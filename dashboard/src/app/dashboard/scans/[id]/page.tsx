@@ -70,7 +70,8 @@ interface ScanResultItem {
     findings: ScanFinding[];
 }
 
-export default async function ScanDetailsPage({ params }: { params: { id: string } }) {
+export default async function ScanDetailsPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const supabase = await createClient();
 
     const { data: scan, error } = await supabase
@@ -222,6 +223,29 @@ export default async function ScanDetailsPage({ params }: { params: { id: string
             {Object.entries(results).map(([key, result]) => {
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
+                // @ts-ignore
+                const errorMessage = result.error;
+
+                if (errorMessage) {
+                    return (
+                        <Card key={key} className="mb-6 border-red-500/50 bg-red-500/5">
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <Icon className="h-6 w-6 text-red-500" />
+                                    <div>
+                                        <CardTitle className="text-red-500">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
+                                        <CardDescription className="text-red-400">Scan Failed</CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm font-mono text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-4 rounded">
+                                    {errorMessage}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    );
+                }
 
                 if (!result.findings || result.findings.length === 0) return null;
 

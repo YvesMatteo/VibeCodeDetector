@@ -184,14 +184,26 @@ export default function NewScanPage() {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="url">Website URL</Label>
-                            <Input
-                                id="url"
-                                type="text"
-                                placeholder="https://example.com"
-                                value={url}
-                                onChange={(e) => setUrl(e.target.value)}
-                                className="text-lg"
-                            />
+                            <div className="flex gap-2">
+                                <Input
+                                    id="url"
+                                    type="text"
+                                    placeholder="https://example.com"
+                                    value={url}
+                                    onChange={(e) => setUrl(e.target.value)}
+                                    className="text-lg flex-1"
+                                />
+                                {isValidUrl(url) && (
+                                    <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={`https://www.google.com/s2/favicons?domain=${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}&sz=64`}
+                                            alt="Favicon"
+                                            className="h-6 w-6 object-contain"
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
