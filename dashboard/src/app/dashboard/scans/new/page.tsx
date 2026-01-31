@@ -114,11 +114,37 @@ export default function NewScanPage() {
 
         setLoading(true);
 
-        // Simulate API call - would actually call /api/scans
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+            // Call the real scan API
+            const response = await fetch('/api/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url,
+                    scanTypes: selectedTypes,
+                }),
+            });
 
-        // In real implementation, this would create a scan and redirect to its page
-        router.push('/dashboard/scans/demo');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Scan failed');
+            }
+
+            // Redirect to scan results (or demo page if no scanId)
+            if (result.scanId) {
+                router.push(`/dashboard/scans/${result.scanId}`);
+            } else {
+                // Store results in sessionStorage for demo page
+                sessionStorage.setItem('lastScanResult', JSON.stringify(result));
+                router.push('/dashboard/scans/demo');
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Scan failed');
+            setLoading(false);
+        }
     }
 
     return (
@@ -189,8 +215,8 @@ export default function NewScanPage() {
                                         key={type.id}
                                         onClick={() => !isPro && toggleScanType(type.id)}
                                         className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer ${isSelected
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-border hover:border-muted-foreground/50'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-muted-foreground/50'
                                             } ${isPro ? 'opacity-60 cursor-not-allowed' : ''}`}
                                     >
                                         {isPro && (
