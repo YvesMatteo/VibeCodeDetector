@@ -115,6 +115,7 @@ export default function NewScanPage() {
         setLoading(true);
 
         try {
+            // Call the real scan API
             const response = await fetch('/api/scan', {
                 method: 'POST',
                 headers: {
@@ -132,12 +133,13 @@ export default function NewScanPage() {
                 throw new Error(data.error || 'Scan failed');
             }
 
-            // Redirect to the scan results page
+            // Redirect to scan results (or demo page if no scanId)
             if (data.scanId) {
                 router.push(`/dashboard/scans/${data.scanId}`);
             } else {
-                // Fallback to scans list if no ID returned
-                router.push('/dashboard/scans');
+                // Store results in sessionStorage for demo page (fallback for anonymous users)
+                sessionStorage.setItem('lastScanResult', JSON.stringify(data));
+                router.push('/dashboard/scans/demo');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
