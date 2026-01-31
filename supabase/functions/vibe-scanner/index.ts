@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -20,9 +20,8 @@ Deno.serve(async (req) => {
             throw new Error("targetUrl is required");
         }
 
-        if (!OPENAI_API_KEY) {
-            console.error("Missing OPENAI_API_KEY");
-            // Fallback or error? For now return a mock/error indicating config missing
+        if (!GEMINI_API_KEY) {
+            console.error("Missing GEMINI_API_KEY");
             return new Response(JSON.stringify({
                 error: "Server configuration error: Missing AI credentials",
                 score: 0
@@ -40,35 +39,33 @@ Deno.serve(async (req) => {
         const html = await response.text();
 
         // Truncate HTML to avoid token limits (focus on structure, head, and body start)
-        // Taking first 15000 chars is usually enough to catch framework classes and meta tags
-        const truncatedHtml = html.substring(0, 15000);
+        const truncatedHtml = html.substring(0, 30000); // Gemini has larger context window
 
-        const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+        const prompt = `You are an expert at detecting "vibe-coded" websites - sites built rapidly using AI agents (like V0, Cursor, Lovable) or templates. 
+    Analyze this HTML for:
+    1. "shadcn/ui" or "tailwind" class abuse typical of AI.
+    2. Generic "Lorem Ipsum" or placeholder text.
+    3. Comments like "v0-generated" or "cursor-agent".
+    4. Generic/stock structure.
+    
+    Return ONLY valid JSON: { "score": number (0-100, where 100 is definitely AI generated), "reasoning": string[] }`;
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        const completion = await fetch(geminiUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are an expert at detecting "vibe-coded" websites - sites built rapidly using AI agents (like V0, Cursor, Lovable) or templates. 
-                    Analyze the HTML for:
-                    1. "shadcn/ui" or "tailwind" class abuse typical of AI.
-                    2. Generic "Lorem Ipsum" or placeholder text.
-                    3. Comments like "v0-generated" or "cursor-agent".
-                    4. Generic/stock structure.
-                    
-                    Return JSON: { "score": number (0-100, where 100 is definitely AI generated), "reasoning": string[] }`
-                    },
-                    {
-                        role: "user",
-                        content: `Analyze this HTML:\n\n${truncatedHtml}`
-                    }
-                ],
-                response_format: { type: "json_object" }
+                contents: [{
+                    parts: [{
+                        text: `${prompt}\n\nAnalyze this HTML:\n\n${truncatedHtml}`
+                    }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
             })
         });
 
@@ -78,7 +75,10 @@ Deno.serve(async (req) => {
             throw new Error(aiRes.error.message);
         }
 
-        const content = JSON.parse(aiRes.choices[0].message.content);
+        const rawText = aiRes.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) throw new Error("Empty response from Gemini");
+
+        const content = JSON.parse(rawText);
 
         return new Response(JSON.stringify({
             scannerType: 'vibe-match',

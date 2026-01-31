@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
             throw new Error("targetUrl is required");
         }
 
-        if (!OPENAI_API_KEY) {
+        if (!GEMINI_API_KEY) {
             return new Response(JSON.stringify({
                 error: "Server configuration error: Missing AI credentials",
                 score: 0
@@ -42,36 +42,35 @@ Deno.serve(async (req) => {
             .replace(/<[^>]+>/g, " ")
             .replace(/\s+/g, " ")
             .trim()
-            .substring(0, 15000); // Truncate
+            .substring(0, 30000); // Gemini has larger context
 
-        const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+        const prompt = `You are a Legal Compliance Auditor for websites.
+    Analyze the webpage text for:
+    1. Absolute/risky claims (e.g., "100% secure", "Best in the world", "Guaranteed returns").
+    2. Missing legal pages mentioned (Privacy Policy, Terms).
+    3. Regulatory non-compliance hints (e.g. collecting data without consent mentions).
+
+    Return ONLY valid JSON: {
+        "score": number (0-100, where 100 is perfectly compliant/safe),
+        "findings": [ { "title": string, "severity": "high"|"medium"|"low", "description": string } ]
+    }`;
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        const completion = await fetch(geminiUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are a Legal Compliance Auditor for websites.
-                    Analyze the webpage text for:
-                    1. Absolute/risky claims (e.g., "100% secure", "Best in the world", "Guaranteed returns").
-                    2. Missing legal pages mentioned (Privacy Policy, Terms).
-                    3. Regulatory non-compliance hints (e.g. collecting data without consent mentions).
-
-                    Return JSON: { 
-                        "score": number (0-100, where 100 is perfectly compliant/safe), 
-                        "findings": [ { "title": string, "severity": "high"|"medium"|"low", "description": string } ] 
-                    }`
-                    },
-                    {
-                        role: "user",
-                        content: `Analyze this site content:\n\n${cleanText}`
-                    }
-                ],
-                response_format: { type: "json_object" }
+                contents: [{
+                    parts: [{
+                        text: `${prompt}\n\nAnalyze this site content:\n\n${cleanText}`
+                    }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
             })
         });
 
@@ -81,7 +80,10 @@ Deno.serve(async (req) => {
             throw new Error(aiRes.error.message);
         }
 
-        const content = JSON.parse(aiRes.choices[0].message.content);
+        const rawText = aiRes.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) throw new Error("Empty response from Gemini");
+
+        const content = JSON.parse(rawText);
 
         return new Response(JSON.stringify({
             scannerType: 'legal-scanner',
