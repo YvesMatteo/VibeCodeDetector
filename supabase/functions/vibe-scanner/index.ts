@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     
     Return ONLY valid JSON: { "score": number (0-100, where 100 is definitely AI generated), "reasoning": string[] }`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const completion = await fetch(geminiUrl, {
             method: "POST",

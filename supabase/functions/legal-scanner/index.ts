@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
         "findings": [ { "title": string, "severity": "high"|"medium"|"low", "description": string } ]
     }`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         const completion = await fetch(geminiUrl, {
             method: "POST",
