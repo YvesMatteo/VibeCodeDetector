@@ -48,8 +48,8 @@ export default function SignupPage() {
             setError(error.message);
             setLoading(false);
         } else {
-            setSuccess(true);
-            setLoading(false);
+            // Redirect directly to dashboard (email confirmation is disabled)
+            router.push('/dashboard');
         }
     }
 

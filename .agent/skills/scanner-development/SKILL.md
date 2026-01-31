@@ -1,5 +1,6 @@
 ---
 name: Scanner Development
+<<<<<<< Updated upstream
 description: Guidelines for building the 6 scanner microservices for VibeCheck
 ---
 
@@ -103,10 +104,146 @@ export class BaseScanner {
     const weights = { critical: 25, high: 15, medium: 8, low: 3, info: 0 };
     const deductions = findings.reduce((sum, f) => sum + weights[f.severity], 0);
     return Math.max(0, 100 - deductions);
+=======
+description: Patterns for creating new scanner microservices for VibeCheck
+---
+
+# Scanner Development for VibeCheck
+
+This skill covers how to create new scanner modules that analyze websites for security, SEO, legal compliance, API key leaks, and AI detection.
+
+## Scanner Architecture
+
+Each scanner is an independent module that:
+1. Receives a target URL and configuration
+2. Performs analysis
+3. Returns a structured result with score, findings, and recommendations
+
+```
+┌─────────────────────────────────────────────────┐
+│                 Scanner Interface                │
+├─────────────────────────────────────────────────┤
+│  Input: { url, options }                        │
+│  Output: { score, findings[], recommendations[] }│
+└─────────────────────────────────────────────────┘
+```
+
+## Scanner Types
+
+| Scanner | Purpose | Key Checks |
+|---------|---------|------------|
+| **Security** | Find vulnerabilities | XSS, CSRF, headers, HTTPS |
+| **API Key Leak** | Detect exposed secrets | AWS, Stripe, Firebase, OpenAI keys |
+| **AI Detection** | Identify vibe-coded sites | Code patterns, design fingerprints |
+| **Legal** | Check compliance | GDPR, privacy policy, claims |
+| **SEO** | Audit optimization | Meta tags, Core Web Vitals, structure |
+| **Competitor** | Analyze competition | Tech stack, traffic, content |
+
+## Base Scanner Interface
+
+```typescript
+// types/scanner.ts
+export interface ScannerInput {
+  url: string;
+  options?: Record<string, unknown>;
+}
+
+export interface Finding {
+  id: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  title: string;
+  description: string;
+  location?: string;
+  evidence?: string;
+}
+
+export interface Recommendation {
+  id: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  effort: 'quick' | 'moderate' | 'significant';
+}
+
+export interface ScanResult {
+  scannerType: string;
+  score: number; // 0-100
+  findings: Finding[];
+  recommendations: Recommendation[];
+  metadata?: Record<string, unknown>;
+  scannedAt: Date;
+}
+
+export interface Scanner {
+  name: string;
+  scan(input: ScannerInput): Promise<ScanResult>;
+}
+```
+
+## Creating a New Scanner
+
+### 1. Security Headers Scanner Example
+
+```typescript
+// scanners/security-headers.ts
+import { Scanner, ScannerInput, ScanResult, Finding } from '@/types/scanner';
+
+export class SecurityHeadersScanner implements Scanner {
+  name = 'security-headers';
+  
+  private readonly requiredHeaders = [
+    { name: 'Strict-Transport-Security', severity: 'high' as const },
+    { name: 'Content-Security-Policy', severity: 'high' as const },
+    { name: 'X-Frame-Options', severity: 'medium' as const },
+    { name: 'X-Content-Type-Options', severity: 'medium' as const },
+    { name: 'Referrer-Policy', severity: 'low' as const },
+    { name: 'Permissions-Policy', severity: 'low' as const },
+  ];
+
+  async scan(input: ScannerInput): Promise<ScanResult> {
+    const response = await fetch(input.url, { method: 'HEAD' });
+    const headers = response.headers;
+    
+    const findings: Finding[] = [];
+    let score = 100;
+    
+    for (const { name, severity } of this.requiredHeaders) {
+      if (!headers.has(name)) {
+        const deduction = severity === 'high' ? 15 : severity === 'medium' ? 10 : 5;
+        score -= deduction;
+        
+        findings.push({
+          id: `missing-${name.toLowerCase()}`,
+          severity,
+          title: `Missing ${name} header`,
+          description: `The ${name} security header is not set.`,
+        });
+      }
+    }
+    
+    return {
+      scannerType: this.name,
+      score: Math.max(0, score),
+      findings,
+      recommendations: this.generateRecommendations(findings),
+      scannedAt: new Date(),
+    };
+  }
+  
+  private generateRecommendations(findings: Finding[]) {
+    return findings.map(f => ({
+      id: `fix-${f.id}`,
+      priority: f.severity === 'critical' ? 'high' : f.severity,
+      title: `Add ${f.title.replace('Missing ', '')}`,
+      description: `Configure your server to send the appropriate header.`,
+      effort: 'quick' as const,
+    }));
+>>>>>>> Stashed changes
   }
 }
 ```
 
+<<<<<<< Updated upstream
 ---
 
 ## Security Scanner
@@ -374,4 +511,138 @@ name: security-headers-scanner
 entrypoint_path: index.ts
 verify_jwt: true
 files: [{"name": "index.ts", "content": "<function_code>"}]
+=======
+### 2. API Key Leak Scanner Example
+
+```typescript
+// scanners/api-key-leak.ts
+const API_KEY_PATTERNS = [
+  { name: 'AWS Access Key', pattern: /AKIA[0-9A-Z]{16}/, severity: 'critical' },
+  { name: 'AWS Secret Key', pattern: /[A-Za-z0-9/+=]{40}/, severity: 'critical' },
+  { name: 'Stripe Live Key', pattern: /sk_live_[a-zA-Z0-9]{24,}/, severity: 'critical' },
+  { name: 'Stripe Test Key', pattern: /sk_test_[a-zA-Z0-9]{24,}/, severity: 'medium' },
+  { name: 'OpenAI API Key', pattern: /sk-[a-zA-Z0-9]{48}/, severity: 'critical' },
+  { name: 'Supabase Service Role', pattern: /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*/, severity: 'critical' },
+  { name: 'Firebase Config', pattern: /apiKey["']?\s*[:=]\s*["'][A-Za-z0-9_-]{39}["']/, severity: 'high' },
+  { name: 'MongoDB URI', pattern: /mongodb(\+srv)?:\/\/[^:]+:[^@]+@/, severity: 'critical' },
+];
+
+export class ApiKeyLeakScanner implements Scanner {
+  name = 'api-key-leak';
+  
+  async scan(input: ScannerInput): Promise<ScanResult> {
+    // Fetch page HTML and all linked JavaScript
+    const sources = await this.fetchAllSources(input.url);
+    const findings: Finding[] = [];
+    
+    for (const { content, location } of sources) {
+      for (const { name, pattern, severity } of API_KEY_PATTERNS) {
+        const matches = content.match(pattern);
+        if (matches) {
+          findings.push({
+            id: `leak-${name.toLowerCase().replace(/\s/g, '-')}`,
+            severity: severity as Finding['severity'],
+            title: `Exposed ${name}`,
+            description: `Found potential ${name} in client-side code.`,
+            location,
+            evidence: this.redactKey(matches[0]),
+          });
+        }
+      }
+    }
+    
+    const score = findings.length === 0 ? 100 : 
+      Math.max(0, 100 - findings.reduce((acc, f) => 
+        acc + (f.severity === 'critical' ? 30 : f.severity === 'high' ? 20 : 10), 0));
+    
+    return {
+      scannerType: this.name,
+      score,
+      findings,
+      recommendations: [...],
+      scannedAt: new Date(),
+    };
+  }
+  
+  private redactKey(key: string): string {
+    return key.slice(0, 8) + '...' + key.slice(-4);
+  }
+}
+```
+
+## Using Puppeteer/Playwright for Dynamic Content
+
+```typescript
+import { chromium } from 'playwright';
+
+async function fetchDynamicContent(url: string) {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  
+  await page.goto(url, { waitUntil: 'networkidle' });
+  
+  // Get all script contents
+  const scripts = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('script'))
+      .map(s => s.textContent || s.src);
+  });
+  
+  // Get localStorage/sessionStorage
+  const storage = await page.evaluate(() => ({
+    localStorage: { ...localStorage },
+    sessionStorage: { ...sessionStorage },
+  }));
+  
+  await browser.close();
+  return { scripts, storage };
+}
+```
+
+## Scanner Queue Integration
+
+Scanners are executed via a job queue (Redis + BullMQ):
+
+```typescript
+// workers/scanner-worker.ts
+import { Worker } from 'bullmq';
+import { SecurityHeadersScanner } from '@/scanners/security-headers';
+import { ApiKeyLeakScanner } from '@/scanners/api-key-leak';
+
+const scanners = {
+  'security-headers': new SecurityHeadersScanner(),
+  'api-key-leak': new ApiKeyLeakScanner(),
+  // Add more scanners
+};
+
+const worker = new Worker('scan-jobs', async (job) => {
+  const { url, scanTypes } = job.data;
+  const results = [];
+  
+  for (const type of scanTypes) {
+    const scanner = scanners[type];
+    if (scanner) {
+      const result = await scanner.scan({ url });
+      results.push(result);
+    }
+  }
+  
+  return results;
+});
+```
+
+## Testing Scanners
+
+Always test with known vulnerable and secure sites:
+
+```typescript
+describe('SecurityHeadersScanner', () => {
+  it('should detect missing headers', async () => {
+    const scanner = new SecurityHeadersScanner();
+    const result = await scanner.scan({ url: 'http://example-insecure.com' });
+    
+    expect(result.score).toBeLessThan(100);
+    expect(result.findings.length).toBeGreaterThan(0);
+  });
+});
+>>>>>>> Stashed changes
 ```
