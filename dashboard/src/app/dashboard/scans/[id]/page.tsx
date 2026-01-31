@@ -70,7 +70,8 @@ interface ScanResultItem {
     findings: ScanFinding[];
 }
 
-export default async function ScanDetailsPage({ params }: { params: { id: string } }) {
+export default async function ScanDetailsPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const supabase = await createClient();
 
     const { data: scan, error } = await supabase
