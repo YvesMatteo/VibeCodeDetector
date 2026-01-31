@@ -61,7 +61,41 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 3. SEO Scanner (Local Lib)
+        // 3. Vibe Match Scanner (Edge Function)
+        if (scanTypes?.includes('vibe_match') || !scanTypes) {
+            scannerPromises.push(
+                fetch(`${supabaseUrl}/functions/v1/vibe-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    },
+                    body: JSON.stringify({ targetUrl }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.vibe_match = data; })
+                    .catch(err => { results.vibe_match = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 4. Legal Scanner (Edge Function)
+        if (scanTypes?.includes('legal') || !scanTypes) {
+            scannerPromises.push(
+                fetch(`${supabaseUrl}/functions/v1/legal-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    },
+                    body: JSON.stringify({ targetUrl }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.legal = data; })
+                    .catch(err => { results.legal = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 5. SEO Scanner (Local Lib)
         if (scanTypes?.includes('seo') || !scanTypes) {
             // Check if runSEOScan is available (it should be from the merge)
             try {
