@@ -127,19 +127,19 @@ export default function NewScanPage() {
                 }),
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Scan failed');
+                throw new Error(result.error || 'Scan failed');
             }
 
             // Redirect to scan results (or demo page if no scanId)
-            if (data.scanId) {
-                router.push(`/dashboard/scans/${data.scanId}`);
+            if (result.scanId) {
+                router.push(`/dashboard/scans/${result.scanId}`);
             } else {
-                // Store results in sessionStorage for demo page (fallback for anonymous users)
-                sessionStorage.setItem('lastScanResult', JSON.stringify(data));
-                router.push('/dashboard/scans/demo');
+                // Store results in session storage for demo display
+                sessionStorage.setItem('lastScanResult', JSON.stringify(result));
+                router.push('/dashboard/demo-results');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
