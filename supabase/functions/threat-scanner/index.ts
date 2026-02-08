@@ -82,6 +82,21 @@ Deno.serve(async (req: Request) => {
             }).catch(e => console.error("Shodan Error:", e)));
         }
 
+        // 4. URLScan
+        if (URLSCAN_KEY) {
+            checks.push(checkUrlScan(targetUrl, URLSCAN_KEY).then(res => {
+                if (res.malicious) {
+                    score -= 30;
+                    findings.push({
+                        title: "URLScan Malicious Verdict",
+                        severity: "high",
+                        description: `URLScan verdict: ${res.verdict || 'malicious'}.`,
+                        recommendation: "Review URLScan report."
+                    });
+                }
+            }).catch(e => console.error("URLScan Error:", e)));
+        }
+
         await Promise.all(checks);
 
         return new Response(JSON.stringify({
@@ -154,6 +169,25 @@ async function checkShodan(url: string, key: string) {
         if (!response.ok) return {};
         const data = await response.json();
         return { ports: data.ports || [] };
+    } catch {
+        return {};
+    }
+}
+
+async function checkUrlScan(url: string, key: string) {
+    try {
+        const response = await fetch(`https://urlscan.io/api/v1/search/?q=page.url:"${url}"`, {
+            headers: { 'API-Key': key }
+        });
+        if (!response.ok) return {};
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+            const latest = data.results[0];
+            const malicious = latest.verdicts?.overall?.malicious;
+            return { malicious, verdict: malicious ? 'malicious' : 'clean' };
+        }
+        return {};
     } catch {
         return {};
     }

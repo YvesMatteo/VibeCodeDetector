@@ -18,6 +18,24 @@ export interface SEOScanResult {
         accessibility: number;
         bestPractices: number;
     };
+    // Core Web Vitals (from CrUX / loadingExperience)
+    cruxMetrics?: {
+        fcp?: string; // First Contentful Paint
+        inp?: string; // Interaction to Next Paint
+        lcp?: string; // Largest Contentful Paint
+        cls?: string; // Cumulative Layout Shift
+        fid?: string; // First Input Delay (Legacy)
+        ttfb?: string; // Time to First Byte
+    };
+    // Detailed Lab Data (from Lighthouse)
+    lighthouseMetrics?: {
+        fcp?: string; // First Contentful Paint
+        si?: string;  // Speed Index
+        lcp?: string; // Largest Contentful Paint
+        tbt?: string; // Total Blocking Time
+        tti?: string; // Time to Interactive
+        cls?: string; // Cumulative Layout Shift
+    };
     audits: {
         title: string;
         score: number | null;
@@ -33,6 +51,15 @@ export interface SEOScanResult {
 }
 
 interface PageSpeedResult {
+    loadingExperience?: {
+        metrics: {
+            [key: string]: {
+                percentile?: number;
+                distributions?: any[];
+                category?: string;
+            };
+        };
+    };
     lighthouseResult: {
         categories: {
             seo?: { score: number };
@@ -74,6 +101,7 @@ export async function runSEOScan(url: string): Promise<SEOScanResult> {
 
         const data: PageSpeedResult = await response.json();
         const lhr = data.lighthouseResult;
+        const crux = data.loadingExperience?.metrics;
 
         // Extract scores (0-100)
         const scores = {
@@ -81,6 +109,26 @@ export async function runSEOScan(url: string): Promise<SEOScanResult> {
             performance: Math.round((lhr.categories.performance?.score ?? 0) * 100),
             accessibility: Math.round((lhr.categories.accessibility?.score ?? 0) * 100),
             bestPractices: Math.round((lhr.categories['best-practices']?.score ?? 0) * 100),
+        };
+
+        // Extract CrUX Metrics (Real User Data)
+        const cruxMetrics = crux ? {
+            fcp: crux.FIRST_CONTENTFUL_PAINT_MS?.category,
+            inp: crux.INTERACTION_TO_NEXT_PAINT?.category,
+            lcp: crux.LARGEST_CONTENTFUL_PAINT_MS?.category,
+            cls: crux.CUMULATIVE_LAYOUT_SHIFT_SCORE?.category,
+            fid: crux.FIRST_INPUT_DELAY_MS?.category,
+            ttfb: crux.EXPERIMENTAL_TIME_TO_FIRST_BYTE?.category
+        } : undefined;
+
+        // Extract Lighthouse Metrics (Lab Data)
+        const lighthouseMetrics = {
+            fcp: lhr.audits['first-contentful-paint']?.displayValue,
+            si: lhr.audits['speed-index']?.displayValue,
+            lcp: lhr.audits['largest-contentful-paint']?.displayValue,
+            tbt: lhr.audits['total-blocking-time']?.displayValue,
+            tti: lhr.audits['interactive']?.displayValue,
+            cls: lhr.audits['cumulative-layout-shift']?.displayValue,
         };
 
         // Extract key audits for SEO
@@ -135,6 +183,8 @@ export async function runSEOScan(url: string): Promise<SEOScanResult> {
             score: scores.seo, // Top-level score for compatibility
             findings,          // Top-level findings for compatibility
             scores,
+            cruxMetrics,
+            lighthouseMetrics,
             audits,
             recommendations: recommendations.slice(0, 10),
             scanDuration: Date.now() - startTime,
