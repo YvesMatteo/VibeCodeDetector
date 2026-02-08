@@ -415,18 +415,21 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <SpotlightCard
-                  className="bg-white/[0.02] h-full"
-                >
-                  <CardHeader>
-                    <div className="relative mb-4">
-                      <feature.icon className={`h-12 w-12 ${feature.color} transition-transform group-hover:scale-110`} />
-                      <div className={`absolute inset-0 ${feature.color} blur-2xl opacity-0 group-hover:opacity-30 transition-opacity`} />
+                <div className="group relative h-full bg-zinc-900/40 border border-white/5 rounded-xl hover:border-white/10 transition-colors overflow-hidden">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color.replace('text-', 'from-')}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                  <div className="relative p-6 flex flex-col h-full">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className={`p-2 rounded-lg bg-white/5 ${feature.color} ring-1 ring-white/10 group-hover:ring-white/20 transition-all`}>
+                        <feature.icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="text-lg font-medium text-white tracking-tight">{feature.title}</h3>
                     </div>
-                    <CardTitle className="text-xl font-medium text-white">{feature.title}</CardTitle>
-                    <CardDescription className="text-zinc-400">{feature.description}</CardDescription>
-                  </CardHeader>
-                </SpotlightCard>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -455,7 +458,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -465,33 +468,32 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="h-full"
               >
-                <SpotlightCard
-                  className={`h-full flex flex-col ${tier.highlighted
-                    ? 'border-[#749CFF]/50 shadow-[0_0_50px_-12px_rgba(116,156,255,0.2)]'
-                    : ''
-                    }`}
-                >
+                <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
+                    ? 'bg-zinc-900/60 border-blue-500/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                    : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                  }`}>
                   {tier.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0 shadow-lg">
+                      <div className="bg-blue-600 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
                         Most Popular
-                      </Badge>
+                      </div>
                     </div>
                   )}
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-medium text-white">{tier.name}</CardTitle>
-                    <CardDescription className="text-zinc-400">{tier.description}</CardDescription>
-                    <div className="mt-4">
-                      <span className="text-4xl font-heading font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">{tier.price}</span>
-                      <span className="text-zinc-500 text-sm ml-1">{tier.period}</span>
+                  <div className="p-6 border-b border-white/5">
+                    <h3 className="text-lg font-medium text-white">{tier.name}</h3>
+                    <p className="text-sm text-zinc-400 mt-1">{tier.description}</p>
+                    <div className="mt-4 flex items-baseline gap-1">
+                      <span className="text-4xl font-bold text-white tracking-tight">{tier.price}</span>
+                      {tier.period && <span className="text-zinc-500 text-sm font-normal">{tier.period}</span>}
                     </div>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <ul className="space-y-3 mb-6 flex-1">
+                  </div>
+
+                  <div className="p-6 flex-1 flex flex-col">
+                    <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />
-                          <span className="text-sm text-zinc-400">{feature}</span>
+                        <li key={feature} className="flex items-start gap-3">
+                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-blue-400' : 'text-zinc-500'}`} />
+                          <span className="text-sm text-zinc-300">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -555,7 +557,7 @@ export default function HomePage() {
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
-                          ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
+                          ? 'bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/20'
                           : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
                           }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
@@ -564,8 +566,8 @@ export default function HomePage() {
                         <Link href="/signup">{tier.cta}</Link>
                       </Button>
                     )}
-                  </CardContent>
-                </SpotlightCard>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

@@ -19,7 +19,10 @@ import {
     Bot,
     Scale,
     Radar,
+    Info,
 } from 'lucide-react';
+import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
+import { getPlainEnglish } from '@/lib/plain-english';
 
 function getScoreColor(score: number) {
     if (score >= 80) return 'text-green-400';
@@ -131,7 +134,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
     const results = scan.results as Record<string, ScanResultItem>;
 
-    // Aggregate counts
+    // Aggregate counts and findings
     const totalFindings = {
         critical: 0,
         high: 0,
@@ -139,8 +142,12 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
         low: 0,
     };
 
+    // Collect all findings for AI prompt
+    const allFindings: any[] = [];
+
     Object.values(results).forEach((result: any) => {
         if (result.findings && Array.isArray(result.findings)) {
+            allFindings.push(...result.findings);
             result.findings.forEach((f: any) => {
                 const sev = f.severity?.toLowerCase();
                 if (sev === 'critical') totalFindings.critical++;
@@ -186,6 +193,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     </div>
 
                     <div className="flex gap-3">
+                        <AIFixPrompt url={scan.url} findings={allFindings} />
                         <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
                             <Download className="mr-2 h-4 w-4" />
                             Export PDF
@@ -339,6 +347,23 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                                     <p className="text-sm text-muted-foreground">
                                                         {finding.description}
                                                     </p>
+
+                                                    {(() => {
+                                                        const plainEnglish = getPlainEnglish(finding.title, finding.description);
+                                                        if (plainEnglish) {
+                                                            return (
+                                                                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                                                                    <div className="flex items-center gap-2 mb-1 text-blue-400">
+                                                                        <Info className="h-4 w-4" />
+                                                                        <span className="text-xs font-bold uppercase tracking-wider">Plain English</span>
+                                                                    </div>
+                                                                    <p className="text-sm font-medium text-slate-200">{plainEnglish.summary}</p>
+                                                                    <p className="text-xs text-slate-400 mt-1">{plainEnglish.whyItMatters}</p>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        return null;
+                                                    })()}
                                                     {finding.recommendation && (
                                                         <p className="text-sm mt-2 text-muted-foreground">
                                                             <span className="font-medium text-purple-400">Recommendation:</span> {finding.recommendation}

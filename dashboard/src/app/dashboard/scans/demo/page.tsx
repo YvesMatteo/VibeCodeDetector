@@ -16,7 +16,10 @@ import {
     Shield,
     Eye,
     Zap,
+    Info,
 } from 'lucide-react';
+import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
+import { getPlainEnglish } from '@/lib/plain-english';
 
 interface ScanResult {
     url: string;
@@ -131,10 +134,17 @@ export default function DemoResultsPage() {
                             </span>
                         </div>
                     </div>
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Completed
-                    </Badge>
+                    <div className="flex gap-3 items-center">
+                        <AIFixPrompt url={result.url} findings={result.recommendations.map(r => ({
+                            title: r.title,
+                            description: r.description,
+                            severity: r.impact
+                        }))} />
+                        <Badge variant="secondary" className="flex items-center gap-1 h-fit py-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Completed
+                        </Badge>
+                    </div>
                 </div>
             </div>
 
@@ -197,6 +207,21 @@ export default function DemoResultsPage() {
                                             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                                                 {rec.description}
                                             </p>
+                                            {(() => {
+                                                const plainEnglish = getPlainEnglish(rec.title, rec.description);
+                                                if (plainEnglish) {
+                                                    return (
+                                                        <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                                                            <div className="flex items-center gap-1 mb-1 text-blue-400">
+                                                                <Info className="h-3 w-3" />
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider">Plain English</span>
+                                                            </div>
+                                                            <p className="text-xs font-medium text-slate-200">{plainEnglish.summary}</p>
+                                                        </div>
+                                                    )
+                                                }
+                                                return null;
+                                            })()}
                                         </div>
                                         <Badge className={getImpactColor(rec.impact)}>
                                             {rec.impact}
