@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'GeistMono';
+    src: url('https://assets.vercel.com/font/geist-mono/GeistMono-Regular.woff2') format('woff2');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+:root {
+    background-color: #09090b;
+    /* zinc-950 */
+    color: white;
+}
