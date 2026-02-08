@@ -19,29 +19,29 @@ import {
 } from 'lucide-react';
 
 function getScoreColor(score: number) {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    if (score >= 40) return 'text-orange-500';
-    return 'text-red-500';
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-amber-400';
+    if (score >= 40) return 'text-orange-400';
+    return 'text-red-400';
 }
 
-function getScoreBg(score: number) {
-    if (score >= 80) return 'bg-green-500/10';
-    if (score >= 60) return 'bg-yellow-500/10';
-    if (score >= 40) return 'bg-orange-500/10';
-    return 'bg-red-500/10';
+function getScoreRingColor(score: number) {
+    if (score >= 80) return 'stroke-green-500';
+    if (score >= 60) return 'stroke-amber-500';
+    if (score >= 40) return 'stroke-orange-500';
+    return 'stroke-red-500';
 }
 
 function getSeverityStyles(severity: string) {
     switch (severity) {
         case 'critical':
-            return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20' };
+            return { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' };
         case 'high':
-            return { icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' };
+            return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' };
         case 'medium':
-            return { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' };
+            return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' };
         default:
-            return { icon: CheckCircle, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' };
+            return { icon: CheckCircle, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
     }
 }
 
@@ -68,6 +68,41 @@ interface ScanFinding {
 interface ScanResultItem {
     score: number;
     findings: ScanFinding[];
+}
+
+// Animated score ring component
+function ScoreRing({ score, size = 'large' }: { score: number; size?: 'small' | 'large' }) {
+    const dimensions = size === 'large' ? { container: 120, radius: 52, strokeWidth: 8 } : { container: 56, radius: 24, strokeWidth: 4 };
+    const circumference = 2 * Math.PI * dimensions.radius;
+    const strokeDashoffset = circumference - (score / 100) * circumference;
+
+    return (
+        <div className={`relative flex items-center justify-center`} style={{ width: dimensions.container, height: dimensions.container }}>
+            <svg className="absolute -rotate-90" style={{ width: dimensions.container, height: dimensions.container }}>
+                <circle
+                    cx={dimensions.container / 2}
+                    cy={dimensions.container / 2}
+                    r={dimensions.radius}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={dimensions.strokeWidth}
+                    className="text-white/10"
+                />
+                <circle
+                    cx={dimensions.container / 2}
+                    cy={dimensions.container / 2}
+                    r={dimensions.radius}
+                    fill="none"
+                    strokeWidth={dimensions.strokeWidth}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    className={`${getScoreRingColor(score)} transition-all duration-1000`}
+                />
+            </svg>
+            <span className={`font-bold ${getScoreColor(score)} ${size === 'large' ? 'text-4xl' : 'text-xl'}`}>{score}</span>
+        </div>
+    );
 }
 
 export default async function ScanDetailsPage(props: { params: Promise<{ id: string }> }) {
@@ -102,7 +137,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 if (sev === 'critical') totalFindings.critical++;
                 else if (sev === 'high') totalFindings.high++;
                 else if (sev === 'medium') totalFindings.medium++;
-                else totalFindings.low++; // Treat 'low', 'info', etc as low or ignore
+                else totalFindings.low++;
             });
         }
     });
@@ -110,10 +145,10 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
     return (
         <div className="p-8">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 animate-fade-in-up">
                 <Link
                     href="/dashboard/scans"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4"
+                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Scans
@@ -122,12 +157,12 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 <div className="flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold">{scan.url.replace(/^https?:\/\//, '')}</h1>
+                            <h1 className="text-3xl font-bold gradient-text">{scan.url.replace(/^https?:\/\//, '')}</h1>
                             <a
                                 href={scan.url.startsWith('http') ? scan.url : `https://${scan.url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <ExternalLink className="h-5 w-5" />
                             </a>
@@ -137,16 +172,16 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                 <Clock className="h-4 w-4" />
                                 Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
                             </div>
-                            <Badge variant="secondary">{scan.status}</Badge>
+                            <Badge variant="secondary" className="bg-white/5 border-white/10">{scan.status}</Badge>
                         </div>
                     </div>
 
                     <div className="flex gap-3">
-                        <Button variant="outline">
+                        <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
                             <Download className="mr-2 h-4 w-4" />
                             Export PDF
                         </Button>
-                        <Button>
+                        <Button className="shimmer-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0">
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Rescan
                         </Button>
@@ -155,29 +190,26 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Score Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className={getScoreBg(scan.overall_score || 0)}>
-                    <CardContent className="pt-6 text-center">
-                        <div className={`text-5xl font-bold ${getScoreColor(scan.overall_score || 0)}`}>
-                            {scan.overall_score}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">Overall Score</p>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 stagger-children">
+                <Card className="glass-card border-white/5">
+                    <CardContent className="pt-6 flex flex-col items-center">
+                        <ScoreRing score={scan.overall_score || 0} size="large" />
+                        <p className="text-sm text-muted-foreground mt-4">Overall Score</p>
                     </CardContent>
                 </Card>
 
-                {Object.entries(results).map(([key, result]) => {
+                {Object.entries(results).map(([key, result], index) => {
                     const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
-                    // Handle case where result might be an error object or missing score
                     const score = typeof result.score === 'number' ? result.score : 0;
 
                     return (
-                        <Card key={key}>
+                        <Card key={key} className="glass-card border-white/5 hover-lift group" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between mb-2">
-                                    <Icon className="h-5 w-5 text-muted-foreground" />
-                                    <span className={`text-2xl font-bold ${getScoreColor(score)}`}>
-                                        {score}
-                                    </span>
+                                    <div className="relative">
+                                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-purple-400 transition-colors" />
+                                    </div>
+                                    <ScoreRing score={score} size="small" />
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                     {scannerNames[key as keyof typeof scannerNames] || key}
@@ -192,35 +224,39 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Findings Summary */}
-            <Card className="mb-8">
+            <Card className="mb-8 glass-card border-white/5 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
                 <CardHeader>
                     <CardTitle>Findings Summary</CardTitle>
                     <CardDescription>Issues found during the scan, grouped by severity</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex gap-6">
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                            <span className="font-medium">{totalFindings.critical} Critical</span>
+                    <div className="flex gap-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-red-600 animate-pulse"></div>
+                            <span className="font-medium">{totalFindings.critical}</span>
+                            <span className="text-muted-foreground">Critical</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-                            <span className="font-medium">{totalFindings.high} High</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-orange-500 to-orange-600"></div>
+                            <span className="font-medium">{totalFindings.high}</span>
+                            <span className="text-muted-foreground">High</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                            <span className="font-medium">{totalFindings.medium} Medium</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600"></div>
+                            <span className="font-medium">{totalFindings.medium}</span>
+                            <span className="text-muted-foreground">Medium</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                            <span className="font-medium">{totalFindings.low} Low</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600"></div>
+                            <span className="font-medium">{totalFindings.low}</span>
+                            <span className="text-muted-foreground">Low</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Detailed Results by Scanner */}
-            {Object.entries(results).map(([key, result]) => {
+            {Object.entries(results).map(([key, result], scannerIndex) => {
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
                 // @ts-ignore
@@ -228,18 +264,21 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
                 if (errorMessage) {
                     return (
-                        <Card key={key} className="mb-6 border-red-500/50 bg-red-500/5">
+                        <Card key={key} className="mb-6 glass-card border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                             <CardHeader>
                                 <div className="flex items-center gap-3">
-                                    <Icon className="h-6 w-6 text-red-500" />
+                                    <div className="relative">
+                                        <Icon className="h-6 w-6 text-red-400" />
+                                        <div className="absolute inset-0 bg-red-500/30 blur-xl" />
+                                    </div>
                                     <div>
-                                        <CardTitle className="text-red-500">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
-                                        <CardDescription className="text-red-400">Scan Failed</CardDescription>
+                                        <CardTitle className="text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
+                                        <CardDescription className="text-red-400/70">Scan Failed</CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm font-mono text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-4 rounded">
+                                <p className="text-sm font-mono text-red-400 bg-red-500/10 p-4 rounded-lg border border-red-500/20">
                                     {errorMessage}
                                 </p>
                             </CardContent>
@@ -250,11 +289,14 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 if (!result.findings || result.findings.length === 0) return null;
 
                 return (
-                    <Card key={key} className="mb-6">
+                    <Card key={key} className="mb-6 glass-card border-white/5 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Icon className="h-6 w-6" />
+                                    <div className="relative">
+                                        <Icon className="h-6 w-6 text-purple-400" />
+                                        <div className="absolute inset-0 bg-purple-500/20 blur-xl" />
+                                    </div>
                                     <div>
                                         <CardTitle>{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
                                         <CardDescription>{result.findings.length} issues found</CardDescription>
@@ -274,14 +316,14 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                     return (
                                         <div
                                             key={index}
-                                            className={`p-4 rounded-lg border ${styles.bg} ${styles.border}`}
+                                            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:scale-[1.01]`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <h4 className="font-medium">{finding.title}</h4>
-                                                        <Badge variant="outline" className="text-xs capitalize">
+                                                        <Badge variant="outline" className={`text-xs capitalize ${styles.bg} ${styles.color} border-0`}>
                                                             {finding.severity}
                                                         </Badge>
                                                     </div>
@@ -289,12 +331,12 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                                         {finding.description}
                                                     </p>
                                                     {finding.recommendation && (
-                                                        <p className="text-sm mt-2 text-muted-foreground font-medium">
-                                                            Recommendation: {finding.recommendation}
+                                                        <p className="text-sm mt-2 text-muted-foreground">
+                                                            <span className="font-medium text-purple-400">Recommendation:</span> {finding.recommendation}
                                                         </p>
                                                     )}
                                                     {finding.evidence && (
-                                                        <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                                                        <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
                                                             {finding.evidence}
                                                         </pre>
                                                     )}
