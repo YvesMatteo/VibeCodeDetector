@@ -28,20 +28,20 @@ export default async function SettingsPage() {
     return (
         <div className="p-8 max-w-4xl">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">Settings</h1>
-                <p className="text-muted-foreground mt-1">
+                <h1 className="text-3xl font-heading font-medium tracking-tight text-white mb-2">Settings</h1>
+                <p className="text-zinc-400">
                     Manage your account settings
                 </p>
             </div>
 
             {/* Profile */}
-            <Card className="mb-6 glass-card border-white/5">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader>
                     <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-blue-400" />
                         <div>
-                            <CardTitle>Profile</CardTitle>
-                            <CardDescription>Your account information</CardDescription>
+                            <CardTitle className="text-white">Profile</CardTitle>
+                            <CardDescription className="text-zinc-400">Your account information</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -63,14 +63,14 @@ export default async function SettingsPage() {
             </Card>
 
             {/* Credits */}
-            <Card className="mb-6 glass-card border-white/5">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <CreditCard className="h-5 w-5 text-blue-400" />
                             <div>
-                                <CardTitle>Credits</CardTitle>
-                                <CardDescription>Your scan credits balance</CardDescription>
+                                <CardTitle className="text-white">Credits</CardTitle>
+                                <CardDescription className="text-zinc-400">Your scan credits balance</CardDescription>
                             </div>
                         </div>
                     </div>
@@ -96,13 +96,13 @@ export default async function SettingsPage() {
             </Card>
 
             {/* Security */}
-            <Card className="mb-6 glass-card border-white/5">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader>
                     <div className="flex items-center gap-3">
                         <Shield className="h-5 w-5 text-blue-400" />
                         <div>
-                            <CardTitle>Security</CardTitle>
-                            <CardDescription>Manage your account security</CardDescription>
+                            <CardTitle className="text-white">Security</CardTitle>
+                            <CardDescription className="text-zinc-400">Manage your account security</CardDescription>
                         </div>
                     </div>
                 </CardHeader>

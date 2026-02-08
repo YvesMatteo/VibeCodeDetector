@@ -71,7 +71,7 @@ export function AIFixPrompt({ url, findings }: AIFixPromptProps) {
                     generate AI Fix Prompt
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl bg-slate-950 border-white/10 text-white">
+            <DialogContent className="max-w-2xl bg-[#0E0E10] border-white/10 text-white">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl">
                         <Sparkles className="h-5 w-5 text-blue-400" />

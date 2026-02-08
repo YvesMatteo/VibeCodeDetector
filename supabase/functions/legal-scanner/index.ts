@@ -44,16 +44,30 @@ Deno.serve(async (req: Request) => {
             .trim()
             .substring(0, 30000); // Gemini has larger context
 
-        const prompt = `You are a Legal Compliance Auditor for websites.
-    Analyze the webpage text for:
-    1. Absolute/risky claims (e.g., "100% secure", "Best in the world", "Guaranteed returns").
-    2. Missing legal pages mentioned (Privacy Policy, Terms).
-    3. Regulatory non-compliance hints (e.g. collecting data without consent mentions).
+        const prompt = `You are a Legal Compliance Auditor for websites. Analyze the extracted page text below.
 
-    Return ONLY valid JSON: {
-        "score": number (0-100, where 100 is perfectly compliant/safe),
-        "findings": [ { "title": string, "severity": "high"|"medium"|"low", "description": string } ]
-    }`;
+IMPORTANT SCORING GUIDELINES:
+- Start at 100 and only deduct for CLEAR, CONCRETE issues you can point to in the text.
+- A site with standard marketing language ("best", "leading", "#1") is NORMAL — do NOT flag common marketing superlatives unless they make specific, verifiable, misleading claims (e.g., "FDA approved" without evidence, "guaranteed 10x returns").
+- Legal page links (Privacy Policy, Terms of Service) are typically in the footer. If the page text mentions "Privacy", "Terms", "Legal", or similar words anywhere, assume the site likely has legal pages and do NOT deduct for "missing legal pages".
+- Only flag missing legal pages if the site appears to collect user data (has forms, sign-ups, cookies mentions) but has ZERO references to privacy or terms anywhere in the text.
+- Cookie consent banners and GDPR compliance are only required for sites targeting EU users — do not assume all sites need them.
+
+WHAT TO CHECK:
+1. Genuinely misleading claims — false promises, deceptive guarantees, unsubstantiated health/financial claims.
+2. Clear regulatory red flags — collecting sensitive data with no privacy mention, financial services with no disclaimers.
+3. Truly missing legal basics — a site with user accounts or payments but absolutely no reference to terms or privacy.
+
+WHAT NOT TO FLAG:
+- Standard marketing language and superlatives
+- Well-known companies (they have legal teams)
+- Pages that simply don't discuss legal topics (like a blog post or product page)
+
+Return ONLY valid JSON: {
+    "score": number (0-100, where 100 is no issues found),
+    "findings": [ { "title": string, "severity": "high"|"medium"|"low", "description": string } ]
+}
+If no issues are found, return score 100 and an empty findings array.`;
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 

@@ -69,10 +69,10 @@ export default function CreditsPage() {
                 <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
                     Add Credits
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-heading font-medium mb-4 tracking-tight">
-                    Simple, <span className="gradient-text">Pay-as-you-go</span> Pricing
+                <h1 className="text-3xl sm:text-4xl font-heading font-medium mb-4 tracking-tight text-white">
+                    Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Pay-as-you-go</span> Pricing
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl">
+                <p className="text-xl text-zinc-400 max-w-2xl">
                     Purchase credits to scan your projects. Credits never expire.
                 </p>
             </div>
@@ -81,9 +81,9 @@ export default function CreditsPage() {
                 {pricingPackages.map((pkg) => (
                     <Card
                         key={pkg.id}
-                        className={`relative glass-card hover-lift transition-all duration-300 flex flex-col ${pkg.highlighted
-                            ? 'border-[#749CFF]/50 glow-animated scale-105 z-10'
-                            : 'border-white/5 hover:border-white/10'
+                        className={`relative transition-all duration-300 flex flex-col ${pkg.highlighted
+                            ? 'bg-zinc-900/60 border-blue-500/30 scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                            : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                             }`}
                     >
                         {pkg.highlighted && (

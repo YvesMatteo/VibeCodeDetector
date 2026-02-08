@@ -41,14 +41,20 @@ Deno.serve(async (req: Request) => {
         // Truncate HTML to avoid token limits (focus on structure, head, and body start)
         const truncatedHtml = html.substring(0, 30000); // Gemini has larger context window
 
-        const prompt = `You are an expert at detecting "vibe-coded" websites - sites built rapidly using AI agents (like V0, Cursor, Lovable) or templates. 
-    Analyze this HTML for:
-    1. "shadcn/ui" or "tailwind" class abuse typical of AI.
-    2. Generic "Lorem Ipsum" or placeholder text.
-    3. Comments like "v0-generated" or "cursor-agent".
-    4. Generic/stock structure.
-    
-    Return ONLY valid JSON: { "score": number (0-100, where 100 is definitely AI generated), "reasoning": string[] }`;
+        const prompt = `You are an expert at detecting "vibe-coded" websites — sites built rapidly using AI code generators (V0, Cursor, Lovable, Bolt) or low-code templates with minimal human refinement.
+
+Look for STRONG indicators only:
+1. AI generator comments or metadata (e.g. "v0-generated", "cursor-agent", "built with lovable").
+2. Unmodified template boilerplate: placeholder text like "Lorem Ipsum", default hero sections with stock copy like "Welcome to our amazing platform".
+3. Excessive repetitive utility class patterns with no custom CSS, suggesting pure AI output with zero human styling.
+4. Multiple signs of a hastily generated site: broken links, placeholder images, generic "Contact Us" forms with no real backend.
+
+Do NOT flag:
+- Professional use of Tailwind CSS, shadcn/ui, or other popular frameworks — these are industry-standard tools used by human developers.
+- Clean, well-structured HTML — good structure is a sign of quality, not AI generation.
+- Modern design patterns (hero sections, feature grids, testimonials) — these are universal web design conventions.
+
+Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-crafted and 100 is definitely AI-generated with no human refinement), "reasoning": string[] }`;
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -80,16 +86,27 @@ Deno.serve(async (req: Request) => {
 
         const content = JSON.parse(rawText);
 
-        return new Response(JSON.stringify({
-            scannerType: 'vibe-match',
-            score: content.score,
-            findings: content.reasoning.map((r: string, i: number) => ({
+        // Gemini returns 0-100 where 100 = "definitely AI generated"
+        // We invert so 100 = human-crafted (good), 0 = fully AI-generated (bad)
+        const aiLikelihood = Math.max(0, Math.min(100, content.score || 0));
+        const qualityScore = 100 - aiLikelihood;
+
+        // Only report findings if AI likelihood is significant (>30%)
+        const findings = aiLikelihood > 30
+            ? content.reasoning.map((r: string, i: number) => ({
                 id: `vibe-${i}`,
-                severity: content.score > 70 ? 'high' : 'medium',
+                severity: aiLikelihood > 80 ? 'high' : aiLikelihood > 50 ? 'medium' : 'low',
                 title: 'AI Generation Indicator',
                 description: r,
-                recommendation: 'Ensure human review of generated code/design.'
-            })),
+                recommendation: 'Consider adding custom branding, unique content, and human design touches.',
+            }))
+            : [];
+
+        return new Response(JSON.stringify({
+            scannerType: 'vibe-match',
+            score: qualityScore,
+            aiLikelihood,
+            findings,
             scannedAt: new Date().toISOString(),
             url: targetUrl
         }), {

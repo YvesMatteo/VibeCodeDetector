@@ -143,21 +143,21 @@ export default async function DashboardPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">
-                        <span className="gradient-text">Dashboard</span>
+                    <h1 className="text-3xl font-heading font-medium tracking-tight text-white">
+                        Dashboard
                     </h1>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-zinc-400 mt-1">
                         Overview of your website security and performance
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
+                    <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
                         <Link href="/dashboard/credits">
                             <CreditCard className="mr-2 h-4 w-4" />
                             Buy Credits
                         </Link>
                     </Button>
-                    <Button asChild className="shimmer-button bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0">
+                    <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
                         <Link href="/dashboard/scans/new">
                             <Plus className="mr-2 h-4 w-4" />
                             New Scan
@@ -171,23 +171,23 @@ export default async function DashboardPage() {
                 {displayStats.map((stat, index) => (
                     <Card
                         key={stat.label}
-                        className="glass-card border-white/5 hover-lift group relative overflow-hidden"
+                        className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors"
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
                         {stat.href && (
                             <Link href={stat.href} className="absolute inset-0 z-10" />
                         )}
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                            <CardTitle className="text-sm font-medium text-zinc-400">
                                 {stat.label}
                             </CardTitle>
-                            <div className="relative">
-                                <stat.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${stat.alert ? 'text-orange-400' : `text-${stat.color}-400`}`} />
+                            <div className={`p-2 rounded-lg bg-white/5 ${stat.alert ? 'text-orange-400' : `text-${stat.color}-400`}`}>
+                                <stat.icon className="h-4 w-4" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold gradient-text">{stat.value}</div>
-                            <p className={`text-sm mt-1 ${stat.alert ? 'text-orange-400' : 'text-muted-foreground'}`}>
+                            <div className="text-2xl font-bold text-white">{stat.value}</div>
+                            <p className={`text-xs mt-1 ${stat.alert ? 'text-orange-400' : 'text-zinc-500'}`}>
                                 {stat.sub}
                             </p>
                         </CardContent>
@@ -196,14 +196,14 @@ export default async function DashboardPage() {
             </div>
 
             {/* Recent Scans */}
-            <Card className="glass-card border-white/5">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="bg-zinc-900/40 border-white/5">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
                     <div>
-                        <CardTitle>Recent Scans</CardTitle>
-                        <CardDescription>Your latest website scans and their results</CardDescription>
+                        <CardTitle className="font-heading text-xl font-medium text-white">Recent Scans</CardTitle>
+                        <CardDescription className="text-zinc-400">Your latest website scans and their results</CardDescription>
                     </div>
                     {scanList.length > 0 && (
-                        <Button variant="ghost" size="sm" asChild className="hover:bg-white/5">
+                        <Button variant="ghost" size="sm" asChild className="text-zinc-400 hover:text-white hover:bg-white/5">
                             <Link href="/dashboard/scans">
                                 View all
                                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -311,40 +311,46 @@ export default async function DashboardPage() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 stagger-children">
-                <Card className="glass-card border-blue-500/20 hover-lift group" style={{ animationDelay: '0ms' }}>
+                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '0ms' }}>
                     <CardContent className="pt-6">
-                        <Shield className="h-10 w-10 text-blue-400 mb-4 transition-transform group-hover:scale-110" />
-                        <h3 className="font-semibold text-lg mb-2">Security Deep Dive</h3>
-                        <p className="text-muted-foreground text-sm mb-4">
+                        <div className="p-3 rounded-lg bg-blue-500/10 w-fit mb-4 group-hover:bg-blue-500/20 transition-colors">
+                            <Shield className="h-6 w-6 text-blue-400" />
+                        </div>
+                        <h3 className="font-heading font-medium text-lg text-white mb-2">Security Deep Dive</h3>
+                        <p className="text-zinc-400 text-sm mb-6">
                             Run a comprehensive security audit on your website
                         </p>
-                        <Button variant="secondary" size="sm" asChild className="bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20">
+                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
                             <Link href="/dashboard/scans/new">Start Scan</Link>
                         </Button>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-amber-500/20 hover-lift group" style={{ animationDelay: '100ms' }}>
+                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '100ms' }}>
                     <CardContent className="pt-6">
-                        <Key className="h-10 w-10 text-amber-400 mb-4 transition-transform group-hover:scale-110" />
-                        <h3 className="font-semibold text-lg mb-2">API Key Check</h3>
-                        <p className="text-muted-foreground text-sm mb-4">
+                        <div className="p-3 rounded-lg bg-amber-500/10 w-fit mb-4 group-hover:bg-amber-500/20 transition-colors">
+                            <Key className="h-6 w-6 text-amber-400" />
+                        </div>
+                        <h3 className="font-heading font-medium text-lg text-white mb-2">API Key Check</h3>
+                        <p className="text-zinc-400 text-sm mb-6">
                             Scan for exposed API keys and credentials
                         </p>
-                        <Button variant="secondary" size="sm" asChild className="bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20">
+                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
                             <Link href="/dashboard/scans/new">Start Scan</Link>
                         </Button>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-green-500/20 hover-lift group" style={{ animationDelay: '200ms' }}>
+                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '200ms' }}>
                     <CardContent className="pt-6">
-                        <Search className="h-10 w-10 text-green-400 mb-4 transition-transform group-hover:scale-110" />
-                        <h3 className="font-semibold text-lg mb-2">SEO Analysis</h3>
-                        <p className="text-muted-foreground text-sm mb-4">
+                        <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-4 group-hover:bg-green-500/20 transition-colors">
+                            <Search className="h-6 w-6 text-green-400" />
+                        </div>
+                        <h3 className="font-heading font-medium text-lg text-white mb-2">SEO Analysis</h3>
+                        <p className="text-zinc-400 text-sm mb-6">
                             Check your site&apos;s SEO health and get recommendations
                         </p>
-                        <Button variant="secondary" size="sm" asChild className="bg-green-500/10 border-green-500/20 hover:bg-green-500/20">
+                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
                             <Link href="/dashboard/scans/new">Start Scan</Link>
                         </Button>
                     </CardContent>

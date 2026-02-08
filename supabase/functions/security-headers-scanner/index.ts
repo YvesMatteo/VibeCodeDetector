@@ -6,13 +6,14 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
  */
 
 const SECURITY_HEADERS = [
-    { name: 'Content-Security-Policy', weight: 20, severity: 'high', description: 'Prevents XSS and injection attacks' },
+    { name: 'Content-Security-Policy', weight: 15, severity: 'medium', description: 'Prevents XSS and injection attacks. Note: many large sites use alternative mitigations like nonce-based scripts or Trusted Types instead of a strict CSP.' },
     { name: 'Strict-Transport-Security', weight: 20, severity: 'high', description: 'Enforces HTTPS connections' },
-    { name: 'X-Frame-Options', weight: 15, severity: 'medium', description: 'Prevents clickjacking attacks' },
+    { name: 'X-Frame-Options', weight: 10, severity: 'medium', description: 'Prevents clickjacking attacks (superseded by CSP frame-ancestors)' },
     { name: 'X-Content-Type-Options', weight: 10, severity: 'medium', description: 'Prevents MIME-type sniffing' },
-    { name: 'Referrer-Policy', weight: 10, severity: 'low', description: 'Controls referrer information' },
-    { name: 'Permissions-Policy', weight: 10, severity: 'low', description: 'Controls browser feature access' },
-    { name: 'X-XSS-Protection', weight: 5, severity: 'low', description: 'Legacy XSS filter (deprecated but still checked)' },
+    { name: 'Referrer-Policy', weight: 5, severity: 'low', description: 'Controls referrer information' },
+    { name: 'Permissions-Policy', weight: 5, severity: 'low', description: 'Controls browser feature access (relatively new header, adoption is still growing)' },
+    // X-XSS-Protection intentionally excluded: it's deprecated, modern browsers ignore it,
+    // and in some cases it can actually introduce vulnerabilities (Chrome removed it in 2023).
 ];
 
 interface Finding {
@@ -80,11 +81,27 @@ Deno.serve(async (req: Request) => {
             headersRecord[key.toLowerCase()] = value;
         });
 
+        // Pre-check: does CSP include frame-ancestors? If so, X-Frame-Options is redundant.
+        const cspHeader = response.headers.get('Content-Security-Policy');
+        const hasFrameAncestors = cspHeader?.toLowerCase().includes('frame-ancestors');
+
         // Check each security header
         for (const header of SECURITY_HEADERS) {
             const headerValue = response.headers.get(header.name);
 
             if (!headerValue) {
+                // Don't penalize for missing X-Frame-Options if CSP frame-ancestors is set
+                if (header.name === 'X-Frame-Options' && hasFrameAncestors) {
+                    findings.push({
+                        id: `info-${header.name.toLowerCase()}`,
+                        severity: 'info',
+                        title: `${header.name} not set (covered by CSP)`,
+                        description: 'X-Frame-Options is not set, but CSP frame-ancestors directive is present which provides the same protection.',
+                        recommendation: 'No action needed — CSP frame-ancestors is the modern replacement.',
+                    });
+                    continue;
+                }
+
                 score -= header.weight;
                 findings.push({
                     id: `missing-${header.name.toLowerCase()}`,

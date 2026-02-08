@@ -27,12 +27,14 @@ Deno.serve(async (req: Request) => {
 
         const findings: any[] = [];
         let score = 100;
+        let checksRun = 0;
 
         // Parallelize checks
         const checks = [];
 
         // 1. Google Safe Browsing
         if (GOOGLE_SAFE_BROWSING_KEY) {
+            checksRun++;
             checks.push(checkSafeBrowsing(targetUrl, GOOGLE_SAFE_BROWSING_KEY).then(res => {
                 if (res.unsafe) {
                     score -= 50;
@@ -48,6 +50,7 @@ Deno.serve(async (req: Request) => {
 
         // 2. VirusTotal
         if (VIRUSTOTAL_KEY) {
+            checksRun++;
             checks.push(checkVirusTotal(targetUrl, VIRUSTOTAL_KEY).then(res => {
                 if (res.malicious > 0) {
                     score -= (res.malicious * 10); // Deduct 10 points per engine detection
@@ -63,6 +66,7 @@ Deno.serve(async (req: Request) => {
 
         // 3. Shodan (Domain/IP check)
         if (SHODAN_KEY) {
+            checksRun++;
             checks.push(checkShodan(targetUrl, SHODAN_KEY).then(res => {
                 if (res.ports && res.ports.length > 0) {
                     // Open ports aren't necessarily bad, but unexpected ones are
@@ -84,6 +88,7 @@ Deno.serve(async (req: Request) => {
 
         // 4. URLScan
         if (URLSCAN_KEY) {
+            checksRun++;
             checks.push(checkUrlScan(targetUrl, URLSCAN_KEY).then(res => {
                 if (res.malicious) {
                     score -= 30;
@@ -99,9 +104,20 @@ Deno.serve(async (req: Request) => {
 
         await Promise.all(checks);
 
+        // If no threat APIs are configured, note this transparently
+        if (checksRun === 0) {
+            findings.push({
+                title: "No Threat APIs Configured",
+                severity: "info",
+                description: "No external threat intelligence APIs are configured. Score is based on the absence of detected threats, but no active checks were performed.",
+                recommendation: "Configure Google Safe Browsing, VirusTotal, Shodan, or URLScan API keys for comprehensive threat analysis."
+            });
+        }
+
         return new Response(JSON.stringify({
             scannerType: 'threat-intelligence',
             score: Math.max(0, score),
+            checksRun,
             findings,
             scannedAt: new Date().toISOString(),
             url: targetUrl

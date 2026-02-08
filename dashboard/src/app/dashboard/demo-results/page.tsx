@@ -106,20 +106,20 @@ export default function DemoResultsPage() {
             <div className="mb-8">
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4"
+                    className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Scan Results</h1>
-                        <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                        <h1 className="text-3xl font-heading font-medium tracking-tight text-white">Scan Results</h1>
+                        <div className="flex items-center gap-2 text-zinc-400 mt-1">
                             <a
                                 href={result.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-foreground flex items-center gap-1"
+                                className="hover:text-white flex items-center gap-1 transition-colors"
                             >
                                 {result.url}
                                 <ExternalLink className="h-3 w-3" />
@@ -131,7 +131,7 @@ export default function DemoResultsPage() {
                             </span>
                         </div>
                     </div>
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge variant="secondary" className="flex items-center gap-1 bg-green-500/10 text-green-400 border-green-500/20">
                         <CheckCircle2 className="h-3 w-3" />
                         Completed
                     </Badge>
@@ -139,23 +139,23 @@ export default function DemoResultsPage() {
             </div>
 
             {/* Overall Score */}
-            <Card className="mb-6">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardContent className="p-6">
                     <div className="flex items-center gap-8">
                         <div className="text-center">
-                            <div className={`text-6xl font-bold ${getScoreColor(result.overallScore)}`}>
+                            <div className={`text-6xl font-bold font-heading ${getScoreColor(result.overallScore)}`}>
                                 {result.overallScore}
                             </div>
-                            <div className="text-sm text-muted-foreground mt-1">Overall Score</div>
+                            <div className="text-sm text-zinc-400 mt-1">Overall Score</div>
                         </div>
                         <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
                             {scoreCategories.map((cat) => (
-                                <div key={cat.key} className="text-center p-4 rounded-lg bg-muted/50">
+                                <div key={cat.key} className="text-center p-4 rounded-lg bg-white/5 border border-white/5">
                                     <cat.icon className={`h-5 w-5 mx-auto mb-2 ${getScoreColor(cat.score)}`} />
                                     <div className={`text-2xl font-bold ${getScoreColor(cat.score)}`}>
                                         {cat.score}
                                     </div>
-                                    <div className="text-xs text-muted-foreground">{cat.label}</div>
+                                    <div className="text-xs text-zinc-400">{cat.label}</div>
                                     <Progress
                                         value={cat.score}
                                         className="h-1 mt-2"
@@ -168,13 +168,13 @@ export default function DemoResultsPage() {
             </Card>
 
             {/* Recommendations */}
-            <Card>
+            <Card className="bg-zinc-900/40 border-white/5">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-white">
                         <AlertTriangle className="h-5 w-5 text-yellow-500" />
                         Recommendations
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-zinc-400">
                         Issues found during the scan, sorted by impact
                     </CardDescription>
                 </CardHeader>
@@ -189,16 +189,16 @@ export default function DemoResultsPage() {
                             {result.recommendations.map((rec, index) => (
                                 <div
                                     key={index}
-                                    className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                                    className="p-4 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-colors"
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">
-                                            <p className="font-medium">{rec.title}</p>
-                                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                            <p className="font-medium text-white">{rec.title}</p>
+                                            <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
                                                 {rec.description}
                                             </p>
                                         </div>
-                                        <Badge className={getImpactColor(rec.impact)}>
+                                        <Badge className={`${getImpactColor(rec.impact)} border`}>
                                             {rec.impact}
                                         </Badge>
                                     </div>
@@ -211,10 +211,10 @@ export default function DemoResultsPage() {
 
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="bg-transparent border-white/10 hover:bg-white/5 text-zinc-300">
                     <Link href="/dashboard/scans/new">New Scan</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="bg-blue-600 hover:bg-blue-500 text-white border-0">
                     <Link href="/dashboard">Back to Dashboard</Link>
                 </Button>
             </div>

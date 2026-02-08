@@ -61,8 +61,8 @@ export default async function ScansPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Scans</h1>
-                    <p className="text-muted-foreground mt-1">
+                    <h1 className="text-3xl font-heading font-medium tracking-tight text-white">Scans</h1>
+                    <p className="text-zinc-400 mt-1">
                         View and manage all your website scans
                     </p>
                 </div>
@@ -76,33 +76,33 @@ export default async function ScansPage() {
 
             {/* Usage Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card>
+                <Card className="bg-zinc-900/40 border-white/5">
                     <CardHeader className="pb-2">
-                        <CardDescription>Total Scans</CardDescription>
+                        <CardDescription className="text-zinc-400">Total Scans</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">{scanList.length}</div>
-                        <p className="text-sm text-muted-foreground">{completedScans.length} completed</p>
+                        <div className="text-3xl font-bold text-white">{scanList.length}</div>
+                        <p className="text-sm text-zinc-500">{completedScans.length} completed</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-zinc-900/40 border-white/5">
                     <CardHeader className="pb-2">
-                        <CardDescription>Average Score</CardDescription>
+                        <CardDescription className="text-zinc-400">Average Score</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-3xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : ''}`}>
+                        <div className={`text-3xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-600'}`}>
                             {avgScore > 0 ? avgScore : '—'}
                         </div>
-                        <p className="text-sm text-muted-foreground">across {completedScans.length} scan{completedScans.length !== 1 ? 's' : ''}</p>
+                        <p className="text-sm text-zinc-500">across {completedScans.length} scan{completedScans.length !== 1 ? 's' : ''}</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-zinc-900/40 border-white/5">
                     <CardHeader className="pb-2">
-                        <CardDescription>Total Issues Found</CardDescription>
+                        <CardDescription className="text-zinc-400">Total Issues Found</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">{totalFindings}</div>
-                        <p className="text-sm text-muted-foreground">
+                        <div className="text-3xl font-bold text-white">{totalFindings}</div>
+                        <p className="text-sm text-zinc-500">
                             {criticalCount} critical, {highCount} high
                         </p>
                     </CardContent>
@@ -110,10 +110,10 @@ export default async function ScansPage() {
             </div>
 
             {/* Scans Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Scans</CardTitle>
-                    <CardDescription>Complete history of all your website scans</CardDescription>
+            <Card className="bg-zinc-900/40 border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4">
+                    <CardTitle className="font-heading text-xl font-medium text-white">All Scans</CardTitle>
+                    <CardDescription className="text-zinc-400">Complete history of all your website scans</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {scanList.length === 0 ? (

@@ -61,7 +61,7 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background">
             {/* Sidebar */}
-            <aside className="fixed inset-y-0 left-0 z-50 w-64 glass border-r border-white/5">
+            <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#0E0E10] border-r border-white/5">
                 <div className="flex h-full flex-col">
                     {/* Logo */}
                     <div className="flex h-16 items-center px-6 border-b border-white/5">
@@ -69,13 +69,13 @@ export default function DashboardLayout({
                             <div className="relative">
                                 <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110" />
                             </div>
-                            <span className="text-xl font-bold">CheckVibe</span>
+                            <span className="font-heading text-xl font-bold tracking-tight">CheckVibe</span>
                         </Link>
                     </div>
 
                     {/* New Scan Button */}
                     <div className="p-4">
-                        <Button asChild className="w-full shimmer-button bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0">
+                        <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 border-0 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
                             <Link href="/dashboard/scans/new">
                                 <Plus className="mr-2 h-4 w-4" />
                                 New Scan
@@ -93,15 +93,15 @@ export default function DashboardLayout({
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                                        ? 'bg-blue-500/20 text-white'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive
+                                        ? 'text-white font-medium'
+                                        : 'text-zinc-500 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {isActive && (
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full" />
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                                     )}
-                                    <item.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? 'text-blue-400' : ''}`} />
+                                    <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? 'text-blue-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
                                     {item.name}
                                 </Link>
                             );

@@ -173,7 +173,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 <div className="flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold gradient-text">{scan.url.replace(/^https?:\/\//, '')}</h1>
+                            <h1 className="text-3xl font-heading font-medium tracking-tight text-white">{scan.url.replace(/^https?:\/\//, '')}</h1>
                             <a
                                 href={scan.url.startsWith('http') ? scan.url : `https://${scan.url}`}
                                 target="_blank"
@@ -208,10 +208,10 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
             {/* Score Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 stagger-children">
-                <Card className="glass-card border-white/5">
+                <Card className="bg-zinc-900/40 border-white/5">
                     <CardContent className="pt-6 flex flex-col items-center">
                         <ScoreRing score={scan.overall_score || 0} size="large" />
-                        <p className="text-sm text-muted-foreground mt-4">Overall Score</p>
+                        <p className="text-sm text-zinc-400 mt-4">Overall Score</p>
                     </CardContent>
                 </Card>
 
@@ -220,7 +220,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     const score = typeof result.score === 'number' ? result.score : 0;
 
                     return (
-                        <Card key={key} className="glass-card border-white/5 hover-lift group" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
+                        <Card key={key} className="bg-zinc-900/40 border-white/5 hover-lift group" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="relative">
@@ -241,10 +241,10 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Findings Summary */}
-            <Card className="mb-8 glass-card border-white/5 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <Card className="mb-8 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
                 <CardHeader>
-                    <CardTitle>Findings Summary</CardTitle>
-                    <CardDescription>Issues found during the scan, grouped by severity</CardDescription>
+                    <CardTitle className="text-white">Findings Summary</CardTitle>
+                    <CardDescription className="text-zinc-400">Issues found during the scan, grouped by severity</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex gap-8">
@@ -281,7 +281,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
                 if (errorMessage) {
                     return (
-                        <Card key={key} className="mb-6 glass-card border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                        <Card key={key} className="mb-6 bg-zinc-900/40 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                             <CardHeader>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
@@ -306,7 +306,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 if (!result.findings || result.findings.length === 0) return null;
 
                 return (
-                    <Card key={key} className="mb-6 glass-card border-white/5 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                    <Card key={key} className="mb-6 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -315,8 +315,8 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                         <div className="absolute inset-0 bg-purple-500/20 blur-xl" />
                                     </div>
                                     <div>
-                                        <CardTitle>{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
-                                        <CardDescription>{result.findings.length} issues found</CardDescription>
+                                        <CardTitle className="text-white">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
+                                        <CardDescription className="text-zinc-400">{result.findings.length} issues found</CardDescription>
                                     </div>
                                 </div>
                                 <div className={`text-3xl font-bold ${getScoreColor(score)}`}>
@@ -333,7 +333,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                     return (
                                         <div
                                             key={index}
-                                            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:scale-[1.01]`}
+                                            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:bg-opacity-20`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />

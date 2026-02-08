@@ -147,26 +147,26 @@ export default function NewScanPage() {
             <div className="mb-8">
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4"
+                    className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                 </Link>
-                <h1 className="text-3xl font-bold">New Scan</h1>
-                <p className="text-muted-foreground mt-1">
+                <h1 className="text-3xl font-heading font-medium tracking-tight text-white">New Scan</h1>
+                <p className="text-zinc-400 mt-1">
                     Enter a URL and select the types of scans to run
                 </p>
             </div>
 
             <form onSubmit={handleSubmit}>
                 {/* URL Input */}
-                <Card className="mb-6">
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Globe className="h-5 w-5" />
+                        <CardTitle className="flex items-center gap-2 text-white">
+                            <Globe className="h-5 w-5 text-blue-400" />
                             Target URL
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="text-zinc-400">
                             Enter the website URL you want to scan
                         </CardDescription>
                     </CardHeader>
@@ -177,7 +177,7 @@ export default function NewScanPage() {
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="url">Website URL</Label>
+                            <Label htmlFor="url" className="text-zinc-300">Website URL</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="url"
@@ -185,7 +185,7 @@ export default function NewScanPage() {
                                     placeholder="https://example.com"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="text-lg flex-1"
+                                    className="text-lg flex-1 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
                                 />
                                 {isValidUrl(url) && (
                                     <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
@@ -203,10 +203,10 @@ export default function NewScanPage() {
                 </Card>
 
                 {/* Scan Types */}
-                <Card className="mb-6">
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
-                        <CardTitle>Scan Types</CardTitle>
-                        <CardDescription>
+                        <CardTitle className="text-white">Scan Types</CardTitle>
+                        <CardDescription className="text-zinc-400">
                             Select which scans to run on the target URL
                         </CardDescription>
                     </CardHeader>
@@ -219,9 +219,9 @@ export default function NewScanPage() {
                                     <div
                                         key={type.id}
                                         onClick={() => toggleScanType(type.id)}
-                                        className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer ${isSelected
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground/50'
+                                        className={`relative p-4 rounded-lg border transition-all cursor-pointer ${isSelected
+                                            ? 'border-blue-500/50 bg-blue-500/10'
+                                            : 'border-white/5 hover:border-white/10 bg-white/5'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -242,10 +242,10 @@ export default function NewScanPage() {
 
                 {/* Submit */}
                 <div className="flex justify-end gap-4">
-                    <Button type="button" variant="outline" asChild>
+                    <Button type="button" variant="outline" asChild className="bg-transparent border-white/10 hover:bg-white/5 text-zinc-300">
                         <Link href="/dashboard">Cancel</Link>
                     </Button>
-                    <Button type="submit" disabled={loading} size="lg">
+                    <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
                         {loading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -254,7 +254,7 @@ export default function NewScanPage() {
                         ) : (
                             <>
                                 Start Scan
-                                <span className="ml-2 text-primary-foreground/70">
+                                <span className="ml-2 text-blue-100 opacity-70">
                                     ({selectedTypes.length} selected)
                                 </span>
                             </>
