@@ -27,7 +27,6 @@ const scanTypes = [
         description: 'Vulnerabilities, headers, SSL, and more',
         icon: Shield,
         color: 'text-red-500',
-        tier: 'free',
     },
     {
         id: 'api_keys',
@@ -35,7 +34,6 @@ const scanTypes = [
         description: 'Find exposed credentials and secrets',
         icon: Key,
         color: 'text-amber-500',
-        tier: 'free',
     },
     {
         id: 'seo',
@@ -43,7 +41,6 @@ const scanTypes = [
         description: 'Meta tags, Core Web Vitals, schema',
         icon: Search,
         color: 'text-green-500',
-        tier: 'free',
     },
     {
         id: 'vibe_match',
@@ -51,7 +48,6 @@ const scanTypes = [
         description: 'AI-generated code detection and analysis',
         icon: Bot,
         color: 'text-purple-500',
-        tier: 'pro',
     },
     {
         id: 'legal',
@@ -59,7 +55,6 @@ const scanTypes = [
         description: 'GDPR, CCPA, claim verification',
         icon: Scale,
         color: 'text-blue-500',
-        tier: 'pro',
     },
     {
         id: 'threat_intelligence',
@@ -67,7 +62,6 @@ const scanTypes = [
         description: 'Safe Browsing, VirusTotal, Shodan analysis',
         icon: Users,
         color: 'text-cyan-500',
-        tier: 'pro',
     },
 ];
 
@@ -220,22 +214,16 @@ export default function NewScanPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {scanTypes.map((type) => {
                                 const isSelected = selectedTypes.includes(type.id);
-                                const isPro = type.tier === 'pro';
 
                                 return (
                                     <div
                                         key={type.id}
-                                        onClick={() => !isPro && toggleScanType(type.id)}
+                                        onClick={() => toggleScanType(type.id)}
                                         className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer ${isSelected
                                             ? 'border-primary bg-primary/5'
                                             : 'border-border hover:border-muted-foreground/50'
-                                            } ${isPro ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                            }`}
                                     >
-                                        {isPro && (
-                                            <Badge className="absolute top-2 right-2" variant="secondary">
-                                                Pro
-                                            </Badge>
-                                        )}
                                         <div className="flex items-start gap-3">
                                             <type.icon className={`h-6 w-6 ${type.color} mt-0.5`} />
                                             <div>
