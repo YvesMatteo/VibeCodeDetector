@@ -291,14 +291,14 @@
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899, #ef4444);
+  background: linear-gradient(135deg, #3b82f6, #06b6d4, #22d3ee);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .gradient-text-animated {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899, #ef4444, #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #06b6d4, #22d3ee, #3b82f6);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -319,7 +319,7 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899, #ef4444);
+  background: linear-gradient(135deg, #3b82f6, #06b6d4, #22d3ee);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -455,11 +455,13 @@
 }
 
 .orb-purple {
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(59, 130, 246, 0.4);
+  /* Blue */
 }
 
 .orb-pink {
-  background: rgba(236, 72, 153, 0.4);
+  background: rgba(6, 182, 212, 0.4);
+  /* Cyan */
 }
 
 .orb-blue {
@@ -543,7 +545,7 @@
 
 /* Static gradient text */
 .gradient-text {
-  background: linear-gradient(90deg, #a855f7, #ec4899);
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

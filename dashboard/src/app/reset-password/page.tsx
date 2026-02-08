@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function ResetPasswordPage() {
     const [email, setEmail] = useState('');
@@ -58,8 +59,8 @@ export default function ResetPasswordPage() {
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-8">
                     <Link href="/" className="flex items-center space-x-2">
-                        <Zap className="h-8 w-8 text-primary" />
-                        <span className="text-2xl font-bold">VibeCheck</span>
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={32} height={32} className="h-8 w-8 object-contain" />
+                        <span className="text-2xl font-bold">CheckVibe</span>
                     </Link>
                 </div>
 
@@ -102,7 +103,7 @@ export default function ResetPasswordPage() {
 
                         <div className="mt-6 text-center text-sm text-muted-foreground">
                             Remember your password?{' '}
-                            <Link href="/login" className="text-primary hover:underline font-medium">
+                            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
                                 Sign in
                             </Link>
                         </div>

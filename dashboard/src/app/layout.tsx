@@ -19,7 +19,7 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "VibeCheck - AI Website Scanner",
+  title: "CheckVibe - AI Website Scanner",
   description: "Scan your website for vibe and security issues.",
 };
 

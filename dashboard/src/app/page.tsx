@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +12,9 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Zap,
   Sparkles
 } from 'lucide-react';
+import * as motion from "framer-motion/client";
 
 const features = [
   {
@@ -112,10 +113,15 @@ export default function HomePage() {
       {/* Navigation */}
       {/* Navigation - Cluely Style Pill */}
       <nav className="fixed top-4 w-full z-50 flex justify-center pointer-events-none">
-        <div className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]">
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+        >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
-            <Zap className="h-5 w-5 text-[#749CFF]" />
-            <span className="font-bold text-white tracking-tight">VibeCheck</span>
+            <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
+            <span className="font-bold text-white tracking-tight">CheckVibe</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
             <Link href="#features" className="hover:text-white transition-colors">Features</Link>
@@ -125,7 +131,7 @@ export default function HomePage() {
           <Button asChild size="sm" className="bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
             <Link href="/signup">Get Started</Link>
           </Button>
-        </div>
+        </motion.div>
       </nav>
 
       {/* Hero Section - Cluely 1:1 Replica */}
@@ -139,43 +145,71 @@ export default function HomePage() {
 
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-8">
           {/* Badge */}
-          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0ms' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5">
-              <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
-              <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Private Beta</span>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
+          >
+            <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
+            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Private Beta</span>
+          </motion.div>
 
           {/* H1 Typography - EB Garamond + Reveal Animation */}
           <h1 className="font-heading text-[56px] leading-[1.05] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-2">
             <span className="block overflow-hidden">
-              <span className="block animate-fade-in-up opacity-0" style={{ animationDelay: '100ms' }}>
+              <motion.span
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className="block"
+              >
                 The <span className="italic text-white/50 font-serif">#1</span> Scanner
-              </span>
+              </motion.span>
             </span>
             <span className="block overflow-hidden">
-              <span className="block animate-fade-in-up opacity-0 relative" style={{ animationDelay: '200ms' }}>
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">Vibe-Coded</span>
-              </span>
+              <motion.span
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                className="block"
+              >
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">Check-Vibed</span>
+              </motion.span>
             </span>
             <span className="block overflow-hidden">
-              <span className="block animate-fade-in-up opacity-0" style={{ animationDelay: '300ms' }}>
+              <motion.span
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                className="block"
+              >
                 Websites
-              </span>
+              </motion.span>
             </span>
           </h1>
 
           {/* Subtext */}
           <div className="overflow-hidden">
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto animate-fade-in-up opacity-0" style={{ animationDelay: '400ms' }}>
-              VibeCheck listens to your codebase. It catches what AI misses: security holes,
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto"
+            >
+              CheckVibe listens to your codebase. It catches what AI misses: security holes,
               <br className="hidden md:block" />
               leaked keys, and bad vibes.
-            </p>
+            </motion.p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up opacity-0 mt-4" style={{ animationDelay: '500ms' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
+          >
             <Button size="lg" asChild className="h-12 px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href="/signup">
                 Start Scanning
@@ -186,10 +220,15 @@ export default function HomePage() {
               <span>No credit card required</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Hero Visual - Floating Glass Cards (Cluely Style) */}
-          <div className="relative mt-20 w-full max-w-4xl h-[400px] perspective-midrange animate-fade-in-up opacity-0" style={{ animationDelay: '700ms' }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
+            className="relative mt-20 w-full max-w-4xl h-[400px] perspective-midrange"
+          >
             <div className="absolute inset-0 bg-[#1C1C1E] rounded-t-2xl border border-white/5 shadow-2xl overflow-hidden group mask-radial-faded transform rotate-x-12">
               {/* Mock Browser Header */}
               <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 gap-2">
@@ -208,7 +247,11 @@ export default function HomePage() {
             </div>
 
             {/* Floating "AI Insight" Card */}
-            <div className="absolute -right-12 top-20 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 animate-float w-64 backdrop-blur-xl">
+            <motion.div
+              animate={{ y: [0, -15, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="absolute -right-12 top-20 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 w-64 backdrop-blur-xl"
+            >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white" />
@@ -219,10 +262,14 @@ export default function HomePage() {
                 <div className="h-2 w-3/4 bg-white/20 rounded"></div>
                 <div className="h-2 w-1/2 bg-white/20 rounded"></div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Floating "Score" Card */}
-            <div className="absolute -left-12 bottom-40 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 animate-float-slow w-48 backdrop-blur-xl delay-700">
+            <motion.div
+              animate={{ y: [0, -20, 0] }}
+              transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
+              className="absolute -left-12 bottom-40 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 w-48 backdrop-blur-xl"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-zinc-400">Security Score</span>
                 <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 text-[10px] px-1 py-0 h-5">98/100</Badge>
@@ -230,8 +277,8 @@ export default function HomePage() {
               <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
                 <div className="bg-green-500 h-full w-[98%]"></div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -243,7 +290,13 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
             <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
               Features
             </Badge>
@@ -254,24 +307,30 @@ export default function HomePage() {
             <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
               Six powerful scanners that catch the issues AI coding tools commonly miss.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {features.map((feature, index) => (
-              <Card
+              <motion.div
                 key={feature.title}
-                className={`group glass-card border-white/5 shadow-cluely-card hover:border-white/10 transition-all duration-300 hover-lift ${feature.glow} bg-white/[0.02]`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <CardHeader>
-                  <div className="relative mb-4">
-                    <feature.icon className={`h-12 w-12 ${feature.color} transition-transform group-hover:scale-110 animate-float`} style={{ animationDelay: `${index * 200}ms` }} />
-                    <div className={`absolute inset-0 ${feature.color} blur-2xl opacity-0 group-hover:opacity-30 transition-opacity`} />
-                  </div>
-                  <CardTitle className="text-xl font-medium text-white">{feature.title}</CardTitle>
-                  <CardDescription className="text-zinc-400">{feature.description}</CardDescription>
-                </CardHeader>
-              </Card>
+                <Card
+                  className={`group glass-card border-white/5 shadow-cluely-card hover:border-white/10 transition-all duration-300 hover-lift ${feature.glow} bg-white/[0.02] h-full`}
+                >
+                  <CardHeader>
+                    <div className="relative mb-4">
+                      <feature.icon className={`h-12 w-12 ${feature.color} transition-transform group-hover:scale-110 animate-float`} style={{ animationDelay: `${index * 200}ms` }} />
+                      <div className={`absolute inset-0 ${feature.color} blur-2xl opacity-0 group-hover:opacity-30 transition-opacity`} />
+                    </div>
+                    <CardTitle className="text-xl font-medium text-white">{feature.title}</CardTitle>
+                    <CardDescription className="text-zinc-400">{feature.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -281,7 +340,13 @@ export default function HomePage() {
       <section id="pricing" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
             <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
               Pricing
             </Badge>
@@ -291,54 +356,61 @@ export default function HomePage() {
             <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
               Start free. Upgrade when you need more power.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {pricingTiers.map((tier, index) => (
-              <Card
+              <motion.div
                 key={tier.name}
-                className={`relative glass-card shadow-cluely-card hover-lift transition-all duration-300 bg-white/[0.02] ${tier.highlighted
-                  ? 'border-[#749CFF]/50 glow-animated'
-                  : 'border-white/5 hover:border-white/10'
-                  }`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="h-full"
               >
-                {tier.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-medium text-white">{tier.name}</CardTitle>
-                  <CardDescription className="text-zinc-400">{tier.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-heading font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">{tier.price}</span>
-                    <span className="text-zinc-500 text-sm ml-1">{tier.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {tier.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />
-                        <span className="text-sm text-zinc-400">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className={`w-full ${tier.highlighted
-                      ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
-                      }`}
-                    variant={tier.highlighted ? 'default' : 'outline'}
-                    asChild
-                  >
-                    <Link href="/signup">{tier.cta}</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card
+                  className={`relative glass-card shadow-cluely-card hover-lift transition-all duration-300 bg-white/[0.02] h-full flex flex-col ${tier.highlighted
+                    ? 'border-[#749CFF]/50 glow-animated'
+                    : 'border-white/5 hover:border-white/10'
+                    }`}
+                >
+                  {tier.highlighted && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0">
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-white">{tier.name}</CardTitle>
+                    <CardDescription className="text-zinc-400">{tier.description}</CardDescription>
+                    <div className="mt-4">
+                      <span className="text-4xl font-heading font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">{tier.price}</span>
+                      <span className="text-zinc-500 text-sm ml-1">{tier.period}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col">
+                    <ul className="space-y-3 mb-6 flex-1">
+                      {tier.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />
+                          <span className="text-sm text-zinc-400">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className={`w-full ${tier.highlighted
+                        ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                        }`}
+                      variant={tier.highlighted ? 'default' : 'outline'}
+                      asChild
+                    >
+                      <Link href="/signup">{tier.cta}</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -351,7 +423,13 @@ export default function HomePage() {
         <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="glass-card shadow-cluely-card rounded-2xl p-12 bg-white/[0.02] border-white/10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="glass-card shadow-cluely-card rounded-2xl p-12 bg-white/[0.02] border-white/10"
+          >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
@@ -364,7 +442,7 @@ export default function HomePage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -372,12 +450,12 @@ export default function HomePage() {
       <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Zap className="h-6 w-6 text-purple-500" />
-              <span className="font-bold">VibeCheck</span>
+            <div className="flex items-center gap-2 mb-4">
+              <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
+              <span className="font-bold text-white">CheckVibe</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              © 2026 VibeCheck. All rights reserved.
+              © 2026 CheckVibe. All rights reserved.
             </p>
           </div>
         </div>

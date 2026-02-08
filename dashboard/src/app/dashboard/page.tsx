@@ -11,14 +11,17 @@ import {
     TrendingUp,
     Clock,
     AlertTriangle,
+    CreditCard,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
 // Placeholder data - would come from Supabase
+// Placeholder data - would come from Supabase
 const stats = [
-    { label: 'Total Scans', value: '12', change: '+3 this month', icon: Search, color: 'purple' },
-    { label: 'Security Issues', value: '5', change: '2 critical', icon: Shield, alert: true, color: 'red' },
-    { label: 'Leaked Keys Found', value: '1', change: 'AWS key detected', icon: Key, alert: true, color: 'amber' },
-    { label: 'SEO Score Avg', value: '76', change: '+12 improvement', icon: TrendingUp, color: 'green' },
+    { label: 'Total Scans', value: '12', change: '+3 this month', icon: Search, color: 'purple', key: 'scans' },
+    { label: 'Security Issues', value: '5', change: '2 critical', icon: Shield, alert: true, color: 'red', key: 'security' },
+    { label: 'Leaked Keys Found', value: '1', change: 'AWS key detected', icon: Key, alert: true, color: 'amber', key: 'keys' },
+    { label: 'SEO Score Avg', value: '76', change: '+12 improvement', icon: TrendingUp, color: 'green', key: 'seo' },
 ];
 
 const recentScans = [
@@ -99,7 +102,28 @@ function ScoreRing({ score }: { score: number }) {
     );
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    let credits = 0;
+
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', user.id)
+            .single();
+
+        if (profile) {
+            credits = profile.credits;
+        }
+    }
+
+    const displayStats = [
+        { label: 'Credits Available', value: credits.toString(), change: 'Top up now', icon: CreditCard, color: 'blue', key: 'credits', href: '/dashboard/credits' },
+        ...stats,
+    ];
     return (
         <div className="p-8">
             {/* Header */}
@@ -113,6 +137,12 @@ export default function DashboardPage() {
                     </p>
                 </div>
                 <Button asChild className="shimmer-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0">
+                    <Link href="/dashboard/credits">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Buy Credits
+                    </Link>
+                </Button>
+                <Button asChild className="shimmer-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 ml-4">
                     <Link href="/dashboard/scans/new">
                         <Plus className="mr-2 h-4 w-4" />
                         New Scan
@@ -121,20 +151,27 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stagger-children">
-                {stats.map((stat, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8 stagger-children">
+                {displayStats.map((stat, index) => (
                     <Card
-                        key={stat.label}
-                        className="glass-card border-white/5 hover-lift group"
+                        key={stat.key}
+                        className="glass-card border-white/5 hover-lift group relative overflow-hidden"
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
+                        {/* @ts-ignore */}
+                        {stat.href && (
+                            // @ts-ignore
+                            <Link href={stat.href} className="absolute inset-0 z-10" />
+                        )}
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">
                                 {stat.label}
                             </CardTitle>
                             <div className="relative">
+                                {/* @ts-ignore */}
                                 <stat.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${stat.alert ? 'text-orange-400' : `text-${stat.color}-400`
                                     }`} />
+                                {/* @ts-ignore */}
                                 {stat.alert && (
                                     <div className="absolute inset-0 bg-orange-500/30 blur-xl" />
                                 )}
@@ -142,6 +179,7 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold gradient-text">{stat.value}</div>
+                            {/* @ts-ignore */}
                             <p className={`text-sm mt-1 ${stat.alert ? 'text-orange-400' : 'text-muted-foreground'}`}>
                                 {stat.change}
                             </p>

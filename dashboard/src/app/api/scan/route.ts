@@ -8,6 +8,52 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // ==========================================
+        // CREDIT CHECK & DEDUCTION
+        // ==========================================
+
+        // 1. Get user profile
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile) {
+            // Handle case where profile might be missing (should be created by trigger, but just in case)
+            // Or return error
+            console.error('Profile fetch error:', profileError);
+            return NextResponse.json({ error: 'User profile not found.' }, { status: 404 });
+        }
+
+        if (profile.credits < 1) {
+            return NextResponse.json({
+                error: 'Insufficient credits',
+                code: 'INSUFFICIENT_CREDITS'
+            }, { status: 402 });
+        }
+
+        // 2. Deduct credit (Optimistic deduction)
+        // We deduct BEFORE scanning to prevent abuse. If scan fails entirely, we could refund, 
+        // but partial failures (e.g. one scanner fails) should still count as a scan.
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ credits: profile.credits - 1 })
+            .eq('id', user.id);
+
+        if (updateError) {
+            console.error('Credit deduction error:', updateError);
+            return NextResponse.json({ error: 'Failed to process credits.' }, { status: 500 });
+        }
+
+        // ==========================================
+        // END CREDIT CHECK
+        // ==========================================
+
         const body = await request.json();
         const { url, scanTypes } = body;
 
