@@ -109,6 +109,23 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // 6. Threat Intelligence Scanner (Edge Function)
+        if (scanTypes?.includes('threat_intelligence') || !scanTypes) {
+            scannerPromises.push(
+                fetch(`${supabaseUrl}/functions/v1/threat-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    },
+                    body: JSON.stringify({ targetUrl }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.threat_intelligence = data; })
+                    .catch(err => { results.threat_intelligence = { error: err.message, score: 0 }; })
+            );
+        }
+
         // Wait for all
         await Promise.all(scannerPromises);
 

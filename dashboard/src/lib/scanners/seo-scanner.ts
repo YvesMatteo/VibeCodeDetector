@@ -57,7 +57,13 @@ export async function runSEOScan(url: string): Promise<SEOScanResult> {
 
     try {
         // Try Google PageSpeed Insights API first
-        const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&category=seo&category=performance&category=accessibility&category=best-practices&strategy=desktop`;
+        let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&category=seo&category=performance&category=accessibility&category=best-practices&strategy=desktop`;
+
+        // Add API Key if available to prevent rate limiting
+        const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+        if (apiKey) {
+            apiUrl += `&key=${apiKey}`;
+        }
 
         const response = await fetch(apiUrl);
 
