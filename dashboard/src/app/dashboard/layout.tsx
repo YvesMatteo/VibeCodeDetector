@@ -65,7 +65,7 @@ export default function DashboardLayout({
                 <div className="flex h-full flex-col">
                     {/* Logo */}
                     <div className="flex h-16 items-center px-6 border-b border-white/5">
-                        <Link href="/dashboard" className="flex items-center space-x-2 group">
+                        <Link href="/" className="flex items-center space-x-2 group">
                             <div className="relative">
                                 <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110" />
                             </div>
