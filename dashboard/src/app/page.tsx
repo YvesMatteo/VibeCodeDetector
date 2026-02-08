@@ -14,13 +14,28 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Terminal,
+  AlertTriangle,
+  FileCode,
+  Globe,
+  Zap
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
-import { useMotionValue, useTransform, useSpring } from "framer-motion";
+import { useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { SpotlightCard } from '@/components/ui/spotlight-card';
 import { CountUp } from '@/components/ui/count-up';
-import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import React, { useState, useEffect } from 'react';
 
 const features = [
   {
@@ -41,22 +56,22 @@ const features = [
     icon: Bot,
     title: 'AI Detection',
     description: 'Identify telltale signs that a website was built using AI coding assistants.',
-    color: 'text-[#749CFF]',
-    glow: 'group-hover:shadow-[#749CFF]/20',
+    color: 'text-blue-400',
+    glow: 'group-hover:shadow-blue-500/20',
   },
   {
     icon: Scale,
     title: 'Legal Compliance',
     description: 'Ensure websites don\'t make unsubstantiated claims and comply with regulations.',
-    color: 'text-blue-400',
-    glow: 'group-hover:shadow-blue-500/20',
+    color: 'text-indigo-400',
+    glow: 'group-hover:shadow-indigo-500/20',
   },
   {
     icon: Search,
     title: 'SEO Analyzer',
     description: 'Comprehensive SEO audit with Core Web Vitals, meta tags, and schema validation.',
-    color: 'text-green-400',
-    glow: 'group-hover:shadow-green-500/20',
+    color: 'text-sky-400',
+    glow: 'group-hover:shadow-sky-500/20',
   },
   {
     icon: Users,
@@ -76,6 +91,7 @@ const pricingTiers = [
     features: ['1 Full CheckVibe Analysis', 'All 6 Scanners', 'PDF Report', 'API Key Detection', 'AI Vibe Check'],
     cta: 'Get Started',
     highlighted: false,
+    upsell: true, // Marker for Upsell Logic
   },
   {
     name: 'Triple Pack',
@@ -85,6 +101,7 @@ const pricingTiers = [
     features: ['3 Full Analyses', 'Save $38', 'All Features Included', 'Great for Iterations', 'No Expiration'],
     cta: 'Get Started',
     highlighted: true,
+    upsell: false,
   },
   {
     name: 'Agency Pack',
@@ -94,6 +111,7 @@ const pricingTiers = [
     features: ['5 Full Analyses', 'Save $66', 'Priority Support', 'Best Value', 'Shareable Reports'],
     cta: 'Get Started',
     highlighted: false,
+    upsell: false,
   },
 ];
 
@@ -267,62 +285,96 @@ export default function HomePage() {
             ))}
           </motion.div>
 
-          {/* Hero Visual - Floating Glass Cards (Cluely Style) */}
+          {/* Hero Visual - Code Scanner Animation */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
             animate={{ opacity: 1, scale: 1, rotateX: 0 }}
             transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
-            className="relative mt-20 w-full max-w-4xl h-[400px] perspective-midrange"
+            className="relative mt-16 w-full max-w-4xl perspective-midrange group"
           >
-            <div className="absolute inset-0 bg-[#1C1C1E] rounded-t-2xl border border-white/5 shadow-2xl overflow-hidden group mask-radial-faded transform rotate-x-12">
-              {/* Mock Browser Header */}
-              <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/20"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/20"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/20"></div>
+            {/* Main Terminal Window */}
+            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[450px] w-full flex flex-col transform transition-transform duration-700 hover:rotate-x-2">
+
+              {/* Header */}
+              <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 justify-between">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500/20"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/20"></div>
+                </div>
+                <div className="text-xs text-zinc-500 font-mono">analysis_result.json</div>
               </div>
-              {/* Mock Content */}
-              <div className="p-8 grid grid-cols-3 gap-6 opacity-50 group-hover:opacity-100 transition-opacity duration-700">
-                <div className="h-32 rounded-lg bg-white/5 animate-pulse"></div>
-                <div className="h-32 rounded-lg bg-white/5 animate-pulse" style={{ animationDelay: '100ms' }}></div>
-                <div className="h-32 rounded-lg bg-white/5 animate-pulse" style={{ animationDelay: '200ms' }}></div>
-                <div className="h-32 rounded-lg bg-white/5 animate-pulse" style={{ animationDelay: '150ms' }}></div>
-                <div className="h-32 col-span-2 rounded-lg bg-white/5 animate-pulse" style={{ animationDelay: '300ms' }}></div>
+
+              {/* Code Content & Scanner */}
+              <div className="relative p-6 font-mono text-sm overflow-hidden flex-1 bg-[#0E0E10]">
+
+                {/* Grid Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+
+                {/* Code Lines */}
+                <div className="space-y-1 relative z-10 opacity-80">
+                  <div className="flex gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">"sk_live_51Mz..."</span>; <span className="text-zinc-500">{'// <= Exposed Key'}</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">"Authorization"</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">07</span> </div>
+                  <div className="flex gap-4"><span className="text-zinc-600">08</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">"/api/charge"</span>, {'{'}</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">09</span>     <span className="text-cyan-200">method</span>: <span className="text-green-300">"POST"</span>,</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">10</span>     <span className="text-cyan-200">headers</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">11</span>   {'}'});</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">12</span> {'}'}</div>
+                  <div className="flex gap-4"><span className="text-zinc-600">13</span> </div>
+                  <div className="flex gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// SEO: Missing meta tags'}</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">metadata</span> = {'{'} {'}'};</div>
+                </div>
+
+                {/* Scanning Beam */}
+                <motion.div
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute left-0 right-0 h-[2px] bg-blue-500/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20"
+                >
+                  <div className="absolute right-0 -top-2 bg-blue-500 text-[10px] text-white px-1 rounded-sm font-mono">SCANNING</div>
+                </motion.div>
+
+                {/* Scan overlay gradient */}
+                <motion.div
+                  animate={{ top: ["-10%", "90%", "-10%"] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute left-0 right-0 h-20 bg-gradient-to-b from-blue-500/10 to-transparent z-10 pointer-events-none"
+                />
+
+                {/* Detection Markers - Animated Appear */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: [0, 1, 1, 0, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
+                  className="absolute top-[80px] right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-3 shadow-xl z-30"
+                >
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <div>
+                    <div className="text-xs font-bold">Critical Issue</div>
+                    <div className="text-[10px] opacity-80">Exposed Stripe Key</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: [0, 1, 1, 0, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
+                  className="absolute top-[320px] right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-3 shadow-xl z-30"
+                >
+                  <Search className="w-5 h-5 text-yellow-500" />
+                  <div>
+                    <div className="text-xs font-bold">SEO Warning</div>
+                    <div className="text-[10px] opacity-80">Missing Metadata</div>
+                  </div>
+                </motion.div>
+
               </div>
             </div>
-
-            {/* Floating "AI Insight" Card */}
-            <motion.div
-              animate={{ y: [0, -15, 0] }}
-              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              className="absolute -right-12 top-20 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 w-64 backdrop-blur-xl"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-xs font-medium text-white">Vibe AI</div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-2 w-3/4 bg-white/20 rounded"></div>
-                <div className="h-2 w-1/2 bg-white/20 rounded"></div>
-              </div>
-            </motion.div>
-
-            {/* Floating "Score" Card */}
-            <motion.div
-              animate={{ y: [0, -20, 0] }}
-              transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
-              className="absolute -left-12 bottom-40 glass-card p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10 w-48 backdrop-blur-xl"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-zinc-400">Security Score</span>
-                <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 text-[10px] px-1 py-0 h-5">98/100</Badge>
-              </div>
-              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-green-500 h-full w-[98%]"></div>
-              </div>
-            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -330,7 +382,7 @@ export default function HomePage() {
       {/* Features Section */}
       <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E10] via-purple-950/5 to-[#0E0E10]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E10] via-blue-950/5 to-[#0E0E10]" />
 
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
 
@@ -392,7 +444,7 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
+            <Badge variant="secondary" className="mb-4 bg-blue-500/10 border-blue-500/20 text-blue-300">
               Pricing
             </Badge>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
@@ -443,16 +495,75 @@ export default function HomePage() {
                         </li>
                       ))}
                     </ul>
-                    <Button
-                      className={`w-full ${tier.highlighted
-                        ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
-                        }`}
-                      variant={tier.highlighted ? 'default' : 'outline'}
-                      asChild
-                    >
-                      <Link href="/signup">{tier.cta}</Link>
-                    </Button>
+
+                    {tier.upsell ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                            variant="outline"
+                          >
+                            {tier.cta}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md bg-[#1C1C1E] border-white/10 text-white">
+                          <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                              <Sparkles className="w-5 h-5 text-yellow-400" />
+                              Unlock More Value?
+                            </DialogTitle>
+                            <DialogDescription className="text-zinc-400 text-base">
+                              You selected the <span className="text-white font-medium">Single Scan</span> for $29.
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="py-4 space-y-4">
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 flex items-center justify-between">
+                              <div>
+                                <div className="font-bold text-blue-200">Upgrade to Triple Pack</div>
+                                <div className="text-sm text-zinc-400">3 Scans for just <span className="text-white font-bold">$49</span></div>
+                                <div className="text-xs text-green-400 mt-1">That's only $16.33 per scan!</div>
+                              </div>
+                              <div className="text-right">
+                                <span className="block text-sm text-zinc-500 line-through">$87</span>
+                                <span className="block text-xl font-bold text-white">$49</span>
+                              </div>
+                            </div>
+
+                            <div className="text-center text-sm text-zinc-500">
+                              Or continue with single scan for $29
+                            </div>
+                          </div>
+
+                          <DialogFooter className="flex-col sm:justify-center gap-2">
+                            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 py-6 text-lg">
+                              <Link href="/signup?plan=triple">
+                                Upgrade & Save 45%
+                              </Link>
+                            </Button>
+
+                            <DialogClose asChild>
+                              <Button asChild variant="ghost" className="w-full text-zinc-400 hover:text-white hover:bg-white/5">
+                                <Link href="/signup?plan=single">
+                                  No thanks, just one scan
+                                </Link>
+                              </Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    ) : (
+                      <Button
+                        className={`w-full ${tier.highlighted
+                          ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                          }`}
+                        variant={tier.highlighted ? 'default' : 'outline'}
+                        asChild
+                      >
+                        <Link href="/signup">{tier.cta}</Link>
+                      </Button>
+                    )}
                   </CardContent>
                 </SpotlightCard>
               </motion.div>
@@ -481,7 +592,7 @@ export default function HomePage() {
             <p className="text-xl text-zinc-400 mb-8">
               Get your first scan free. No credit card required.
             </p>
-            <Button size="lg" asChild className="text-lg px-10 py-6 shimmer-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 glow-on-hover text-white">
+            <Button size="lg" asChild className="text-lg px-10 py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">
                 Start Your Free Scan
                 <ArrowRight className="ml-2 h-5 w-5" />
