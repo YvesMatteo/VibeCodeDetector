@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -15,6 +17,10 @@ import {
   Sparkles
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
+import { useMotionValue, useTransform, useSpring } from "framer-motion";
+import { SpotlightCard } from '@/components/ui/spotlight-card';
+import { CountUp } from '@/components/ui/count-up';
+import React from 'react';
 
 const features = [
   {
@@ -63,39 +69,30 @@ const features = [
 
 const pricingTiers = [
   {
-    name: 'Free',
-    price: '$0',
-    period: '/month',
-    description: 'For trying things out',
-    features: ['3 scans per month', 'Basic security scan', 'SEO overview', 'Limited API key detection'],
+    name: 'Single Scan',
+    price: '$29',
+    period: '',
+    description: 'Perfect for a one-off check',
+    features: ['1 Full CheckVibe Analysis', 'All 6 Scanners', 'PDF Report', 'API Key Detection', 'AI Vibe Check'],
     cta: 'Get Started',
     highlighted: false,
   },
   {
-    name: 'Starter',
-    price: '$29',
-    period: '/month',
-    description: 'For indie hackers',
-    features: ['25 scans per month', 'Full security scanner', 'Complete SEO audit', 'API key leak detection', 'Email alerts', 'PDF reports'],
-    cta: 'Start Free Trial',
-    highlighted: false,
-  },
-  {
-    name: 'Professional',
-    price: '$79',
-    period: '/month',
-    description: 'For growing teams',
-    features: ['100 scans per month', 'All Starter features', 'Legal compliance checker', 'AI detection scanner', 'Competitor analysis (3)', 'API access'],
-    cta: 'Start Free Trial',
+    name: 'Triple Pack',
+    price: '$49',
+    period: '',
+    description: 'Great for iterations',
+    features: ['3 Full Analyses', 'Save $38', 'All Features Included', 'Great for Iterations', 'No Expiration'],
+    cta: 'Get Started',
     highlighted: true,
   },
   {
-    name: 'Enterprise',
-    price: '$199',
-    period: '/month',
-    description: 'For agencies',
-    features: ['Unlimited scans', 'All Pro features', 'Unlimited competitors', 'White-label reports', 'Priority support', 'Team (5 seats)'],
-    cta: 'Contact Sales',
+    name: 'Agency Pack',
+    price: '$79',
+    period: '',
+    description: 'For multiple projects',
+    features: ['5 Full Analyses', 'Save $66', 'Priority Support', 'Best Value', 'Shareable Reports'],
+    cta: 'Get Started',
     highlighted: false,
   },
 ];
@@ -108,8 +105,27 @@ const stats = [
 ];
 
 export default function HomePage() {
+  // Parallax Logic
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    const x = (clientX - left) / width - 0.5;
+    const y = (clientY - top) / height - 0.5;
+
+    mouseX.set(x);
+    mouseY.set(y);
+  }
+
+  const orb1X = useSpring(useTransform(mouseX, [-0.5, 0.5], [-30, 30]), { stiffness: 150, damping: 30 });
+  const orb1Y = useSpring(useTransform(mouseY, [-0.5, 0.5], [-30, 30]), { stiffness: 150, damping: 30 });
+
+  const orb2X = useSpring(useTransform(mouseX, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
+  const orb2Y = useSpring(useTransform(mouseY, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
+
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden" onMouseMove={handleMouseMove}>
       {/* Navigation */}
       {/* Navigation - Cluely Style Pill */}
       <nav className="fixed top-4 w-full z-50 flex justify-center pointer-events-none">
@@ -138,8 +154,14 @@ export default function HomePage() {
       <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col items-center justify-center overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[#0E0E10]">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#497EE9]/20 blur-[120px] rounded-full animate-float-slow" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#749CFF]/10 blur-[120px] rounded-full animate-float-slow" style={{ animationDelay: '4s' }} />
+          <motion.div
+            style={{ x: orb1X, y: orb1Y }}
+            className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#497EE9]/20 blur-[120px] rounded-full"
+          />
+          <motion.div
+            style={{ x: orb2X, y: orb2Y }}
+            className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#749CFF]/10 blur-[120px] rounded-full"
+          />
           <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
         </div>
 
@@ -174,7 +196,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
                 className="block"
               >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">Check-Vibed</span>
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span>
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -220,6 +242,29 @@ export default function HomePage() {
               <span>No credit card required</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
+          </motion.div>
+
+          {/* Stats Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-12 w-full max-w-4xl px-4"
+          >
+            {stats.map((stat, i) => (
+              <div key={i} className="flex flex-col items-center justify-center text-center">
+                <div className="text-3xl md:text-4xl font-bold text-white mb-1 flex items-baseline">
+                  {stat.value.includes('<') && <span className="mr-1 text-2xl text-zinc-400">&lt;</span>}
+                  <CountUp
+                    to={parseInt(stat.value.replace(/\D/g, ''))}
+                    className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50"
+                  />
+                  {stat.value.includes('+') && <span className="ml-1 text-2xl text-zinc-400">+</span>}
+                  {stat.value.includes('s') && <span className="ml-1 text-2xl text-zinc-400">s</span>}
+                </div>
+                <div className="text-sm text-zinc-500 font-medium uppercase tracking-wider">{stat.label}</div>
+              </div>
+            ))}
           </motion.div>
 
           {/* Hero Visual - Floating Glass Cards (Cluely Style) */}
@@ -318,18 +363,18 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card
-                  className={`group glass-card border-white/5 shadow-cluely-card hover:border-white/10 transition-all duration-300 hover-lift ${feature.glow} bg-white/[0.02] h-full`}
+                <SpotlightCard
+                  className="bg-white/[0.02] h-full"
                 >
                   <CardHeader>
                     <div className="relative mb-4">
-                      <feature.icon className={`h-12 w-12 ${feature.color} transition-transform group-hover:scale-110 animate-float`} style={{ animationDelay: `${index * 200}ms` }} />
+                      <feature.icon className={`h-12 w-12 ${feature.color} transition-transform group-hover:scale-110`} />
                       <div className={`absolute inset-0 ${feature.color} blur-2xl opacity-0 group-hover:opacity-30 transition-opacity`} />
                     </div>
                     <CardTitle className="text-xl font-medium text-white">{feature.title}</CardTitle>
                     <CardDescription className="text-zinc-400">{feature.description}</CardDescription>
                   </CardHeader>
-                </Card>
+                </SpotlightCard>
               </motion.div>
             ))}
           </div>
@@ -368,15 +413,15 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="h-full"
               >
-                <Card
-                  className={`relative glass-card shadow-cluely-card hover-lift transition-all duration-300 bg-white/[0.02] h-full flex flex-col ${tier.highlighted
-                    ? 'border-[#749CFF]/50 glow-animated'
-                    : 'border-white/5 hover:border-white/10'
+                <SpotlightCard
+                  className={`h-full flex flex-col ${tier.highlighted
+                    ? 'border-[#749CFF]/50 shadow-[0_0_50px_-12px_rgba(116,156,255,0.2)]'
+                    : ''
                     }`}
                 >
                   {tier.highlighted && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0 shadow-lg">
                         Most Popular
                       </Badge>
                     </div>
@@ -409,7 +454,7 @@ export default function HomePage() {
                       <Link href="/signup">{tier.cta}</Link>
                     </Button>
                   </CardContent>
-                </Card>
+                </SpotlightCard>
               </motion.div>
             ))}
           </div>

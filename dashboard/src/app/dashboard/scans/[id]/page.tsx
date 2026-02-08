@@ -16,6 +16,9 @@ import {
     Clock,
     Download,
     RefreshCw,
+    Bot,
+    Scale,
+    Radar,
 } from 'lucide-react';
 
 function getScoreColor(score: number) {
@@ -45,16 +48,22 @@ function getSeverityStyles(severity: string) {
     }
 }
 
-const scannerIcons = {
+const scannerIcons: Record<string, any> = {
     security: Shield,
     seo: Search,
     api_keys: Key,
+    vibe_match: Bot,
+    legal: Scale,
+    threat_intelligence: Radar,
 };
 
-const scannerNames = {
+const scannerNames: Record<string, string> = {
     security: 'Security Scanner',
     seo: 'SEO Analyzer',
     api_keys: 'API Key Detector',
+    vibe_match: 'Vibe Match',
+    legal: 'Legal Compliance',
+    threat_intelligence: 'Threat Intelligence',
 };
 
 // Define minimal types for the JSONB structure
