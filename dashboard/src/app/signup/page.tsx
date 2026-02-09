@@ -111,7 +111,7 @@ export default function SignupPage() {
                 <Card className="glass-card border-white/10">
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl">Create an account</CardTitle>
-                        <CardDescription>Start scanning your websites for free</CardDescription>
+                        <CardDescription>Start scanning your websites in minutes</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSignup} className="space-y-4">

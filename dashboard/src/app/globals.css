@@ -135,6 +135,7 @@
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 }
 
@@ -187,13 +188,13 @@
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3),
-      0 0 40px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.1);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5),
-      0 0 60px rgba(139, 92, 246, 0.2);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5),
+      0 0 60px rgba(59, 130, 246, 0.2);
   }
 }
 
@@ -281,9 +282,9 @@
 
 @media (hover: hover) {
   .glass-card:hover {
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-      0 0 30px rgba(139, 92, 246, 0.1);
+      0 0 30px rgba(59, 130, 246, 0.1);
     transform: translateY(-2px);
   }
 }
@@ -312,8 +313,8 @@
 }
 
 .glow-on-hover:hover {
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3),
-    0 0 60px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3),
+    0 0 60px rgba(59, 130, 246, 0.1);
 }
 
 .glow-animated {
@@ -425,12 +426,19 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(59, 130, 246, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.5);
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* Animated Gradient Background (Auth pages) */
+.bg-gradient-animated {
+  background: linear-gradient(135deg, #0E0E10 0%, #131528 25%, #0E0E10 50%, #0E1A2E 75%, #0E0E10 100%);
+  background-size: 400% 400%;
+  animation: gradient-flow 15s ease infinite;
 }
 
 /* Reduced Motion */

@@ -7,10 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   Shield,
   Key,
-  Bot,
   Scale,
   Search,
-  Users,
   CheckCircle,
   ArrowRight,
   AlertTriangle,
@@ -44,13 +42,6 @@ const features = [
     glow: 'group-hover:shadow-amber-500/20',
   },
   {
-    icon: Bot,
-    title: 'AI Detection',
-    description: 'Identify telltale signs that a website was built using AI coding assistants.',
-    color: 'text-blue-400',
-    glow: 'group-hover:shadow-blue-500/20',
-  },
-  {
     icon: Scale,
     title: 'Legal Compliance',
     description: 'Ensure websites don\'t make unsubstantiated claims and comply with regulations.',
@@ -65,9 +56,9 @@ const features = [
     glow: 'group-hover:shadow-sky-500/20',
   },
   {
-    icon: Users,
-    title: 'Competitor Intel',
-    description: 'Understand what competitors are doing and what\'s working for them.',
+    icon: AlertTriangle,
+    title: 'Threat Intelligence',
+    description: 'Check against Google Safe Browsing, VirusTotal, Shodan, and more.',
     color: 'text-cyan-400',
     glow: 'group-hover:shadow-cyan-500/20',
   },
@@ -79,7 +70,7 @@ const pricingTiers = [
     priceMonthly: 19,
     priceAnnualPerMonth: 15.20,
     description: 'For solo makers',
-    features: ['1 domain', '5 scans/month', 'All 6 scanners', 'PDF export'],
+    features: ['1 domain', '5 scans/month', 'Full scan suite', 'Scan history'],
     cta: 'Get Started',
     highlighted: false,
   },
@@ -88,7 +79,7 @@ const pricingTiers = [
     priceMonthly: 39,
     priceAnnualPerMonth: 31.20,
     description: 'For growing projects',
-    features: ['3 domains', '20 scans/month', 'All 6 scanners', 'Priority support'],
+    features: ['3 domains', '20 scans/month', 'Full scan suite', 'Priority support'],
     cta: 'Get Started',
     highlighted: true,
   },
@@ -97,7 +88,7 @@ const pricingTiers = [
     priceMonthly: 89,
     priceAnnualPerMonth: 71.20,
     description: 'For teams & agencies',
-    features: ['10 domains', '75 scans/month', 'All 6 scanners', 'Dedicated support'],
+    features: ['10 domains', '75 scans/month', 'Full scan suite', 'Dedicated support'],
     cta: 'Get Started',
     highlighted: false,
   },
@@ -217,7 +208,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
           >
             <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
-            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Private Beta</span>
+            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Now Live</span>
           </motion.div>
 
           {/* H1 Typography - EB Garamond + Reveal Animation */}
@@ -229,7 +220,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                 className="block"
               >
-                The <span className="italic text-white/50 font-serif">#1</span> Scanner
+                The <span className="italic text-white/50 font-serif">All-in-One</span> Scanner
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -262,9 +253,9 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe listens to your codebase. It catches what AI misses: security holes,
+              CheckVibe scans your live website for security holes, leaked API keys,
               <br className="hidden md:block" />
-              leaked keys, and bad vibes.
+              SEO issues, legal risks, and known threats.
             </motion.p>
           </div>
 
@@ -428,7 +419,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-              Six powerful scanners that catch the issues AI coding tools commonly miss.
+              Five powerful checks that catch the issues vibe-coded sites commonly have.
             </p>
           </motion.div>
 
@@ -635,10 +626,15 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
               <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
               <span className="font-bold text-white">CheckVibe</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-zinc-400">
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+              <a href="mailto:hello@checkvibe.dev" className="hover:text-white transition-colors">Contact</a>
             </div>
             <p className="text-muted-foreground text-sm">
               © {new Date().getFullYear()} CheckVibe. All rights reserved.

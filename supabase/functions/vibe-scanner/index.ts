@@ -62,12 +62,13 @@ Do NOT flag:
 
 Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-crafted and 100 is definitely AI-generated with no human refinement), "reasoning": string[] }`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
         const completion = await fetch(geminiUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY,
             },
             body: JSON.stringify({
                 contents: [{

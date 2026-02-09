@@ -20,12 +20,14 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, legal compliance, and AI-generated content detection.",
+  description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, legal compliance, and threat intelligence.",
+  metadataBase: new URL("https://checkvibe.online"),
   openGraph: {
     title: "CheckVibe - AI Website Scanner",
     description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, and more.",
     type: "website",
     siteName: "CheckVibe",
+    url: "https://checkvibe.online",
   },
   twitter: {
     card: "summary_large_image",

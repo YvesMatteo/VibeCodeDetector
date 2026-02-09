@@ -34,6 +34,13 @@ Deno.serve(async (req: Request) => {
         return new Response(null, { headers: getCorsHeaders(req) });
     }
 
+    if (req.method !== 'POST') {
+        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+            status: 405,
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+        });
+    }
+
     if (!validateScannerAuth(req)) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
             status: 401,
@@ -210,9 +217,9 @@ Deno.serve(async (req: Request) => {
 });
 
 async function checkSafeBrowsing(url: string, key: string) {
-    const response = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${key}`, {
+    const response = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
             client: { clientId: "vibe-code", clientVersion: "1.0.0" },
             threatInfo: {
@@ -245,11 +252,10 @@ async function checkVirusTotal(url: string, key: string) {
     };
 }
 
+// NOTE: Shodan API only supports query-param auth (?key=). No header alternative exists.
 async function checkShodan(url: string, key: string) {
     try {
         const domain = new URL(url).hostname;
-        // Shodan requires an IP address, not a hostname.
-        // Use Shodan's DNS resolve endpoint to get the IP first.
         const dnsRes = await fetch(`https://api.shodan.io/dns/resolve?hostnames=${domain}&key=${key}`);
         if (!dnsRes.ok) return {};
         const dnsData = await dnsRes.json();

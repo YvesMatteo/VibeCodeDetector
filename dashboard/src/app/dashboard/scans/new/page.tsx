@@ -7,77 +7,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
-    Shield,
-    Key,
-    Bot,
-    Scale,
-    Search,
-    Users,
     ArrowLeft,
     Loader2,
     Globe,
+    Shield,
+    Key,
+    Search,
+    Scale,
+    Radar,
+    CheckCircle,
 } from 'lucide-react';
-
-const scanTypes = [
-    {
-        id: 'security',
-        name: 'Security Scanner',
-        description: 'Vulnerabilities, headers, SSL, and more',
-        icon: Shield,
-        color: 'text-red-500',
-    },
-    {
-        id: 'api_keys',
-        name: 'API Key Detector',
-        description: 'Find exposed credentials and secrets',
-        icon: Key,
-        color: 'text-amber-500',
-    },
-    {
-        id: 'seo',
-        name: 'SEO Analyzer',
-        description: 'Meta tags, Core Web Vitals, schema',
-        icon: Search,
-        color: 'text-green-500',
-    },
-    {
-        id: 'vibe_match',
-        name: 'Vibe Match',
-        description: 'AI-generated code detection and analysis',
-        icon: Bot,
-        color: 'text-purple-500',
-    },
-    {
-        id: 'legal',
-        name: 'Legal Compliance',
-        description: 'GDPR, CCPA, claim verification',
-        icon: Scale,
-        color: 'text-blue-500',
-    },
-    {
-        id: 'threat_intelligence',
-        name: 'Threat Intelligence',
-        description: 'Safe Browsing, VirusTotal, Shodan analysis',
-        icon: Users,
-        color: 'text-cyan-500',
-    },
-];
 
 export default function NewScanPage() {
     const [url, setUrl] = useState('');
-    const [selectedTypes, setSelectedTypes] = useState<string[]>(['security', 'seo']);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
     const router = useRouter();
-
-    function toggleScanType(id: string) {
-        setSelectedTypes((prev) =>
-            prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-        );
-    }
 
     function isValidUrl(string: string) {
         try {
@@ -108,11 +55,6 @@ export default function NewScanPage() {
             return;
         }
 
-        if (selectedTypes.length === 0) {
-            setError('Please select at least one scan type');
-            return;
-        }
-
         setLoading(true);
 
         try {
@@ -123,7 +65,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: selectedTypes,
+                    scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence'],
                 }),
             });
 
@@ -138,7 +80,7 @@ export default function NewScanPage() {
                 router.push(`/dashboard/scans/${result.scanId}`);
             } else {
                 sessionStorage.setItem('lastScanResult', JSON.stringify(result));
-                router.push('/dashboard/demo-results');
+                router.push('/dashboard/scans/demo');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
@@ -159,7 +101,7 @@ export default function NewScanPage() {
                 </Link>
                 <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">New Scan</h1>
                 <p className="text-zinc-400 mt-1">
-                    Enter a URL and select the types of scans to run
+                    Enter a URL to run a full scan across all checks
                 </p>
             </div>
 
@@ -222,44 +164,39 @@ export default function NewScanPage() {
                     </CardContent>
                 </Card>
 
-                {/* Scan Types */}
+                {/* What's Included */}
                 <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
-                        <CardTitle className="text-white">Scan Types</CardTitle>
+                        <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Select which scans to run on the target URL
+                            Every scan runs all 5 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {scanTypes.map((type) => {
-                                const isSelected = selectedTypes.includes(type.id);
-
-                                return (
-                                    <div
-                                        key={type.id}
-                                        role="checkbox"
-                                        aria-checked={isSelected}
-                                        tabIndex={0}
-                                        onClick={() => toggleScanType(type.id)}
-                                        onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleScanType(type.id); } }}
-                                        className={`relative p-3.5 rounded-lg border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSelected
-                                            ? 'border-blue-500/50 bg-blue-500/10'
-                                            : 'border-white/5 hover:border-white/10 bg-white/5'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <type.icon className={`h-5 w-5 ${type.color} shrink-0`} />
-                                            <div className="min-w-0">
-                                                <h3 className="font-medium text-sm">{type.name}</h3>
-                                                <p className="text-xs text-muted-foreground truncate">
-                                                    {type.description}
-                                                </p>
-                                            </div>
+                            {[
+                                { icon: Shield, name: 'Security Scanner', description: 'Vulnerabilities, headers, SSL, and more', color: 'text-red-500' },
+                                { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets', color: 'text-amber-500' },
+                                { icon: Search, name: 'SEO Analyzer', description: 'Meta tags, Core Web Vitals, schema', color: 'text-green-500' },
+                                { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
+                                { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
+                            ].map((check) => (
+                                <div
+                                    key={check.name}
+                                    className="relative p-3.5 rounded-lg border border-white/5 bg-white/5"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <check.icon className={`h-5 w-5 ${check.color} shrink-0`} />
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-medium text-sm text-white">{check.name}</h3>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {check.description}
+                                            </p>
                                         </div>
+                                        <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
                                     </div>
-                                );
-                            })}
+                                </div>
+                            ))}
                         </div>
                     </CardContent>
                 </Card>
@@ -276,12 +213,7 @@ export default function NewScanPage() {
                                 Starting Scan...
                             </>
                         ) : (
-                            <>
-                                Start Scan
-                                <span className="ml-2 text-blue-100 opacity-70">
-                                    ({selectedTypes.length} selected)
-                                </span>
-                            </>
+                            'Start Scan'
                         )}
                     </Button>
                 </div>

@@ -16,7 +16,6 @@ import {
     Clock,
     Download,
     RefreshCw,
-    Bot,
     Scale,
     Radar,
     Info,
@@ -58,7 +57,6 @@ const scannerIcons: Record<string, any> = {
     security: Shield,
     seo: Search,
     api_keys: Key,
-    vibe_match: Bot,
     legal: Scale,
     threat_intelligence: Radar,
 };
@@ -67,7 +65,6 @@ const scannerNames: Record<string, string> = {
     security: 'Security Scanner',
     seo: 'SEO Analyzer',
     api_keys: 'API Key Detector',
-    vibe_match: 'Vibe Match',
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
 };

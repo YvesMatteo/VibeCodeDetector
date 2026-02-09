@@ -36,13 +36,15 @@ BEGIN
   ) THEN
     -- Only allow if the current role is service_role (server-side operations like
     -- Edge Functions, webhooks, or admin scripts using the service_role key)
-    IF current_setting('request.jwt.claim.role', true) IS DISTINCT FROM 'service_role' THEN
+    IF current_setting('request.jwt.claim.role', true) IS DISTINCT FROM 'service_role'
+       AND current_user IS DISTINCT FROM 'postgres' THEN
       RAISE EXCEPTION 'Users cannot modify billing fields';
     END IF;
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
 
 -- Drop trigger if it already exists (idempotent)
 DROP TRIGGER IF EXISTS protect_billing_fields ON public.profiles;

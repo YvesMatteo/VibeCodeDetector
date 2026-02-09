@@ -75,12 +75,13 @@ Return ONLY valid JSON: {
 }
 If no issues are found, return score 100 and an empty findings array.`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
         const completion = await fetch(geminiUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY,
             },
             body: JSON.stringify({
                 contents: [{

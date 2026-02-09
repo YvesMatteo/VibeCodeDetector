@@ -54,19 +54,29 @@ export function validateTargetUrl(targetUrl: unknown): { valid: boolean; url?: s
 export function validateScannerAuth(req: Request): boolean {
   const authKey = req.headers.get('x-scanner-key');
   const expectedKey = Deno.env.get('SCANNER_SECRET_KEY');
-  if (!expectedKey) return false; // Fail closed if not configured
-  return authKey === expectedKey;
+  if (!expectedKey || !authKey) return false; // Fail closed if not configured
+  // Constant-time comparison to prevent timing attacks
+  if (authKey.length !== expectedKey.length) return false;
+  const encoder = new TextEncoder();
+  const a = encoder.encode(authKey);
+  const b = encoder.encode(expectedKey);
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a[i] ^ b[i];
+  }
+  return result === 0;
 }
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const allowedOrigins = [
-    Deno.env.get('ALLOWED_ORIGIN') || 'https://checkvibe.dev',
+    Deno.env.get('ALLOWED_ORIGIN') || 'https://checkvibe.online',
   ];
   const origin = req.headers.get('Origin') || '';
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  // Only set CORS header if origin matches
+  const allowOrigin = allowedOrigins.includes(origin) ? origin : '';
 
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}),
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-scanner-key',
   };

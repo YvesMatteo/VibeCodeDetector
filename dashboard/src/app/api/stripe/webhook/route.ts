@@ -13,15 +13,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-const PLANS_BY_AMOUNT: Record<number, { plan: string; domains: number; scans: number }> = {
-    // Monthly prices
-    1900: { plan: 'starter', domains: 1, scans: 5 },
-    3900: { plan: 'pro', domains: 3, scans: 20 },
-    8900: { plan: 'enterprise', domains: 10, scans: 75 },
-    // Annual prices
-    18240: { plan: 'starter', domains: 1, scans: 5 },
-    37440: { plan: 'pro', domains: 3, scans: 20 },
-    85440: { plan: 'enterprise', domains: 10, scans: 75 },
+const PLANS_BY_PRICE_ID: Record<string, { plan: string; domains: number; scans: number }> = {
+    // Starter
+    'price_1Sz2CgLRbxIsl4HLE7jp6ecZ': { plan: 'starter', domains: 1, scans: 5 },  // monthly
+    'price_1Sz2CiLRbxIsl4HLDkUzXZXs': { plan: 'starter', domains: 1, scans: 5 },  // annual
+    // Pro
+    'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 3, scans: 20 },      // monthly
+    'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 20 },      // annual
+    // Enterprise
+    'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'enterprise', domains: 10, scans: 75 }, // monthly
+    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'enterprise', domains: 10, scans: 75 }, // annual
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -54,22 +55,25 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    // Check idempotency - skip if already processed
-    const { data: existing } = await supabase
+    // Atomic idempotency check: INSERT and skip if already exists
+    const { data: inserted, error: idempotencyError } = await supabase
         .from('processed_webhook_events')
-        .select('event_id')
-        .eq('event_id', event.id)
-        .single();
+        .upsert(
+            { event_id: event.id, event_type: event.type },
+            { onConflict: 'event_id', ignoreDuplicates: true }
+        )
+        .select();
 
-    if (existing) {
+    if (idempotencyError) {
+        console.error('Idempotency check failed:', idempotencyError);
+        return new NextResponse('Idempotency check failed', { status: 500 });
+    }
+
+    // If no rows were returned, the event was already processed
+    if (!inserted || inserted.length === 0) {
         console.log(`Event ${event.id} already processed, skipping`);
         return new NextResponse(null, { status: 200 });
     }
-
-    // Mark as processed (do this early to prevent concurrent processing)
-    await supabase
-        .from('processed_webhook_events')
-        .insert({ event_id: event.id, event_type: event.type });
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -80,13 +84,13 @@ export async function POST(req: Request) {
             return new NextResponse(null, { status: 200 });
         }
 
-        // Re-derive plan from the actual price paid, not just metadata
+        // Re-derive plan from the actual price ID, not just metadata
         let planInfo: { plan: string; domains: number; scans: number } | null = null;
         try {
             const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-            const priceAmount = lineItems.data[0]?.price?.unit_amount;
-            if (priceAmount && PLANS_BY_AMOUNT[priceAmount]) {
-                planInfo = PLANS_BY_AMOUNT[priceAmount];
+            const priceId = lineItems.data[0]?.price?.id;
+            if (priceId && PLANS_BY_PRICE_ID[priceId]) {
+                planInfo = PLANS_BY_PRICE_ID[priceId];
             }
         } catch (err) {
             console.warn('Could not fetch line items for price verification:', err);
@@ -104,6 +108,17 @@ export async function POST(req: Request) {
         }
 
         if (planInfo) {
+            // Get actual billing period from Stripe
+            let periodStart = new Date().toISOString();
+            if (session.subscription) {
+                try {
+                    const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+                    periodStart = new Date(sub.current_period_start * 1000).toISOString();
+                } catch (e) {
+                    console.warn('Could not fetch subscription period, using current time:', e);
+                }
+            }
+
             try {
                 const { error } = await supabase
                     .from('profiles')
@@ -112,7 +127,7 @@ export async function POST(req: Request) {
                         plan_domains: planInfo.domains,
                         plan_scans_limit: planInfo.scans,
                         plan_scans_used: 0,
-                        plan_period_start: new Date().toISOString(),
+                        plan_period_start: periodStart,
                         stripe_customer_id: session.customer as string,
                         stripe_subscription_id: session.subscription as string,
                     })
@@ -157,7 +172,7 @@ export async function POST(req: Request) {
                     .from('profiles')
                     .update({
                         plan_scans_used: 0,
-                        plan_period_start: new Date().toISOString(),
+                        plan_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : new Date().toISOString(),
                     })
                     .eq('id', profile.id);
 
@@ -165,6 +180,39 @@ export async function POST(req: Request) {
             } catch (error) {
                 console.error('Error resetting monthly scans:', error);
                 return new NextResponse(null, { status: 500 });
+            }
+        }
+    }
+
+    else if (event.type === 'invoice.payment_failed') {
+        const invoice = event.data.object as Stripe.Invoice;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawSubscription = (invoice as any).subscription;
+        const subscriptionId = typeof rawSubscription === 'string'
+            ? rawSubscription
+            : rawSubscription?.toString() || '';
+
+        if (subscriptionId) {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('stripe_subscription_id', subscriptionId)
+                    .single();
+
+                if (profile) {
+                    // Restrict scanning while payment is failing.
+                    // When Stripe retries successfully, customer.subscription.updated
+                    // fires and restores the correct limits from the price amount.
+                    await supabase
+                        .from('profiles')
+                        .update({ plan_scans_limit: 0 })
+                        .eq('id', profile.id);
+
+                    console.log(`Payment failed for user ${profile.id} — scanning restricted`);
+                }
+            } catch (error) {
+                console.error('Error handling payment failure:', error);
             }
         }
     }
@@ -204,24 +252,48 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata;
 
-        // Resolve plan from metadata (set via subscription_data) or fall back to price amount
         let planInfo: { plan: string; domains: number; scans: number } | null = null;
 
-        if (metadata?.plan) {
+        // Check price ID first (more reliable than metadata for portal changes)
+        const items = (subscription as any).items?.data;
+        if (items?.length > 0) {
+            const priceId = items[0].price?.id;
+            if (priceId && PLANS_BY_PRICE_ID[priceId]) {
+                planInfo = PLANS_BY_PRICE_ID[priceId];
+            }
+        }
+
+        // Fall back to metadata only if price lookup fails
+        if (!planInfo && metadata?.plan) {
             planInfo = {
                 plan: metadata.plan,
                 domains: parseInt(metadata.plan_domains || '0', 10),
                 scans: parseInt(metadata.plan_scans_limit || '0', 10),
             };
-        } else {
-            // Fallback: resolve from the subscription's current price amount
-            const items = (subscription as any).items?.data;
-            if (items?.length > 0) {
-                const amount = items[0].price?.unit_amount;
-                if (amount && PLANS_BY_AMOUNT[amount]) {
-                    planInfo = PLANS_BY_AMOUNT[amount];
+            console.warn(`Fell back to metadata for subscription.updated plan: ${metadata.plan}`);
+        }
+
+        // Handle non-active subscription states
+        const subStatus = subscription.status;
+        if (subStatus === 'past_due' || subStatus === 'unpaid' || subStatus === 'paused' || subStatus === 'incomplete') {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('stripe_subscription_id', subscription.id)
+                    .single();
+
+                if (profile) {
+                    await supabase
+                        .from('profiles')
+                        .update({ plan_scans_limit: 0 })
+                        .eq('id', profile.id);
+                    console.log(`Restricted scanning for user ${profile.id} due to subscription status: ${subStatus}`);
                 }
+            } catch (error) {
+                console.error('Error restricting plan for non-active subscription:', error);
             }
+            return new NextResponse(null, { status: 200 });
         }
 
         if (planInfo) {

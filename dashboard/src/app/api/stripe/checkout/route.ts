@@ -10,10 +10,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2026-01-28.clover',
 });
 
-const PLANS: Record<string, { priceMonthly: number; priceAnnual: number; domains: number; scans: number; name: string }> = {
-    starter: { priceMonthly: 1900, priceAnnual: 18240, domains: 1, scans: 5, name: 'Starter' },
-    pro: { priceMonthly: 3900, priceAnnual: 37440, domains: 3, scans: 20, name: 'Pro' },
-    enterprise: { priceMonthly: 8900, priceAnnual: 85440, domains: 10, scans: 75, name: 'Enterprise' },
+const PLANS: Record<string, { priceIdMonthly: string; priceIdAnnual: string; domains: number; scans: number; name: string }> = {
+    starter: { priceIdMonthly: 'price_1Sz2CgLRbxIsl4HLE7jp6ecZ', priceIdAnnual: 'price_1Sz2CiLRbxIsl4HLDkUzXZXs', domains: 1, scans: 5, name: 'Starter' },
+    pro: { priceIdMonthly: 'price_1Sz2CjLRbxIsl4HLbs2LEaw0', priceIdAnnual: 'price_1Sz2ClLRbxIsl4HLrXX3IxAf', domains: 3, scans: 20, name: 'Pro' },
+    enterprise: { priceIdMonthly: 'price_1Sz2CnLRbxIsl4HL2XFxYOmP', priceIdAnnual: 'price_1Sz2CoLRbxIsl4HL1uhpaBEp', domains: 10, scans: 75, name: 'Enterprise' },
 };
 
 export async function POST(req: Request) {
@@ -27,21 +27,23 @@ export async function POST(req: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        const { plan, currency = 'usd', billing = 'monthly' } = await req.json();
+        const { plan, billing = 'monthly' } = await req.json();
 
         const planConfig = PLANS[plan];
         if (!planConfig) {
             return new NextResponse('Invalid plan', { status: 400 });
         }
 
-        const isAnnual = billing === 'annual';
-        const unitAmount = isAnnual ? planConfig.priceAnnual : planConfig.priceMonthly;
-        const interval: 'month' | 'year' = isAnnual ? 'year' : 'month';
+        // Reuse existing Stripe customer if available
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('stripe_customer_id')
+            .eq('id', user.id)
+            .single();
 
-        const allowedCurrencies = ['usd', 'chf', 'gbp', 'eur'];
-        const selectedCurrency = allowedCurrencies.includes(currency.toLowerCase())
-            ? currency.toLowerCase()
-            : 'usd';
+        const isAnnual = billing === 'annual';
+        const priceId = isAnnual ? planConfig.priceIdAnnual : planConfig.priceIdMonthly;
+        const interval: 'month' | 'year' = isAnnual ? 'year' : 'month';
 
         const allowedOrigins = [
             process.env.NEXT_PUBLIC_SITE_URL,
@@ -54,15 +56,7 @@ export async function POST(req: Request) {
             payment_method_types: ['card'],
             line_items: [
                 {
-                    price_data: {
-                        currency: selectedCurrency,
-                        product_data: {
-                            name: `CheckVibe ${planConfig.name}`,
-                            description: `${planConfig.domains} domain${planConfig.domains > 1 ? 's' : ''}, ${planConfig.scans} scans/month`,
-                        },
-                        unit_amount: unitAmount,
-                        recurring: { interval },
-                    },
+                    price: priceId,
                     quantity: 1,
                 },
             ],
@@ -85,7 +79,9 @@ export async function POST(req: Request) {
                     plan_scans_limit: planConfig.scans.toString(),
                 },
             },
-            customer_email: user.email,
+            ...(profile?.stripe_customer_id
+                ? { customer: profile.stripe_customer_id }
+                : { customer_email: user.email }),
         });
 
         return NextResponse.json({ sessionId: session.id, url: session.url });

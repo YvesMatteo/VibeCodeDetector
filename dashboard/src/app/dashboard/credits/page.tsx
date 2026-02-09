@@ -16,7 +16,7 @@ const pricingPlans = [
         description: 'For solo makers',
         domains: 1,
         scans: 5,
-        features: ['1 domain', '5 scans/month', 'All 6 scanners', 'PDF export'],
+        features: ['1 domain', '5 scans/month', 'Full scan suite', 'PDF export'],
         highlighted: false,
     },
     {
@@ -27,7 +27,7 @@ const pricingPlans = [
         description: 'For growing projects',
         domains: 3,
         scans: 20,
-        features: ['3 domains', '20 scans/month', 'All 6 scanners', 'Priority support'],
+        features: ['3 domains', '20 scans/month', 'Full scan suite', 'Priority support'],
         highlighted: true,
         badge: 'Most Popular',
     },
@@ -39,7 +39,7 @@ const pricingPlans = [
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
-        features: ['10 domains', '75 scans/month', 'All 6 scanners', 'Dedicated support'],
+        features: ['10 domains', '75 scans/month', 'Full scan suite', 'Dedicated support'],
         highlighted: false,
     },
     {
