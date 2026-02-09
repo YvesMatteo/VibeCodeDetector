@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Shield,
@@ -14,18 +14,20 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Terminal,
   AlertTriangle,
-  FileCode,
-  Globe,
-  Zap,
-  Mail
+  Mail,
+  Menu,
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
-import { useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
-import { SpotlightCard } from '@/components/ui/spotlight-card';
+import { useMotionValue, useTransform, useSpring } from "framer-motion";
+
 import { CountUp } from '@/components/ui/count-up';
-import React, { useState, useEffect } from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { useState, type MouseEvent } from 'react';
 
 const features = [
   {
@@ -120,11 +122,13 @@ const stats = [
 ];
 
 export default function HomePage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   // Parallax Logic
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent<HTMLDivElement>) {
     const { left, top, width, height } = currentTarget.getBoundingClientRect();
     const x = (clientX - left) / width - 0.5;
     const y = (clientY - top) / height - 0.5;
@@ -143,7 +147,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background overflow-hidden" onMouseMove={handleMouseMove}>
       {/* Navigation */}
       {/* Navigation - Cluely Style Pill */}
-      <nav className="fixed top-4 w-full z-50 flex justify-center pointer-events-none">
+      <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none">
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -155,16 +159,40 @@ export default function HomePage() {
             <span className="font-bold text-white tracking-tight">CheckVibe</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
-            <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-            <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
             <Link href="/login" className="hover:text-white transition-colors">Login</Link>
           </div>
-          <Button asChild size="sm" className="bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+          <Button asChild size="sm" className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
             <Link href="/signup">Get Started</Link>
           </Button>
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </motion.div>
       </nav>
 
+      {/* Mobile Nav Drawer */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="right" className="w-64 bg-[#1C1C1E] border-white/10 p-0">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <div className="flex flex-col gap-1 p-6 pt-12">
+            <a href="#features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
+            <a href="#pricing" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Pricing</a>
+            <Link href="/login" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Login</Link>
+            <div className="mt-4">
+              <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 rounded-full font-medium">
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <main>
       {/* Hero Section - Cluely 1:1 Replica */}
       <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col items-center justify-center overflow-hidden">
         {/* Animated Background */}
@@ -193,7 +221,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* H1 Typography - EB Garamond + Reveal Animation */}
-          <h1 className="font-heading text-[56px] leading-[1.05] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-2">
+          <h1 className="font-heading text-[36px] leading-[1.05] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-2">
             <span className="block overflow-hidden">
               <motion.span
                 initial={{ y: 100 }}
@@ -290,7 +318,7 @@ export default function HomePage() {
             className="relative mt-16 w-full max-w-4xl perspective-midrange group"
           >
             {/* Main Terminal Window */}
-            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[450px] w-full flex flex-col transform transition-transform duration-700 hover:rotate-x-2">
+            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col transform transition-transform duration-700">
 
               {/* Header */}
               <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 justify-between">
@@ -455,7 +483,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -515,7 +543,7 @@ export default function HomePage() {
                         variant={tier.highlighted ? 'default' : 'outline'}
                         asChild
                       >
-                        <Link href="/signup">{tier.cta}</Link>
+                        <Link href={`/signup?plan=${tier.name.toLowerCase()}`}>{tier.cta}</Link>
                       </Button>
                     )}
                   </div>
@@ -538,7 +566,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="glass-card shadow-cluely-card rounded-2xl p-12 bg-white/[0.02] border-white/10"
+            className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
@@ -555,17 +583,18 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
               <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
               <span className="font-bold text-white">CheckVibe</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              © 2026 CheckVibe. All rights reserved.
+              © {new Date().getFullYear()} CheckVibe. All rights reserved.
             </p>
           </div>
         </div>

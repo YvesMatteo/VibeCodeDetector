@@ -142,7 +142,7 @@ export default function NewScanPage() {
     }
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-4 md:p-8 max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-8">
                 <Link
@@ -152,7 +152,7 @@ export default function NewScanPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                 </Link>
-                <h1 className="text-3xl font-heading font-medium tracking-tight text-white">New Scan</h1>
+                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">New Scan</h1>
                 <p className="text-zinc-400 mt-1">
                     Enter a URL and select the types of scans to run
                 </p>
@@ -256,7 +256,7 @@ export default function NewScanPage() {
                 </Card>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-4">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
                     <Button type="button" variant="outline" asChild className="bg-transparent border-white/10 hover:bg-white/5 text-zinc-300">
                         <Link href="/dashboard">Cancel</Link>
                     </Button>

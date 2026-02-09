@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
+if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2026-01-28.clover',
 });
 
@@ -27,7 +31,13 @@ export async function POST(req: Request) {
             return new NextResponse('No subscription found', { status: 404 });
         }
 
-        const origin = req.headers.get('origin') || 'http://localhost:3000';
+        const allowedOrigins = [
+            process.env.NEXT_PUBLIC_SITE_URL,
+            'http://localhost:3000',
+            'http://localhost:3001',
+        ].filter(Boolean);
+        const requestOrigin = req.headers.get('origin');
+        const origin = allowedOrigins.includes(requestOrigin || '') ? requestOrigin! : allowedOrigins[0]!;
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: profile.stripe_customer_id,
@@ -35,7 +45,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ url: portalSession.url });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Stripe Portal Error:', err);
         return new NextResponse('Internal Error', { status: 500 });
     }

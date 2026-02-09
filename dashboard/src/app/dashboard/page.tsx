@@ -152,18 +152,18 @@ export default async function DashboardPage() {
     ];
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             {/* Header */}
-            <div className="flex justify-between items-start mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-heading font-medium tracking-tight text-white">
+                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                         Dashboard
                     </h1>
                     <p className="text-zinc-400 mt-1">
                         Overview of your website security and performance
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                     <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
                         <Link href="/dashboard/credits">
                             <Crown className="mr-2 h-4 w-4" />

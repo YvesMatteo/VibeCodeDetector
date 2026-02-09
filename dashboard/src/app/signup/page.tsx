@@ -69,8 +69,8 @@ export default function SignupPage() {
                 <div className="absolute inset-0 bg-gradient-animated" />
 
                 {/* Floating Orbs */}
-                <div className="orb orb-blue w-96 h-96 -top-48 -left-48" />
-                <div className="orb orb-blue w-80 h-80 top-1/4 -right-40" />
+                <div className="orb orb-blue w-48 h-48 sm:w-96 sm:h-96 -top-24 sm:-top-48 -left-24 sm:-left-48" />
+                <div className="orb orb-blue w-40 h-40 sm:w-80 sm:h-80 top-1/4 -right-20 sm:-right-40" />
 
                 <Card className="w-full max-w-md glass-card border-white/10 relative z-10 animate-scale-in">
                     <CardContent className="pt-6 text-center">
@@ -98,9 +98,9 @@ export default function SignupPage() {
             <div className="absolute inset-0 bg-gradient-animated" />
 
             {/* Floating Orbs */}
-            <div className="orb orb-blue w-96 h-96 -top-48 -left-48" style={{ animationDelay: '0s' }} />
-            <div className="orb orb-blue w-80 h-80 top-1/4 -right-40" style={{ animationDelay: '2s' }} />
-            <div className="orb orb-blue w-64 h-64 bottom-20 left-1/4" style={{ animationDelay: '4s' }} />
+            <div className="orb orb-blue w-48 h-48 sm:w-96 sm:h-96 -top-24 sm:-top-48 -left-24 sm:-left-48" style={{ animationDelay: '0s' }} />
+            <div className="orb orb-blue w-40 h-40 sm:w-80 sm:h-80 top-1/4 -right-20 sm:-right-40" style={{ animationDelay: '2s' }} />
+            <div className="orb orb-blue w-32 h-32 sm:w-64 sm:h-64 bottom-20 left-1/4" style={{ animationDelay: '4s' }} />
 
             {/* Grid Pattern Overlay */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />

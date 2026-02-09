@@ -3,11 +3,21 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-    apiVersion: '2026-01-28.clover', // @ts-ignore
+if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2026-01-28.clover' as Stripe.LatestApiVersion,
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+const PLANS_BY_AMOUNT: Record<number, { plan: string; domains: number; scans: number }> = {
+    1900: { plan: 'starter', domains: 1, scans: 5 },
+    3900: { plan: 'pro', domains: 3, scans: 20 },
+    8900: { plan: 'enterprise', domains: 10, scans: 75 },
+};
 
 function getSupabaseAdmin() {
     return createClient(
@@ -29,9 +39,10 @@ export async function POST(req: Request) {
             return new NextResponse('Missing signature', { status: 400 });
         }
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err: any) {
-        console.error(`Webhook signature verification failed: ${err.message}`);
-        return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.error(`Webhook signature verification failed: ${message}`);
+        return new NextResponse('Webhook verification failed', { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
@@ -135,7 +146,27 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata;
 
+        // Resolve plan from metadata (set via subscription_data) or fall back to price amount
+        let planInfo: { plan: string; domains: number; scans: number } | null = null;
+
         if (metadata?.plan) {
+            planInfo = {
+                plan: metadata.plan,
+                domains: parseInt(metadata.plan_domains || '0', 10),
+                scans: parseInt(metadata.plan_scans_limit || '0', 10),
+            };
+        } else {
+            // Fallback: resolve from the subscription's current price amount
+            const items = (subscription as any).items?.data;
+            if (items?.length > 0) {
+                const amount = items[0].price?.unit_amount;
+                if (amount && PLANS_BY_AMOUNT[amount]) {
+                    planInfo = PLANS_BY_AMOUNT[amount];
+                }
+            }
+        }
+
+        if (planInfo) {
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
@@ -147,13 +178,13 @@ export async function POST(req: Request) {
                     await supabase
                         .from('profiles')
                         .update({
-                            plan: metadata.plan,
-                            plan_domains: parseInt(metadata.plan_domains || '0', 10),
-                            plan_scans_limit: parseInt(metadata.plan_scans_limit || '0', 10),
+                            plan: planInfo.plan,
+                            plan_domains: planInfo.domains,
+                            plan_scans_limit: planInfo.scans,
                         })
                         .eq('id', profile.id);
 
-                    console.log(`Updated plan to '${metadata.plan}' for user ${profile.id}`);
+                    console.log(`Updated plan to '${planInfo.plan}' for user ${profile.id}`);
                 }
             } catch (error) {
                 console.error('Error updating plan:', error);

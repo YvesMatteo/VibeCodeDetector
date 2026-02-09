@@ -135,7 +135,7 @@ export default function CreditsPage() {
     };
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
             <div className="flex flex-col items-center text-center mb-12">
                 <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
                     Pricing
@@ -150,7 +150,7 @@ export default function CreditsPage() {
 
             {/* Current plan banner */}
             {currentPlan !== 'none' && (
-                <div className="mb-8 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-center justify-between">
+                <div className="mb-8 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Crown className="h-5 w-5 text-blue-400" />
                         <div>
@@ -173,7 +173,7 @@ export default function CreditsPage() {
                 </div>
             )}
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {pricingPlans.map((plan) => {
                     const isCurrent = currentPlan === plan.id;
 
@@ -207,7 +207,7 @@ export default function CreditsPage() {
                                         <span className="text-3xl font-heading font-bold gradient-text">Custom</span>
                                     ) : (
                                         <>
-                                            <span className="text-5xl font-heading font-bold gradient-text">${plan.price}</span>
+                                            <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">${plan.price}</span>
                                             <span className="text-zinc-400 text-sm">{plan.period}</span>
                                         </>
                                     )}

@@ -162,7 +162,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
     });
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             {/* Header */}
             <div className="mb-8 animate-fade-in-up">
                 <Link
@@ -173,20 +173,20 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     Back to Scans
                 </Link>
 
-                <div className="flex justify-between items-start">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-heading font-medium tracking-tight text-white">{scan.url.replace(/^https?:\/\//, '')}</h1>
+                            <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white break-all">{scan.url.replace(/^https?:\/\//, '')}</h1>
                             <a
                                 href={scan.url.startsWith('http') ? scan.url : `https://${scan.url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             >
                                 <ExternalLink className="h-5 w-5" />
                             </a>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
                                 Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
@@ -195,7 +195,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                         </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <AIFixPrompt url={scan.url} findings={allFindings} />
                         <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
                             <Download className="mr-2 h-4 w-4" />
@@ -210,7 +210,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Score Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 stagger-children">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8 stagger-children">
                 <Card className="bg-zinc-900/40 border-white/5">
                     <CardContent className="pt-6 flex flex-col items-center">
                         <ScoreRing score={scan.overall_score || 0} size="large" />
@@ -250,7 +250,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     <CardDescription className="text-zinc-400">Issues found during the scan, grouped by severity</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex gap-8">
+                    <div className="flex flex-wrap gap-4 md:gap-8">
                         <div className="flex items-center gap-3">
                             <div className="w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-red-600 animate-pulse"></div>
                             <span className="font-medium">{totalFindings.critical}</span>

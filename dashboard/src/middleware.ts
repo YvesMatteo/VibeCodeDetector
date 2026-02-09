@@ -5,8 +5,14 @@ export async function middleware(request: NextRequest) {
     try {
         return await updateSession(request);
     } catch (e) {
-        // Fallback to allowing request if auth fails (prevents 500 loop)
         console.error('Middleware error:', e);
+        // If auth fails on protected routes, redirect to login instead of allowing through
+        if (request.nextUrl.pathname.startsWith('/dashboard')) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/login';
+            return NextResponse.redirect(url);
+        }
+        // For public routes, allow through even if auth refresh fails
         return NextResponse.next({
             request: {
                 headers: request.headers,

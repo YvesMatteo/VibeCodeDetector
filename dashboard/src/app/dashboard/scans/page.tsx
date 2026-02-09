@@ -57,11 +57,11 @@ export default async function ScansPage() {
     });
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             {/* Header */}
-            <div className="flex justify-between items-start mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-heading font-medium tracking-tight text-white">Scans</h1>
+                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">Scans</h1>
                     <p className="text-zinc-400 mt-1">
                         View and manage all your website scans
                     </p>
@@ -75,7 +75,7 @@ export default async function ScansPage() {
             </div>
 
             {/* Usage Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 <Card className="bg-zinc-900/40 border-white/5">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-zinc-400">Total Scans</CardDescription>
@@ -128,6 +128,7 @@ export default async function ScansPage() {
                             </Button>
                         </div>
                     ) : (
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -230,6 +231,7 @@ export default async function ScansPage() {
                                 })}
                             </TableBody>
                         </Table>
+                        </div>
                     )}
                 </CardContent>
             </Card>
