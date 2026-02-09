@@ -39,7 +39,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-clip">
             {/* Animated Background */}
             <div className="absolute inset-0 bg-gradient-animated" />
 

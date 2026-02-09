@@ -93,7 +93,7 @@ export default async function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-lg border border-white/10 p-4 mb-4 bg-white/5">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                             <div>
                                 <div className="text-3xl font-bold gradient-text">{planLabel}</div>
                                 <p className="text-sm text-muted-foreground">
@@ -101,7 +101,7 @@ export default async function SettingsPage() {
                                 </p>
                             </div>
                             {plan === 'none' ? (
-                                <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0">
+                                <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 w-full sm:w-auto">
                                     <Link href="/dashboard/credits">Subscribe</Link>
                                 </Button>
                             ) : (
@@ -188,15 +188,17 @@ export default async function SettingsPage() {
                                 <p className="font-medium">Password</p>
                                 <p className="text-sm text-muted-foreground">Change your account password</p>
                             </div>
-                            <Button variant="outline" size="sm" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10">Change</Button>
+                            <Button variant="outline" size="sm" asChild className="bg-white/5 border-white/10 hover:bg-white/10">
+                                <Link href="/update-password">Change</Link>
+                            </Button>
                         </div>
                         <Separator className="bg-white/10" />
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="font-medium text-red-400">Delete account</p>
-                                <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+                                <p className="text-sm text-muted-foreground">Please contact support to delete your account</p>
                             </div>
-                            <Button variant="destructive" size="sm" disabled title="Coming soon" className="opacity-50 cursor-not-allowed">Delete</Button>
+                            <Button variant="destructive" size="sm" disabled className="opacity-50 cursor-not-allowed">Contact Support</Button>
                         </div>
                     </div>
                 </CardContent>

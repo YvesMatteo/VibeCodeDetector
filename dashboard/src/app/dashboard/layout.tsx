@@ -170,7 +170,7 @@ export default function DashboardLayout({
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileOpen(true)}
-                        className="p-1.5 -ml-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="p-2.5 -ml-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
                     >
                         <Menu className="h-5 w-5" />
                     </button>

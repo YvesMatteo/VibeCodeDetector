@@ -34,6 +34,21 @@ export default function SignupPage() {
             return;
         }
 
+        if (!/[A-Z]/.test(password)) {
+            setError('Password must contain at least one uppercase letter');
+            return;
+        }
+
+        if (!/[a-z]/.test(password)) {
+            setError('Password must contain at least one lowercase letter');
+            return;
+        }
+
+        if (!/\d/.test(password)) {
+            setError('Password must contain at least one number');
+            return;
+        }
+
         setLoading(true);
 
         const { error } = await supabase.auth.signUp({
@@ -53,16 +68,24 @@ export default function SignupPage() {
     // Password strength indicator
     const getPasswordStrength = () => {
         if (!password) return { width: '0%', color: 'bg-white/10', label: '' };
-        if (password.length < 8) return { width: '25%', color: 'bg-red-500', label: 'Weak' };
-        if (password.length < 10) return { width: '50%', color: 'bg-amber-500', label: 'Fair' };
-        if (password.length < 14) return { width: '75%', color: 'bg-green-400', label: 'Good' };
-        return { width: '100%', color: 'bg-green-500', label: 'Strong' };
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/\d/.test(password)) score++;
+        if (password.length >= 12) score++;
+
+        if (score <= 1) return { width: '20%', color: 'bg-red-500', label: 'Weak' };
+        if (score === 2) return { width: '40%', color: 'bg-orange-500', label: 'Fair' };
+        if (score === 3) return { width: '60%', color: 'bg-amber-500', label: 'Good' };
+        if (score === 4) return { width: '80%', color: 'bg-green-400', label: 'Strong' };
+        return { width: '100%', color: 'bg-green-500', label: 'Very Strong' };
     };
 
     const strength = getPasswordStrength();
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-clip">
             {/* Animated Background */}
             <div className="absolute inset-0 bg-gradient-animated" />
 

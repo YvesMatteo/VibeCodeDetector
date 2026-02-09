@@ -93,7 +93,7 @@ export function AIFixPrompt({ url, findings }: AIFixPromptProps) {
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="absolute top-2 right-2 h-8 w-8 bg-white/10 hover:bg-white/20 text-white transition-opacity opacity-0 group-hover:opacity-100"
+                        className="absolute top-2 right-2 h-8 w-8 bg-white/10 hover:bg-white/20 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         onClick={handleCopy}
                     >
                         {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}

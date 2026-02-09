@@ -76,8 +76,8 @@ const features = [
 const pricingTiers = [
   {
     name: 'Starter',
-    price: '$19',
-    period: '/mo',
+    priceMonthly: 19,
+    priceAnnualPerMonth: 15.20,
     description: 'For solo makers',
     features: ['1 domain', '5 scans/month', 'All 6 scanners', 'PDF export'],
     cta: 'Get Started',
@@ -85,8 +85,8 @@ const pricingTiers = [
   },
   {
     name: 'Pro',
-    price: '$39',
-    period: '/mo',
+    priceMonthly: 39,
+    priceAnnualPerMonth: 31.20,
     description: 'For growing projects',
     features: ['3 domains', '20 scans/month', 'All 6 scanners', 'Priority support'],
     cta: 'Get Started',
@@ -94,8 +94,8 @@ const pricingTiers = [
   },
   {
     name: 'Enterprise',
-    price: '$89',
-    period: '/mo',
+    priceMonthly: 89,
+    priceAnnualPerMonth: 71.20,
     description: 'For teams & agencies',
     features: ['10 domains', '75 scans/month', 'All 6 scanners', 'Dedicated support'],
     cta: 'Get Started',
@@ -103,8 +103,8 @@ const pricingTiers = [
   },
   {
     name: 'Max',
-    price: 'Custom',
-    period: '',
+    priceMonthly: null,
+    priceAnnualPerMonth: null,
     description: 'For large organizations',
     features: ['Unlimited domains', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
     cta: 'Contact Us',
@@ -122,6 +122,7 @@ const stats = [
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
 
   // Parallax Logic
   const mouseX = useMotionValue(0);
@@ -151,7 +152,7 @@ export default function HomePage() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
         >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
             <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
@@ -167,7 +168,7 @@ export default function HomePage() {
           </Button>
           <button
             onClick={() => setMobileNavOpen(true)}
-            className="md:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white transition-colors"
+            className="md:hidden p-2.5 -m-1 rounded-lg text-zinc-400 hover:text-white transition-colors"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -176,7 +177,7 @@ export default function HomePage() {
 
       {/* Mobile Nav Drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="right" className="w-64 bg-[#1C1C1E] border-white/10 p-0">
+        <SheetContent side="right" className="w-[70vw] max-w-64 bg-[#1C1C1E] border-white/10 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <div className="flex flex-col gap-1 p-6 pt-12">
             <a href="#features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
@@ -281,7 +282,7 @@ export default function HomePage() {
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
               <div className="h-px w-10 bg-white/10"></div>
-              <span>Plans from $19/month</span>
+              <span>Plans from $15.20/month</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
           </motion.div>
@@ -340,7 +341,7 @@ export default function HomePage() {
                 <div className="space-y-1 relative z-10 opacity-80">
                   <div className="flex gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
                   <div className="flex gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">"sk_live_51Mz..."</span>; <span className="text-zinc-500">{'// <= Exposed Key'}</span></div>
+                  <div className="flex gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">"sk_live_EXAMPLE_KEY_DO_NOT_USE..."</span>; <span className="text-zinc-500">{'// <= Exposed Key'}</span></div>
                   <div className="flex gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
                   <div className="flex gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">"Authorization"</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
                   <div className="flex gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
@@ -478,12 +479,43 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
             </h2>
-            <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-              Monthly plans for every team size. Cancel anytime.
+            <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+              Flexible plans for every team size. Cancel anytime.
             </p>
+
+            {/* Billing Toggle */}
+            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                  billing === 'monthly'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBilling('annual')}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  billing === 'annual'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Annual
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  billing === 'annual'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-green-500/10 text-green-400'
+                }`}>
+                  Save 20%
+                </span>
+              </button>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 max-w-sm sm:max-w-6xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -507,9 +539,24 @@ export default function HomePage() {
                   <div className="p-6 border-b border-white/5">
                     <h3 className="text-lg font-medium text-white">{tier.name}</h3>
                     <p className="text-sm text-zinc-400 mt-1">{tier.description}</p>
-                    <div className="mt-4 flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-white tracking-tight">{tier.price}</span>
-                      {tier.period && <span className="text-zinc-500 text-sm font-normal">{tier.period}</span>}
+                    <div className="mt-4">
+                      {tier.priceMonthly === null ? (
+                        <span className="text-4xl font-bold text-white tracking-tight">Custom</span>
+                      ) : billing === 'annual' ? (
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-bold text-white tracking-tight">${tier.priceAnnualPerMonth!.toFixed(2)}</span>
+                            <span className="text-zinc-500 text-sm font-normal">/mo</span>
+                          </div>
+                          <span className="text-zinc-500 text-sm line-through mt-1">${tier.priceMonthly}/mo</span>
+                          <span className="text-zinc-500 text-xs mt-1">billed annually</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold text-white tracking-tight">${tier.priceMonthly}</span>
+                          <span className="text-zinc-500 text-sm font-normal">/mo</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -572,7 +619,7 @@ export default function HomePage() {
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
             <p className="text-xl text-zinc-400 mb-8">
-              Plans start at $19/month. Cancel anytime.
+              Plans start at $15.20/month. Cancel anytime.
             </p>
             <Button size="lg" asChild className="text-lg px-10 py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">

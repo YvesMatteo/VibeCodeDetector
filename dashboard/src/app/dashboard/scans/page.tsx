@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,9 +26,16 @@ function formatDate(dateString: string) {
 
 export default async function ScansPage() {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect('/login');
+    }
+
     const { data: scans } = await supabase
         .from('scans')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
     const scanList = scans || [];
@@ -134,9 +142,9 @@ export default async function ScansPage() {
                                 <TableRow>
                                     <TableHead>Website</TableHead>
                                     <TableHead>Score</TableHead>
-                                    <TableHead>Issues</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Issues</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Date</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Date</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -187,7 +195,7 @@ export default async function ScansPage() {
                                                     </span>
                                                 )}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden sm:table-cell">
                                                 {scan.status === 'completed' ? (
                                                     <div className="flex gap-1.5">
                                                         {scanCritical > 0 && (
@@ -215,7 +223,7 @@ export default async function ScansPage() {
                                                     {scan.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden sm:table-cell">
                                                 <div className="flex items-center gap-1 text-muted-foreground text-sm">
                                                     <Clock className="h-3 w-3" />
                                                     {formatDate(scan.completed_at || scan.created_at)}

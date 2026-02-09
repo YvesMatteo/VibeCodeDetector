@@ -11,8 +11,8 @@ const pricingPlans = [
     {
         id: 'starter',
         name: 'Starter',
-        price: '19',
-        period: '/mo',
+        priceMonthly: 19,
+        priceAnnualPerMonth: 15.20,
         description: 'For solo makers',
         domains: 1,
         scans: 5,
@@ -22,8 +22,8 @@ const pricingPlans = [
     {
         id: 'pro',
         name: 'Pro',
-        price: '39',
-        period: '/mo',
+        priceMonthly: 39,
+        priceAnnualPerMonth: 31.20,
         description: 'For growing projects',
         domains: 3,
         scans: 20,
@@ -34,8 +34,8 @@ const pricingPlans = [
     {
         id: 'enterprise',
         name: 'Enterprise',
-        price: '89',
-        period: '/mo',
+        priceMonthly: 89,
+        priceAnnualPerMonth: 71.20,
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
@@ -45,8 +45,8 @@ const pricingPlans = [
     {
         id: 'max',
         name: 'Max',
-        price: 'Custom',
-        period: '',
+        priceMonthly: null,
+        priceAnnualPerMonth: null,
         description: 'For large organizations',
         domains: null,
         scans: null,
@@ -57,6 +57,7 @@ const pricingPlans = [
 ];
 
 export default function CreditsPage() {
+    const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function CreditsPage() {
             const res = await fetch('/api/stripe/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: planId, currency: 'usd' }),
+                body: JSON.stringify({ plan: planId, currency: 'usd', billing }),
             });
 
             if (!res.ok) throw new Error('Checkout failed');
@@ -139,11 +140,42 @@ export default function CreditsPage() {
                     Pricing
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-heading font-medium mb-4 tracking-tight text-white">
-                    Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Monthly</span> Plans
+                    Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Transparent</span> Plans
                 </h1>
-                <p className="text-xl text-zinc-400 max-w-2xl">
+                <p className="text-xl text-zinc-400 max-w-2xl mb-6">
                     Choose a plan that fits your needs. Upgrade or downgrade anytime.
                 </p>
+
+                {/* Billing Toggle */}
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+                    <button
+                        onClick={() => setBilling('monthly')}
+                        className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                            billing === 'monthly'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-zinc-400 hover:text-white'
+                        }`}
+                    >
+                        Monthly
+                    </button>
+                    <button
+                        onClick={() => setBilling('annual')}
+                        className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                            billing === 'annual'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-zinc-400 hover:text-white'
+                        }`}
+                    >
+                        Annual
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            billing === 'annual'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-green-500/10 text-green-400'
+                        }`}>
+                            Save 20%
+                        </span>
+                    </button>
+                </div>
             </div>
 
             {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-8">{error}</div>}
@@ -181,7 +213,7 @@ export default function CreditsPage() {
                         <Card
                             key={plan.id}
                             className={`relative transition-all duration-300 flex flex-col ${plan.highlighted
-                                ? 'bg-zinc-900/60 border-blue-500/30 scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                                ? 'bg-zinc-900/60 border-blue-500/30 sm:scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                                 : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                                 }`}
                         >
@@ -205,10 +237,21 @@ export default function CreditsPage() {
                                 <div className="mt-6">
                                     {plan.isContact ? (
                                         <span className="text-3xl font-heading font-bold gradient-text">Custom</span>
+                                    ) : billing === 'annual' ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">
+                                                    ${plan.priceAnnualPerMonth!.toFixed(2)}
+                                                </span>
+                                                <span className="text-zinc-400 text-sm">/mo</span>
+                                            </div>
+                                            <span className="text-zinc-500 text-sm line-through mt-1">${plan.priceMonthly}/mo</span>
+                                            <span className="text-zinc-500 text-xs mt-1">billed annually</span>
+                                        </div>
                                     ) : (
                                         <>
-                                            <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">${plan.price}</span>
-                                            <span className="text-zinc-400 text-sm">{plan.period}</span>
+                                            <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">${plan.priceMonthly}</span>
+                                            <span className="text-zinc-400 text-sm">/mo</span>
                                         </>
                                     )}
                                 </div>

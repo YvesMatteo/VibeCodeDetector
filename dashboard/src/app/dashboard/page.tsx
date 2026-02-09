@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,7 @@ import {
     AlertTriangle,
     Crown,
     Activity,
+    Globe,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -61,30 +63,33 @@ export default async function DashboardPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+        redirect('/login');
+    }
+
     let plan = 'none';
     let planScansUsed = 0;
     let planScansLimit = 0;
     let domainsUsed = 0;
     let domainsLimit = 0;
-    if (user) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
-            .eq('id', user.id)
-            .single();
-        if (profile) {
-            plan = profile.plan || 'none';
-            planScansUsed = profile.plan_scans_used || 0;
-            planScansLimit = profile.plan_scans_limit || 0;
-            domainsUsed = profile.allowed_domains?.length || 0;
-            domainsLimit = profile.plan_domains || 0;
-        }
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
+        .eq('id', user.id)
+        .single();
+    if (profile) {
+        plan = profile.plan || 'none';
+        planScansUsed = profile.plan_scans_used || 0;
+        planScansLimit = profile.plan_scans_limit || 0;
+        domainsUsed = profile.allowed_domains?.length || 0;
+        domainsLimit = profile.plan_domains || 0;
     }
 
     // Fetch real scans
     const { data: scans } = await supabase
         .from('scans')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
     const scanList = scans || [];
@@ -257,7 +262,7 @@ export default async function DashboardPage() {
                                 return (
                                     <div
                                         key={scan.id}
-                                        className="flex items-center justify-between p-4 rounded-lg border border-white/5 hover:border-white/10 hover:bg-white/5 transition-all duration-200 animate-fade-in-up"
+                                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-white/5 hover:border-white/10 hover:bg-white/5 transition-all duration-200 animate-fade-in-up"
                                         style={{ animationDelay: `${index * 100}ms` }}
                                     >
                                         <div className="flex items-center gap-4">
@@ -269,7 +274,7 @@ export default async function DashboardPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="font-medium">{scan.url.replace(/^https?:\/\//, '')}</p>
+                                                <p className="font-medium truncate max-w-[200px] sm:max-w-none">{scan.url.replace(/^https?:\/\//, '')}</p>
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <Clock className="h-3 w-3" />
                                                     {timeAgo(scan.completed_at || scan.created_at)}
@@ -277,7 +282,7 @@ export default async function DashboardPage() {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                                             {scan.status === 'completed' && (
                                                 <div className="flex gap-2">
                                                     {scanCritical > 0 && (

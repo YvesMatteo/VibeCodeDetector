@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -123,11 +123,17 @@ function ScoreRing({ score, size = 'large' }: { score: number; size?: 'small' | 
 export default async function ScanDetailsPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect('/login');
+    }
 
     const { data: scan, error } = await supabase
         .from('scans')
         .select('*')
         .eq('id', params.id)
+        .eq('user_id', user.id)
         .single();
 
     if (error || !scan) {
@@ -341,9 +347,9 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                             <div className="flex items-start gap-3">
                                                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
+                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
                                                         <h4 className="font-medium">{finding.title}</h4>
-                                                        <Badge variant="outline" className={`text-xs capitalize ${styles.bg} ${styles.color} border-0`}>
+                                                        <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
                                                             {finding.severity}
                                                         </Badge>
                                                     </div>
