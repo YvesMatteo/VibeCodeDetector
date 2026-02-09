@@ -28,8 +28,8 @@ export function AIFixPrompt({ url, findings }: AIFixPromptProps) {
     const [copied, setCopied] = useState(false);
 
     const generatePrompt = () => {
-        const critical = findings.filter(f => f.severity === 'critical');
-        const others = findings.filter(f => f.severity !== 'critical');
+        const critical = findings.filter(f => f.severity?.toLowerCase() === 'critical');
+        const others = findings.filter(f => f.severity?.toLowerCase() !== 'critical');
 
         let prompt = `# Fix Request for ${url}\n\n`;
         prompt += `I have run an automated audit on my website and need you to fix the following issues.\n\n`;
@@ -58,9 +58,13 @@ export function AIFixPrompt({ url, findings }: AIFixPromptProps) {
     const promptText = generatePrompt();
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(promptText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            await navigator.clipboard.writeText(promptText);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Fallback for when clipboard API is unavailable
+        }
     };
 
     return (
@@ -68,7 +72,7 @@ export function AIFixPrompt({ url, findings }: AIFixPromptProps) {
             <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 shadow-lg shadow-blue-500/20">
                     <Sparkles className="mr-2 h-4 w-4" />
-                    generate AI Fix Prompt
+                    Generate AI Fix Prompt
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl bg-[#0E0E10] border-white/10 text-white">

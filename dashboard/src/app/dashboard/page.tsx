@@ -11,9 +11,7 @@ import {
     Clock,
     AlertTriangle,
     Crown,
-    BarChart3,
     Activity,
-    Globe,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 

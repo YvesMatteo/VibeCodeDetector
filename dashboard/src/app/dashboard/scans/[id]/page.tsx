@@ -197,11 +197,11 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <AIFixPrompt url={scan.url} findings={allFindings} />
-                        <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
+                        <Button variant="outline" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10">
                             <Download className="mr-2 h-4 w-4" />
                             Export PDF
                         </Button>
-                        <Button className="shimmer-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0">
+                        <Button disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 border-0">
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Rescan
                         </Button>

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-
 import { Badge } from '@/components/ui/badge';
 import {
   Shield,
@@ -196,7 +195,7 @@ export default function HomePage() {
       {/* Hero Section - Cluely 1:1 Replica */}
       <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col items-center justify-center overflow-hidden">
         {/* Animated Background */}
-        <div className="absolute inset-0 bg-[#0E0E10]">
+        <div className="absolute inset-0 bg-[#0E0E10]" aria-hidden="true">
           <motion.div
             style={{ x: orb1X, y: orb1Y }}
             className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#497EE9]/20 blur-[120px] rounded-full"
@@ -316,6 +315,7 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1, rotateX: 0 }}
             transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
             className="relative mt-16 w-full max-w-4xl perspective-midrange group"
+            aria-hidden="true"
           >
             {/* Main Terminal Window */}
             <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col transform transition-transform duration-700">
@@ -407,9 +407,9 @@ export default function HomePage() {
       {/* Features Section */}
       <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E10] via-blue-950/5 to-[#0E0E10]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E10] via-blue-950/5 to-[#0E0E10]" aria-hidden="true" />
 
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" aria-hidden="true"></div>
 
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
@@ -463,7 +463,7 @@ export default function HomePage() {
 
       {/* Pricing Section */}
       <section id="pricing" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" aria-hidden="true"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -557,8 +557,8 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] border-t border-white/5">
         {/* Gradient orbs */}
-        <div className="orb orb-blue w-64 h-64 top-0 left-1/4" />
-        <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" />
+        <div className="orb orb-blue w-64 h-64 top-0 left-1/4" aria-hidden="true" />
+        <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" aria-hidden="true" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div

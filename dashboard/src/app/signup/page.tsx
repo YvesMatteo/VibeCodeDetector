@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Loader2, CheckCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SignupPage() {
@@ -17,7 +17,6 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -30,8 +29,8 @@ export default function SignupPage() {
             return;
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters');
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters');
             return;
         }
 
@@ -54,43 +53,13 @@ export default function SignupPage() {
     // Password strength indicator
     const getPasswordStrength = () => {
         if (!password) return { width: '0%', color: 'bg-white/10', label: '' };
-        if (password.length < 6) return { width: '25%', color: 'bg-red-500', label: 'Weak' };
+        if (password.length < 8) return { width: '25%', color: 'bg-red-500', label: 'Weak' };
         if (password.length < 10) return { width: '50%', color: 'bg-amber-500', label: 'Fair' };
         if (password.length < 14) return { width: '75%', color: 'bg-green-400', label: 'Good' };
         return { width: '100%', color: 'bg-green-500', label: 'Strong' };
     };
 
     const strength = getPasswordStrength();
-
-    if (success) {
-        return (
-            <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-                {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-animated" />
-
-                {/* Floating Orbs */}
-                <div className="orb orb-blue w-48 h-48 sm:w-96 sm:h-96 -top-24 sm:-top-48 -left-24 sm:-left-48" />
-                <div className="orb orb-blue w-40 h-40 sm:w-80 sm:h-80 top-1/4 -right-20 sm:-right-40" />
-
-                <Card className="w-full max-w-md glass-card border-white/10 relative z-10 animate-scale-in">
-                    <CardContent className="pt-6 text-center">
-                        <div className="relative inline-block">
-                            <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
-                            <div className="absolute inset-0 bg-green-500/30 blur-xl" />
-                        </div>
-                        <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-                        <p className="text-muted-foreground mb-6">
-                            We&apos;ve sent you a confirmation link to <span className="font-medium text-foreground">{email}</span>.
-                            Click the link to activate your account.
-                        </p>
-                        <Button variant="outline" asChild className="bg-white/5 border-white/10 hover:bg-white/10">
-                            <Link href="/login">Back to Login</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
@@ -151,7 +120,7 @@ export default function SignupPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
                                 />
                                 {/* Password Strength Indicator */}

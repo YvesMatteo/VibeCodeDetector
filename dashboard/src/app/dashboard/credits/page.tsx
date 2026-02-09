@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Zap, Crown, Globe, BarChart3, Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { CheckCircle, Zap, Crown, Mail } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 const pricingPlans = [
     {
@@ -60,19 +59,16 @@ const pricingPlans = [
 export default function CreditsPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [currentPlan, setCurrentPlan] = useState<string>('none');
     const [scansUsed, setScansUsed] = useState(0);
     const [scansLimit, setScansLimit] = useState(0);
     const [domainsUsed, setDomainsUsed] = useState(0);
     const [domainsLimit, setDomainsLimit] = useState(0);
-    const router = useRouter();
 
     useEffect(() => {
         async function loadProfile() {
-            const supabase = createBrowserClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-            );
+            const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
@@ -95,6 +91,7 @@ export default function CreditsPage() {
 
     const handleSubscribe = async (planId: string) => {
         setLoading(planId);
+        setError(null);
         try {
             const res = await fetch('/api/stripe/checkout', {
                 method: 'POST',
@@ -106,9 +103,9 @@ export default function CreditsPage() {
 
             const { url } = await res.json();
             if (url) window.location.href = url;
-        } catch (error) {
-            console.error('Subscribe error:', error);
-            alert('Something went wrong. Please try again.');
+        } catch (err) {
+            console.error('Subscribe error:', err);
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(null);
         }
@@ -116,6 +113,7 @@ export default function CreditsPage() {
 
     const handleManageSubscription = async () => {
         setPortalLoading(true);
+        setError(null);
         try {
             const res = await fetch('/api/stripe/portal', {
                 method: 'POST',
@@ -126,9 +124,9 @@ export default function CreditsPage() {
 
             const { url } = await res.json();
             if (url) window.location.href = url;
-        } catch (error) {
-            console.error('Portal error:', error);
-            alert('Something went wrong. Please try again.');
+        } catch (err) {
+            console.error('Portal error:', err);
+            setError('Something went wrong. Please try again.');
         } finally {
             setPortalLoading(false);
         }
@@ -147,6 +145,8 @@ export default function CreditsPage() {
                     Choose a plan that fits your needs. Upgrade or downgrade anytime.
                 </p>
             </div>
+
+            {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-8">{error}</div>}
 
             {/* Current plan banner */}
             {currentPlan !== 'none' && (

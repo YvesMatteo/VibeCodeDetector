@@ -188,7 +188,7 @@ export default async function SettingsPage() {
                                 <p className="font-medium">Password</p>
                                 <p className="text-sm text-muted-foreground">Change your account password</p>
                             </div>
-                            <Button variant="outline" size="sm" className="bg-white/5 border-white/10 hover:bg-white/10">Change</Button>
+                            <Button variant="outline" size="sm" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10">Change</Button>
                         </div>
                         <Separator className="bg-white/10" />
                         <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ export default async function SettingsPage() {
                                 <p className="font-medium text-red-400">Delete account</p>
                                 <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                             </div>
-                            <Button variant="destructive" size="sm">Delete</Button>
+                            <Button variant="destructive" size="sm" disabled title="Coming soon" className="opacity-50 cursor-not-allowed">Delete</Button>
                         </div>
                     </div>
                 </CardContent>

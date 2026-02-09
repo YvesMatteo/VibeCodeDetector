@@ -20,7 +20,22 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website for vibe and security issues.",
+  description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, legal compliance, and AI-generated content detection.",
+  openGraph: {
+    title: "CheckVibe - AI Website Scanner",
+    description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, and more.",
+    type: "website",
+    siteName: "CheckVibe",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CheckVibe - AI Website Scanner",
+    description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, and more.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -5,24 +5,28 @@ import * as ProgressPrimitive from "@radix-ui/react-progress"
 
 import { cn } from "@/lib/utils"
 
-const Progress = React.forwardRef<
-    React.ElementRef<typeof ProgressPrimitive.Root>,
-    React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
->(({ className, value, ...props }, ref) => (
+function Progress({
+  className,
+  value,
+  ...props
+}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  const clampedValue = Math.min(100, Math.max(0, value || 0));
+  return (
     <ProgressPrimitive.Root
-        ref={ref}
-        className={cn(
-            "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-            className
-        )}
-        {...props}
+      data-slot="progress"
+      className={cn(
+        "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
+        className
+      )}
+      {...props}
     >
-        <ProgressPrimitive.Indicator
-            className="h-full w-full flex-1 bg-primary transition-all"
-            style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-        />
+      <ProgressPrimitive.Indicator
+        data-slot="progress-indicator"
+        className="h-full w-full flex-1 bg-primary transition-transform"
+        style={{ transform: `translateX(-${100 - clampedValue}%)` }}
+      />
     </ProgressPrimitive.Root>
-))
-Progress.displayName = ProgressPrimitive.Root.displayName
+  )
+}
 
 export { Progress }

@@ -82,7 +82,12 @@ export default function NewScanPage() {
     function isValidUrl(string: string) {
         try {
             const url = new URL(string.startsWith('http') ? string : `https://${string}`);
-            return url.protocol === 'http:' || url.protocol === 'https:';
+            if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+            const hostname = url.hostname;
+            // Block private/internal IPs
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+            if (!hostname.includes('.')) return false;
+            return true;
         } catch {
             return false;
         }
@@ -233,8 +238,12 @@ export default function NewScanPage() {
                                 return (
                                     <div
                                         key={type.id}
+                                        role="checkbox"
+                                        aria-checked={isSelected}
+                                        tabIndex={0}
                                         onClick={() => toggleScanType(type.id)}
-                                        className={`relative p-4 rounded-lg border transition-all cursor-pointer ${isSelected
+                                        onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleScanType(type.id); } }}
+                                        className={`relative p-4 rounded-lg border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSelected
                                             ? 'border-blue-500/50 bg-blue-500/10'
                                             : 'border-white/5 hover:border-white/10 bg-white/5'
                                             }`}

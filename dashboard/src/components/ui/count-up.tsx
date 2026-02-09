@@ -3,28 +3,24 @@
 import { useEffect, useRef } from "react";
 import { useInView, useMotionValue, useSpring } from "framer-motion";
 
+const damping = 20 + 40 * (1 / 1.1);
+const stiffness = 100 * (1 / 1.1);
+
 export function CountUp({
     to,
     from = 0,
     direction = "up",
     delay = 0,
-    onStart,
-    onEnd,
     className,
 }: {
     to: number;
     from?: number;
     direction?: "up" | "down";
     delay?: number;
-    onStart?: () => void;
-    onEnd?: () => void;
-    className?: string; // Add className prop
+    className?: string;
 }) {
     const ref = useRef<HTMLSpanElement>(null);
     const motionValue = useMotionValue(direction === "down" ? to : from);
-
-    const damping = 20 + 40 * (1 / 1.1); // Reduced from 18 + 20 due to spring behavior change
-    const stiffness = 100 * (1 / 1.1); // Reduced from 120 due to spring behavior change
 
     const springValue = useSpring(motionValue, {
         damping,
@@ -67,5 +63,5 @@ export function CountUp({
         return () => unsub(); // Use the returned unsubscribe function directly
     }, [springValue]);
 
-    return <span className={className} ref={ref} />;
+    return <span className={className} ref={ref} role="status" />;
 }

@@ -11,6 +11,38 @@ function extractDomain(url: string): string {
     }
 }
 
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'vibe_match', 'legal', 'threat_intelligence'] as const;
+
+function isPrivateOrReservedIP(hostname: string): boolean {
+    // Block localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+    // Block private IP ranges
+    const parts = hostname.split('.').map(Number);
+    if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+        if (parts[0] === 10) return true; // 10.0.0.0/8
+        if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true; // 172.16.0.0/12
+        if (parts[0] === 192 && parts[1] === 168) return true; // 192.168.0.0/16
+        if (parts[0] === 169 && parts[1] === 254) return true; // 169.254.0.0/16 (link-local/metadata)
+        if (parts[0] === 0) return true; // 0.0.0.0/8
+    }
+    // Block common metadata endpoints
+    if (hostname === 'metadata.google.internal') return true;
+    // Require at least one dot (TLD)
+    if (!hostname.includes('.')) return true;
+    return false;
+}
+
+function isValidScanUrl(urlString: string): boolean {
+    try {
+        const url = new URL(urlString);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+        if (isPrivateOrReservedIP(url.hostname)) return false;
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
@@ -52,11 +84,23 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { url, scanTypes } = body;
 
-        if (!url) {
+        if (!url || typeof url !== 'string') {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
+        // Validate scanTypes if provided
+        if (scanTypes !== undefined && scanTypes !== null) {
+            if (!Array.isArray(scanTypes) || !scanTypes.every((t: unknown) => typeof t === 'string' && VALID_SCAN_TYPES.includes(t as typeof VALID_SCAN_TYPES[number]))) {
+                return NextResponse.json({ error: 'Invalid scan types' }, { status: 400 });
+            }
+        }
+
         const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+
+        // SSRF protection: block private/internal IPs and non-public URLs
+        if (!isValidScanUrl(targetUrl)) {
+            return NextResponse.json({ error: 'Invalid or non-public URL. Please enter a publicly accessible website.' }, { status: 400 });
+        }
         const domain = extractDomain(targetUrl);
         const allowedDomains: string[] = profile.allowed_domains || [];
 
@@ -76,12 +120,6 @@ export async function POST(request: NextRequest) {
                 .update({ allowed_domains: newDomains })
                 .eq('id', user.id);
         }
-
-        // Increment scan usage
-        await supabase
-            .from('profiles')
-            .update({ plan_scans_used: profile.plan_scans_used + 1 })
-            .eq('id', user.id);
 
         // ==========================================
         // RUN SCANNERS
@@ -225,25 +263,28 @@ export async function POST(request: NextRequest) {
 
         let scanId = null;
 
-        if (user) {
-            const { data: scan, error: insertError } = await supabase
-                .from('scans')
-                .insert({
-                    user_id: user.id,
-                    url: targetUrl,
-                    status: 'completed',
-                    overall_score: overallScore,
-                    results,
-                    completed_at: new Date().toISOString(),
-                })
-                .select()
-                .single();
+        const { data: scan, error: insertError } = await supabase
+            .from('scans')
+            .insert({
+                user_id: user.id,
+                url: targetUrl,
+                status: 'completed',
+                overall_score: overallScore,
+                results,
+                completed_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
 
-            if (!insertError && scan) {
-                scanId = scan.id;
-            } else {
-                console.error('Failed to save scan:', insertError);
-            }
+        if (!insertError && scan) {
+            scanId = scan.id;
+            // Increment scan usage only after successful scan save
+            await supabase
+                .from('profiles')
+                .update({ plan_scans_used: profile.plan_scans_used + 1 })
+                .eq('id', user.id);
+        } else {
+            console.error('Failed to save scan:', insertError);
         }
 
         return NextResponse.json({
@@ -258,7 +299,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error('Scan error:', error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Scan failed' },
+            { error: 'Scan failed. Please try again.' },
             { status: 500 }
         );
     }

@@ -67,10 +67,13 @@ export default function DemoResultsPage() {
     const [result, setResult] = useState<ScanResult | null>(null);
 
     useEffect(() => {
-        // Try to get result from sessionStorage
-        const stored = sessionStorage.getItem('lastScanResult');
-        if (stored) {
-            setResult(JSON.parse(stored));
+        try {
+            const stored = sessionStorage.getItem('lastScanResult');
+            if (stored) {
+                setResult(JSON.parse(stored));
+            }
+        } catch {
+            // Ignore corrupted sessionStorage data
         }
     }, []);
 
