@@ -20,6 +20,9 @@ import {
     Scale,
     Radar,
     Info,
+    Database,
+    Server,
+    Lock,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { getPlainEnglish } from '@/lib/plain-english';
@@ -325,8 +328,8 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {result.findings.map((finding: any, index: number) => {
+                            {(() => {
+                                const renderFinding = (finding: any, index: number) => {
                                     const styles = getSeverityStyles(finding.severity);
                                     const SeverityIcon = styles.icon;
 
@@ -378,8 +381,53 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                             </div>
                                         </div>
                                     );
-                                })}
-                            </div>
+                                };
+
+                                // For api_keys scanner, group findings by category
+                                const hasCategories = key === 'api_keys' && result.findings.some((f: any) => f.category);
+
+                                if (hasCategories) {
+                                    const categories = [
+                                        { key: 'credentials', label: 'Leaked Credentials', icon: Lock, color: 'text-red-400' },
+                                        { key: 'infrastructure', label: 'Exposed Infrastructure', icon: Server, color: 'text-orange-400' },
+                                        { key: 'databases', label: 'Exposed Databases', icon: Database, color: 'text-amber-400' },
+                                    ];
+                                    const uncategorized = result.findings.filter((f: any) => !f.category);
+
+                                    return (
+                                        <div className="space-y-6">
+                                            {categories.map(cat => {
+                                                const catFindings = result.findings.filter((f: any) => f.category === cat.key);
+                                                if (catFindings.length === 0) return null;
+                                                const CatIcon = cat.icon;
+                                                return (
+                                                    <div key={cat.key}>
+                                                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/10">
+                                                            <CatIcon className={`h-4 w-4 ${cat.color}`} />
+                                                            <h3 className={`text-sm font-semibold uppercase tracking-wider ${cat.color}`}>{cat.label}</h3>
+                                                            <span className="text-xs text-zinc-500">({catFindings.length})</span>
+                                                        </div>
+                                                        <div className="space-y-4">
+                                                            {catFindings.map((finding: any, i: number) => renderFinding(finding, i))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {uncategorized.length > 0 && (
+                                                <div className="space-y-4">
+                                                    {uncategorized.map((finding: any, i: number) => renderFinding(finding, i))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="space-y-4">
+                                        {result.findings.map((finding: any, index: number) => renderFinding(finding, index))}
+                                    </div>
+                                );
+                            })()}
                         </CardContent>
                     </Card>
                 );

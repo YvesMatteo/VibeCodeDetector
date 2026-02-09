@@ -11,6 +11,27 @@ const GOOGLE_SAFE_BROWSING_KEY = Deno.env.get("GOOGLE_SAFE_BROWSING_API_KEY");
 const VIRUSTOTAL_KEY = Deno.env.get("VIRUSTOTAL_API_KEY");
 const SHODAN_KEY = Deno.env.get("SHODAN_API_KEY");
 const URLSCAN_KEY = Deno.env.get("URLSCAN_API_KEY");
+const LEAKIX_KEY = Deno.env.get("LEAKIX_API_KEY");
+
+// Port categories for Shodan
+const REMOTE_ACCESS_PORTS: Record<number, string> = {
+    21: 'FTP',
+    23: 'Telnet',
+    3389: 'RDP',
+    5900: 'VNC',
+};
+
+const DATABASE_PORTS: Record<number, string> = {
+    3306: 'MySQL',
+    5432: 'PostgreSQL',
+    27017: 'MongoDB',
+    6379: 'Redis',
+    9200: 'Elasticsearch',
+    5984: 'CouchDB',
+    11211: 'Memcached',
+    9042: 'Cassandra',
+    1433: 'MSSQL',
+};
 
 Deno.serve(async (req: Request) => {
     // Handle CORS preflight
@@ -64,22 +85,34 @@ Deno.serve(async (req: Request) => {
             }).catch(e => console.error("VirusTotal Error:", e)));
         }
 
-        // 3. Shodan (Domain/IP check)
+        // 3. Shodan (Domain/IP check) - expanded port detection
         if (SHODAN_KEY) {
             checksRun++;
             checks.push(checkShodan(targetUrl, SHODAN_KEY).then(res => {
                 if (res.ports && res.ports.length > 0) {
-                    // Open ports aren't necessarily bad, but unexpected ones are
-                    const riskyPorts = [21, 23, 3389, 5900]; // FTP, Telnet, RDP, VNC
-                    const foundRisky = res.ports.filter((p: number) => riskyPorts.includes(p));
+                    const allRiskyPorts = { ...REMOTE_ACCESS_PORTS, ...DATABASE_PORTS };
+                    const foundRemoteAccess = res.ports.filter((p: number) => REMOTE_ACCESS_PORTS[p]);
+                    const foundDatabase = res.ports.filter((p: number) => DATABASE_PORTS[p]);
 
-                    if (foundRisky.length > 0) {
+                    if (foundRemoteAccess.length > 0) {
                         score -= 20;
+                        const portDetails = foundRemoteAccess.map((p: number) => `${p} (${REMOTE_ACCESS_PORTS[p]})`).join(', ');
                         findings.push({
-                            title: "Risky Open Ports Detected",
+                            title: "Risky Remote Access Ports Detected",
                             severity: "high",
-                            description: `Open ports detected: ${foundRisky.join(', ')}`,
-                            recommendation: "Close unnecessary ports and ensure exposed services are secured."
+                            description: `Exposed remote access ports: ${portDetails}. These services allow direct remote control of the server.`,
+                            recommendation: "Close unnecessary remote access ports. Use VPN or SSH tunneling instead of exposing these services directly."
+                        });
+                    }
+
+                    if (foundDatabase.length > 0) {
+                        score -= 30;
+                        const portDetails = foundDatabase.map((p: number) => `${p} (${DATABASE_PORTS[p]})`).join(', ');
+                        findings.push({
+                            title: "Exposed Database Ports Detected",
+                            severity: "critical",
+                            description: `Database ports directly reachable from the internet: ${portDetails}. Attackers can attempt brute-force or exploit known vulnerabilities.`,
+                            recommendation: "Never expose database ports to the public internet. Use firewall rules, VPN, or SSH tunneling for database access."
                         });
                     }
                 }
@@ -102,6 +135,36 @@ Deno.serve(async (req: Request) => {
             }).catch(e => console.error("URLScan Error:", e)));
         }
 
+        // 5. LeakIX
+        if (LEAKIX_KEY) {
+            checksRun++;
+            checks.push(checkLeakIX(targetUrl, LEAKIX_KEY).then(res => {
+                if (res.leaks && res.leaks.length > 0) {
+                    // Group leaks by type
+                    const leakTypes: Record<string, number> = {};
+                    for (const leak of res.leaks) {
+                        const type = leak.event_type || leak.type_name || 'unknown';
+                        leakTypes[type] = (leakTypes[type] || 0) + 1;
+                    }
+
+                    const leakCount = res.leaks.length;
+                    const deduction = Math.min(40, leakCount * 15);
+                    score -= deduction;
+
+                    const typesSummary = Object.entries(leakTypes)
+                        .map(([type, count]) => `${type} (${count})`)
+                        .join(', ');
+
+                    findings.push({
+                        title: "Known Data Leaks (LeakIX)",
+                        severity: leakCount > 2 ? "critical" : "high",
+                        description: `LeakIX found ${leakCount} known data leak(s) associated with this domain: ${typesSummary}.`,
+                        recommendation: "Investigate each leak immediately. Rotate all exposed credentials, patch vulnerable services, and review access logs for signs of exploitation."
+                    });
+                }
+            }).catch(e => console.error("LeakIX Error:", e)));
+        }
+
         await Promise.all(checks);
 
         // If no threat APIs are configured, note this transparently
@@ -110,7 +173,7 @@ Deno.serve(async (req: Request) => {
                 title: "No Threat APIs Configured",
                 severity: "info",
                 description: "No external threat intelligence APIs are configured. Score is based on the absence of detected threats, but no active checks were performed.",
-                recommendation: "Configure Google Safe Browsing, VirusTotal, Shodan, or URLScan API keys for comprehensive threat analysis."
+                recommendation: "Configure Google Safe Browsing, VirusTotal, Shodan, URLScan, or LeakIX API keys for comprehensive threat analysis."
             });
         }
 
@@ -178,10 +241,15 @@ async function checkVirusTotal(url: string, key: string) {
 async function checkShodan(url: string, key: string) {
     try {
         const domain = new URL(url).hostname;
-        // Resolve IP first (Shodan works best with IPs)
-        // In Deno Deploy/Edge, we might not have direct DNS resolution easily without params
-        // defaulting to a simple host search for now
-        const response = await fetch(`https://api.shodan.io/shodan/host/${domain}?key=${key}`);
+        // Shodan requires an IP address, not a hostname.
+        // Use Shodan's DNS resolve endpoint to get the IP first.
+        const dnsRes = await fetch(`https://api.shodan.io/dns/resolve?hostnames=${domain}&key=${key}`);
+        if (!dnsRes.ok) return {};
+        const dnsData = await dnsRes.json();
+        const ip = dnsData[domain];
+        if (!ip) return {};
+
+        const response = await fetch(`https://api.shodan.io/shodan/host/${ip}?key=${key}`);
         if (!response.ok) return {};
         const data = await response.json();
         return { ports: data.ports || [] };
@@ -206,5 +274,22 @@ async function checkUrlScan(url: string, key: string) {
         return {};
     } catch {
         return {};
+    }
+}
+
+async function checkLeakIX(url: string, key: string) {
+    try {
+        const domain = new URL(url).hostname;
+        const response = await fetch(`https://leakix.net/search?q=domain:${domain}&scope=leak`, {
+            headers: {
+                'api-key': key,
+                'Accept': 'application/json',
+            },
+        });
+        if (!response.ok) return { leaks: [] };
+        const data = await response.json();
+        return { leaks: Array.isArray(data) ? data : [] };
+    } catch {
+        return { leaks: [] };
     }
 }
