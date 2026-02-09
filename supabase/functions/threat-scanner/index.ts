@@ -1,10 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
-const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shared/security.ts";
 
 // Environment variables
 const GOOGLE_SAFE_BROWSING_KEY = Deno.env.get("GOOGLE_SAFE_BROWSING_API_KEY");
@@ -36,15 +31,26 @@ const DATABASE_PORTS: Record<number, string> = {
 Deno.serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        return new Response(null, { headers: CORS_HEADERS });
+        return new Response(null, { headers: getCorsHeaders(req) });
+    }
+
+    if (!validateScannerAuth(req)) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+        });
     }
 
     try {
-        const { targetUrl } = await req.json();
-
-        if (!targetUrl) {
-            throw new Error("targetUrl is required");
+        const body = await req.json();
+        const validation = validateTargetUrl(body.targetUrl);
+        if (!validation.valid) {
+            return new Response(JSON.stringify({ error: validation.error }), {
+                status: 400,
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            });
         }
+        const targetUrl = validation.url!;
 
         const findings: any[] = [];
         let score = 100;
@@ -185,18 +191,19 @@ Deno.serve(async (req: Request) => {
             scannedAt: new Date().toISOString(),
             url: targetUrl
         }), {
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
         });
 
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Scanner error:', error);
         return new Response(JSON.stringify({
             scannerType: 'threat-intelligence',
-            error: errorMessage,
             score: 0,
-            findings: []
+            error: 'Scan failed. Please try again.',
+            findings: [],
+            metadata: {}
         }), {
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             status: 500
         });
     }
@@ -260,7 +267,7 @@ async function checkShodan(url: string, key: string) {
 
 async function checkUrlScan(url: string, key: string) {
     try {
-        const response = await fetch(`https://urlscan.io/api/v1/search/?q=page.url:"${url}"`, {
+        const response = await fetch(`https://urlscan.io/api/v1/search/?q=page.url:"${encodeURIComponent(url)}"`, {
             headers: { 'API-Key': key }
         });
         if (!response.ok) return {};
@@ -280,7 +287,7 @@ async function checkUrlScan(url: string, key: string) {
 async function checkLeakIX(url: string, key: string) {
     try {
         const domain = new URL(url).hostname;
-        const response = await fetch(`https://leakix.net/search?q=domain:${domain}&scope=leak`, {
+        const response = await fetch(`https://leakix.net/search?q=domain:${encodeURIComponent(domain)}&scope=leak`, {
             headers: {
                 'api-key': key,
                 'Accept': 'application/json',

@@ -14,10 +14,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 const PLANS_BY_AMOUNT: Record<number, { plan: string; domains: number; scans: number }> = {
+    // Monthly prices
     1900: { plan: 'starter', domains: 1, scans: 5 },
     3900: { plan: 'pro', domains: 3, scans: 20 },
     8900: { plan: 'enterprise', domains: 10, scans: 75 },
+    // Annual prices
+    18240: { plan: 'starter', domains: 1, scans: 5 },
+    37440: { plan: 'pro', domains: 3, scans: 20 },
+    85440: { plan: 'enterprise', domains: 10, scans: 75 },
 };
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getSupabaseAdmin() {
     return createClient(
@@ -47,21 +54,63 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
+    // Check idempotency - skip if already processed
+    const { data: existing } = await supabase
+        .from('processed_webhook_events')
+        .select('event_id')
+        .eq('event_id', event.id)
+        .single();
+
+    if (existing) {
+        console.log(`Event ${event.id} already processed, skipping`);
+        return new NextResponse(null, { status: 200 });
+    }
+
+    // Mark as processed (do this early to prevent concurrent processing)
+    await supabase
+        .from('processed_webhook_events')
+        .insert({ event_id: event.id, event_type: event.type });
+
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-        const plan = session.metadata?.plan;
-        const planDomains = parseInt(session.metadata?.plan_domains || '0', 10);
-        const planScansLimit = parseInt(session.metadata?.plan_scans_limit || '0', 10);
 
-        if (userId && plan) {
+        if (!userId || !UUID_REGEX.test(userId)) {
+            console.error('Invalid userId in webhook metadata:', userId);
+            return new NextResponse(null, { status: 200 });
+        }
+
+        // Re-derive plan from the actual price paid, not just metadata
+        let planInfo: { plan: string; domains: number; scans: number } | null = null;
+        try {
+            const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+            const priceAmount = lineItems.data[0]?.price?.unit_amount;
+            if (priceAmount && PLANS_BY_AMOUNT[priceAmount]) {
+                planInfo = PLANS_BY_AMOUNT[priceAmount];
+            }
+        } catch (err) {
+            console.warn('Could not fetch line items for price verification:', err);
+        }
+
+        // Fall back to metadata only if price lookup fails
+        if (!planInfo) {
+            const plan = session.metadata?.plan;
+            const planDomains = parseInt(session.metadata?.plan_domains || '0', 10);
+            const planScansLimit = parseInt(session.metadata?.plan_scans_limit || '0', 10);
+            if (plan) {
+                planInfo = { plan, domains: planDomains, scans: planScansLimit };
+                console.warn(`Fell back to metadata for plan derivation: ${plan}`);
+            }
+        }
+
+        if (planInfo) {
             try {
                 const { error } = await supabase
                     .from('profiles')
                     .update({
-                        plan,
-                        plan_domains: planDomains,
-                        plan_scans_limit: planScansLimit,
+                        plan: planInfo.plan,
+                        plan_domains: planInfo.domains,
+                        plan_scans_limit: planInfo.scans,
                         plan_scans_used: 0,
                         plan_period_start: new Date().toISOString(),
                         stripe_customer_id: session.customer as string,
@@ -70,7 +119,7 @@ export async function POST(req: Request) {
                     .eq('id', userId);
 
                 if (error) throw error;
-                console.log(`Activated plan '${plan}' for user ${userId}`);
+                console.log(`Activated plan '${planInfo.plan}' for user ${userId}`);
             } catch (error) {
                 console.error('Error activating plan:', error);
                 return new NextResponse('Error activating plan', { status: 500 });
@@ -78,9 +127,13 @@ export async function POST(req: Request) {
         }
     }
 
-    if (event.type === 'invoice.paid') {
+    else if (event.type === 'invoice.paid') {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = (invoice as any).subscription as string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawSubscription = (invoice as any).subscription;
+        const subscriptionId = typeof rawSubscription === 'string'
+            ? rawSubscription
+            : rawSubscription?.toString() || '';
 
         if (subscriptionId) {
             try {
@@ -91,7 +144,11 @@ export async function POST(req: Request) {
                     .eq('stripe_subscription_id', subscriptionId)
                     .single();
 
-                if (fetchError || !profile) {
+                if (fetchError) {
+                    console.error('Database error looking up subscription:', fetchError);
+                    return new NextResponse(null, { status: 500 });
+                }
+                if (!profile) {
                     console.warn('No profile found for subscription:', subscriptionId);
                     return new NextResponse(null, { status: 200 });
                 }
@@ -107,11 +164,12 @@ export async function POST(req: Request) {
                 console.log(`Monthly reset for user ${profile.id}`);
             } catch (error) {
                 console.error('Error resetting monthly scans:', error);
+                return new NextResponse(null, { status: 500 });
             }
         }
     }
 
-    if (event.type === 'customer.subscription.deleted') {
+    else if (event.type === 'customer.subscription.deleted') {
         const subscription = event.data.object as Stripe.Subscription;
 
         try {
@@ -142,7 +200,7 @@ export async function POST(req: Request) {
         }
     }
 
-    if (event.type === 'customer.subscription.updated') {
+    else if (event.type === 'customer.subscription.updated') {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata;
 
@@ -190,6 +248,8 @@ export async function POST(req: Request) {
                 console.error('Error updating plan:', error);
             }
         }
+    } else {
+        console.warn(`Unhandled webhook event type: ${event.type}`);
     }
 
     return new NextResponse(null, { status: 200 });

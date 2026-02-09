@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shared/security.ts";
 
 /**
  * API Key & Exposure Scanner
@@ -180,8 +181,8 @@ interface ScanResult {
 }
 
 function redactSecret(secret: string): string {
-    if (secret.length <= 12) return '***REDACTED***';
-    return secret.substring(0, 6) + '...' + secret.substring(secret.length - 4);
+    if (secret.length <= 8) return '***REDACTED***';
+    return secret.substring(0, 4) + '...[REDACTED]';
 }
 
 function calculateEntropy(str: string): number {
@@ -489,34 +490,33 @@ async function probeExposedDatabases(baseUrl: string, html: string): Promise<Fin
 Deno.serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        return new Response(null, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            },
-        });
+        return new Response(null, { headers: getCorsHeaders(req) });
     }
 
     if (req.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method not allowed' }), {
             status: 405,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+        });
+    }
+
+    if (!validateScannerAuth(req)) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
         });
     }
 
     try {
-        const { targetUrl } = await req.json();
-
-        if (!targetUrl) {
-            return new Response(JSON.stringify({ error: 'targetUrl is required' }), {
+        const body = await req.json();
+        const validation = validateTargetUrl(body.targetUrl);
+        if (!validation.valid) {
+            return new Response(JSON.stringify({ error: validation.error }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             });
         }
-
-        // Normalize URL
-        const url = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+        const url = validation.url!;
 
         // Run all three workstreams in parallel
         const [sources, infraFindings, dbFindings] = await Promise.all([
@@ -607,33 +607,21 @@ Deno.serve(async (req: Request) => {
         };
 
         return new Response(JSON.stringify(result), {
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
         });
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Scanner error:', error);
         return new Response(
             JSON.stringify({
                 scannerType: 'api-key-leak',
                 score: 0,
-                error: errorMessage,
-                findings: [{
-                    id: 'scan-failed',
-                    severity: 'critical',
-                    title: 'Scan failed',
-                    description: `Could not scan the target: ${errorMessage}`,
-                    recommendation: 'Verify the URL is accessible and try again.',
-                }],
-                scannedAt: new Date().toISOString(),
+                error: 'Scan failed. Please try again.',
+                findings: [],
+                metadata: {},
             }),
             {
                 status: 500,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                },
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             }
         );
     }

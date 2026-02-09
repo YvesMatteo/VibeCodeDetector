@@ -8,5 +8,5 @@
             "dom.asynciterable"
         ]
     },
-    "lock": false
+    "lock": true
 }

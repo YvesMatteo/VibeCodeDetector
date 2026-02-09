@@ -3,48 +3,23 @@ import { createClient } from '@/lib/supabase/server';
 // @ts-ignore - Module likely exists from merge
 import { runSEOScan } from '@/lib/scanners/seo-scanner';
 
-function extractDomain(url: string): string {
-    try {
-        return new URL(url).hostname.replace(/^www\./, '');
-    } catch {
-        return url;
-    }
-}
-
 const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'vibe_match', 'legal', 'threat_intelligence'] as const;
 
-function isPrivateOrReservedIP(hostname: string): boolean {
-    // Block localhost
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
-    // Block private IP ranges
-    const parts = hostname.split('.').map(Number);
-    if (parts.length === 4 && parts.every(p => !isNaN(p))) {
-        if (parts[0] === 10) return true; // 10.0.0.0/8
-        if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true; // 172.16.0.0/12
-        if (parts[0] === 192 && parts[1] === 168) return true; // 192.168.0.0/16
-        if (parts[0] === 169 && parts[1] === 254) return true; // 169.254.0.0/16 (link-local/metadata)
-        if (parts[0] === 0) return true; // 0.0.0.0/8
-    }
-    // Block common metadata endpoints
-    if (hostname === 'metadata.google.internal') return true;
-    // Require at least one dot (TLD)
-    if (!hostname.includes('.')) return true;
-    return false;
-}
-
-function isValidScanUrl(urlString: string): boolean {
+export async function POST(req: NextRequest) {
     try {
-        const url = new URL(urlString);
-        if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
-        if (isPrivateOrReservedIP(url.hostname)) return false;
-        return true;
-    } catch {
-        return false;
-    }
-}
+        // ==========================================
+        // CSRF / ORIGIN CHECK
+        // ==========================================
+        const origin = req.headers.get('origin');
+        const allowedOrigins = [
+            process.env.NEXT_PUBLIC_SITE_URL,
+            'http://localhost:3000',
+            'http://localhost:3001',
+        ].filter(Boolean);
+        if (origin && !allowedOrigins.includes(origin)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
-export async function POST(request: NextRequest) {
-    try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -52,73 +27,81 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // ==========================================
-        // SUBSCRIPTION CHECK
-        // ==========================================
-
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('plan, plan_domains, plan_scans_limit, plan_scans_used, allowed_domains')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError || !profile) {
-            console.error('Profile fetch error:', profileError);
-            return NextResponse.json({ error: 'User profile not found.' }, { status: 404 });
-        }
-
-        if (profile.plan === 'none') {
-            return NextResponse.json({
-                error: 'Active subscription required. Please subscribe to a plan.',
-                code: 'PLAN_REQUIRED'
-            }, { status: 402 });
-        }
-
-        if (profile.plan_scans_used >= profile.plan_scans_limit) {
-            return NextResponse.json({
-                error: `Monthly scan limit reached (${profile.plan_scans_limit}). Upgrade your plan for more scans.`,
-                code: 'SCAN_LIMIT_REACHED'
-            }, { status: 402 });
-        }
-
-        const body = await request.json();
+        const body = await req.json();
         const { url, scanTypes } = body;
 
+        // ==========================================
+        // URL VALIDATION
+        // ==========================================
         if (!url || typeof url !== 'string') {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
-
-        // Validate scanTypes if provided
-        if (scanTypes !== undefined && scanTypes !== null) {
-            if (!Array.isArray(scanTypes) || !scanTypes.every((t: unknown) => typeof t === 'string' && VALID_SCAN_TYPES.includes(t as typeof VALID_SCAN_TYPES[number]))) {
-                return NextResponse.json({ error: 'Invalid scan types' }, { status: 400 });
-            }
+        if (url.length > 2048) {
+            return NextResponse.json({ error: 'URL exceeds maximum length' }, { status: 400 });
         }
-
         const targetUrl = url.startsWith('http') ? url : `https://${url}`;
-
-        // SSRF protection: block private/internal IPs and non-public URLs
-        if (!isValidScanUrl(targetUrl)) {
-            return NextResponse.json({ error: 'Invalid or non-public URL. Please enter a publicly accessible website.' }, { status: 400 });
+        let parsedUrl: URL;
+        try {
+            parsedUrl = new URL(targetUrl);
+        } catch {
+            return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
         }
-        const domain = extractDomain(targetUrl);
-        const allowedDomains: string[] = profile.allowed_domains || [];
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return NextResponse.json({ error: 'Only http/https URLs are allowed' }, { status: 400 });
+        }
+        // SSRF protection
+        const privatePatterns = [
+            /^localhost$/i, /^127\.\d+\.\d+\.\d+$/, /^10\.\d+\.\d+\.\d+$/,
+            /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, /^192\.168\.\d+\.\d+$/,
+            /^169\.254\.\d+\.\d+$/, /^0\.0\.0\.0$/, /^\[?::1\]?$/,
+        ];
+        if (privatePatterns.some(p => p.test(parsedUrl.hostname))) {
+            return NextResponse.json({ error: 'Internal URLs are not allowed' }, { status: 400 });
+        }
 
-        // Domain enforcement
-        if (!allowedDomains.includes(domain)) {
-            if (allowedDomains.length >= profile.plan_domains) {
-                return NextResponse.json({
-                    error: `Domain limit reached (${profile.plan_domains}). You can only scan: ${allowedDomains.join(', ')}`,
-                    code: 'DOMAIN_LIMIT_REACHED'
-                }, { status: 402 });
+        // ==========================================
+        // SCAN TYPES VALIDATION
+        // ==========================================
+        const validScanTypes = ['security', 'api_keys', 'seo', 'vibe_match', 'legal', 'threat_intelligence'];
+        if (scanTypes !== undefined) {
+            if (!Array.isArray(scanTypes) || !scanTypes.every((t: unknown) => typeof t === 'string' && validScanTypes.includes(t))) {
+                return NextResponse.json({ error: 'Invalid scanTypes' }, { status: 400 });
             }
+        }
 
-            // Auto-register this domain
-            const newDomains = [...allowedDomains, domain];
-            await supabase
-                .from('profiles')
-                .update({ allowed_domains: newDomains })
-                .eq('id', user.id);
+        // ==========================================
+        // ATOMIC SCAN USAGE & DOMAIN CHECKS
+        // ==========================================
+        const domain = parsedUrl.hostname;
+
+        // First, handle domain registration atomically
+        const { data: domainResult, error: domainError } = await supabase
+            .rpc('register_scan_domain', { p_user_id: user.id, p_domain: domain });
+
+        if (domainError) {
+            console.error('Domain registration error:', domainError);
+            return NextResponse.json({ error: 'Failed to verify domain' }, { status: 500 });
+        }
+
+        if (domainResult && domainResult.length > 0 && !domainResult[0].success) {
+            return NextResponse.json({
+                error: `Domain limit reached. Your plan allows ${domainResult[0].allowed_domains?.length || 0} domains.`
+            }, { status: 402 });
+        }
+
+        // Atomic scan usage increment
+        const { data: usageResult, error: usageError } = await supabase
+            .rpc('increment_scan_usage', { p_user_id: user.id });
+
+        if (usageError) {
+            console.error('Usage increment error:', usageError);
+            return NextResponse.json({ error: 'Failed to check scan usage' }, { status: 500 });
+        }
+
+        if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
+            return NextResponse.json({
+                error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`
+            }, { status: 402 });
         }
 
         // ==========================================
@@ -130,6 +113,7 @@ export async function POST(request: NextRequest) {
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const scannerSecretKey = process.env.SCANNER_SECRET_KEY || '';
         const { data: { session } } = await supabase.auth.getSession();
         const accessToken = session?.access_token;
 
@@ -141,6 +125,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
                     },
                     body: JSON.stringify({ targetUrl }),
                 })
@@ -158,6 +143,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
                     },
                     body: JSON.stringify({ targetUrl }),
                 })
@@ -175,6 +161,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
                     },
                     body: JSON.stringify({ targetUrl }),
                 })
@@ -192,6 +179,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
                     },
                     body: JSON.stringify({ targetUrl }),
                 })
@@ -222,6 +210,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
                     },
                     body: JSON.stringify({ targetUrl }),
                 })
@@ -278,11 +267,6 @@ export async function POST(request: NextRequest) {
 
         if (!insertError && scan) {
             scanId = scan.id;
-            // Increment scan usage only after successful scan save
-            await supabase
-                .from('profiles')
-                .update({ plan_scans_used: profile.plan_scans_used + 1 })
-                .eq('id', user.id);
         } else {
             console.error('Failed to save scan:', insertError);
         }
@@ -298,9 +282,6 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('Scan error:', error);
-        return NextResponse.json(
-            { error: 'Scan failed. Please try again.' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });
     }
 }

@@ -33,9 +33,8 @@ export async function POST(req: Request) {
 
         const allowedOrigins = [
             process.env.NEXT_PUBLIC_SITE_URL,
-            'http://localhost:3000',
-            'http://localhost:3001',
-        ].filter(Boolean);
+            ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+        ].filter(Boolean) as string[];
         const requestOrigin = req.headers.get('origin');
         const origin = allowedOrigins.includes(requestOrigin || '') ? requestOrigin! : allowedOrigins[0]!;
 

@@ -10,10 +10,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2026-01-28.clover',
 });
 
-const PLANS: Record<string, { price: number; domains: number; scans: number; name: string }> = {
-    starter: { price: 1900, domains: 1, scans: 5, name: 'Starter' },
-    pro: { price: 3900, domains: 3, scans: 20, name: 'Pro' },
-    enterprise: { price: 8900, domains: 10, scans: 75, name: 'Enterprise' },
+const PLANS: Record<string, { priceMonthly: number; priceAnnual: number; domains: number; scans: number; name: string }> = {
+    starter: { priceMonthly: 1900, priceAnnual: 18240, domains: 1, scans: 5, name: 'Starter' },
+    pro: { priceMonthly: 3900, priceAnnual: 37440, domains: 3, scans: 20, name: 'Pro' },
+    enterprise: { priceMonthly: 8900, priceAnnual: 85440, domains: 10, scans: 75, name: 'Enterprise' },
 };
 
 export async function POST(req: Request) {
@@ -27,12 +27,16 @@ export async function POST(req: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        const { plan, currency = 'usd' } = await req.json();
+        const { plan, currency = 'usd', billing = 'monthly' } = await req.json();
 
         const planConfig = PLANS[plan];
         if (!planConfig) {
             return new NextResponse('Invalid plan', { status: 400 });
         }
+
+        const isAnnual = billing === 'annual';
+        const unitAmount = isAnnual ? planConfig.priceAnnual : planConfig.priceMonthly;
+        const interval: 'month' | 'year' = isAnnual ? 'year' : 'month';
 
         const allowedCurrencies = ['usd', 'chf', 'gbp', 'eur'];
         const selectedCurrency = allowedCurrencies.includes(currency.toLowerCase())
@@ -41,9 +45,8 @@ export async function POST(req: Request) {
 
         const allowedOrigins = [
             process.env.NEXT_PUBLIC_SITE_URL,
-            'http://localhost:3000',
-            'http://localhost:3001',
-        ].filter(Boolean);
+            ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+        ].filter(Boolean) as string[];
         const requestOrigin = req.headers.get('origin');
         const origin = allowedOrigins.includes(requestOrigin || '') ? requestOrigin! : allowedOrigins[0]!;
 
@@ -57,8 +60,8 @@ export async function POST(req: Request) {
                             name: `CheckVibe ${planConfig.name}`,
                             description: `${planConfig.domains} domain${planConfig.domains > 1 ? 's' : ''}, ${planConfig.scans} scans/month`,
                         },
-                        unit_amount: planConfig.price,
-                        recurring: { interval: 'month' },
+                        unit_amount: unitAmount,
+                        recurring: { interval },
                     },
                     quantity: 1,
                 },
@@ -69,6 +72,7 @@ export async function POST(req: Request) {
             metadata: {
                 userId: user.id,
                 plan,
+                billing_interval: interval,
                 plan_domains: planConfig.domains.toString(),
                 plan_scans_limit: planConfig.scans.toString(),
             },
@@ -76,6 +80,7 @@ export async function POST(req: Request) {
                 metadata: {
                     userId: user.id,
                     plan,
+                    billing_interval: interval,
                     plan_domains: planConfig.domains.toString(),
                     plan_scans_limit: planConfig.scans.toString(),
                 },

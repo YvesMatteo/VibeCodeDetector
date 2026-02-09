@@ -1,37 +1,43 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shared/security.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
-const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
 Deno.serve(async (req: Request) => {
     if (req.method === 'OPTIONS') {
-        return new Response(null, { headers: CORS_HEADERS });
+        return new Response(null, { headers: getCorsHeaders(req) });
+    }
+
+    if (!validateScannerAuth(req)) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+        });
     }
 
     try {
-        const { targetUrl } = await req.json();
-
-        if (!targetUrl) {
-            throw new Error("targetUrl is required");
+        const body = await req.json();
+        const validation = validateTargetUrl(body.targetUrl);
+        if (!validation.valid) {
+            return new Response(JSON.stringify({ error: validation.error }), {
+                status: 400,
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            });
         }
+        const url = validation.url!;
 
         if (!GEMINI_API_KEY) {
             return new Response(JSON.stringify({
                 error: "Server configuration error: Missing AI credentials",
                 score: 0
             }), {
-                headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
                 status: 500
             });
         }
 
         // Fetch page content
-        const response = await fetch(targetUrl);
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Failed to fetch target URL: ${response.statusText}`);
         }
@@ -99,25 +105,34 @@ If no issues are found, return score 100 and an empty findings array.`;
 
         const content = JSON.parse(rawText);
 
+        // Validate AI response structure
+        if (typeof content.score !== 'number' || content.score < 0 || content.score > 100) {
+            content.score = 50; // Default to neutral on invalid response
+        }
+        if (!Array.isArray(content.findings)) {
+            content.findings = content.findings || [];
+        }
+
         return new Response(JSON.stringify({
             scannerType: 'legal-scanner',
             score: content.score,
             findings: content.findings,
             scannedAt: new Date().toISOString(),
-            url: targetUrl
+            url
         }), {
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
         });
 
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Scanner error:', error);
         return new Response(JSON.stringify({
             scannerType: 'legal-scanner',
-            error: errorMessage,
             score: 0,
-            findings: []
+            error: 'Scan failed. Please try again.',
+            findings: [],
+            metadata: {}
         }), {
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             status: 500
         });
     }
