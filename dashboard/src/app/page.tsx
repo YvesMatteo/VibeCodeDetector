@@ -155,7 +155,7 @@ export default function HomePage() {
           className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
         >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
-            <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
+            <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
             <span className="font-bold text-white tracking-tight">CheckVibe</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
@@ -221,7 +221,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* H1 Typography - EB Garamond + Reveal Animation */}
-          <h1 className="font-heading text-[36px] leading-[1.05] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-2">
+          <h1 className="font-heading text-[28px] leading-[1.05] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-1 sm:gap-2 w-full px-2">
             <span className="block overflow-hidden">
               <motion.span
                 initial={{ y: 100 }}
@@ -260,7 +260,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto"
+              className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
               CheckVibe listens to your codebase. It catches what AI misses: security holes,
               <br className="hidden md:block" />
@@ -275,14 +275,14 @@ export default function HomePage() {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
           >
-            <Button size="lg" asChild className="h-12 px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
+            <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href="/signup">
                 Start Scanning
               </Link>
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
               <div className="h-px w-10 bg-white/10"></div>
-              <span>Plans from $15.20/month</span>
+              <span>Plans from $19/month</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
           </motion.div>
@@ -332,7 +332,7 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-6 font-mono text-sm overflow-hidden flex-1 bg-[#0E0E10]">
+              <div className="relative p-3 sm:p-6 font-mono text-[10px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
 
                 {/* Grid Background */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
@@ -377,7 +377,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
-                  className="absolute top-[80px] right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-3 shadow-xl z-30"
+                  className="absolute top-[80px] right-2 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
                 >
                   <AlertTriangle className="w-5 h-5 text-red-500" />
                   <div>
@@ -390,7 +390,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
-                  className="absolute top-[320px] right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-3 shadow-xl z-30"
+                  className="absolute top-[220px] sm:top-[320px] right-2 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
                 >
                   <Search className="w-5 h-5 text-yellow-500" />
                   <div>
@@ -427,7 +427,7 @@ export default function HomePage() {
               Everything You Need to{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
-            <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto">
               Six powerful scanners that catch the issues AI coding tools commonly miss.
             </p>
           </motion.div>
@@ -479,7 +479,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
             </h2>
-            <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
               Flexible plans for every team size. Cancel anytime.
             </p>
 
@@ -618,10 +618,10 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
-            <p className="text-xl text-zinc-400 mb-8">
-              Plans start at $15.20/month. Cancel anytime.
+            <p className="text-base sm:text-xl text-zinc-400 mb-8">
+              Plans start at $19/month. Cancel anytime.
             </p>
-            <Button size="lg" asChild className="text-lg px-10 py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
+            <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">
                 Start Scanning
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -637,7 +637,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain" />
+              <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
               <span className="font-bold text-white">CheckVibe</span>
             </div>
             <p className="text-muted-foreground text-sm">

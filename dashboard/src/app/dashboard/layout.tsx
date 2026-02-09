@@ -57,7 +57,7 @@ function SidebarContent({
             <div className="flex h-16 items-center px-6 border-b border-white/5">
                 <Link href="/" className="flex items-center space-x-2 group">
                     <div className="relative">
-                        <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110" />
+                        <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
                     </div>
                     <span className="font-heading text-xl font-bold tracking-tight">CheckVibe</span>
                 </Link>
@@ -175,7 +175,7 @@ export default function DashboardLayout({
                         <Menu className="h-5 w-5" />
                     </button>
                     <Link href="/" className="flex items-center space-x-2">
-                        <Image src="/logo-nobg.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
+                        <Image src="/logo-nobg.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
                         <span className="font-heading text-lg font-bold tracking-tight">CheckVibe</span>
                     </Link>
                 </div>

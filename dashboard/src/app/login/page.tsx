@@ -55,7 +55,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-8">
                     <Link href="/" className="flex items-center space-x-2 group">
                         <div className="relative">
-                            <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain transition-transform group-hover:scale-110" />
+                            <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                             <div className="absolute inset-0 bg-blue-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <span className="text-2xl font-bold">CheckVibe</span>
