@@ -147,7 +147,7 @@ export default function NewScanPage() {
     }
 
     return (
-        <div className="p-4 md:p-8 max-w-4xl mx-auto">
+        <div className="p-4 md:p-8 pb-16 max-w-3xl mx-auto">
             {/* Header */}
             <div className="mb-8">
                 <Link
@@ -231,7 +231,7 @@ export default function NewScanPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {scanTypes.map((type) => {
                                 const isSelected = selectedTypes.includes(type.id);
 
@@ -243,16 +243,16 @@ export default function NewScanPage() {
                                         tabIndex={0}
                                         onClick={() => toggleScanType(type.id)}
                                         onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleScanType(type.id); } }}
-                                        className={`relative p-4 rounded-lg border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSelected
+                                        className={`relative p-3.5 rounded-lg border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSelected
                                             ? 'border-blue-500/50 bg-blue-500/10'
                                             : 'border-white/5 hover:border-white/10 bg-white/5'
                                             }`}
                                     >
-                                        <div className="flex items-start gap-3">
-                                            <type.icon className={`h-6 w-6 ${type.color} mt-0.5`} />
-                                            <div>
-                                                <h3 className="font-medium">{type.name}</h3>
-                                                <p className="text-sm text-muted-foreground">
+                                        <div className="flex items-center gap-3">
+                                            <type.icon className={`h-5 w-5 ${type.color} shrink-0`} />
+                                            <div className="min-w-0">
+                                                <h3 className="font-medium text-sm">{type.name}</h3>
+                                                <p className="text-xs text-muted-foreground truncate">
                                                     {type.description}
                                                 </p>
                                             </div>
