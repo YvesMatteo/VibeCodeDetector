@@ -198,22 +198,24 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                         <AIFixPrompt url={scan.url} findings={allFindings} />
-                        <Button variant="outline" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10">
-                            <Download className="mr-2 h-4 w-4" />
-                            Export PDF
-                        </Button>
-                        <Button disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 border-0">
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Rescan
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button variant="outline" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10 flex-1 sm:flex-none">
+                                <Download className="mr-2 h-4 w-4" />
+                                Export
+                            </Button>
+                            <Button disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 border-0 flex-1 sm:flex-none">
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Rescan
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Score Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8 stagger-children">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 stagger-children">
                 <Card className="bg-zinc-900/40 border-white/5">
                     <CardContent className="pt-6 flex flex-col items-center">
                         <ScoreRing score={scan.overall_score || 0} size="large" />

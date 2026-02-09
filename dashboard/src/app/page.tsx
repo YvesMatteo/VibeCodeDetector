@@ -138,7 +138,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background overflow-hidden" onMouseMove={handleMouseMove}>
       {/* Navigation */}
       {/* Navigation - Cluely Style Pill */}
-      <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none">
+      <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none px-4">
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -185,7 +185,7 @@ export default function HomePage() {
 
       <main>
       {/* Hero Section - Cluely 1:1 Replica */}
-      <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <section className="relative pt-24 sm:pt-40 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 sm:min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[#0E0E10]" aria-hidden="true">
           <motion.div
@@ -199,7 +199,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
         </div>
 
-        <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-8">
+        <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-5 sm:gap-8">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -212,7 +212,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* H1 Typography - EB Garamond + Reveal Animation */}
-          <h1 className="font-heading text-[28px] leading-[1.05] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-1 sm:gap-2 w-full px-2">
+          <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-2 w-full">
             <span className="block overflow-hidden">
               <motion.span
                 initial={{ y: 100 }}
@@ -251,11 +251,9 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
+              className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe scans your live website for security holes, leaked API keys,
-              <br className="hidden md:block" />
-              SEO issues, legal risks, and known threats.
+              CheckVibe scans your live website for security holes, leaked API keys, SEO issues, legal risks, and known threats.
             </motion.p>
           </div>
 
@@ -283,20 +281,20 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-12 w-full max-w-4xl px-4"
+            className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 sm:gap-8 mt-8 sm:mt-12 w-full max-w-4xl"
           >
             {stats.map((stat, i) => (
-              <div key={i} className="flex flex-col items-center justify-center text-center">
-                <div className="text-3xl md:text-4xl font-bold text-white mb-1 flex items-baseline">
-                  {stat.value.includes('<') && <span className="mr-1 text-2xl text-zinc-400">&lt;</span>}
+              <div key={i} className="flex flex-col items-center justify-center text-center min-w-0">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 flex items-baseline">
+                  {stat.value.includes('<') && <span className="mr-0.5 text-lg sm:text-2xl text-zinc-400">&lt;</span>}
                   <CountUp
                     to={parseInt(stat.value.replace(/\D/g, ''))}
                     className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50"
                   />
-                  {stat.value.includes('+') && <span className="ml-1 text-2xl text-zinc-400">+</span>}
-                  {stat.value.includes('s') && <span className="ml-1 text-2xl text-zinc-400">s</span>}
+                  {stat.value.includes('+') && <span className="ml-0.5 text-lg sm:text-2xl text-zinc-400">+</span>}
+                  {stat.value.includes('s') && <span className="ml-0.5 text-lg sm:text-2xl text-zinc-400">s</span>}
                 </div>
-                <div className="text-sm text-zinc-500 font-medium uppercase tracking-wider">{stat.label}</div>
+                <div className="text-[10px] sm:text-sm text-zinc-500 font-medium uppercase tracking-wide sm:tracking-wider">{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -306,11 +304,11 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
             animate={{ opacity: 1, scale: 1, rotateX: 0 }}
             transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
-            className="relative mt-16 w-full max-w-4xl perspective-midrange group"
+            className="relative mt-6 sm:mt-16 w-full max-w-4xl perspective-midrange group"
             aria-hidden="true"
           >
             {/* Main Terminal Window */}
-            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col transform transition-transform duration-700">
+            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[240px] sm:h-[350px] md:h-[450px] w-full flex flex-col transform transition-transform duration-700 hover:rotate-x-2">
 
               {/* Header */}
               <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 justify-between">
@@ -323,28 +321,28 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-3 sm:p-6 font-mono text-[10px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
+              <div className="relative p-3 sm:p-6 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10] [&>div]:overflow-hidden">
 
                 {/* Grid Background */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
 
                 {/* Code Lines */}
-                <div className="space-y-1 relative z-10 opacity-80">
-                  <div className="flex gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">"sk_live_EXAMPLE_KEY_DO_NOT_USE..."</span>; <span className="text-zinc-500">{'// <= Exposed Key'}</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">"Authorization"</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">07</span> </div>
-                  <div className="flex gap-4"><span className="text-zinc-600">08</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">"/api/charge"</span>, {'{'}</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">09</span>     <span className="text-cyan-200">method</span>: <span className="text-green-300">"POST"</span>,</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">10</span>     <span className="text-cyan-200">headers</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">11</span>   {'}'});</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">12</span> {'}'}</div>
-                  <div className="flex gap-4"><span className="text-zinc-600">13</span> </div>
-                  <div className="flex gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// SEO: Missing meta tags'}</span></div>
-                  <div className="flex gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">metadata</span> = {'{'} {'}'};</div>
+                <div className="space-y-1 relative z-10 opacity-80 whitespace-nowrap">
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">&quot;sk_live_EXAMPLE_KEY...&quot;</span>;</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">&quot;Authorization&quot;</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">07</span> </div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">08</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">&quot;/api/charge&quot;</span>, {'{'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span>     <span className="text-cyan-200">method</span>: <span className="text-green-300">&quot;POST&quot;</span>,</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">10</span>     <span className="text-cyan-200">headers</span></div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">11</span>   {'}'});</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">12</span> {'}'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">13</span> </div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// SEO: Missing meta tags'}</span></div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">metadata</span> = {'{'} {'}'};</div>
                 </div>
 
                 {/* Scanning Beam */}
@@ -368,12 +366,12 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
-                  className="absolute top-[80px] right-2 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
+                  className="absolute top-[55px] sm:top-[80px] right-2 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
                 >
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
                   <div>
-                    <div className="text-xs font-bold">Critical Issue</div>
-                    <div className="text-[10px] opacity-80">Exposed Stripe Key</div>
+                    <div className="text-[10px] sm:text-xs font-bold">Critical Issue</div>
+                    <div className="text-[9px] sm:text-[10px] opacity-80">Exposed Stripe Key</div>
                   </div>
                 </motion.div>
 
@@ -381,12 +379,12 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
-                  className="absolute top-[220px] sm:top-[320px] right-2 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
+                  className="absolute top-[120px] sm:top-[320px] right-2 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
                 >
-                  <Search className="w-5 h-5 text-yellow-500" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                   <div>
-                    <div className="text-xs font-bold">SEO Warning</div>
-                    <div className="text-[10px] opacity-80">Missing Metadata</div>
+                    <div className="text-[10px] sm:text-xs font-bold">SEO Warning</div>
+                    <div className="text-[9px] sm:text-[10px] opacity-80">Missing Metadata</div>
                   </div>
                 </motion.div>
 
@@ -397,7 +395,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
+      <section id="features" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         {/* Subtle gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0E0E10] via-blue-950/5 to-[#0E0E10]" aria-hidden="true" />
 
@@ -409,21 +407,21 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
             <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
               Features
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Everything You Need to{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
-            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
               Five powerful checks that catch the issues vibe-coded sites commonly have.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 stagger-children">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -454,7 +452,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
+      <section id="pricing" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" aria-hidden="true"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
@@ -462,15 +460,15 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
             <Badge variant="secondary" className="mb-4 bg-blue-500/10 border-blue-500/20 text-blue-300">
               Pricing
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
             </h2>
-            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-6 sm:mb-8">
               Flexible plans for every team size. Cancel anytime.
             </p>
 
@@ -478,7 +476,7 @@ export default function HomePage() {
             <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
               <button
                 onClick={() => setBilling('monthly')}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${
                   billing === 'monthly'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-zinc-400 hover:text-white'
@@ -488,25 +486,25 @@ export default function HomePage() {
               </button>
               <button
                 onClick={() => setBilling('annual')}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
                   billing === 'annual'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Annual
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${
                   billing === 'annual'
                     ? 'bg-green-100 text-green-700'
                     : 'bg-green-500/10 text-green-400'
                 }`}>
-                  Save 20%
+                  -20%
                 </span>
               </button>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 max-w-sm sm:max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-4 max-w-sm sm:max-w-6xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -593,7 +591,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] border-t border-white/5">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] border-t border-white/5 overflow-hidden">
         {/* Gradient orbs */}
         <div className="orb orb-blue w-64 h-64 top-0 left-1/4" aria-hidden="true" />
         <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" aria-hidden="true" />
@@ -606,7 +604,7 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
             className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
@@ -624,20 +622,20 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
+      <footer className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
             <div className="flex items-center gap-2">
               <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
               <span className="font-bold text-white">CheckVibe</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-zinc-400">
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-zinc-400">
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
               <a href="mailto:hello@checkvibe.dev" className="hover:text-white transition-colors">Contact</a>
             </div>
-            <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} CheckVibe. All rights reserved.
+            <p className="text-muted-foreground text-xs sm:text-sm text-center">
+              © {new Date().getFullYear()} CheckVibe
             </p>
           </div>
         </div>

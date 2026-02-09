@@ -139,10 +139,10 @@ export default function CreditsPage() {
                 <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
                     Pricing
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-heading font-medium mb-4 tracking-tight text-white">
+                <h1 className="text-2xl sm:text-4xl font-heading font-medium mb-4 tracking-tight text-white">
                     Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Transparent</span> Plans
                 </h1>
-                <p className="text-xl text-zinc-400 max-w-2xl mb-6">
+                <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mb-6">
                     Choose a plan that fits your needs. Upgrade or downgrade anytime.
                 </p>
 
@@ -150,7 +150,7 @@ export default function CreditsPage() {
                 <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
                     <button
                         onClick={() => setBilling('monthly')}
-                        className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                        className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${
                             billing === 'monthly'
                                 ? 'bg-white text-black shadow-sm'
                                 : 'text-zinc-400 hover:text-white'
@@ -160,19 +160,19 @@ export default function CreditsPage() {
                     </button>
                     <button
                         onClick={() => setBilling('annual')}
-                        className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                        className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
                             billing === 'annual'
                                 ? 'bg-white text-black shadow-sm'
                                 : 'text-zinc-400 hover:text-white'
                         }`}
                     >
                         Annual
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${
                             billing === 'annual'
                                 ? 'bg-green-100 text-green-700'
                                 : 'bg-green-500/10 text-green-400'
                         }`}>
-                            Save 20%
+                            -20%
                         </span>
                     </button>
                 </div>
@@ -213,7 +213,7 @@ export default function CreditsPage() {
                         <Card
                             key={plan.id}
                             className={`relative transition-all duration-300 flex flex-col ${plan.highlighted
-                                ? 'bg-zinc-900/60 border-blue-500/30 sm:scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                                ? 'bg-zinc-900/60 border-blue-500/30 lg:scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                                 : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                                 }`}
                         >
