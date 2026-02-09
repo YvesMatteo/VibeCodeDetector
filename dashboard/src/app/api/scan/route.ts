@@ -1,31 +1,52 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runSEOScan } from '@/lib/scanners/seo-scanner';
+import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
+import { getServiceClient } from '@/lib/api-keys';
 
 const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence'] as const;
 
 export async function POST(req: NextRequest) {
     try {
         // ==========================================
-        // CSRF / ORIGIN CHECK
+        // CSRF / ORIGIN CHECK (skip for API key auth)
         // ==========================================
-        const origin = req.headers.get('origin');
-        const host = req.headers.get('host') || '';
-        if (!origin) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        const originHost = new URL(origin).host;
-        const isSameHost = originHost === host;
-        const isLocalhost = originHost.startsWith('localhost');
-        if (!isSameHost && !isLocalhost) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        const isApiKeyAuth = req.headers.get('authorization')?.startsWith('Bearer cvd_live_');
+
+        if (!isApiKeyAuth) {
+            const origin = req.headers.get('origin');
+            const host = req.headers.get('host') || '';
+            if (!origin) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
+            const originHost = new URL(origin).host;
+            const isSameHost = originHost === host;
+            const isLocalhost = originHost.startsWith('localhost');
+            if (!isSameHost && !isLocalhost) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
         }
 
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        // ==========================================
+        // UNIFIED AUTH (session OR API key) + RATE LIMITING
+        // ==========================================
+        const { context: auth, error: authError } = await resolveAuth(req);
+        if (authError) return authError;
+        if (!auth) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+            ?? req.headers.get('x-real-ip')
+            ?? '0.0.0.0';
+
+        // ==========================================
+        // SCOPE CHECK (API key must have scan:write)
+        // ==========================================
+        const scopeError = requireScope(auth, 'scan:write');
+        if (scopeError) {
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 403 });
+            return scopeError;
         }
 
         const body = await req.json();
@@ -61,6 +82,16 @@ export async function POST(req: NextRequest) {
         }
 
         // ==========================================
+        // API KEY DOMAIN RESTRICTION CHECK
+        // ==========================================
+        const domain = parsedUrl.hostname;
+        const domainError = requireDomain(auth, domain);
+        if (domainError) {
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 403 });
+            return domainError;
+        }
+
+        // ==========================================
         // SCAN TYPES VALIDATION
         // ==========================================
         if (scanTypes !== undefined) {
@@ -71,19 +102,21 @@ export async function POST(req: NextRequest) {
 
         // ==========================================
         // ATOMIC SCAN USAGE & DOMAIN CHECKS
+        // Use service client for API key auth (anon client for session)
         // ==========================================
-        const domain = parsedUrl.hostname;
+        const supabase = auth.keyId ? getServiceClient() : await createClient();
 
         // First, handle domain registration atomically
-        const { data: domainResult, error: domainError } = await supabase
-            .rpc('register_scan_domain', { p_user_id: user.id, p_domain: domain });
+        const { data: domainResult, error: domRegError } = await supabase
+            .rpc('register_scan_domain', { p_user_id: auth.userId, p_domain: domain });
 
-        if (domainError) {
-            console.error('Domain registration error:', domainError);
+        if (domRegError) {
+            console.error('Domain registration error:', domRegError);
             return NextResponse.json({ error: 'Failed to verify domain' }, { status: 500 });
         }
 
         if (domainResult && domainResult.length > 0 && !domainResult[0].success) {
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
             return NextResponse.json({
                 error: `Domain limit reached. Your plan allows ${domainResult[0].allowed_domains?.length || 0} domains.`,
                 code: 'DOMAIN_LIMIT_REACHED',
@@ -92,7 +125,7 @@ export async function POST(req: NextRequest) {
 
         // Atomic scan usage increment
         const { data: usageResult, error: usageError } = await supabase
-            .rpc('increment_scan_usage', { p_user_id: user.id });
+            .rpc('increment_scan_usage', { p_user_id: auth.userId });
 
         if (usageError) {
             console.error('Usage increment error:', usageError);
@@ -101,6 +134,7 @@ export async function POST(req: NextRequest) {
 
         if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
             const hasNoPlan = usageResult[0].plan === 'none' || usageResult[0].plan_scans_limit === 0;
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
             return NextResponse.json({
                 error: hasNoPlan
                     ? 'A plan is required to run scans. Subscribe to get started.'
@@ -118,17 +152,23 @@ export async function POST(req: NextRequest) {
 
         const SCANNER_TIMEOUT_MS = 30000; // 30 second timeout per scanner
 
-        function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+        function fetchWithTimeout(fetchUrl: string, options: RequestInit): Promise<Response> {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), SCANNER_TIMEOUT_MS);
-            return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
+            return fetch(fetchUrl, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         const scannerSecretKey = process.env.SCANNER_SECRET_KEY || '';
-        const { data: { user: validatedUser } } = await supabase.auth.getUser();
-        const accessToken = validatedUser ? (await supabase.auth.getSession()).data.session?.access_token : undefined;
+
+        // For API key auth, use anon key for edge function calls (scanner-key handles auth there)
+        let accessToken: string | undefined;
+        if (!auth.keyId) {
+            const sessionClient = await createClient();
+            const { data: { user: validatedUser } } = await sessionClient.auth.getUser();
+            accessToken = validatedUser ? (await sessionClient.auth.getSession()).data.session?.access_token : undefined;
+        }
 
         // 1. Security Headers Scanner (Edge Function)
         scannerPromises.push(
@@ -236,10 +276,13 @@ export async function POST(req: NextRequest) {
 
         let scanId = null;
 
-        const { data: scan, error: insertError } = await supabase
+        // Use service client for insert when using API key auth
+        const insertClient = auth.keyId ? getServiceClient() : await createClient();
+
+        const { data: scan, error: insertError } = await insertClient
             .from('scans')
             .insert({
-                user_id: user.id,
+                user_id: auth.userId,
                 url: targetUrl,
                 status: 'completed',
                 overall_score: overallScore,
@@ -254,6 +297,9 @@ export async function POST(req: NextRequest) {
         } else {
             console.error('Failed to save scan:', insertError);
         }
+
+        // Audit log (fire-and-forget)
+        logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 200 });
 
         return NextResponse.json({
             success: true,

@@ -28,12 +28,14 @@ import {
     Plus,
     ChevronDown,
     Menu,
+    Key,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Scans', href: '/dashboard/scans', icon: Scan },
+    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
     { name: 'Credits', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -212,8 +214,13 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="md:pl-64 pt-14 md:pt-0">
-                <div className="min-h-screen animate-fade-in-up">
+            <main className="md:pl-64 pt-14 md:pt-0 relative">
+                {/* Subtle blue gradient background */}
+                <div className="fixed inset-0 md:left-64 pointer-events-none" aria-hidden="true">
+                    <div className="absolute top-[-10%] left-[10%] w-[40%] h-[40%] bg-[#497EE9]/[0.07] blur-[120px] rounded-full" />
+                    <div className="absolute bottom-[-10%] right-[5%] w-[35%] h-[35%] bg-[#749CFF]/[0.05] blur-[120px] rounded-full" />
+                </div>
+                <div className="relative min-h-screen animate-fade-in-up">
                     {children}
                 </div>
             </main>

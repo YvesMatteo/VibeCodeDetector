@@ -24,7 +24,8 @@ import {
   SheetContent,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useState, type MouseEvent } from 'react';
+import { useState, useEffect, type MouseEvent } from 'react';
+import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 
 const features = [
   {
@@ -114,6 +115,11 @@ const stats = [
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+  const [currency, setCurrency] = useState<CurrencyCode>('USD');
+
+  useEffect(() => {
+    setCurrency(detectCurrency());
+  }, []);
 
   // Parallax Logic
   const mouseX = useMotionValue(0);
@@ -271,7 +277,7 @@ export default function HomePage() {
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
               <div className="h-px w-10 bg-white/10"></div>
-              <span>Plans from $19/month</span>
+              <span>Plans from {formatPrice(19, currency)}/month</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
           </motion.div>
@@ -534,15 +540,15 @@ export default function HomePage() {
                       ) : billing === 'annual' ? (
                         <div className="flex flex-col">
                           <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-bold text-white tracking-tight">${tier.priceAnnualPerMonth!.toFixed(2)}</span>
+                            <span className="text-4xl font-bold text-white tracking-tight">{formatPrice(tier.priceAnnualPerMonth!, currency)}</span>
                             <span className="text-zinc-500 text-sm font-normal">/mo</span>
                           </div>
-                          <span className="text-zinc-500 text-sm line-through mt-1">${tier.priceMonthly}/mo</span>
+                          <span className="text-zinc-500 text-sm line-through mt-1">{formatPrice(tier.priceMonthly!, currency)}/mo</span>
                           <span className="text-zinc-500 text-xs mt-1">billed annually</span>
                         </div>
                       ) : (
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-white tracking-tight">${tier.priceMonthly}</span>
+                          <span className="text-4xl font-bold text-white tracking-tight">{formatPrice(tier.priceMonthly!, currency)}</span>
                           <span className="text-zinc-500 text-sm font-normal">/mo</span>
                         </div>
                       )}
@@ -608,7 +614,7 @@ export default function HomePage() {
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              Plans start at $19/month. Cancel anytime.
+              Plans start at {formatPrice(19, currency)}/month. Cancel anytime.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">

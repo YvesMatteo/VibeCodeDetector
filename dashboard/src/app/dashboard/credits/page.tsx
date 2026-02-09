@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Zap, Crown, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 
 const pricingPlans = [
     {
@@ -61,11 +62,16 @@ export default function CreditsPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [currency, setCurrency] = useState<CurrencyCode>('USD');
     const [currentPlan, setCurrentPlan] = useState<string>('none');
     const [scansUsed, setScansUsed] = useState(0);
     const [scansLimit, setScansLimit] = useState(0);
     const [domainsUsed, setDomainsUsed] = useState(0);
     const [domainsLimit, setDomainsLimit] = useState(0);
+
+    useEffect(() => {
+        setCurrency(detectCurrency());
+    }, []);
 
     useEffect(() => {
         async function loadProfile() {
@@ -97,7 +103,7 @@ export default function CreditsPage() {
             const res = await fetch('/api/stripe/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: planId, currency: 'usd', billing }),
+                body: JSON.stringify({ plan: planId, currency: currency.toLowerCase(), billing }),
             });
 
             if (!res.ok) throw new Error('Checkout failed');
@@ -241,16 +247,16 @@ export default function CreditsPage() {
                                         <div className="flex flex-col items-center">
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">
-                                                    ${plan.priceAnnualPerMonth!.toFixed(2)}
+                                                    {formatPrice(plan.priceAnnualPerMonth!, currency)}
                                                 </span>
                                                 <span className="text-zinc-400 text-sm">/mo</span>
                                             </div>
-                                            <span className="text-zinc-500 text-sm line-through mt-1">${plan.priceMonthly}/mo</span>
+                                            <span className="text-zinc-500 text-sm line-through mt-1">{formatPrice(plan.priceMonthly!, currency)}/mo</span>
                                             <span className="text-zinc-500 text-xs mt-1">billed annually</span>
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">${plan.priceMonthly}</span>
+                                            <span className="text-4xl md:text-5xl font-heading font-bold gradient-text">{formatPrice(plan.priceMonthly!, currency)}</span>
                                             <span className="text-zinc-400 text-sm">/mo</span>
                                         </>
                                     )}
