@@ -70,6 +70,7 @@ export default function NewScanPage() {
     const [selectedTypes, setSelectedTypes] = useState<string[]>(['security', 'seo']);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [errorCode, setErrorCode] = useState<string | null>(null);
     const router = useRouter();
 
     function toggleScanType(id: string) {
@@ -90,6 +91,7 @@ export default function NewScanPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
+        setErrorCode(null);
 
         if (!url) {
             setError('Please enter a URL');
@@ -109,7 +111,6 @@ export default function NewScanPage() {
         setLoading(true);
 
         try {
-            // Call the real scan API
             const response = await fetch('/api/scan', {
                 method: 'POST',
                 headers: {
@@ -124,14 +125,13 @@ export default function NewScanPage() {
             const result = await response.json();
 
             if (!response.ok) {
+                setErrorCode(result.code || null);
                 throw new Error(result.error || 'Scan failed');
             }
 
-            // Redirect to scan results (or demo page if no scanId)
             if (result.scanId) {
                 router.push(`/dashboard/scans/${result.scanId}`);
             } else {
-                // Store results in session storage for demo display
                 sessionStorage.setItem('lastScanResult', JSON.stringify(result));
                 router.push('/dashboard/demo-results');
             }
@@ -173,7 +173,22 @@ export default function NewScanPage() {
                     <CardContent>
                         {error && (
                             <div className="mb-4 p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                {error}
+                                <p>{error}</p>
+                                {errorCode === 'PLAN_REQUIRED' && (
+                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
+                                        Subscribe to a plan &rarr;
+                                    </Link>
+                                )}
+                                {errorCode === 'SCAN_LIMIT_REACHED' && (
+                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
+                                        Upgrade your plan &rarr;
+                                    </Link>
+                                )}
+                                {errorCode === 'DOMAIN_LIMIT_REACHED' && (
+                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
+                                        Upgrade for more domains &rarr;
+                                    </Link>
+                                )}
                             </div>
                         )}
                         <div className="space-y-2">

@@ -6,6 +6,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
     apiVersion: '2026-01-28.clover',
 });
 
+const PLANS: Record<string, { price: number; domains: number; scans: number; name: string }> = {
+    starter: { price: 1900, domains: 1, scans: 5, name: 'Starter' },
+    pro: { price: 3900, domains: 3, scans: 20, name: 'Pro' },
+    enterprise: { price: 8900, domains: 10, scans: 75, name: 'Enterprise' },
+};
+
 export async function POST(req: Request) {
     try {
         const supabase = await createClient();
@@ -17,38 +23,13 @@ export async function POST(req: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        const { package: packageId, currency = 'usd' } = await req.json();
+        const { plan, currency = 'usd' } = await req.json();
 
-        let priceAmount = 0;
-        let credits = 0;
-        let productName = '';
-
-        // Pricing logic
-        // Single Analysis: 29
-        // 3 Analyses: 49
-        // 5 Analyses: 79
-        switch (packageId) {
-            case 1:
-                priceAmount = 2900; // $29.00
-                credits = 1;
-                productName = 'Single Vibe Analysis';
-                break;
-            case 3:
-                priceAmount = 4900; // $49.00
-                credits = 3;
-                productName = '3 Vibe Analyses Pack';
-                break;
-            case 5:
-                priceAmount = 7900; // $79.00
-                credits = 5;
-                productName = '5 Vibe Analyses Pack';
-                break;
-            default:
-                return new NextResponse('Invalid package', { status: 400 });
+        const planConfig = PLANS[plan];
+        if (!planConfig) {
+            return new NextResponse('Invalid plan', { status: 400 });
         }
 
-        // Supported currencies: usd, chf, gbp, eur
-        // We strictly use the same numerical amount for simplicity as requested: "$29, 29 CHF, 29 GBP, 29 EUR"
         const allowedCurrencies = ['usd', 'chf', 'gbp', 'eur'];
         const selectedCurrency = allowedCurrencies.includes(currency.toLowerCase())
             ? currency.toLowerCase()
@@ -63,20 +44,23 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: selectedCurrency,
                         product_data: {
-                            name: productName,
-                            description: `${credits} analysis credit${credits > 1 ? 's' : ''}`,
+                            name: `CheckVibe ${planConfig.name}`,
+                            description: `${planConfig.domains} domain${planConfig.domains > 1 ? 's' : ''}, ${planConfig.scans} scans/month`,
                         },
-                        unit_amount: priceAmount,
+                        unit_amount: planConfig.price,
+                        recurring: { interval: 'month' },
                     },
                     quantity: 1,
                 },
             ],
-            mode: 'payment',
+            mode: 'subscription',
             success_url: `${origin}/dashboard?success=true`,
             cancel_url: `${origin}/dashboard/credits?canceled=true`,
             metadata: {
                 userId: user.id,
-                credits: credits.toString(),
+                plan,
+                plan_domains: planConfig.domains.toString(),
+                plan_scans_limit: planConfig.scans.toString(),
             },
             customer_email: user.email,
         });

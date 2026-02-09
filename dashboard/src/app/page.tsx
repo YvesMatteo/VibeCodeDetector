@@ -14,27 +14,17 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Sparkles,
   Terminal,
   AlertTriangle,
   FileCode,
   Globe,
-  Zap
+  Zap,
+  Mail
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
 import { useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { SpotlightCard } from '@/components/ui/spotlight-card';
 import { CountUp } from '@/components/ui/count-up';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
 import React, { useState, useEffect } from 'react';
 
 const features = [
@@ -84,34 +74,41 @@ const features = [
 
 const pricingTiers = [
   {
-    name: 'Single Scan',
-    price: '$29',
-    period: '',
-    description: 'Perfect for a one-off check',
-    features: ['1 Full CheckVibe Analysis', 'All 6 Scanners', 'PDF Report', 'API Key Detection', 'AI Vibe Check'],
+    name: 'Starter',
+    price: '$19',
+    period: '/mo',
+    description: 'For solo makers',
+    features: ['1 domain', '5 scans/month', 'All 6 scanners', 'PDF export'],
     cta: 'Get Started',
     highlighted: false,
-    upsell: true, // Marker for Upsell Logic
   },
   {
-    name: 'Triple Pack',
-    price: '$49',
-    period: '',
-    description: 'Great for iterations',
-    features: ['3 Full Analyses', 'Save $38', 'All Features Included', 'Great for Iterations', 'No Expiration'],
+    name: 'Pro',
+    price: '$39',
+    period: '/mo',
+    description: 'For growing projects',
+    features: ['3 domains', '20 scans/month', 'All 6 scanners', 'Priority support'],
     cta: 'Get Started',
     highlighted: true,
-    upsell: false,
   },
   {
-    name: 'Agency Pack',
-    price: '$79',
-    period: '',
-    description: 'For multiple projects',
-    features: ['5 Full Analyses', 'Save $66', 'Priority Support', 'Best Value', 'Shareable Reports'],
+    name: 'Enterprise',
+    price: '$89',
+    period: '/mo',
+    description: 'For teams & agencies',
+    features: ['10 domains', '75 scans/month', 'All 6 scanners', 'Dedicated support'],
     cta: 'Get Started',
     highlighted: false,
-    upsell: false,
+  },
+  {
+    name: 'Max',
+    price: 'Custom',
+    period: '',
+    description: 'For large organizations',
+    features: ['Unlimited domains', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
+    cta: 'Contact Us',
+    highlighted: false,
+    isContact: true,
   },
 ];
 
@@ -257,7 +254,7 @@ export default function HomePage() {
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
               <div className="h-px w-10 bg-white/10"></div>
-              <span>No credit card required</span>
+              <span>Plans from $19/month</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
           </motion.div>
@@ -454,11 +451,11 @@ export default function HomePage() {
               Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
             </h2>
             <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-              Start free. Upgrade when you need more power.
+              Monthly plans for every team size. Cancel anytime.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -498,62 +495,17 @@ export default function HomePage() {
                       ))}
                     </ul>
 
-                    {tier.upsell ? (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
-                            variant="outline"
-                          >
-                            {tier.cta}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md bg-[#1C1C1E] border-white/10 text-white">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                              <Sparkles className="w-5 h-5 text-yellow-400" />
-                              Unlock More Value?
-                            </DialogTitle>
-                            <DialogDescription className="text-zinc-400 text-base">
-                              You selected the <span className="text-white font-medium">Single Scan</span> for $29.
-                            </DialogDescription>
-                          </DialogHeader>
-
-                          <div className="py-4 space-y-4">
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 flex items-center justify-between">
-                              <div>
-                                <div className="font-bold text-blue-200">Upgrade to Triple Pack</div>
-                                <div className="text-sm text-zinc-400">3 Scans for just <span className="text-white font-bold">$49</span></div>
-                                <div className="text-xs text-green-400 mt-1">That's only $16.33 per scan!</div>
-                              </div>
-                              <div className="text-right">
-                                <span className="block text-sm text-zinc-500 line-through">$87</span>
-                                <span className="block text-xl font-bold text-white">$49</span>
-                              </div>
-                            </div>
-
-                            <div className="text-center text-sm text-zinc-500">
-                              Or continue with single scan for $29
-                            </div>
-                          </div>
-
-                          <DialogFooter className="flex-col sm:justify-center gap-2">
-                            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 py-6 text-lg">
-                              <Link href="/signup?plan=triple">
-                                Upgrade & Save 45%
-                              </Link>
-                            </Button>
-
-                            <DialogClose asChild>
-                              <Button asChild variant="ghost" className="w-full text-zinc-400 hover:text-white hover:bg-white/5">
-                                <Link href="/signup?plan=single">
-                                  No thanks, just one scan
-                                </Link>
-                              </Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                    {'isContact' in tier && tier.isContact ? (
+                      <Button
+                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                        variant="outline"
+                        asChild
+                      >
+                        <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan">
+                          <Mail className="mr-2 h-4 w-4" />
+                          {tier.cta}
+                        </a>
+                      </Button>
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
@@ -592,11 +544,11 @@ export default function HomePage() {
               Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
             </h2>
             <p className="text-xl text-zinc-400 mb-8">
-              Get your first scan free. No credit card required.
+              Plans start at $19/month. Cancel anytime.
             </p>
             <Button size="lg" asChild className="text-lg px-10 py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">
-                Start Your Free Scan
+                Start Scanning
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

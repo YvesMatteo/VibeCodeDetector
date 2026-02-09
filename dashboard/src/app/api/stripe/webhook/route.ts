@@ -9,6 +9,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+function getSupabaseAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+}
+
 export async function POST(req: Request) {
     const body = await req.text();
     const headerPayload = await headers();
@@ -18,8 +25,6 @@ export async function POST(req: Request) {
 
     try {
         if (!signature || !webhookSecret) {
-            console.warn('Webhook signature verification failed due to missing signature or secret.');
-            // In development, you might want to bypass verification if secret is missing, but better to fail.
             if (!webhookSecret) return new NextResponse('Webhook secret not configured', { status: 500 });
             return new NextResponse('Missing signature', { status: 400 });
         }
@@ -29,52 +34,129 @@ export async function POST(req: Request) {
         return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
     }
 
+    const supabase = getSupabaseAdmin();
+
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
-
         const userId = session.metadata?.userId;
-        const creditsToAdd = parseInt(session.metadata?.credits || '0', 10);
+        const plan = session.metadata?.plan;
+        const planDomains = parseInt(session.metadata?.plan_domains || '0', 10);
+        const planScansLimit = parseInt(session.metadata?.plan_scans_limit || '0', 10);
 
-        if (userId && creditsToAdd > 0) {
+        if (userId && plan) {
             try {
-                // Initialize Supabase Admin Client
-                const supabase = createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.SUPABASE_SERVICE_ROLE_KEY!
-                );
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        plan,
+                        plan_domains: planDomains,
+                        plan_scans_limit: planScansLimit,
+                        plan_scans_used: 0,
+                        plan_period_start: new Date().toISOString(),
+                        stripe_customer_id: session.customer as string,
+                        stripe_subscription_id: session.subscription as string,
+                    })
+                    .eq('id', userId);
 
-                // Fetch current credits to ensure atomic increment or use RPC if available.
-                // For simplicity and since we don't have high concurrency per user, we fetch and update.
-                // Ideally, use a database function for atomic increment: increment_credits(user_id, amount).
-                // Let's create an RPC call in the migration if strict atomicity is needed, 
-                // but typically standard update is fine for this scale. 
-                // Better: use rpc if possible. I'll assume standard update for now.
+                if (error) throw error;
+                console.log(`Activated plan '${plan}' for user ${userId}`);
+            } catch (error) {
+                console.error('Error activating plan:', error);
+                return new NextResponse('Error activating plan', { status: 500 });
+            }
+        }
+    }
 
+    if (event.type === 'invoice.paid') {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = (invoice as any).subscription as string;
+
+        if (subscriptionId) {
+            try {
+                // Find user by subscription ID and reset monthly scans
                 const { data: profile, error: fetchError } = await supabase
                     .from('profiles')
-                    .select('credits')
-                    .eq('id', userId)
+                    .select('id')
+                    .eq('stripe_subscription_id', subscriptionId)
                     .single();
 
-                if (fetchError) {
-                    // If profile doesn't exist (legacy user?), create it.
-                    if (fetchError.code === 'PGRST116') {
-                        await supabase.from('profiles').insert({ id: userId, credits: creditsToAdd });
-                    } else {
-                        throw fetchError;
-                    }
-                } else {
-                    const newCredits = (profile.credits || 0) + creditsToAdd;
-                    await supabase
-                        .from('profiles')
-                        .update({ credits: newCredits, stripe_customer_id: session.customer as string })
-                        .eq('id', userId);
+                if (fetchError || !profile) {
+                    console.warn('No profile found for subscription:', subscriptionId);
+                    return new NextResponse(null, { status: 200 });
                 }
 
-                console.log(`Added ${creditsToAdd} credits to user ${userId}`);
+                await supabase
+                    .from('profiles')
+                    .update({
+                        plan_scans_used: 0,
+                        plan_period_start: new Date().toISOString(),
+                    })
+                    .eq('id', profile.id);
+
+                console.log(`Monthly reset for user ${profile.id}`);
             } catch (error) {
-                console.error('Error updating user credits:', error);
-                return new NextResponse('Error updating credits', { status: 500 });
+                console.error('Error resetting monthly scans:', error);
+            }
+        }
+    }
+
+    if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('stripe_subscription_id', subscription.id)
+                .single();
+
+            if (profile) {
+                await supabase
+                    .from('profiles')
+                    .update({
+                        plan: 'none',
+                        plan_domains: 0,
+                        plan_scans_limit: 0,
+                        plan_scans_used: 0,
+                        plan_period_start: null,
+                        stripe_subscription_id: null,
+                        allowed_domains: [],
+                    })
+                    .eq('id', profile.id);
+
+                console.log(`Deactivated plan for user ${profile.id}`);
+            }
+        } catch (error) {
+            console.error('Error deactivating plan:', error);
+        }
+    }
+
+    if (event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object as Stripe.Subscription;
+        const metadata = subscription.metadata;
+
+        if (metadata?.plan) {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('stripe_subscription_id', subscription.id)
+                    .single();
+
+                if (profile) {
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            plan: metadata.plan,
+                            plan_domains: parseInt(metadata.plan_domains || '0', 10),
+                            plan_scans_limit: parseInt(metadata.plan_scans_limit || '0', 10),
+                        })
+                        .eq('id', profile.id);
+
+                    console.log(`Updated plan to '${metadata.plan}' for user ${profile.id}`);
+                }
+            } catch (error) {
+                console.error('Error updating plan:', error);
             }
         }
     }

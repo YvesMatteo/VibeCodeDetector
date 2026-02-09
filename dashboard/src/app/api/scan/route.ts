@@ -3,6 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 // @ts-ignore - Module likely exists from merge
 import { runSEOScan } from '@/lib/scanners/seo-scanner';
 
+function extractDomain(url: string): string {
+    try {
+        return new URL(url).hostname.replace(/^www\./, '');
+    } catch {
+        return url;
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
@@ -13,46 +21,33 @@ export async function POST(request: NextRequest) {
         }
 
         // ==========================================
-        // CREDIT CHECK & DEDUCTION
+        // SUBSCRIPTION CHECK
         // ==========================================
 
-        // 1. Get user profile
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('credits')
+            .select('plan, plan_domains, plan_scans_limit, plan_scans_used, allowed_domains')
             .eq('id', user.id)
             .single();
 
         if (profileError || !profile) {
-            // Handle case where profile might be missing (should be created by trigger, but just in case)
-            // Or return error
             console.error('Profile fetch error:', profileError);
             return NextResponse.json({ error: 'User profile not found.' }, { status: 404 });
         }
 
-        if (profile.credits < 1) {
+        if (profile.plan === 'none') {
             return NextResponse.json({
-                error: 'Insufficient credits',
-                code: 'INSUFFICIENT_CREDITS'
+                error: 'Active subscription required. Please subscribe to a plan.',
+                code: 'PLAN_REQUIRED'
             }, { status: 402 });
         }
 
-        // 2. Deduct credit (Optimistic deduction)
-        // We deduct BEFORE scanning to prevent abuse. If scan fails entirely, we could refund, 
-        // but partial failures (e.g. one scanner fails) should still count as a scan.
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ credits: profile.credits - 1 })
-            .eq('id', user.id);
-
-        if (updateError) {
-            console.error('Credit deduction error:', updateError);
-            return NextResponse.json({ error: 'Failed to process credits.' }, { status: 500 });
+        if (profile.plan_scans_used >= profile.plan_scans_limit) {
+            return NextResponse.json({
+                error: `Monthly scan limit reached (${profile.plan_scans_limit}). Upgrade your plan for more scans.`,
+                code: 'SCAN_LIMIT_REACHED'
+            }, { status: 402 });
         }
-
-        // ==========================================
-        // END CREDIT CHECK
-        // ==========================================
 
         const body = await request.json();
         const { url, scanTypes } = body;
@@ -61,10 +56,37 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        // Normalize URL
         const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+        const domain = extractDomain(targetUrl);
+        const allowedDomains: string[] = profile.allowed_domains || [];
 
-        // Prepare scanners
+        // Domain enforcement
+        if (!allowedDomains.includes(domain)) {
+            if (allowedDomains.length >= profile.plan_domains) {
+                return NextResponse.json({
+                    error: `Domain limit reached (${profile.plan_domains}). You can only scan: ${allowedDomains.join(', ')}`,
+                    code: 'DOMAIN_LIMIT_REACHED'
+                }, { status: 402 });
+            }
+
+            // Auto-register this domain
+            const newDomains = [...allowedDomains, domain];
+            await supabase
+                .from('profiles')
+                .update({ allowed_domains: newDomains })
+                .eq('id', user.id);
+        }
+
+        // Increment scan usage
+        await supabase
+            .from('profiles')
+            .update({ plan_scans_used: profile.plan_scans_used + 1 })
+            .eq('id', user.id);
+
+        // ==========================================
+        // RUN SCANNERS
+        // ==========================================
+
         const results: Record<string, any> = {};
         const scannerPromises: Promise<void>[] = [];
 
@@ -143,7 +165,6 @@ export async function POST(request: NextRequest) {
 
         // 5. SEO Scanner (Local Lib)
         if (scanTypes?.includes('seo') || !scanTypes) {
-            // Check if runSEOScan is available (it should be from the merge)
             try {
                 scannerPromises.push(
                     Promise.resolve(runSEOScan(targetUrl))
@@ -175,19 +196,35 @@ export async function POST(request: NextRequest) {
         // Wait for all
         await Promise.all(scannerPromises);
 
-        // Calculate Overall Score
-        const scores = Object.values(results)
-            .filter((r): r is { score?: number } => typeof r === 'object' && r !== null && typeof r.score === 'number')
-            .map(r => r.score!);
+        // Calculate Overall Score using weighted average
+        const SCANNER_WEIGHTS: Record<string, number> = {
+            security: 0.30,
+            api_keys: 0.25,
+            threat_intelligence: 0.20,
+            seo: 0.15,
+            legal: 0.05,
+            vibe_match: 0.05,
+        };
 
-        const overallScore = scores.length > 0
-            ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        let weightedSum = 0;
+        let totalWeight = 0;
+
+        for (const [key, result] of Object.entries(results)) {
+            if (typeof result !== 'object' || result === null) continue;
+            const r = result as Record<string, any>;
+            if (r.error || typeof r.score !== 'number') continue;
+
+            const weight = SCANNER_WEIGHTS[key] ?? 0.05;
+            weightedSum += r.score * weight;
+            totalWeight += weight;
+        }
+
+        const overallScore = totalWeight > 0
+            ? Math.round(weightedSum / totalWeight)
             : 0;
 
         let scanId = null;
 
-        // Save to DB if authenticated
-        // We merged schema concepts: 'scans' table stores the master record
         if (user) {
             const { data: scan, error: insertError } = await supabase
                 .from('scans')
@@ -196,7 +233,7 @@ export async function POST(request: NextRequest) {
                     url: targetUrl,
                     status: 'completed',
                     overall_score: overallScore,
-                    results, // Store all results in JSONB for now
+                    results,
                     completed_at: new Date().toISOString(),
                 })
                 .select()

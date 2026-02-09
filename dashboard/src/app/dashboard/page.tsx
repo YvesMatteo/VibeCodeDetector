@@ -10,9 +10,10 @@ import {
     ArrowRight,
     Clock,
     AlertTriangle,
-    CreditCard,
+    Crown,
     BarChart3,
     Activity,
+    Globe,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -62,14 +63,24 @@ export default async function DashboardPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    let credits = 0;
+    let plan = 'none';
+    let planScansUsed = 0;
+    let planScansLimit = 0;
+    let domainsUsed = 0;
+    let domainsLimit = 0;
     if (user) {
         const { data: profile } = await supabase
             .from('profiles')
-            .select('credits')
+            .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
             .eq('id', user.id)
             .single();
-        if (profile) credits = profile.credits;
+        if (profile) {
+            plan = profile.plan || 'none';
+            planScansUsed = profile.plan_scans_used || 0;
+            planScansLimit = profile.plan_scans_limit || 0;
+            domainsUsed = profile.allowed_domains?.length || 0;
+            domainsLimit = profile.plan_domains || 0;
+        }
     }
 
     // Fetch real scans
@@ -105,27 +116,29 @@ export default async function DashboardPage() {
         }
     });
 
+    const planLabel = plan === 'none' ? 'No Plan' : plan.charAt(0).toUpperCase() + plan.slice(1);
+
     const displayStats = [
         {
-            label: 'Credits Available',
-            value: credits.toString(),
-            sub: credits === 0 ? 'Buy credits to scan' : `${credits} scan${credits !== 1 ? 's' : ''} remaining`,
-            icon: CreditCard,
+            label: 'Current Plan',
+            value: planLabel,
+            sub: plan === 'none' ? 'Subscribe to start scanning' : 'Active subscription',
+            icon: Crown,
             color: 'blue',
             href: '/dashboard/credits',
         },
         {
-            label: 'Total Scans',
-            value: scanList.length.toString(),
-            sub: `${completedScans.length} completed`,
+            label: 'Scans This Month',
+            value: plan === 'none' ? '—' : `${planScansUsed}/${planScansLimit}`,
+            sub: plan === 'none' ? 'No active plan' : `${planScansLimit - planScansUsed} remaining`,
             icon: Activity,
             color: 'purple',
         },
         {
-            label: 'Average Score',
-            value: avgScore > 0 ? avgScore.toString() : '—',
-            sub: completedScans.length > 0 ? `across ${completedScans.length} scan${completedScans.length !== 1 ? 's' : ''}` : 'No scans yet',
-            icon: BarChart3,
+            label: 'Domains',
+            value: plan === 'none' ? '—' : `${domainsUsed}/${domainsLimit}`,
+            sub: plan === 'none' ? 'No active plan' : `${domainsLimit - domainsUsed} slot${domainsLimit - domainsUsed !== 1 ? 's' : ''} available`,
+            icon: Globe,
             color: 'green',
         },
         {
@@ -153,8 +166,8 @@ export default async function DashboardPage() {
                 <div className="flex gap-3">
                     <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
                         <Link href="/dashboard/credits">
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Buy Credits
+                            <Crown className="mr-2 h-4 w-4" />
+                            {plan === 'none' ? 'Subscribe' : 'Upgrade'}
                         </Link>
                     </Button>
                     <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
