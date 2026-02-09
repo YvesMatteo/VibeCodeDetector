@@ -11,16 +11,15 @@ export async function POST(req: NextRequest) {
         // CSRF / ORIGIN CHECK
         // ==========================================
         const origin = req.headers.get('origin');
-        const allowedOrigins = [
-            process.env.NEXT_PUBLIC_SITE_URL,
-            'http://localhost:3000',
-            'http://localhost:3001',
-        ].filter(Boolean);
-        const isVercelPreview = origin && (
-            origin.endsWith('.vercel.app') || origin.endsWith('.vercel.sh')
-        );
-        if (origin && !allowedOrigins.includes(origin) && !isVercelPreview) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        const host = req.headers.get('host') || '';
+        if (origin) {
+            const originHost = new URL(origin).host;
+            const isSameHost = originHost === host;
+            const isLocalhost = originHost.startsWith('localhost');
+            const isVercelPreview = originHost.endsWith('.vercel.app') || originHost.endsWith('.vercel.sh');
+            if (!isSameHost && !isLocalhost && !isVercelPreview) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
         }
 
         const supabase = await createClient();
