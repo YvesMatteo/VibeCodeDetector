@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
             'http://localhost:3000',
             'http://localhost:3001',
         ].filter(Boolean);
-        if (origin && !allowedOrigins.includes(origin)) {
+        const isVercelPreview = origin && (
+            origin.endsWith('.vercel.app') || origin.endsWith('.vercel.sh')
+        );
+        if (origin && !allowedOrigins.includes(origin) && !isVercelPreview) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
