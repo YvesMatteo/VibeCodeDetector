@@ -54,10 +54,12 @@ export default async function ScansPage() {
         if (results) {
             Object.values(results).forEach((r: any) => {
                 if (r.findings && Array.isArray(r.findings)) {
-                    totalFindings += r.findings.length;
                     r.findings.forEach((f: any) => {
-                        if (f.severity === 'critical') criticalCount++;
-                        if (f.severity === 'high') highCount++;
+                        const sev = f.severity?.toLowerCase();
+                        if (sev === 'info') return;
+                        totalFindings++;
+                        if (sev === 'critical') criticalCount++;
+                        if (sev === 'high') highCount++;
                     });
                 }
             });
@@ -157,10 +159,12 @@ export default async function ScansPage() {
                                     if (results) {
                                         Object.values(results).forEach((r: any) => {
                                             if (r.findings && Array.isArray(r.findings)) {
-                                                scanFindings += r.findings.length;
                                                 r.findings.forEach((f: any) => {
-                                                    if (f.severity === 'critical') scanCritical++;
-                                                    if (f.severity === 'high') scanHigh++;
+                                                    const sev = f.severity?.toLowerCase();
+                                                    if (sev === 'info') return;
+                                                    scanFindings++;
+                                                    if (sev === 'critical') scanCritical++;
+                                                    if (sev === 'high') scanHigh++;
                                                 });
                                             }
                                         });

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, EB_Garamond } from "next/font/google"; // Import EB Garamond
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,19 +12,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const ebGaramond = EB_Garamond({
-  variable: "--font-eb-garamond",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, legal compliance, and threat intelligence.",
+  description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and 17 more checks.",
   metadataBase: new URL("https://checkvibe.online"),
   openGraph: {
     title: "CheckVibe - AI Website Scanner",
-    description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, and more.",
+    description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
     type: "website",
     siteName: "CheckVibe",
     url: "https://checkvibe.online",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CheckVibe - AI Website Scanner",
-    description: "Scan your website for security vulnerabilities, exposed API keys, SEO issues, and more.",
+    description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
     images: ["/twitter-image"],
   },
   robots: {
@@ -58,7 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
         {children}
       </body>

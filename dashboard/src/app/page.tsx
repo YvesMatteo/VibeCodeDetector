@@ -8,12 +8,15 @@ import {
   Shield,
   Key,
   Scale,
-  Search,
   CheckCircle,
   ArrowRight,
   AlertTriangle,
   Mail,
   Menu,
+  Database,
+  Code,
+  Lock,
+  GitBranch,
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
 import { useMotionValue, useTransform, useSpring } from "framer-motion";
@@ -30,8 +33,8 @@ import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 const features = [
   {
     icon: Shield,
-    title: 'Security Scanner',
-    description: 'Identify vulnerabilities, check security headers, and audit authentication.',
+    title: 'Security Headers',
+    description: 'Audit CSP, HSTS, X-Frame-Options, and 20+ security headers in real time.',
     color: 'text-red-400',
     glow: 'group-hover:shadow-red-500/20',
   },
@@ -43,25 +46,32 @@ const features = [
     glow: 'group-hover:shadow-amber-500/20',
   },
   {
-    icon: Scale,
-    title: 'Legal Compliance',
-    description: 'Ensure websites don\'t make unsubstantiated claims and comply with regulations.',
-    color: 'text-indigo-400',
-    glow: 'group-hover:shadow-indigo-500/20',
+    icon: Database,
+    title: 'SQL Injection',
+    description: 'Passive SQLi detection across forms, query parameters, and API endpoints.',
+    color: 'text-rose-400',
+    glow: 'group-hover:shadow-rose-500/20',
   },
   {
-    icon: Search,
-    title: 'SEO Analyzer',
-    description: 'Comprehensive SEO audit with Core Web Vitals, meta tags, and schema validation.',
-    color: 'text-sky-400',
-    glow: 'group-hover:shadow-sky-500/20',
+    icon: Code,
+    title: 'XSS Detection',
+    description: 'Scan for DOM sinks, reflected XSS, and template injection vulnerabilities.',
+    color: 'text-pink-400',
+    glow: 'group-hover:shadow-pink-500/20',
   },
   {
-    icon: AlertTriangle,
-    title: 'Threat Intelligence',
-    description: 'Check against Google Safe Browsing, VirusTotal, Shodan, and more.',
-    color: 'text-cyan-400',
-    glow: 'group-hover:shadow-cyan-500/20',
+    icon: Lock,
+    title: 'SSL/TLS Security',
+    description: 'Verify certificates, HSTS enforcement, TLS versions, and mixed content.',
+    color: 'text-emerald-400',
+    glow: 'group-hover:shadow-emerald-500/20',
+  },
+  {
+    icon: GitBranch,
+    title: 'GitHub Secret Scanning',
+    description: '40+ secret patterns checked across git history, branches, and commits.',
+    color: 'text-purple-400',
+    glow: 'group-hover:shadow-purple-500/20',
   },
 ];
 
@@ -106,9 +116,9 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '50+', label: 'Security Checks' },
+  { value: '17', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
-  { value: '20+', label: 'SEO Metrics' },
+  { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
 ];
 
@@ -226,7 +236,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                 className="block"
               >
-                The <span className="italic text-white/50 font-serif">All-in-One</span> Scanner
+                The <span className="italic text-white/50">All-in-One</span> Scanner
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -259,7 +269,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe scans your live website for security holes, leaked API keys, SEO issues, legal risks, and known threats.
+              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 17 more checks.
             </motion.p>
           </div>
 
@@ -347,8 +357,8 @@ export default function HomePage() {
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">11</span>   {'}'});</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">12</span> {'}'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">13</span> </div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// SEO: Missing meta tags'}</span></div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">metadata</span> = {'{'} {'}'};</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// CORS: Missing Access-Control headers'}</span></div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
                 </div>
 
                 {/* Scanning Beam */}
@@ -387,14 +397,37 @@ export default function HomePage() {
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
                   className="absolute top-[120px] sm:top-[320px] right-2 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
                 >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                   <div>
-                    <div className="text-[10px] sm:text-xs font-bold">SEO Warning</div>
-                    <div className="text-[9px] sm:text-[10px] opacity-80">Missing Metadata</div>
+                    <div className="text-[10px] sm:text-xs font-bold">XSS Warning</div>
+                    <div className="text-[9px] sm:text-[10px] opacity-80">Reflected Input</div>
                   </div>
                 </motion.div>
 
               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Trust Strip */}
+      <section className="relative py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] border-t border-white/5">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center gap-4"
+          >
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-widest text-zinc-500">Trusted by developers shipping with AI</p>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+              {['17 Security Scanners', '150+ Checks', 'Real-Time CVE Lookups', 'GitHub Deep Scan'].map((item) => (
+                <div key={item} className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.06]">
+                  <CheckCircle className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-xs sm:text-sm text-zinc-300">{item}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -423,7 +456,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
             <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-              Five powerful checks that catch the issues vibe-coded sites commonly have.
+              17 scanners that catch the issues vibe-coded sites commonly have.
             </p>
           </motion.div>
 
@@ -611,10 +644,10 @@ export default function HomePage() {
             className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10"
           >
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship with Confidence</span>?
+              Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              Plans start at {formatPrice(19, currency)}/month. Cancel anytime.
+              17 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">

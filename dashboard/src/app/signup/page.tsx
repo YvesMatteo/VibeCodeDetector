@@ -7,15 +7,18 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Shield, Key, Scale, Search, AlertTriangle } from 'lucide-react';
+import { Loader2, Shield, Key, Database, Code, Lock, GitBranch, Globe, Cookie } from 'lucide-react';
 import Image from 'next/image';
 
 const scanTypes = [
     { icon: Shield, label: 'Security Headers', color: 'text-red-400' },
     { icon: Key, label: 'API Key Detection', color: 'text-amber-400' },
-    { icon: Scale, label: 'Legal Compliance', color: 'text-indigo-400' },
-    { icon: Search, label: 'SEO Analysis', color: 'text-sky-400' },
-    { icon: AlertTriangle, label: 'Threat Intel', color: 'text-cyan-400' },
+    { icon: Database, label: 'SQL Injection', color: 'text-rose-400' },
+    { icon: Code, label: 'XSS Detection', color: 'text-pink-400' },
+    { icon: Lock, label: 'SSL/TLS', color: 'text-emerald-400' },
+    { icon: GitBranch, label: 'GitHub Secrets', color: 'text-purple-400' },
+    { icon: Globe, label: 'CORS Scanner', color: 'text-sky-400' },
+    { icon: Cookie, label: 'Cookie Security', color: 'text-yellow-400' },
 ];
 
 export default function SignupPage() {
@@ -117,7 +120,7 @@ export default function SignupPage() {
                         </span>
                     </h1>
                     <p className="text-zinc-400 text-lg mb-10">
-                        The all-in-one security scanner for vibecoded websites. Five scans, one dashboard.
+                        The all-in-one security scanner for vibecoded websites. 17 scanners, one dashboard.
                     </p>
 
                     {/* Scan type pills */}

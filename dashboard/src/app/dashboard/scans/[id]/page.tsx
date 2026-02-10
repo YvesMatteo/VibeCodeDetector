@@ -226,9 +226,11 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                 <Download className="mr-2 h-4 w-4" />
                                 Export
                             </Button>
-                            <Button disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 border-0 flex-1 sm:flex-none">
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Rescan
+                            <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 border-0 flex-1 sm:flex-none hover:from-purple-500 hover:to-pink-500">
+                                <Link href={`/dashboard/scans/new?url=${encodeURIComponent(scan.url)}`}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    Rescan
+                                </Link>
                             </Button>
                         </div>
                     </div>

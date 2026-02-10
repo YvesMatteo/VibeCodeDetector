@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,8 @@ import {
 } from 'lucide-react';
 
 export default function NewScanPage() {
-    const [url, setUrl] = useState('');
+    const searchParams = useSearchParams();
+    const [url, setUrl] = useState(searchParams.get('url') || '');
     const [githubRepo, setGithubRepo] = useState('');
     const [supabaseUrl, setSupabaseUrl] = useState('');
     const [loading, setLoading] = useState(false);

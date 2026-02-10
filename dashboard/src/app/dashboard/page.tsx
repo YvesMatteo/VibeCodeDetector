@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import {
     Shield,
     Key,
-    Search,
     Plus,
     ArrowRight,
     Clock,
@@ -14,6 +13,7 @@ import {
     Crown,
     Activity,
     Globe,
+    Code,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -109,10 +109,12 @@ export default async function DashboardPage() {
         if (results) {
             Object.values(results).forEach((r: any) => {
                 if (r.findings && Array.isArray(r.findings)) {
-                    totalIssues += r.findings.length;
                     r.findings.forEach((f: any) => {
-                        if (f.severity === 'critical') criticalCount++;
-                        if (f.severity === 'high') highCount++;
+                        const sev = f.severity?.toLowerCase();
+                        if (sev === 'info') return;
+                        totalIssues++;
+                        if (sev === 'critical') criticalCount++;
+                        if (sev === 'high') highCount++;
                     });
                 }
             });
@@ -163,7 +165,7 @@ export default async function DashboardPage() {
                         Dashboard
                     </h1>
                     <p className="text-zinc-400 mt-1">
-                        Overview of your website security and performance
+                        Overview of your website security
                     </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -251,9 +253,11 @@ export default async function DashboardPage() {
                                     Object.values(results).forEach((r: any) => {
                                         if (r.findings && Array.isArray(r.findings)) {
                                             r.findings.forEach((f: any) => {
-                                                if (f.severity === 'critical') scanCritical++;
-                                                else if (f.severity === 'high') scanHigh++;
-                                                else if (f.severity === 'medium') scanMedium++;
+                                                const sev = f.severity?.toLowerCase();
+                                                if (sev === 'info') return;
+                                                if (sev === 'critical') scanCritical++;
+                                                else if (sev === 'high') scanHigh++;
+                                                else if (sev === 'medium') scanMedium++;
                                             });
                                         }
                                     });
@@ -360,11 +364,11 @@ export default async function DashboardPage() {
                 <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '200ms' }}>
                     <CardContent className="pt-6">
                         <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-4 group-hover:bg-green-500/20 transition-colors">
-                            <Search className="h-6 w-6 text-green-400" />
+                            <Code className="h-6 w-6 text-green-400" />
                         </div>
-                        <h3 className="font-heading font-medium text-lg text-white mb-2">SEO Analysis</h3>
+                        <h3 className="font-heading font-medium text-lg text-white mb-2">XSS & Injection Scan</h3>
                         <p className="text-zinc-400 text-sm mb-6">
-                            Check your site&apos;s SEO health and get recommendations
+                            Detect XSS, SQL injection, and open redirect vulnerabilities
                         </p>
                         <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
                             <Link href="/dashboard/scans/new">Start Scan</Link>
