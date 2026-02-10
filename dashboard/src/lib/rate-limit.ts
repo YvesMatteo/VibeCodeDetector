@@ -29,13 +29,14 @@ export async function checkRateLimit(
 
   if (error) {
     console.error('Rate limit check failed:', error);
-    // Fail open — allow the request but log the error
-    return { allowed: true, currentCount: 0, limitMax: maxRequests, resetAt: new Date().toISOString() };
+    // Fail closed — deny the request when we can't verify the rate limit
+    return { allowed: false, currentCount: 0, limitMax: maxRequests, resetAt: new Date().toISOString() };
   }
 
   const row = data?.[0];
   if (!row) {
-    return { allowed: true, currentCount: 0, limitMax: maxRequests, resetAt: new Date().toISOString() };
+    // No row returned — fail closed
+    return { allowed: false, currentCount: 0, limitMax: maxRequests, resetAt: new Date().toISOString() };
   }
 
   return {

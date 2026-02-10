@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
     Dialog,
     DialogContent,
@@ -25,6 +24,11 @@ import {
     Shield,
     Globe,
     AlertTriangle,
+    BookOpen,
+    Terminal,
+    ChevronDown,
+    ChevronUp,
+    Cpu,
 } from 'lucide-react';
 
 interface ApiKey {
@@ -41,10 +45,10 @@ interface ApiKey {
 }
 
 const SCOPE_OPTIONS = [
-    { value: 'scan:read', label: 'Read Scans', description: 'View scan results and history' },
-    { value: 'scan:write', label: 'Run Scans', description: 'Trigger new scans' },
-    { value: 'keys:read', label: 'List Keys', description: 'View your API keys' },
-    { value: 'keys:manage', label: 'Manage Keys', description: 'Create and revoke keys' },
+    { value: 'scan:read', label: 'Read Scans', description: 'View scan results and history (GET /api/scan)' },
+    { value: 'scan:write', label: 'Run Scans', description: 'Trigger new security scans (POST /api/scan)' },
+    { value: 'keys:read', label: 'List Keys', description: 'View your API keys (GET /api/keys)' },
+    { value: 'keys:manage', label: 'Manage Keys', description: 'Create and revoke keys (POST/DELETE /api/keys)' },
 ];
 
 export default function ApiKeysPage() {
@@ -68,6 +72,10 @@ export default function ApiKeysPage() {
     const [showRevoke, setShowRevoke] = useState(false);
     const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
 
+    // Docs collapsed state
+    const [docsOpen, setDocsOpen] = useState(true);
+    const [mcpOpen, setMcpOpen] = useState(true);
+
     const fetchKeys = useCallback(async () => {
         try {
             const res = await fetch('/api/keys');
@@ -80,7 +88,17 @@ export default function ApiKeysPage() {
         }
     }, []);
 
-    useEffect(() => { fetchKeys(); }, [fetchKeys]);
+    useEffect(() => {
+        fetchKeys();
+    }, [fetchKeys]);
+
+    // Auto-collapse docs if user has keys
+    useEffect(() => {
+        if (keys.length > 0) {
+            setDocsOpen(false);
+            setMcpOpen(false);
+        }
+    }, [keys.length]);
 
     async function handleCreate() {
         setCreating(true);
@@ -200,6 +218,101 @@ export default function ApiKeysPage() {
                     Create Key
                 </Button>
             </div>
+
+            {/* Getting Started */}
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <CardHeader className="cursor-pointer" onClick={() => setDocsOpen(!docsOpen)}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <BookOpen className="h-5 w-5 text-blue-400" />
+                            <div>
+                                <CardTitle className="text-white">Getting Started</CardTitle>
+                                <CardDescription className="text-zinc-400">Authentication and API usage</CardDescription>
+                            </div>
+                        </div>
+                        {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
+                    </div>
+                </CardHeader>
+                {docsOpen && (
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-sm font-medium text-zinc-300 mb-2">Authentication</h4>
+                                <p className="text-xs text-zinc-500 mb-3">
+                                    Include your API key in the Authorization header:
+                                </p>
+                            </div>
+                            <div className="space-y-3">
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">Run a scan:</p>
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+{`curl -X POST https://checkvibe.dev/api/scan \\
+  -H "Authorization: Bearer cvd_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://example.com"}'`}
+                                    </pre>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">List scans:</p>
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+{`curl https://checkvibe.dev/api/scan \\
+  -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
+                                    </pre>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">Get scan results:</p>
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+{`curl https://checkvibe.dev/api/scan/SCAN_ID \\
+  -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
+
+            {/* MCP Server Config */}
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <CardHeader className="cursor-pointer" onClick={() => setMcpOpen(!mcpOpen)}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Cpu className="h-5 w-5 text-purple-400" />
+                            <div>
+                                <CardTitle className="text-white">Use with Claude Code (MCP)</CardTitle>
+                                <CardDescription className="text-zinc-400">Let coding agents run security scans</CardDescription>
+                            </div>
+                        </div>
+                        {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
+                    </div>
+                </CardHeader>
+                {mcpOpen && (
+                    <CardContent>
+                        <div className="space-y-3">
+                            <p className="text-xs text-zinc-500">
+                                Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
+                            </p>
+                            <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+{`{
+  "mcpServers": {
+    "checkvibe": {
+      "command": "npx",
+      "args": ["-y", "@checkvibe/mcp-server"],
+      "env": {
+        "CHECKVIBE_API_KEY": "cvd_live_YOUR_KEY"
+      }
+    }
+  }
+}`}
+                            </pre>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                <Terminal className="h-3.5 w-3.5" />
+                                <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
+                            </div>
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
 
             {/* Active Keys */}
             <Card className="mb-6 bg-zinc-900/40 border-white/5">

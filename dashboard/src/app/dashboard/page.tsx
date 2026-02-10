@@ -4,16 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Shield,
-    Key,
-    Plus,
-    ArrowRight,
-    Clock,
-    AlertTriangle,
     Crown,
     Activity,
     Globe,
-    Code,
+    ArrowRight,
+    Clock,
+    BarChart3,
+    User,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -22,28 +19,6 @@ function getScoreColor(score: number) {
     if (score >= 60) return 'text-amber-400';
     if (score >= 40) return 'text-orange-400';
     return 'text-red-400';
-}
-
-function getScoreRingColor(score: number) {
-    if (score >= 80) return 'stroke-green-500';
-    if (score >= 60) return 'stroke-amber-500';
-    if (score >= 40) return 'stroke-orange-500';
-    return 'stroke-red-500';
-}
-
-function ScoreRing({ score }: { score: number }) {
-    const circumference = 2 * Math.PI * 20;
-    const strokeDashoffset = circumference - (score / 100) * circumference;
-
-    return (
-        <div className="relative h-12 w-12 flex items-center justify-center">
-            <svg className="absolute h-12 w-12 -rotate-90" viewBox="0 0 44 44">
-                <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/10" />
-                <circle cx="22" cy="22" r="20" fill="none" strokeWidth="3" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" className={`${getScoreRingColor(score)} transition-all duration-1000`} />
-            </svg>
-            <span className={`text-lg font-bold ${getScoreColor(score)}`}>{score}</span>
-        </div>
-    );
 }
 
 function timeAgo(dateString: string) {
@@ -72,6 +47,8 @@ export default async function DashboardPage() {
     let planScansLimit = 0;
     let domainsUsed = 0;
     let domainsLimit = 0;
+    let allowedDomains: string[] = [];
+
     const { data: profile } = await supabase
         .from('profiles')
         .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
@@ -81,80 +58,41 @@ export default async function DashboardPage() {
         plan = profile.plan || 'none';
         planScansUsed = profile.plan_scans_used || 0;
         planScansLimit = profile.plan_scans_limit || 0;
-        domainsUsed = profile.allowed_domains?.length || 0;
+        allowedDomains = profile.allowed_domains || [];
+        domainsUsed = allowedDomains.length;
         domainsLimit = profile.plan_domains || 0;
     }
 
-    // Fetch real scans
-    const { data: scans } = await supabase
+    // Lifetime scan count
+    const { count: lifetimeScans } = await supabase
         .from('scans')
-        .select('*')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+    // Completed scans for avg score
+    const { data: completedScans } = await supabase
+        .from('scans')
+        .select('overall_score')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('status', 'completed');
 
-    const scanList = scans || [];
-    const recentScans = scanList.slice(0, 5);
-    const completedScans = scanList.filter(s => s.status === 'completed');
-
-    // Compute real stats
-    const avgScore = completedScans.length > 0
+    const avgScore = completedScans && completedScans.length > 0
         ? Math.round(completedScans.reduce((sum, s) => sum + (s.overall_score || 0), 0) / completedScans.length)
         : 0;
 
-    let totalIssues = 0;
-    let criticalCount = 0;
-    let highCount = 0;
-    completedScans.forEach(scan => {
-        const results = scan.results as Record<string, any> | null;
-        if (results) {
-            Object.values(results).forEach((r: any) => {
-                if (r.findings && Array.isArray(r.findings)) {
-                    r.findings.forEach((f: any) => {
-                        const sev = f.severity?.toLowerCase();
-                        if (sev === 'info') return;
-                        totalIssues++;
-                        if (sev === 'critical') criticalCount++;
-                        if (sev === 'high') highCount++;
-                    });
-                }
-            });
-        }
-    });
+    // Recent 3 scans for activity feed
+    const { data: recentScans } = await supabase
+        .from('scans')
+        .select('id, url, status, overall_score, created_at, completed_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
 
     const planLabel = plan === 'none' ? 'No Plan' : plan.charAt(0).toUpperCase() + plan.slice(1);
-
-    const displayStats = [
-        {
-            label: 'Current Plan',
-            value: planLabel,
-            sub: plan === 'none' ? 'Subscribe to start scanning' : 'Active subscription',
-            icon: Crown,
-            color: 'blue',
-            href: '/dashboard/credits',
-        },
-        {
-            label: 'Scans This Month',
-            value: plan === 'none' ? '—' : `${planScansUsed}/${planScansLimit}`,
-            sub: plan === 'none' ? 'No active plan' : `${planScansLimit - planScansUsed} remaining`,
-            icon: Activity,
-            color: 'purple',
-        },
-        {
-            label: 'Domains',
-            value: plan === 'none' ? '—' : `${domainsUsed}/${domainsLimit}`,
-            sub: plan === 'none' ? 'No active plan' : `${domainsLimit - domainsUsed} slot${domainsLimit - domainsUsed !== 1 ? 's' : ''} available`,
-            icon: Globe,
-            color: 'green',
-        },
-        {
-            label: 'Issues Found',
-            value: totalIssues.toString(),
-            sub: criticalCount > 0 || highCount > 0 ? `${criticalCount} critical, ${highCount} high` : 'No critical issues',
-            icon: Shield,
-            color: criticalCount > 0 ? 'red' : 'green',
-            alert: criticalCount > 0,
-        },
-    ];
+    const scansRemaining = Math.max(0, planScansLimit - planScansUsed);
+    const domainsRemaining = Math.max(0, domainsLimit - domainsUsed);
+    const scansPct = planScansLimit > 0 ? Math.min((planScansUsed / planScansLimit) * 100, 100) : 0;
+    const domainsPct = domainsLimit > 0 ? Math.min((domainsUsed / domainsLimit) * 100, 100) : 0;
 
     return (
         <div className="p-4 md:p-8">
@@ -165,217 +103,221 @@ export default async function DashboardPage() {
                         Dashboard
                     </h1>
                     <p className="text-zinc-400 mt-1">
-                        Overview of your website security
+                        Manage your account and subscription
                     </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {plan !== 'enterprise' && (
                     <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
                         <Link href="/dashboard/credits">
                             <Crown className="mr-2 h-4 w-4" />
-                            {plan === 'none' ? 'Subscribe' : 'Upgrade'}
+                            {plan === 'none' ? 'Subscribe' : 'Upgrade Plan'}
                         </Link>
                     </Button>
-                    <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
-                        <Link href="/dashboard/scans/new">
-                            <Plus className="mr-2 h-4 w-4" />
-                            New Scan
-                        </Link>
-                    </Button>
-                </div>
+                )}
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stagger-children">
-                {displayStats.map((stat, index) => (
-                    <Card
-                        key={stat.label}
-                        className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                        {stat.href && (
-                            <Link href={stat.href} className="absolute inset-0 z-10" />
-                        )}
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">
-                                {stat.label}
-                            </CardTitle>
-                            <div className={`p-2 rounded-lg bg-white/5 ${stat.alert ? 'text-orange-400' : `text-${stat.color}-400`}`}>
-                                <stat.icon className="h-4 w-4" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{stat.value}</div>
-                            <p className={`text-xs mt-1 ${stat.alert ? 'text-orange-400' : 'text-zinc-500'}`}>
-                                {stat.sub}
-                            </p>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {/* Recent Scans */}
-            <Card className="bg-zinc-900/40 border-white/5">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
-                    <div>
-                        <CardTitle className="font-heading text-xl font-medium text-white">Recent Scans</CardTitle>
-                        <CardDescription className="text-zinc-400">Your latest website scans and their results</CardDescription>
+            {/* Account Card */}
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-blue-400" />
+                        <div>
+                            <CardTitle className="text-white">Account</CardTitle>
+                            <CardDescription className="text-zinc-400">{user.email}</CardDescription>
+                        </div>
                     </div>
-                    {scanList.length > 0 && (
+                    <Badge
+                        variant={plan === 'none' ? 'secondary' : 'default'}
+                        className={plan === 'none'
+                            ? 'bg-zinc-700/50 text-zinc-300'
+                            : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
+                    >
+                        {planLabel}
+                    </Badge>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-wrap gap-6 text-sm text-zinc-400">
+                        <span>Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                        {plan !== 'none' && (
+                            <Link href="/dashboard/settings" className="text-blue-400 hover:text-blue-300 transition-colors">
+                                Manage subscription
+                            </Link>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Usage Meters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Scans Usage */}
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                            <Activity className="h-5 w-5 text-purple-400" />
+                            <CardTitle className="text-white text-base">Scans This Month</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {plan === 'none' ? (
+                            <p className="text-sm text-zinc-500">Subscribe to start scanning</p>
+                        ) : (
+                            <>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-zinc-400">{planScansUsed} / {planScansLimit} used</span>
+                                    <span className="text-zinc-300 font-medium">{scansRemaining} remaining</span>
+                                </div>
+                                <div className="w-full bg-white/10 rounded-full h-2">
+                                    <div
+                                        className="bg-purple-500 h-2 rounded-full transition-all"
+                                        style={{ width: `${scansPct}%` }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Domains Usage */}
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                            <Globe className="h-5 w-5 text-green-400" />
+                            <CardTitle className="text-white text-base">Domains</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {plan === 'none' ? (
+                            <p className="text-sm text-zinc-500">Subscribe to register domains</p>
+                        ) : (
+                            <>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-zinc-400">{domainsUsed} / {domainsLimit} used</span>
+                                    <span className="text-zinc-300 font-medium">{domainsRemaining} slot{domainsRemaining !== 1 ? 's' : ''} available</span>
+                                </div>
+                                <div className="w-full bg-white/10 rounded-full h-2">
+                                    <div
+                                        className="bg-green-500 h-2 rounded-full transition-all"
+                                        style={{ width: `${domainsPct}%` }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Registered Domains */}
+            {allowedDomains.length > 0 && (
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                            <Globe className="h-5 w-5 text-blue-400" />
+                            <div>
+                                <CardTitle className="text-white text-base">Registered Domains</CardTitle>
+                                <CardDescription className="text-zinc-500 text-xs">Domains register automatically when scanned</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                            {allowedDomains.map((domain) => (
+                                <div key={domain} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5">
+                                    <Globe className="h-3.5 w-3.5 text-zinc-500" />
+                                    <span className="text-sm text-white font-mono">{domain}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-white/5">
+                                <BarChart3 className="h-5 w-5 text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold text-white">{lifetimeScans || 0}</p>
+                                <p className="text-xs text-zinc-500">Lifetime scans</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-white/5">
+                                <Activity className="h-5 w-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <p className={`text-2xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-500'}`}>
+                                    {avgScore > 0 ? avgScore : '—'}
+                                </p>
+                                <p className="text-xs text-zinc-500">Average score</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card className="bg-zinc-900/40 border-white/5">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle className="text-white text-base">Recent Activity</CardTitle>
+                    {recentScans && recentScans.length > 0 && (
                         <Button variant="ghost" size="sm" asChild className="text-zinc-400 hover:text-white hover:bg-white/5">
                             <Link href="/dashboard/scans">
-                                View all
+                                View all scans
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                     )}
                 </CardHeader>
                 <CardContent>
-                    {recentScans.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                            <p className="text-lg font-medium mb-2">No scans yet</p>
-                            <p className="text-muted-foreground mb-6">Run your first scan to see results here</p>
-                            <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0">
-                                <Link href="/dashboard/scans/new">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Start Your First Scan
-                                </Link>
+                    {!recentScans || recentScans.length === 0 ? (
+                        <div className="text-center py-8">
+                            <p className="text-zinc-500 text-sm">No scans yet</p>
+                            <Button asChild size="sm" className="mt-3 bg-white text-black hover:bg-zinc-200 border-0">
+                                <Link href="/dashboard/scans/new">Run your first scan</Link>
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            {recentScans.map((scan, index) => {
-                                const results = scan.results as Record<string, any> | null;
-                                let scanCritical = 0;
-                                let scanHigh = 0;
-                                let scanMedium = 0;
-                                if (results) {
-                                    Object.values(results).forEach((r: any) => {
-                                        if (r.findings && Array.isArray(r.findings)) {
-                                            r.findings.forEach((f: any) => {
-                                                const sev = f.severity?.toLowerCase();
-                                                if (sev === 'info') return;
-                                                if (sev === 'critical') scanCritical++;
-                                                else if (sev === 'high') scanHigh++;
-                                                else if (sev === 'medium') scanMedium++;
-                                            });
-                                        }
-                                    });
-                                }
-
-                                return (
-                                    <div
-                                        key={scan.id}
-                                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-white/5 hover:border-white/10 hover:bg-white/5 transition-all duration-200 animate-fade-in-up"
-                                        style={{ animationDelay: `${index * 100}ms` }}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-lg bg-white/5 flex items-center justify-center">
-                                                {scan.status !== 'completed' ? (
-                                                    <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                                                ) : (
-                                                    <ScoreRing score={scan.overall_score || 0} />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium truncate max-w-[200px] sm:max-w-none">{scan.url.replace(/^https?:\/\//, '')}</p>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <Clock className="h-3 w-3" />
-                                                    {timeAgo(scan.completed_at || scan.created_at)}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                                            {scan.status === 'completed' && (
-                                                <div className="flex gap-2">
-                                                    {scanCritical > 0 && (
-                                                        <Badge variant="destructive" className="gap-1 bg-red-500/20 text-red-400 border-red-500/30">
-                                                            <AlertTriangle className="h-3 w-3" />
-                                                            {scanCritical}
-                                                        </Badge>
-                                                    )}
-                                                    {scanHigh > 0 && (
-                                                        <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                                                            {scanHigh} high
-                                                        </Badge>
-                                                    )}
-                                                    {scanCritical === 0 && scanHigh === 0 && (
-                                                        <Badge variant="secondary" className="bg-white/5 text-muted-foreground border-white/10">
-                                                            {scanMedium} medium
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {scan.status !== 'completed' && (
-                                                <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                                                    Scanning...
-                                                </Badge>
-                                            )}
-
-                                            <Button variant="ghost" size="sm" asChild className="hover:bg-white/5">
-                                                <Link href={`/dashboard/scans/${scan.id}`}>
-                                                    View
-                                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                        </div>
+                        <div className="space-y-2">
+                            {recentScans.map((scan) => (
+                                <Link
+                                    key={scan.id}
+                                    href={`/dashboard/scans/${scan.id}`}
+                                    className="flex items-center justify-between p-3 rounded-lg border border-white/5 hover:border-white/10 hover:bg-white/5 transition-all"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Globe className="h-4 w-4 text-zinc-500 shrink-0" />
+                                        <span className="text-sm text-white truncate">{scan.url.replace(/^https?:\/\//, '')}</span>
                                     </div>
-                                );
-                            })}
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        {scan.status === 'completed' && scan.overall_score != null && (
+                                            <span className={`text-sm font-bold ${getScoreColor(scan.overall_score)}`}>
+                                                {scan.overall_score}
+                                            </span>
+                                        )}
+                                        {scan.status !== 'completed' && (
+                                            <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">
+                                                Scanning
+                                            </Badge>
+                                        )}
+                                        <span className="text-xs text-zinc-600 flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            {timeAgo(scan.completed_at || scan.created_at)}
+                                        </span>
+                                    </div>
+                                </Link>
+                            ))}
                         </div>
                     )}
                 </CardContent>
             </Card>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 stagger-children">
-                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '0ms' }}>
-                    <CardContent className="pt-6">
-                        <div className="p-3 rounded-lg bg-blue-500/10 w-fit mb-4 group-hover:bg-blue-500/20 transition-colors">
-                            <Shield className="h-6 w-6 text-blue-400" />
-                        </div>
-                        <h3 className="font-heading font-medium text-lg text-white mb-2">Security Deep Dive</h3>
-                        <p className="text-zinc-400 text-sm mb-6">
-                            Run a comprehensive security audit on your website
-                        </p>
-                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
-                            <Link href="/dashboard/scans/new">Start Scan</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '100ms' }}>
-                    <CardContent className="pt-6">
-                        <div className="p-3 rounded-lg bg-amber-500/10 w-fit mb-4 group-hover:bg-amber-500/20 transition-colors">
-                            <Key className="h-6 w-6 text-amber-400" />
-                        </div>
-                        <h3 className="font-heading font-medium text-lg text-white mb-2">API Key Check</h3>
-                        <p className="text-zinc-400 text-sm mb-6">
-                            Scan for exposed API keys and credentials
-                        </p>
-                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
-                            <Link href="/dashboard/scans/new">Start Scan</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-zinc-900/40 border-white/5 hover:border-white/10 transition-colors group" style={{ animationDelay: '200ms' }}>
-                    <CardContent className="pt-6">
-                        <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-4 group-hover:bg-green-500/20 transition-colors">
-                            <Code className="h-6 w-6 text-green-400" />
-                        </div>
-                        <h3 className="font-heading font-medium text-lg text-white mb-2">XSS & Injection Scan</h3>
-                        <p className="text-zinc-400 text-sm mb-6">
-                            Detect XSS, SQL injection, and open redirect vulnerabilities
-                        </p>
-                        <Button variant="outline" size="sm" asChild className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white">
-                            <Link href="/dashboard/scans/new">Start Scan</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
 }

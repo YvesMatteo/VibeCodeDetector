@@ -57,8 +57,24 @@ export function isValidDomain(domain: string): boolean {
 
 /** Validate IP address or CIDR */
 export function isValidIpOrCidr(ip: string): boolean {
-  // IPv4 or IPv4/CIDR
-  return /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/.test(ip);
+  const parts = ip.split('/');
+  if (parts.length > 2) return false;
+
+  const octets = parts[0].split('.');
+  if (octets.length !== 4) return false;
+  for (const octet of octets) {
+    if (!/^\d{1,3}$/.test(octet)) return false;
+    const num = parseInt(octet, 10);
+    if (num < 0 || num > 255) return false;
+  }
+
+  if (parts.length === 2) {
+    if (!/^\d{1,2}$/.test(parts[1])) return false;
+    const mask = parseInt(parts[1], 10);
+    if (mask < 0 || mask > 32) return false;
+  }
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------

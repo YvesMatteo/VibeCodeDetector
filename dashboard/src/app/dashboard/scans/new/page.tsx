@@ -29,13 +29,15 @@ import {
     ShieldAlert,
     Cookie,
     UserCheck,
+    Flame,
 } from 'lucide-react';
 
 export default function NewScanPage() {
     const searchParams = useSearchParams();
     const [url, setUrl] = useState(searchParams.get('url') || '');
     const [githubRepo, setGithubRepo] = useState('');
-    const [supabaseUrl, setSupabaseUrl] = useState('');
+    const [backendType, setBackendType] = useState<'none' | 'supabase' | 'firebase'>('none');
+    const [backendUrl, setBackendUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -80,9 +82,10 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
-                    ...(supabaseUrl.trim() ? { supabaseUrl: supabaseUrl.trim() } : {}),
+                    backendType,
+                    ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
                 }),
             });
 
@@ -110,11 +113,11 @@ export default function NewScanPage() {
             {/* Header */}
             <div className="mb-8">
                 <Link
-                    href="/dashboard"
+                    href="/dashboard/scans"
                     className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Dashboard
+                    Back to Scans
                 </Link>
                 <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">New Scan</h1>
                 <p className="text-zinc-400 mt-1">
@@ -211,32 +214,70 @@ export default function NewScanPage() {
                     </CardContent>
                 </Card>
 
-                {/* Supabase Project URL (optional) */}
+                {/* Backend Provider (optional) */}
                 <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <ServerCrash className="h-5 w-5 text-emerald-400" />
-                            Supabase Project URL
+                            Backend Provider
                             <span className="text-xs font-normal text-zinc-500">(optional)</span>
                         </CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Add your Supabase project URL to scan for backend misconfigurations, exposed tables, and insecure auth settings
+                            Select your backend to scan for misconfigurations, exposed data, and insecure auth settings
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-2">
-                            <Label htmlFor="supabaseUrl" className="text-zinc-300">Supabase Project URL</Label>
-                            <Input
-                                id="supabaseUrl"
-                                type="text"
-                                placeholder="https://yourproject.supabase.co"
-                                value={supabaseUrl}
-                                onChange={(e) => setSupabaseUrl(e.target.value)}
-                                className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
-                            />
-                            <p className="text-xs text-zinc-500">
-                                Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
-                            </p>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="backendType" className="text-zinc-300">Provider</Label>
+                                <select
+                                    id="backendType"
+                                    value={backendType}
+                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase'); setBackendUrl(''); }}
+                                    className="w-full h-10 rounded-md border bg-white/5 border-white/10 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                >
+                                    <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
+                                    <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
+                                    <option value="firebase" className="bg-zinc-900 text-white">Firebase</option>
+                                </select>
+                            </div>
+                            {backendType === 'supabase' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="backendUrl" className="text-zinc-300">Supabase Project URL</Label>
+                                    <Input
+                                        id="backendUrl"
+                                        type="text"
+                                        placeholder="https://yourproject.supabase.co"
+                                        value={backendUrl}
+                                        onChange={(e) => setBackendUrl(e.target.value)}
+                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
+                                    />
+                                    <p className="text-xs text-zinc-500">
+                                        Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
+                                    </p>
+                                </div>
+                            )}
+                            {backendType === 'firebase' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="backendUrl" className="text-zinc-300">Firebase Project URL or ID</Label>
+                                    <Input
+                                        id="backendUrl"
+                                        type="text"
+                                        placeholder="your-project-id or https://your-project.firebaseapp.com"
+                                        value={backendUrl}
+                                        onChange={(e) => setBackendUrl(e.target.value)}
+                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-orange-500/50"
+                                    />
+                                    <p className="text-xs text-zinc-500">
+                                        Checks for open Realtime Database, listable Storage, Firestore access, API key restrictions, and auth enumeration. Auto-detected if not provided.
+                                    </p>
+                                </div>
+                            )}
+                            {backendType === 'none' && (
+                                <p className="text-xs text-zinc-500">
+                                    Both Supabase and Firebase are auto-detected from your site&apos;s source code. Select a provider to provide a specific project URL.
+                                </p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -246,7 +287,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 17 checks automatically
+                            Every scan runs up to 18 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -264,6 +305,7 @@ export default function NewScanPage() {
                                 { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets in code', color: 'text-amber-500' },
                                 { icon: GitBranch, name: 'GitHub Deep Scan', description: '40+ secret patterns across git history', color: 'text-purple-500' },
                                 { icon: ServerCrash, name: 'Supabase Backend', description: 'RLS, storage, auth config, exposed tables', color: 'text-emerald-400' },
+                                { icon: Flame, name: 'Firebase Backend', description: 'RTDB, Firestore, Storage, API key, auth enum', color: 'text-orange-400' },
                                 { icon: Package, name: 'Dependencies', description: 'Known vulnerabilities via OSV.dev database', color: 'text-lime-500' },
                                 { icon: Mail, name: 'DNS & Email', description: 'SPF, DKIM, DMARC, DNSSEC, subdomain takeover', color: 'text-violet-500' },
                                 { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
@@ -293,7 +335,7 @@ export default function NewScanPage() {
                 {/* Submit */}
                 <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
                     <Button type="button" variant="outline" asChild className="bg-transparent border-white/10 hover:bg-white/5 text-zinc-300">
-                        <Link href="/dashboard">Cancel</Link>
+                        <Link href="/dashboard/scans">Cancel</Link>
                     </Button>
                     <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
                         {loading ? (

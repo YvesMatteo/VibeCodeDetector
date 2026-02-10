@@ -4,7 +4,65 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
+
+export async function GET(req: NextRequest) {
+    try {
+        const { context: auth, error: authError } = await resolveAuth(req);
+        if (authError) return authError;
+        if (!auth) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+            ?? req.headers.get('x-real-ip')
+            ?? '0.0.0.0';
+
+        const scopeError = requireScope(auth, 'scan:read');
+        if (scopeError) {
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'GET', ip, statusCode: 403 });
+            return scopeError;
+        }
+
+        const { searchParams } = new URL(req.url);
+        const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 100);
+        const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
+        const statusFilter = searchParams.get('status');
+        const VALID_STATUSES = ['pending', 'running', 'completed', 'failed'];
+
+        const supabase = auth.keyId ? getServiceClient() : await createClient();
+
+        let query = supabase
+            .from('scans')
+            .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
+            .eq('user_id', auth.userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (statusFilter && VALID_STATUSES.includes(statusFilter)) {
+            query = query.eq('status', statusFilter);
+        }
+
+        const { data: scans, count, error: queryError } = await query;
+
+        if (queryError) {
+            console.error('List scans error:', queryError);
+            return NextResponse.json({ error: 'Failed to fetch scans' }, { status: 500 });
+        }
+
+        logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'GET', ip, statusCode: 200 });
+
+        return NextResponse.json({
+            scans: scans || [],
+            total: count || 0,
+            limit,
+            offset,
+        });
+    } catch (error) {
+        console.error('List scans error:', error);
+        return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });
+    }
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -50,7 +108,12 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes, githubRepo, supabaseUrl: userSupabaseUrl } = body;
+        const { url, scanTypes, githubRepo } = body;
+
+        // Backend provider: new format (backendType + backendUrl) or legacy (supabaseUrl)
+        const backendType: string = body.backendType || (body.supabaseUrl ? 'supabase' : 'none');
+        const backendUrl: string = body.backendUrl || body.supabaseUrl || '';
+        const userSupabaseUrl = backendType === 'supabase' ? backendUrl : body.supabaseUrl;
 
         // ==========================================
         // URL VALIDATION
@@ -75,7 +138,9 @@ export async function POST(req: NextRequest) {
         const privatePatterns = [
             /^localhost$/i, /^127\.\d+\.\d+\.\d+$/, /^10\.\d+\.\d+\.\d+$/,
             /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, /^192\.168\.\d+\.\d+$/,
-            /^169\.254\.\d+\.\d+$/, /^0\.0\.0\.0$/, /^\[?::1\]?$/,
+            /^169\.254\.\d+\.\d+$/, /^0\.\d+\.\d+\.\d+$/,
+            /^\[?::1\]?$/, /^\[?fe80:/i, /^\[?fc00:/i, /^\[?fd[0-9a-f]{2}:/i,
+            /^\d+$/, /^0x/i,
         ];
         if (privatePatterns.some(p => p.test(parsedUrl.hostname))) {
             return NextResponse.json({ error: 'Internal URLs are not allowed' }, { status: 400 });
@@ -348,24 +413,44 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.auth = { error: err.message, score: 0 }; })
         );
 
-        // 13. Supabase Backend Scanner (Edge Function)
-        scannerPromises.push(
-            fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({
-                    targetUrl,
-                    ...(userSupabaseUrl && typeof userSupabaseUrl === 'string' ? { supabaseUrl: userSupabaseUrl.trim() } : {}),
-                }),
-            })
-                .then(res => res.json())
-                .then(data => { results.supabase_backend = data; })
-                .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
-        );
+        // 13. Supabase Backend Scanner (Edge Function) — runs when supabase or auto-detect
+        if (backendType === 'supabase' || backendType === 'none') {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({
+                        targetUrl,
+                        ...(userSupabaseUrl && typeof userSupabaseUrl === 'string' ? { supabaseUrl: userSupabaseUrl.trim() } : {}),
+                    }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.supabase_backend = data; })
+                    .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 13b. Firebase Backend Scanner (Edge Function) — runs when firebase is selected
+        if (backendType === 'firebase') {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/firebase-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.firebase_backend = data; })
+                    .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
+            );
+        }
 
         // 14. Dependency Vulnerability Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
@@ -466,6 +551,7 @@ export async function POST(req: NextRequest) {
             api_keys: 0.07,
             github_secrets: 0.05,
             supabase_backend: 0.06,
+            firebase_backend: 0.06,
             dependencies: 0.05,
             dns_email: 0.04,
             threat_intelligence: 0.04,
