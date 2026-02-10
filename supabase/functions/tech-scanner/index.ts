@@ -467,6 +467,20 @@ function detectFromHtml(
         addTech(techs, 'Font Awesome', null, 'Icon Library', 'Font Awesome reference in HTML');
     }
 
+    // Try to extract Next.js version from build manifest or __NEXT_DATA__
+    const nextDataMatch = html.match(/__NEXT_DATA__.*?"version"\s*:\s*"([\d.]+)"/s)
+        ?? html.match(/"next"\s*:\s*"([\d.]+)"/);
+    if (nextDataMatch) {
+        addTech(techs, 'Next.js', nextDataMatch[1], 'Framework', `__NEXT_DATA__ version: ${nextDataMatch[1]}`);
+    }
+
+    // React version from ReactDOM or React script tags
+    const reactVerMatch = html.match(/react(?:-dom)?[./-]([\d.]+)(?:\.min)?\.(?:js|mjs)/i)
+        ?? html.match(/react\.(?:development|production\.min)\.js\?v=([\d.]+)/i);
+    if (reactVerMatch) {
+        addTech(techs, 'React', reactVerMatch[1], 'Framework', `React ${reactVerMatch[1]} in script src`);
+    }
+
     // Google Analytics / Tag Manager
     if (/google-analytics\.com|googletagmanager\.com|gtag\(/i.test(html)) {
         addTech(techs, 'Google Analytics', null, 'Analytics', 'Google Analytics/GTM in HTML');
@@ -851,6 +865,84 @@ function checkInfoDisclosure(
 }
 
 // ---------------------------------------------------------------------------
+// Extract versions from first-party JS bundles
+// ---------------------------------------------------------------------------
+
+async function extractVersionsFromScripts(
+    targetUrl: string,
+    html: string,
+    techs: Map<string, Technology>,
+): Promise<void> {
+    const origin = new URL(targetUrl).origin;
+
+    // Find first-party script URLs (up to 5, skip CDN/third-party)
+    const scriptPattern = /<script[^>]+src\s*=\s*["']([^"']+)["']/gi;
+    const cdnPatterns = /cdn\.|cdnjs\.|unpkg\.com|jsdelivr\.net|googleapis\.com|gstatic\.com|cloudflare\.com|google-analytics/i;
+    const scripts: string[] = [];
+
+    let m;
+    while ((m = scriptPattern.exec(html)) !== null && scripts.length < 5) {
+        let src = m[1];
+        if (src.startsWith('//')) src = 'https:' + src;
+        else if (src.startsWith('/')) src = origin + src;
+        else if (!src.startsWith('http')) continue;
+
+        try {
+            const srcUrl = new URL(src);
+            if (srcUrl.origin !== origin) continue; // skip third-party
+            if (cdnPatterns.test(src)) continue;
+            scripts.push(src);
+        } catch { /* skip invalid URLs */ }
+    }
+
+    if (scripts.length === 0) return;
+
+    // Fetch up to 3 scripts and scan for version patterns
+    const results = await Promise.allSettled(
+        scripts.slice(0, 3).map(async (src) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            try {
+                const resp = await fetch(src, {
+                    signal: controller.signal,
+                    headers: { 'User-Agent': 'CheckVibe-TechScanner/1.0' },
+                });
+                if (!resp.ok) return;
+                const text = await resp.text();
+                // Only scan first 50KB to avoid memory issues
+                const chunk = text.substring(0, 50000);
+
+                // Next.js version in chunks
+                const nextMatch = chunk.match(/Next\.js\s+v?([\d.]+)/i)
+                    ?? chunk.match(/"next":\s*"([\d.]+)"/);
+                if (nextMatch) addTech(techs, 'Next.js', nextMatch[1], 'Framework', `JS bundle: Next.js ${nextMatch[1]}`);
+
+                // React version in bundles
+                const reactMatch = chunk.match(/React v?([\d.]+)/i)
+                    ?? chunk.match(/react\.version\s*=\s*"([\d.]+)"/);
+                if (reactMatch) addTech(techs, 'React', reactMatch[1], 'Framework', `JS bundle: React ${reactMatch[1]}`);
+
+                // Vue.js
+                const vueMatch = chunk.match(/Vue\.js v([\d.]+)/i);
+                if (vueMatch) addTech(techs, 'Vue.js', vueMatch[1], 'Framework', `JS bundle: Vue.js ${vueMatch[1]}`);
+
+                // Angular
+                const angMatch = chunk.match(/@angular\/core.*?([\d]+\.[\d]+\.[\d]+)/);
+                if (angMatch) addTech(techs, 'Angular', angMatch[1], 'Framework', `JS bundle: Angular ${angMatch[1]}`);
+
+                // jQuery
+                const jqMatch = chunk.match(/jQuery\s+v?([\d.]+)/i)
+                    ?? chunk.match(/jquery:\s*"([\d.]+)"/);
+                if (jqMatch) addTech(techs, 'jQuery', jqMatch[1], 'JavaScript Library', `JS bundle: jQuery ${jqMatch[1]}`);
+            } finally {
+                clearTimeout(timeout);
+            }
+        }),
+    );
+    void results;
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
@@ -918,10 +1010,30 @@ Deno.serve(async (req: Request) => {
         // Path probing (max 3 lightweight HEAD requests)
         await probeCommonPaths(targetUrl, techs);
 
+        // Try to extract versions from first-party JS files
+        await extractVersionsFromScripts(targetUrl, html, techs);
+
         // ------------------------------------------------------------------
         // 3. Check detected technologies against CVE database (live + hardcoded)
         // ------------------------------------------------------------------
         const cveResults = await checkCves(techs);
+
+        // Add info finding listing all detected technologies
+        if (techs.size > 0) {
+            const techList = [...techs.values()];
+            const withVersion = techList.filter(t => t.version);
+            const withoutVersion = techList.filter(t => !t.version);
+
+            cveResults.findings.push({
+                id: 'tech-stack-detected',
+                severity: 'info',
+                title: `${techs.size} technologies detected`,
+                description: techList.map(t => t.version ? `${t.name} ${t.version}` : t.name).join(', '),
+                recommendation: withoutVersion.length > 0
+                    ? `${withoutVersion.length} technologies detected without version numbers — CVE checks only run when a version is identified. Consider checking these manually: ${withoutVersion.map(t => t.name).join(', ')}.`
+                    : 'All detected technologies have version numbers and were checked for known CVEs.',
+            });
+        }
 
         // ------------------------------------------------------------------
         // 4. Check for security concerns (info disclosure, debug, etc.)
