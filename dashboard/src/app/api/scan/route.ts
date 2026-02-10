@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { runSEOScan } from '@/lib/scanners/seo-scanner';
+
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
 
 export async function POST(req: NextRequest) {
     try {
@@ -218,18 +218,7 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.legal = { error: err.message, score: 0 }; })
         );
 
-        // 4. SEO Scanner (Local Lib)
-        try {
-            scannerPromises.push(
-                Promise.resolve(runSEOScan(targetUrl))
-                    .then(data => { results.seo = data; })
-                    .catch(err => { results.seo = { error: err.message, score: 0 }; })
-            );
-        } catch (e) {
-            console.error('SEO Scanner not available:', e);
-        }
-
-        // 5. Threat Intelligence Scanner (Edge Function)
+        // 4. Threat Intelligence Scanner (Edge Function)
         scannerPromises.push(
             fetchWithTimeout(`${supabaseUrl}/functions/v1/threat-scanner`, {
                 method: 'POST',
@@ -481,7 +470,6 @@ export async function POST(req: NextRequest) {
             dns_email: 0.04,
             threat_intelligence: 0.04,
             tech_stack: 0.03,
-            seo: 0.03,
             legal: 0.01,
         };
 

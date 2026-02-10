@@ -48,7 +48,6 @@ function getScoreRingColor(score: number) {
 
 const scannerIcons: Record<string, any> = {
     security: Shield,
-    seo: Search,
     api_keys: Key,
     legal: Scale,
     threat_intelligence: Radar,
@@ -69,7 +68,6 @@ const scannerIcons: Record<string, any> = {
 
 const scannerNames: Record<string, string> = {
     security: 'Security Scanner',
-    seo: 'SEO Analyzer',
     api_keys: 'API Key Detector',
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
