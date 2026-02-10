@@ -98,7 +98,7 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; label: string; severity: "critic
 ];
 
 // Sensitive environment files to check
-const SENSITIVE_ENV_FILES = [".env", ".env.local", ".env.production", ".env.staging", ".env.development"];
+const SENSITIVE_ENV_FILES = [".env", ".env.local", ".env.production", ".env.staging", ".env.development", ".env.prod", ".env.dev", ".env.test", ".env.backup"];
 
 // Example/template env files
 const EXAMPLE_ENV_FILES = [".env.example", ".env.sample", ".env.template"];
@@ -256,14 +256,14 @@ function decodeBase64Content(data: { content?: string; encoding?: string }): str
 
 /** Track API calls to stay within rate limits */
 let apiCallCount = 0;
-const MAX_API_CALLS = 60;
+const MAX_API_CALLS = 120;
 
 async function rateLimitedGithubFetch(path: string, token: string): Promise<Response | null> {
   if (apiCallCount >= MAX_API_CALLS) {
     return null;
   }
   apiCallCount++;
-  await delay(200);
+  await delay(100);
   return githubFetch(path, token);
 }
 
@@ -543,19 +543,30 @@ Deno.serve(async (req: Request) => {
     }
 
     // =====================================================================
-    // CHECK 4: Deep commit history scanning
+    // CHECK 4: Deep commit history scanning (up to 100 commits across 2 pages)
     // =====================================================================
     checksRun++;
     try {
-      const commitsRes = await rateLimitedGithubFetch(
-        `/repos/${repo}/commits?per_page=20`,
-        GITHUB_TOKEN
-      );
+      // Fetch up to 100 commits across 2 pages for deeper history coverage
+      const allCommitShas: string[] = [];
+      for (let page = 1; page <= 2; page++) {
+        const commitsRes = await rateLimitedGithubFetch(
+          `/repos/${repo}/commits?per_page=50&page=${page}`,
+          GITHUB_TOKEN
+        );
+        if (commitsRes && commitsRes.ok) {
+          const commits = await commitsRes.json();
+          if (Array.isArray(commits)) {
+            allCommitShas.push(...commits.map((c: { sha: string }) => c.sha));
+          }
+          if (!Array.isArray(commits) || commits.length < 50) break;
+        } else {
+          break;
+        }
+      }
 
-      if (commitsRes && commitsRes.ok) {
-        const commits = await commitsRes.json();
-        if (Array.isArray(commits) && commits.length > 0) {
-          const commitShas: string[] = commits.map((c: { sha: string }) => c.sha);
+      if (allCommitShas.length > 0) {
+          const commitShas = allCommitShas;
           const commitHistorySecrets: Map<string, { label: string; severity: "critical" | "high" | "medium"; commitUrl: string; filePath: string }> = new Map();
 
           // Process commits in batches of 5 to respect rate limits
@@ -578,6 +589,8 @@ Deno.serve(async (req: Request) => {
 
                   for (const file of files) {
                     if (!file.patch) continue;
+                    // Skip scanner source files (contain regex patterns that match secrets)
+                    if (file.filename.includes('-scanner/') || file.filename.includes('_scanner/') || file.filename.endsWith('-scanner.ts') || file.filename.endsWith('-scanner.js')) continue;
                     // Only scan added lines (lines starting with +)
                     const addedLines = file.patch
                       .split("\n")
@@ -637,7 +650,6 @@ Deno.serve(async (req: Request) => {
               reportUrl: secret.commitUrl,
             });
           }
-        }
       }
     } catch {
       // Non-blocking
@@ -974,6 +986,76 @@ Deno.serve(async (req: Request) => {
           recommendation: "Replace real secret values with placeholder text like 'your_api_key_here' or 'change_me'. Rotate any exposed credentials immediately.",
           evidence: maskSecretsInContent(result.content),
           reportUrl: result.htmlUrl,
+        });
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    // =====================================================================
+    // CHECK 9: GitHub Code Search for secrets in codebase
+    // =====================================================================
+    checksRun++;
+    try {
+      // Search queries targeting common secret patterns in the repo
+      const searchQueries = [
+        { q: `filename:.env repo:${repo}`, label: ".env file" },
+        { q: `SUPABASE_SERVICE_ROLE_KEY repo:${repo}`, label: "Supabase service role key" },
+        { q: `sk_live_ repo:${repo}`, label: "Stripe live key" },
+        { q: `AKIA repo:${repo}`, label: "AWS access key" },
+        { q: `sk-ant- repo:${repo}`, label: "Anthropic API key" },
+        { q: `ghp_ repo:${repo}`, label: "GitHub PAT" },
+        { q: `sk-proj- repo:${repo}`, label: "OpenAI project key" },
+        { q: `DATABASE_URL repo:${repo} NOT .env.example NOT .env.sample NOT README`, label: "Database URL" },
+      ];
+
+      const searchFindings: Array<{ label: string; path: string; htmlUrl: string }> = [];
+
+      for (const sq of searchQueries) {
+        if (searchFindings.length >= 5) break;
+        try {
+          const searchRes = await rateLimitedGithubFetch(
+            `/search/code?q=${encodeURIComponent(sq.q)}&per_page=3`,
+            GITHUB_TOKEN!
+          );
+          if (searchRes && searchRes.ok) {
+            const searchData = await searchRes.json();
+            if (searchData.total_count > 0 && Array.isArray(searchData.items)) {
+              for (const item of searchData.items.slice(0, 2)) {
+                // Skip known-safe files
+                const path = item.path?.toLowerCase() || '';
+                if (path.endsWith('.example') || path.endsWith('.sample') || path.endsWith('.template') ||
+                    path.includes('readme') || path.includes('test') || path.includes('mock') ||
+                    path.includes('fixture') || path.includes('node_modules')) continue;
+
+                searchFindings.push({
+                  label: sq.label,
+                  path: item.path,
+                  htmlUrl: item.html_url || '',
+                });
+              }
+            }
+          }
+          // Code search has a strict rate limit — add extra delay
+          await delay(500);
+        } catch {
+          // Search may fail on some repos — non-blocking
+        }
+      }
+
+      // Deduplicate by path
+      const seenPaths = new Set<string>();
+      for (const sf of searchFindings) {
+        if (seenPaths.has(sf.path)) continue;
+        seenPaths.add(sf.path);
+        score -= 15;
+        findings.push({
+          id: `github-search-${sf.path.replace(/[^a-zA-Z0-9]/g, "-")}`,
+          severity: "high",
+          title: `${sf.label} found via code search in ${sf.path}`,
+          description: `GitHub code search found a match for "${sf.label}" in file "${sf.path}". This may indicate secrets or sensitive configuration committed to the repository.`,
+          recommendation: "Review the file immediately. If it contains real credentials, rotate them and remove the file from the repository and its git history.",
+          reportUrl: sf.htmlUrl,
         });
       }
     } catch {
