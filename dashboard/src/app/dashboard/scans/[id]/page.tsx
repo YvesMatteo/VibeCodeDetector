@@ -174,6 +174,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             allFindings.push(...result.findings);
             result.findings.forEach((f: any) => {
                 const sev = f.severity?.toLowerCase();
+                if (sev === 'info') return; // info findings are not security issues
                 if (sev === 'critical') totalFindings.critical++;
                 else if (sev === 'high') totalFindings.high++;
                 else if (sev === 'medium') totalFindings.medium++;
@@ -181,6 +182,8 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             });
         }
     });
+
+    const issueCount = totalFindings.critical + totalFindings.high + totalFindings.medium + totalFindings.low;
 
     return (
         <div className="p-4 md:p-8">
@@ -247,7 +250,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                             );
                         })()}
                         <p className="text-2xl font-medium text-white">
-                            {allFindings.length} {allFindings.length === 1 ? 'issue' : 'issues'} found
+                            {issueCount} {issueCount === 1 ? 'issue' : 'issues'} found
                         </p>
                         <p className="text-sm text-zinc-400">
                             across {Object.keys(results).length} scanners

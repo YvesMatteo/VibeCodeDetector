@@ -99,6 +99,7 @@ function SeveritySummary({ findings }: { findings: any[] }) {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 };
     findings.forEach((f: any) => {
         const sev = f.severity?.toLowerCase();
+        if (sev === 'info') return;
         if (sev === 'critical') counts.critical++;
         else if (sev === 'high') counts.high++;
         else if (sev === 'medium') counts.medium++;
@@ -357,7 +358,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                             {scannerNames[key as keyof typeof scannerNames] || key}
                                         </h3>
                                         <span className="text-xs text-zinc-500">
-                                            {result.findings.length} {result.findings.length === 1 ? 'issue' : 'issues'}
+                                            {(() => { const c = result.findings.filter((f: any) => f.severity?.toLowerCase() !== 'info').length; return `${c} ${c === 1 ? 'issue' : 'issues'}`; })()}
                                         </span>
                                     </div>
                                     <div className="mt-1.5">
