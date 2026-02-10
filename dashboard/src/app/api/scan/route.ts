@@ -4,7 +4,7 @@ import { runSEOScan } from '@/lib/scanners/seo-scanner';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'github_secrets', 'tech_stack'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack'] as const;
 
 export async function POST(req: NextRequest) {
     try {
@@ -261,23 +261,7 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.sqli = { error: err.message, score: 0 }; })
         );
 
-        // 7. GitHub Secrets Scanner (Edge Function)
-        scannerPromises.push(
-            fetchWithTimeout(`${supabaseUrl}/functions/v1/github-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.github_secrets = data; })
-                .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
-        );
-
-        // 8. Technology Stack Scanner (Edge Function)
+        // 7. Technology Stack Scanner (Edge Function)
         scannerPromises.push(
             fetchWithTimeout(`${supabaseUrl}/functions/v1/tech-scanner`, {
                 method: 'POST',
@@ -298,11 +282,10 @@ export async function POST(req: NextRequest) {
 
         // Calculate Overall Score using weighted average
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.20,
+            security: 0.25,
+            sqli: 0.20,
             api_keys: 0.15,
             threat_intelligence: 0.15,
-            sqli: 0.15,
-            github_secrets: 0.10,
             tech_stack: 0.10,
             seo: 0.10,
             legal: 0.05,
