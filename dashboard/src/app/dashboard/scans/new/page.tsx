@@ -20,11 +20,21 @@ import {
     Database,
     GitBranch,
     Cpu,
+    Lock,
+    Mail,
+    Code,
+    ExternalLink,
+    Package,
+    ServerCrash,
+    ShieldAlert,
+    Cookie,
+    UserCheck,
 } from 'lucide-react';
 
 export default function NewScanPage() {
     const [url, setUrl] = useState('');
     const [githubRepo, setGithubRepo] = useState('');
+    const [supabaseUrl, setSupabaseUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -69,8 +79,9 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack'],
+                    scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
+                    ...(supabaseUrl.trim() ? { supabaseUrl: supabaseUrl.trim() } : {}),
                 }),
             });
 
@@ -199,23 +210,63 @@ export default function NewScanPage() {
                     </CardContent>
                 </Card>
 
+                {/* Supabase Project URL (optional) */}
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-white">
+                            <ServerCrash className="h-5 w-5 text-emerald-400" />
+                            Supabase Project URL
+                            <span className="text-xs font-normal text-zinc-500">(optional)</span>
+                        </CardTitle>
+                        <CardDescription className="text-zinc-400">
+                            Add your Supabase project URL to scan for backend misconfigurations, exposed tables, and insecure auth settings
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <Label htmlFor="supabaseUrl" className="text-zinc-300">Supabase Project URL</Label>
+                            <Input
+                                id="supabaseUrl"
+                                type="text"
+                                placeholder="https://yourproject.supabase.co"
+                                value={supabaseUrl}
+                                onChange={(e) => setSupabaseUrl(e.target.value)}
+                                className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
+                            />
+                            <p className="text-xs text-zinc-500">
+                                Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* What's Included */}
                 <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 8 checks automatically
+                            Every scan runs up to 18 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
-                                { icon: Shield, name: 'Security Scanner', description: 'Headers, CORS, cookies, SSL, CSP analysis', color: 'text-red-500' },
+                                { icon: Shield, name: 'Security Headers', description: 'Headers, CSP, info disclosure, rate limiting', color: 'text-red-500' },
                                 { icon: Database, name: 'SQL Injection', description: 'Passive SQLi detection across forms and params', color: 'text-rose-500' },
-                                { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets', color: 'text-amber-500' },
-                                { icon: GitBranch, name: 'GitHub Secrets', description: 'Leaked secrets in your repository', color: 'text-purple-500' },
-                                { icon: Cpu, name: 'Tech Stack', description: 'Technology detection and known CVE checks', color: 'text-indigo-500' },
+                                { icon: Code, name: 'XSS Detection', description: 'DOM sinks, reflected XSS, template injection', color: 'text-pink-500' },
+                                { icon: Globe, name: 'CORS Scanner', description: 'Origin reflection, null origin, wildcard misconfig', color: 'text-sky-500' },
+                                { icon: ShieldAlert, name: 'CSRF Protection', description: 'Token validation, SameSite cookies, origin checks', color: 'text-orange-500' },
+                                { icon: Cookie, name: 'Cookie Security', description: 'Session flags, Secure/HttpOnly/SameSite analysis', color: 'text-yellow-500' },
+                                { icon: UserCheck, name: 'Auth Flow', description: 'Login security, password policy, session management', color: 'text-teal-500' },
+                                { icon: Lock, name: 'SSL/TLS', description: 'Certificate, HSTS, TLS version, mixed content', color: 'text-emerald-500' },
+                                { icon: ExternalLink, name: 'Open Redirect', description: 'URL parameter and path-based redirect testing', color: 'text-fuchsia-500' },
+                                { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets in code', color: 'text-amber-500' },
+                                { icon: GitBranch, name: 'GitHub Deep Scan', description: '40+ secret patterns across git history', color: 'text-purple-500' },
+                                { icon: ServerCrash, name: 'Supabase Backend', description: 'RLS, storage, auth config, exposed tables', color: 'text-emerald-400' },
+                                { icon: Package, name: 'Dependencies', description: 'Known vulnerabilities via OSV.dev database', color: 'text-lime-500' },
+                                { icon: Mail, name: 'DNS & Email', description: 'SPF, DKIM, DMARC, DNSSEC, subdomain takeover', color: 'text-violet-500' },
                                 { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
+                                { icon: Cpu, name: 'Tech Stack & CVEs', description: 'Technology detection with live OSV.dev lookups', color: 'text-indigo-500' },
                                 { icon: Search, name: 'SEO Analyzer', description: 'Meta tags, Core Web Vitals, schema', color: 'text-green-500' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
                             ].map((check) => (

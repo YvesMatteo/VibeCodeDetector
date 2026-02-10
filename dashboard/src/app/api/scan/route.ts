@@ -4,7 +4,7 @@ import { runSEOScan } from '@/lib/scanners/seo-scanner';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
 
 export async function POST(req: NextRequest) {
     try {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes, githubRepo } = body;
+        const { url, scanTypes, githubRepo, supabaseUrl: userSupabaseUrl } = body;
 
         // ==========================================
         // URL VALIDATION
@@ -359,22 +359,129 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.auth = { error: err.message, score: 0 }; })
         );
 
+        // 13. Supabase Backend Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({
+                    targetUrl,
+                    ...(userSupabaseUrl && typeof userSupabaseUrl === 'string' ? { supabaseUrl: userSupabaseUrl.trim() } : {}),
+                }),
+            })
+                .then(res => res.json())
+                .then(data => { results.supabase_backend = data; })
+                .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
+        );
+
+        // 14. Dependency Vulnerability Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/deps-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.dependencies = data; })
+                    .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 15. SSL/TLS Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/ssl-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.ssl_tls = data; })
+                .catch(err => { results.ssl_tls = { error: err.message, score: 0 }; })
+        );
+
+        // 16. DNS & Email Security Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/dns-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.dns_email = data; })
+                .catch(err => { results.dns_email = { error: err.message, score: 0 }; })
+        );
+
+        // 17. XSS Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/xss-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.xss = data; })
+                .catch(err => { results.xss = { error: err.message, score: 0 }; })
+        );
+
+        // 18. Open Redirect Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/redirect-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.open_redirect = data; })
+                .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
         // Calculate Overall Score using weighted average
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.15,
-            sqli: 0.12,
-            cors: 0.10,
-            csrf: 0.10,
-            cookies: 0.10,
-            auth: 0.10,
-            api_keys: 0.10,
-            threat_intelligence: 0.08,
-            github_secrets: 0.06,
-            tech_stack: 0.04,
-            seo: 0.04,
+            security: 0.10,
+            sqli: 0.08,
+            xss: 0.08,
+            cors: 0.06,
+            csrf: 0.06,
+            cookies: 0.06,
+            auth: 0.06,
+            ssl_tls: 0.07,
+            open_redirect: 0.05,
+            api_keys: 0.07,
+            github_secrets: 0.05,
+            supabase_backend: 0.06,
+            dependencies: 0.05,
+            dns_email: 0.04,
+            threat_intelligence: 0.04,
+            tech_stack: 0.03,
+            seo: 0.03,
             legal: 0.01,
         };
 

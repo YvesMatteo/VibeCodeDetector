@@ -547,10 +547,153 @@ function detectDebugMode(html: string, headers: Headers): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// CVE checking
+// Technology-to-ecosystem mapping for OSV.dev lookups
 // ---------------------------------------------------------------------------
 
-function checkCves(techs: Map<string, Technology>): { findings: Finding[]; deductions: number } {
+const TECH_TO_ECOSYSTEM: Record<string, { ecosystem: string; packageName: string }> = {
+    'Next.js': { ecosystem: 'npm', packageName: 'next' },
+    'React': { ecosystem: 'npm', packageName: 'react' },
+    'Vue.js': { ecosystem: 'npm', packageName: 'vue' },
+    'Angular': { ecosystem: 'npm', packageName: '@angular/core' },
+    'AngularJS': { ecosystem: 'npm', packageName: 'angular' },
+    'jQuery': { ecosystem: 'npm', packageName: 'jquery' },
+    'Bootstrap': { ecosystem: 'npm', packageName: 'bootstrap' },
+    'Express': { ecosystem: 'npm', packageName: 'express' },
+    'Nuxt.js': { ecosystem: 'npm', packageName: 'nuxt' },
+    'Gatsby': { ecosystem: 'npm', packageName: 'gatsby' },
+    'Svelte': { ecosystem: 'npm', packageName: 'svelte' },
+    'SvelteKit': { ecosystem: 'npm', packageName: '@sveltejs/kit' },
+    'Ember.js': { ecosystem: 'npm', packageName: 'ember-source' },
+    'WordPress': { ecosystem: 'Packagist', packageName: 'wordpress/wordpress' },
+    'Drupal': { ecosystem: 'Packagist', packageName: 'drupal/core' },
+    'Joomla': { ecosystem: 'Packagist', packageName: 'joomla/joomla-cms' },
+    'Laravel': { ecosystem: 'Packagist', packageName: 'laravel/framework' },
+    'Django': { ecosystem: 'PyPI', packageName: 'Django' },
+    'Ruby on Rails': { ecosystem: 'RubyGems', packageName: 'rails' },
+    'Ghost': { ecosystem: 'npm', packageName: 'ghost' },
+};
+
+// ---------------------------------------------------------------------------
+// Live CVE checking via OSV.dev API (free, no key required)
+// ---------------------------------------------------------------------------
+
+async function checkCvesLive(techs: Map<string, Technology>): Promise<{ findings: Finding[]; deductions: number }> {
+    const findings: Finding[] = [];
+    let deductions = 0;
+    const seenCves = new Set<string>();
+
+    // Build OSV batch query for techs with known versions and ecosystem mappings
+    const queries: Array<{ package: { name: string; ecosystem: string }; version: string; _techName: string; _detectedVia: string }> = [];
+
+    for (const tech of techs.values()) {
+        if (!tech.version) continue;
+        const mapping = TECH_TO_ECOSYSTEM[tech.name];
+        if (!mapping) continue;
+
+        queries.push({
+            package: { name: mapping.packageName, ecosystem: mapping.ecosystem },
+            version: tech.version.replace(/^v/i, ''),
+            _techName: tech.name,
+            _detectedVia: tech.detectedVia,
+        });
+    }
+
+    if (queries.length === 0) return { findings, deductions };
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+            const res = await fetch('https://api.osv.dev/v1/querybatch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    queries: queries.map(q => ({
+                        package: q.package,
+                        version: q.version,
+                    })),
+                }),
+                signal: controller.signal,
+            });
+
+            if (!res.ok) return { findings, deductions };
+
+            const data = await res.json();
+            if (!data.results || !Array.isArray(data.results)) return { findings, deductions };
+
+            for (let i = 0; i < data.results.length; i++) {
+                const result = data.results[i];
+                const query = queries[i];
+                if (!result.vulns || !Array.isArray(result.vulns)) continue;
+
+                // Take top 5 vulns per technology to avoid flooding
+                for (const vuln of result.vulns.slice(0, 5)) {
+                    const vulnId = vuln.id || '';
+                    // Prefer CVE alias if available
+                    const cveAlias = vuln.aliases?.find((a: string) => a.startsWith('CVE-')) || vulnId;
+
+                    if (seenCves.has(cveAlias)) continue;
+                    seenCves.add(cveAlias);
+
+                    // Determine severity from OSV data
+                    let severity: 'critical' | 'high' | 'medium' | 'low' = 'medium';
+                    const severityScore = vuln.severity?.[0]?.score;
+                    const dbSeverity = vuln.database_specific?.severity?.toLowerCase();
+
+                    if (severityScore >= 9.0 || dbSeverity === 'critical') severity = 'critical';
+                    else if (severityScore >= 7.0 || dbSeverity === 'high') severity = 'high';
+                    else if (severityScore >= 4.0 || dbSeverity === 'moderate' || dbSeverity === 'medium') severity = 'medium';
+                    else severity = 'low';
+
+                    const severityDeduction =
+                        severity === 'critical' ? 30 :
+                        severity === 'high' ? 20 :
+                        severity === 'medium' ? 10 : 5;
+
+                    deductions += severityDeduction;
+
+                    // Extract fix version
+                    let fixVersion = '';
+                    if (vuln.affected?.[0]?.ranges) {
+                        for (const range of vuln.affected[0].ranges) {
+                            const fixEvent = range.events?.find((e: any) => e.fixed);
+                            if (fixEvent) {
+                                fixVersion = fixEvent.fixed;
+                                break;
+                            }
+                        }
+                    }
+
+                    const summary = vuln.summary || vuln.details?.substring(0, 150) || 'No description available';
+
+                    findings.push({
+                        id: `osv-${cveAlias.toLowerCase().replace(/[^a-z0-9-]/g, '-')}`,
+                        severity,
+                        title: `${query._techName} ${query.version} — ${cveAlias}`,
+                        description: summary.length > 200 ? summary.substring(0, 200) + '...' : summary,
+                        recommendation: fixVersion
+                            ? `Update ${query._techName} to version ${fixVersion} or later.`
+                            : `Update ${query._techName} to the latest version.`,
+                        evidence: `Detected via: ${query._detectedVia}. Source: OSV.dev`,
+                    });
+                }
+            }
+        } finally {
+            clearTimeout(timeout);
+        }
+    } catch (e) {
+        // OSV.dev unavailable — fall through to hardcoded CVEs
+        console.error('OSV.dev query failed:', e);
+    }
+
+    return { findings, deductions };
+}
+
+// ---------------------------------------------------------------------------
+// Hardcoded CVE checking (fallback)
+// ---------------------------------------------------------------------------
+
+function checkCvesHardcoded(techs: Map<string, Technology>): { findings: Finding[]; deductions: number } {
     const findings: Finding[] = [];
     let deductions = 0;
 
@@ -580,6 +723,44 @@ function checkCves(techs: Map<string, Technology>): { findings: Finding[]; deduc
     }
 
     return { findings, deductions };
+}
+
+// ---------------------------------------------------------------------------
+// Combined CVE check: live OSV.dev first, hardcoded fallback, deduplicated
+// ---------------------------------------------------------------------------
+
+async function checkCves(techs: Map<string, Technology>): Promise<{ findings: Finding[]; deductions: number }> {
+    // Try live OSV.dev first
+    const liveResults = await checkCvesLive(techs);
+
+    // Always run hardcoded as fallback (catches techs without OSV ecosystem mapping)
+    const hardcodedResults = checkCvesHardcoded(techs);
+
+    // Merge: use live results as primary, add hardcoded findings not already covered
+    const seenIds = new Set(liveResults.findings.map(f => {
+        // Extract CVE ID from title for dedup
+        const cveMatch = f.title.match(/CVE-\d{4}-\d+/i);
+        return cveMatch ? cveMatch[0].toLowerCase() : f.id;
+    }));
+
+    const mergedFindings = [...liveResults.findings];
+    let mergedDeductions = liveResults.deductions;
+
+    for (const finding of hardcodedResults.findings) {
+        const cveMatch = finding.title.match(/CVE-\d{4}-\d+/i);
+        const key = cveMatch ? cveMatch[0].toLowerCase() : finding.id;
+        if (!seenIds.has(key)) {
+            seenIds.add(key);
+            mergedFindings.push(finding);
+            // Re-calculate deduction for this finding
+            const d = finding.severity === 'critical' ? 30 :
+                      finding.severity === 'high' ? 20 :
+                      finding.severity === 'medium' ? 10 : 5;
+            mergedDeductions += d;
+        }
+    }
+
+    return { findings: mergedFindings, deductions: mergedDeductions };
 }
 
 // ---------------------------------------------------------------------------
@@ -738,9 +919,9 @@ Deno.serve(async (req: Request) => {
         await probeCommonPaths(targetUrl, techs);
 
         // ------------------------------------------------------------------
-        // 3. Check detected technologies against CVE database
+        // 3. Check detected technologies against CVE database (live + hardcoded)
         // ------------------------------------------------------------------
-        const cveResults = checkCves(techs);
+        const cveResults = await checkCves(techs);
 
         // ------------------------------------------------------------------
         // 4. Check for security concerns (info disclosure, debug, etc.)

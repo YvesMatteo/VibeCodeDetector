@@ -22,6 +22,10 @@ import {
     ShieldAlert,
     Cookie,
     UserCheck,
+    Mail,
+    Code,
+    Package,
+    ServerCrash,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +64,12 @@ const scannerIcons: Record<string, any> = {
     csrf: ShieldAlert,
     cookies: Cookie,
     auth: UserCheck,
+    supabase_backend: ServerCrash,
+    dependencies: Package,
+    ssl_tls: Lock,
+    dns_email: Mail,
+    xss: Code,
+    open_redirect: ExternalLink,
 };
 
 const scannerNames: Record<string, string> = {
@@ -69,12 +79,18 @@ const scannerNames: Record<string, string> = {
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
     sqli: 'SQL Injection',
-    github_secrets: 'GitHub Secrets',
+    github_secrets: 'GitHub Deep Scan',
     tech_stack: 'Tech Stack & CVEs',
     cors: 'CORS Misconfiguration',
     csrf: 'CSRF Protection',
     cookies: 'Cookie & Session Security',
     auth: 'Authentication Flow',
+    supabase_backend: 'Supabase Backend',
+    dependencies: 'Dependency Vulnerabilities',
+    ssl_tls: 'SSL/TLS Security',
+    dns_email: 'DNS & Email Security',
+    xss: 'XSS Detection',
+    open_redirect: 'Open Redirect',
 };
 
 interface ScannerAccordionProps {

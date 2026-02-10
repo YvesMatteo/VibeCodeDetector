@@ -23,6 +23,11 @@ import {
     ShieldAlert,
     Cookie,
     UserCheck,
+    Lock,
+    Mail,
+    Code,
+    Package,
+    ServerCrash,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
@@ -54,6 +59,12 @@ const scannerIcons: Record<string, any> = {
     csrf: ShieldAlert,
     cookies: Cookie,
     auth: UserCheck,
+    supabase_backend: ServerCrash,
+    dependencies: Package,
+    ssl_tls: Lock,
+    dns_email: Mail,
+    xss: Code,
+    open_redirect: ExternalLink,
 };
 
 const scannerNames: Record<string, string> = {
@@ -63,12 +74,18 @@ const scannerNames: Record<string, string> = {
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
     sqli: 'SQL Injection',
-    github_secrets: 'GitHub Secrets',
+    github_secrets: 'GitHub Deep Scan',
     tech_stack: 'Tech Stack & CVEs',
     cors: 'CORS Misconfiguration',
     csrf: 'CSRF Protection',
     cookies: 'Cookie & Session Security',
     auth: 'Authentication Flow',
+    supabase_backend: 'Supabase Backend',
+    dependencies: 'Dependency Vulnerabilities',
+    ssl_tls: 'SSL/TLS Security',
+    dns_email: 'DNS & Email Security',
+    xss: 'XSS Detection',
+    open_redirect: 'Open Redirect',
 };
 
 function getVibeRating(score: number): { label: string; emoji: string; color: string; bg: string } {
@@ -218,47 +235,28 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Score Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 stagger-children">
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardContent className="pt-6 flex flex-col items-center">
-                        <ScoreRing score={scan.overall_score || 0} size="large" />
-                        <p className="text-sm text-zinc-400 mt-4">Overall Score</p>
+            <Card className="bg-zinc-900/40 border-white/5 mb-8 animate-fade-in-up">
+                <CardContent className="pt-6 pb-6 flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
+                    <ScoreRing score={scan.overall_score || 0} size="large" />
+                    <div className="flex flex-col items-center sm:items-start gap-3">
                         {(() => {
                             const vibe = getVibeRating(scan.overall_score || 0);
                             return (
-                                <div className={`mt-3 px-3 py-1.5 rounded-full border ${vibe.bg} flex items-center gap-1.5`}>
+                                <div className={`px-3 py-1.5 rounded-full border ${vibe.bg} flex items-center gap-1.5`}>
                                     <span>{vibe.emoji}</span>
                                     <span className={`text-sm font-medium ${vibe.color}`}>{vibe.label}</span>
                                 </div>
                             );
                         })()}
-                    </CardContent>
-                </Card>
-
-                {Object.entries(results).map(([key, result], index) => {
-                    const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
-                    const score = typeof result.score === 'number' ? result.score : 0;
-
-                    return (
-                        <Card key={key} className="bg-zinc-900/40 border-white/5 hover-lift group" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
-                            <CardContent className="pt-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="relative">
-                                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-purple-400 transition-colors" />
-                                    </div>
-                                    <ScoreRing score={score} size="small" />
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {scannerNames[key as keyof typeof scannerNames] || key}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {result.findings?.length || 0} issues found
-                                </p>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
+                        <p className="text-2xl font-medium text-white">
+                            {allFindings.length} {allFindings.length === 1 ? 'issue' : 'issues'} found
+                        </p>
+                        <p className="text-sm text-zinc-400">
+                            across {Object.keys(results).length} scanners
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Findings Summary */}
             <Card className="mb-8 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
