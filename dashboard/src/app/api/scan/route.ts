@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes } = body;
+        const { url, scanTypes, githubRepo } = body;
 
         // ==========================================
         // URL VALIDATION
@@ -277,6 +277,24 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.tech_stack = { error: err.message, score: 0 }; })
         );
 
+        // 8. GitHub Secrets Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/github-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.github_secrets = data; })
+                    .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
+            );
+        }
+
         // Wait for all
         await Promise.all(scannerPromises);
 
@@ -286,6 +304,7 @@ export async function POST(req: NextRequest) {
             sqli: 0.20,
             api_keys: 0.15,
             threat_intelligence: 0.15,
+            github_secrets: 0.10,
             tech_stack: 0.10,
             seo: 0.10,
             legal: 0.05,

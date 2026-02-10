@@ -18,11 +18,13 @@ import {
     Radar,
     CheckCircle,
     Database,
+    GitBranch,
     Cpu,
 } from 'lucide-react';
 
 export default function NewScanPage() {
     const [url, setUrl] = useState('');
+    const [githubRepo, setGithubRepo] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export default function NewScanPage() {
                 body: JSON.stringify({
                     url,
                     scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack'],
+                    ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                 }),
             });
 
@@ -166,12 +169,42 @@ export default function NewScanPage() {
                     </CardContent>
                 </Card>
 
+                {/* GitHub Repository (optional) */}
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-white">
+                            <GitBranch className="h-5 w-5 text-purple-400" />
+                            GitHub Repository
+                            <span className="text-xs font-normal text-zinc-500">(optional)</span>
+                        </CardTitle>
+                        <CardDescription className="text-zinc-400">
+                            Add your repo to scan for leaked secrets, committed .env files, and exposed private keys
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <Label htmlFor="githubRepo" className="text-zinc-300">Repository URL</Label>
+                            <Input
+                                id="githubRepo"
+                                type="text"
+                                placeholder="https://github.com/your-org/your-repo"
+                                value={githubRepo}
+                                onChange={(e) => setGithubRepo(e.target.value)}
+                                className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-purple-500/50"
+                            />
+                            <p className="text-xs text-zinc-500">
+                                Checks for .env files, git history leaks, missing .gitignore rules, hardcoded credentials, and private key files.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* What's Included */}
                 <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs all 7 checks automatically
+                            Every scan runs up to 8 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -180,6 +213,7 @@ export default function NewScanPage() {
                                 { icon: Shield, name: 'Security Scanner', description: 'Headers, CORS, cookies, SSL, CSP analysis', color: 'text-red-500' },
                                 { icon: Database, name: 'SQL Injection', description: 'Passive SQLi detection across forms and params', color: 'text-rose-500' },
                                 { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets', color: 'text-amber-500' },
+                                { icon: GitBranch, name: 'GitHub Secrets', description: 'Leaked secrets in your repository', color: 'text-purple-500' },
                                 { icon: Cpu, name: 'Tech Stack', description: 'Technology detection and known CVE checks', color: 'text-indigo-500' },
                                 { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
                                 { icon: Search, name: 'SEO Analyzer', description: 'Meta tags, Core Web Vitals, schema', color: 'text-green-500' },

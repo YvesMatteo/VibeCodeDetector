@@ -23,6 +23,7 @@ import {
     Server,
     Lock,
     Cpu,
+    GitBranch,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 
@@ -62,6 +63,7 @@ const scannerIcons: Record<string, any> = {
     legal: Scale,
     threat_intelligence: Radar,
     sqli: Database,
+    github_secrets: GitBranch,
     tech_stack: Cpu,
 };
 
@@ -72,6 +74,7 @@ const scannerNames: Record<string, string> = {
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
     sqli: 'SQL Injection',
+    github_secrets: 'GitHub Secrets',
     tech_stack: 'Tech Stack & CVEs',
 };
 
