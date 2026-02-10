@@ -20,6 +20,8 @@ import {
     GitBranch,
     Globe,
     ShieldAlert,
+    Cookie,
+    UserCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +58,8 @@ const scannerIcons: Record<string, any> = {
     tech_stack: Cpu,
     cors: Globe,
     csrf: ShieldAlert,
+    cookies: Cookie,
+    auth: UserCheck,
 };
 
 const scannerNames: Record<string, string> = {
@@ -69,6 +73,8 @@ const scannerNames: Record<string, string> = {
     tech_stack: 'Tech Stack & CVEs',
     cors: 'CORS Misconfiguration',
     csrf: 'CSRF Protection',
+    cookies: 'Cookie & Session Security',
+    auth: 'Authentication Flow',
 };
 
 interface ScannerAccordionProps {

@@ -4,7 +4,7 @@ import { runSEOScan } from '@/lib/scanners/seo-scanner';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth'] as const;
 
 export async function POST(req: NextRequest) {
     try {
@@ -327,20 +327,54 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.csrf = { error: err.message, score: 0 }; })
         );
 
+        // 11. Cookie/Session Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/cookie-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.cookies = data; })
+                .catch(err => { results.cookies = { error: err.message, score: 0 }; })
+        );
+
+        // 12. Auth Flow Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/auth-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.auth = data; })
+                .catch(err => { results.auth = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
         // Calculate Overall Score using weighted average
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.20,
-            sqli: 0.15,
-            cors: 0.12,
-            csrf: 0.12,
-            api_keys: 0.12,
-            threat_intelligence: 0.10,
-            github_secrets: 0.08,
-            tech_stack: 0.05,
-            seo: 0.05,
+            security: 0.15,
+            sqli: 0.12,
+            cors: 0.10,
+            csrf: 0.10,
+            cookies: 0.10,
+            auth: 0.10,
+            api_keys: 0.10,
+            threat_intelligence: 0.08,
+            github_secrets: 0.06,
+            tech_stack: 0.04,
+            seo: 0.04,
             legal: 0.01,
         };
 

@@ -129,6 +129,58 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Dangerous actions can be triggered by clicking a link.',
         whyItMatters: 'GET requests for delete/update actions mean an attacker can trigger them via image tags, emails, or chat messages.',
     },
+    'missing secure flag': {
+        summary: 'Login cookies can be stolen over wifi.',
+        whyItMatters: 'Without the Secure flag, cookies are sent over unencrypted HTTP connections. Anyone on the same wifi can grab them.',
+    },
+    'missing httponly': {
+        summary: 'JavaScript can read your login cookies.',
+        whyItMatters: 'If any XSS vulnerability exists on your site, attackers can steal user sessions instantly with document.cookie.',
+    },
+    'jwt in cookie': {
+        summary: 'Your authentication token is exposed to browser scripts.',
+        whyItMatters: 'JWTs contain the user\'s entire identity. Without HttpOnly, a single XSS bug lets attackers impersonate any user.',
+    },
+    '__secure-': {
+        summary: 'Cookie security prefix is incorrectly configured.',
+        whyItMatters: 'The __Secure- prefix tells browsers to require HTTPS, but only works if you also set the Secure flag.',
+    },
+    '__host-': {
+        summary: 'Cookie host prefix is incorrectly configured.',
+        whyItMatters: 'The __Host- prefix provides the strongest cookie isolation but requires specific settings to work.',
+    },
+    'broad domain scope': {
+        summary: 'Your login cookie is shared across all subdomains.',
+        whyItMatters: 'If a hacker compromises any subdomain (even a test server), they can steal user sessions from your main site.',
+    },
+    'long expiry': {
+        summary: 'Login sessions last for weeks or months.',
+        whyItMatters: 'If a cookie is stolen, the attacker has weeks to use it. Shorter sessions limit the damage window.',
+    },
+    'authentication pages served over http': {
+        summary: 'Passwords are sent in the open.',
+        whyItMatters: 'Without HTTPS, anyone on the same wifi network can see the passwords your users type. This is the most basic security flaw.',
+    },
+    'no rate limiting': {
+        summary: 'Hackers can guess passwords endlessly.',
+        whyItMatters: 'Without limits on login attempts, automated tools can try thousands of password combinations per second.',
+    },
+    'weak client-side password': {
+        summary: 'Users can set "123" as their password.',
+        whyItMatters: 'Without minimum length requirements, users choose trivially guessable passwords that get cracked in seconds.',
+    },
+    'hardcoded credentials': {
+        summary: 'Passwords are written directly into the code.',
+        whyItMatters: 'This is one of the most common vibe-coding mistakes — AI generates placeholder credentials and they ship to production.',
+    },
+    'client-side password comparison': {
+        summary: 'Password checking happens in the browser, not the server.',
+        whyItMatters: 'Anyone can open browser DevTools and bypass the check. Authentication must ALWAYS happen server-side.',
+    },
+    'storing secrets in localstorage': {
+        summary: 'Sensitive data is stored where any script can read it.',
+        whyItMatters: 'localStorage has zero protection from XSS. Any third-party script or ad on your page can read these secrets.',
+    },
     'heading order': {
         summary: 'Messy document structure.',
         whyItMatters: 'Headings should follow a hierarchy (H1 -> H2 -> H3). Skipping levels confuses screen readers and SEO bots.',
