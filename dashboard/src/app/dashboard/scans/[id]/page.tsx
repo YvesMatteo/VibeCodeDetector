@@ -19,6 +19,10 @@ import {
     Database,
     Cpu,
     GitBranch,
+    Globe,
+    ShieldAlert,
+    Cookie,
+    UserCheck,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
@@ -46,6 +50,10 @@ const scannerIcons: Record<string, any> = {
     sqli: Database,
     github_secrets: GitBranch,
     tech_stack: Cpu,
+    cors: Globe,
+    csrf: ShieldAlert,
+    cookies: Cookie,
+    auth: UserCheck,
 };
 
 const scannerNames: Record<string, string> = {
@@ -57,11 +65,24 @@ const scannerNames: Record<string, string> = {
     sqli: 'SQL Injection',
     github_secrets: 'GitHub Secrets',
     tech_stack: 'Tech Stack & CVEs',
+    cors: 'CORS Misconfiguration',
+    csrf: 'CSRF Protection',
+    cookies: 'Cookie & Session Security',
+    auth: 'Authentication Flow',
 };
+
+function getVibeRating(score: number): { label: string; emoji: string; color: string; bg: string } {
+    if (score >= 90) return { label: 'Immaculate Vibes', emoji: '✨', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
+    if (score >= 75) return { label: 'Good Vibes', emoji: '🟢', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' };
+    if (score >= 60) return { label: 'Cautious Vibes', emoji: '🟡', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
+    if (score >= 40) return { label: 'Sketchy Vibes', emoji: '🟠', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
+    if (score >= 20) return { label: 'Bad Vibes', emoji: '🔴', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
+    return { label: 'Danger Zone', emoji: '💀', color: 'text-red-500', bg: 'bg-red-500/15 border-red-500/30' };
+}
 
 interface ScanResultItem {
     score: number;
-    findings: { severity: string; title: string; description: string; [key: string]: any }[];
+    findings: { severity: string; title: string; description: string;[key: string]: any }[];
 }
 
 // Animated score ring component
@@ -181,7 +202,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-                        <AIFixPrompt url={scan.url} findings={allFindings} />
+                        <AIFixPrompt url={scan.url} findings={allFindings} techStack={(results as any)?.tech_stack} />
                         <div className="flex gap-3">
                             <Button variant="outline" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10 flex-1 sm:flex-none">
                                 <Download className="mr-2 h-4 w-4" />
@@ -202,6 +223,15 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     <CardContent className="pt-6 flex flex-col items-center">
                         <ScoreRing score={scan.overall_score || 0} size="large" />
                         <p className="text-sm text-zinc-400 mt-4">Overall Score</p>
+                        {(() => {
+                            const vibe = getVibeRating(scan.overall_score || 0);
+                            return (
+                                <div className={`mt-3 px-3 py-1.5 rounded-full border ${vibe.bg} flex items-center gap-1.5`}>
+                                    <span>{vibe.emoji}</span>
+                                    <span className={`text-sm font-medium ${vibe.color}`}>{vibe.label}</span>
+                                </div>
+                            );
+                        })()}
                     </CardContent>
                 </Card>
 
