@@ -81,6 +81,54 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Remote control services are exposed.',
         whyItMatters: 'Services like FTP, Telnet, RDP, and VNC allow direct server access. Bots constantly try to brute-force these.',
     },
+    'cors reflects arbitrary': {
+        summary: 'Any website can read your users\' data.',
+        whyItMatters: 'Your server trusts every website that asks. An attacker\'s site can steal logged-in user data, session tokens, and personal information.',
+    },
+    'cors wildcard': {
+        summary: 'Your API is open to every website on the internet.',
+        whyItMatters: 'Using * for CORS means any site can read your API responses. Fine for public data, dangerous for anything private.',
+    },
+    'cors accepts null origin': {
+        summary: 'Attackers can bypass your security using iframes.',
+        whyItMatters: 'The "null" origin is used by sandboxed iframes and local files. Accepting it lets attackers craft pages that bypass your origin checks.',
+    },
+    'cors vulnerable to subdomain': {
+        summary: 'A forgotten subdomain could be used to hack your users.',
+        whyItMatters: 'If an attacker takes over any of your subdomains (even unused ones), they can use it to steal data from your main site.',
+    },
+    'cors origin validation uses insecure': {
+        summary: 'Your website\'s security check can be easily tricked.',
+        whyItMatters: 'The origin check uses simple text matching that attackers can bypass by registering domains like "yoursite.com.evil.com".',
+    },
+    'cors accepts http': {
+        summary: 'Your site trusts insecure connections.',
+        whyItMatters: 'Accepting HTTP origins means someone intercepting wifi traffic can pretend to be your site and steal data.',
+    },
+    'cors accepts private': {
+        summary: 'Debug settings left in production.',
+        whyItMatters: 'Accepting localhost/internal IPs suggests development CORS settings are still active. This is a common vibe-coding mistake.',
+    },
+    'csrf token': {
+        summary: 'Forms can be submitted by attacker websites.',
+        whyItMatters: 'Without CSRF tokens, an attacker can create a hidden page that submits forms as your logged-in users — changing passwords, making purchases, etc.',
+    },
+    'csrf protection': {
+        summary: 'No anti-forgery protection detected anywhere.',
+        whyItMatters: 'Your site has zero CSRF defenses. Any malicious website can trigger actions on behalf of your users without them knowing.',
+    },
+    'samesite': {
+        summary: 'Login cookies are sent to attacker websites.',
+        whyItMatters: 'Without SameSite on cookies, your user\'s login session is sent along with cross-site requests, enabling account takeover.',
+    },
+    'clickjacking': {
+        summary: 'Your site can be embedded in an attacker\'s page.',
+        whyItMatters: 'Attackers can overlay invisible buttons on top of your site, tricking users into clicking things they didn\'t intend to.',
+    },
+    'state-changing action uses get': {
+        summary: 'Dangerous actions can be triggered by clicking a link.',
+        whyItMatters: 'GET requests for delete/update actions mean an attacker can trigger them via image tags, emails, or chat messages.',
+    },
     'heading order': {
         summary: 'Messy document structure.',
         whyItMatters: 'Headings should follow a hierarchy (H1 -> H2 -> H3). Skipping levels confuses screen readers and SEO bots.',

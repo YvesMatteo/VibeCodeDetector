@@ -4,7 +4,7 @@ import { runSEOScan } from '@/lib/scanners/seo-scanner';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf'] as const;
 
 export async function POST(req: NextRequest) {
     try {
@@ -295,19 +295,53 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // 9. CORS Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/cors-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.cors = data; })
+                .catch(err => { results.cors = { error: err.message, score: 0 }; })
+        );
+
+        // 10. CSRF Scanner (Edge Function)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/csrf-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.csrf = data; })
+                .catch(err => { results.csrf = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
         // Calculate Overall Score using weighted average
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.25,
-            sqli: 0.20,
-            api_keys: 0.15,
-            threat_intelligence: 0.15,
-            github_secrets: 0.10,
-            tech_stack: 0.10,
-            seo: 0.10,
-            legal: 0.05,
+            security: 0.20,
+            sqli: 0.15,
+            cors: 0.12,
+            csrf: 0.12,
+            api_keys: 0.12,
+            threat_intelligence: 0.10,
+            github_secrets: 0.08,
+            tech_stack: 0.05,
+            seo: 0.05,
+            legal: 0.01,
         };
 
         let weightedSum = 0;

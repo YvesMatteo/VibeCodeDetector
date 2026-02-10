@@ -11,23 +11,17 @@ import {
     Key,
     Search,
     AlertTriangle,
-    CheckCircle,
-    XCircle,
     Clock,
     Download,
     RefreshCw,
     Scale,
     Radar,
-    Info,
     Database,
-    Server,
-    Lock,
     Cpu,
     GitBranch,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
-
-import { getPlainEnglish } from '@/lib/plain-english';
+import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
 
 function getScoreColor(score: number) {
     if (score >= 80) return 'text-green-400';
@@ -41,19 +35,6 @@ function getScoreRingColor(score: number) {
     if (score >= 60) return 'stroke-amber-500';
     if (score >= 40) return 'stroke-orange-500';
     return 'stroke-red-500';
-}
-
-function getSeverityStyles(severity: string) {
-    switch (severity) {
-        case 'critical':
-            return { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' };
-        case 'high':
-            return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' };
-        case 'medium':
-            return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' };
-        default:
-            return { icon: CheckCircle, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
-    }
 }
 
 const scannerIcons: Record<string, any> = {
@@ -78,17 +59,9 @@ const scannerNames: Record<string, string> = {
     tech_stack: 'Tech Stack & CVEs',
 };
 
-// Define minimal types for the JSONB structure
-interface ScanFinding {
-    severity: string;
-    title: string;
-    description: string;
-    [key: string]: any;
-}
-
 interface ScanResultItem {
     score: number;
-    findings: ScanFinding[];
+    findings: { severity: string; title: string; description: string; [key: string]: any }[];
 }
 
 // Animated score ring component
@@ -290,187 +263,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </Card>
 
             {/* Detailed Results by Scanner */}
-            {Object.entries(results).map(([key, result], scannerIndex) => {
-                const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
-                const score = typeof result.score === 'number' ? result.score : 0;
-                // @ts-ignore
-                const errorMessage = result.error;
-
-                if (errorMessage) {
-                    return (
-                        <Card key={key} className="mb-6 bg-zinc-900/40 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                            <CardHeader>
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <Icon className="h-6 w-6 text-red-400" />
-                                        <div className="absolute inset-0 bg-red-500/30 blur-xl" />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
-                                        <CardDescription className="text-red-400/70">Scan Failed</CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm font-mono text-red-400 bg-red-500/10 p-4 rounded-lg border border-red-500/20">
-                                    {errorMessage}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    );
-                }
-
-                if ((!result.findings || result.findings.length === 0) && !(result as any).technologies?.length) return null;
-
-                return (
-                    <Card key={key} className="mb-6 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <Icon className="h-6 w-6 text-purple-400" />
-                                        <div className="absolute inset-0 bg-purple-500/20 blur-xl" />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-white">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
-                                        <CardDescription className="text-zinc-400">{result.findings.length} issues found</CardDescription>
-                                    </div>
-                                </div>
-                                <div className={`text-3xl font-bold ${getScoreColor(score)}`}>
-                                    {score}/100
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {/* Tech Stack Badges */}
-                            {key === 'tech_stack' && (result as any).technologies?.length > 0 && (
-                                <div className="mb-4 pb-4 border-b border-white/5">
-                                    <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Detected Technologies</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(result as any).technologies.map((tech: any, i: number) => (
-                                            <Badge key={i} variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30">
-                                                {tech.name}{tech.version ? ` ${tech.version}` : ''}
-                                                {tech.category && <span className="ml-1 text-zinc-500 text-xs">({tech.category})</span>}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {(() => {
-                                const renderFinding = (finding: any, index: number) => {
-                                    const styles = getSeverityStyles(finding.severity);
-                                    const SeverityIcon = styles.icon;
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:bg-opacity-20`}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
-                                                <div className="flex-1">
-                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                        <h4 className="font-medium">{finding.title}</h4>
-                                                        <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
-                                                            {finding.severity}
-                                                        </Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {finding.description}
-                                                    </p>
-
-                                                    {(() => {
-                                                        const plainEnglish = getPlainEnglish(finding.title, finding.description);
-                                                        if (plainEnglish) {
-                                                            return (
-                                                                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                                                                    <div className="flex items-center gap-2 mb-1 text-blue-400">
-                                                                        <Info className="h-4 w-4" />
-                                                                        <span className="text-xs font-bold uppercase tracking-wider">Plain English</span>
-                                                                    </div>
-                                                                    <p className="text-sm font-medium text-slate-200">{plainEnglish.summary}</p>
-                                                                    <p className="text-xs text-slate-400 mt-1">{plainEnglish.whyItMatters}</p>
-                                                                </div>
-                                                            )
-                                                        }
-                                                        return null;
-                                                    })()}
-                                                    {finding.recommendation && (
-                                                        <p className="text-sm mt-2 text-muted-foreground">
-                                                            <span className="font-medium text-purple-400">Recommendation:</span> {finding.recommendation}
-                                                        </p>
-                                                    )}
-                                                    {finding.reportUrl && (
-                                                        <a
-                                                            href={finding.reportUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/20 rounded-md px-3 py-1.5"
-                                                        >
-                                                            <ExternalLink className="h-3 w-3" />
-                                                            View Full Report
-                                                        </a>
-                                                    )}
-                                                    {finding.evidence && (
-                                                        <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
-                                                            {finding.evidence}
-                                                        </pre>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                };
-
-                                // For api_keys scanner, group findings by category
-                                const hasCategories = key === 'api_keys' && result.findings.some((f: any) => f.category);
-
-                                if (hasCategories) {
-                                    const categories = [
-                                        { key: 'credentials', label: 'Leaked Credentials', icon: Lock, color: 'text-red-400' },
-                                        { key: 'infrastructure', label: 'Exposed Infrastructure', icon: Server, color: 'text-orange-400' },
-                                        { key: 'databases', label: 'Exposed Databases', icon: Database, color: 'text-amber-400' },
-                                    ];
-                                    const uncategorized = result.findings.filter((f: any) => !f.category);
-
-                                    return (
-                                        <div className="space-y-6">
-                                            {categories.map(cat => {
-                                                const catFindings = result.findings.filter((f: any) => f.category === cat.key);
-                                                if (catFindings.length === 0) return null;
-                                                const CatIcon = cat.icon;
-                                                return (
-                                                    <div key={cat.key}>
-                                                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/10">
-                                                            <CatIcon className={`h-4 w-4 ${cat.color}`} />
-                                                            <h3 className={`text-sm font-semibold uppercase tracking-wider ${cat.color}`}>{cat.label}</h3>
-                                                            <span className="text-xs text-zinc-500">({catFindings.length})</span>
-                                                        </div>
-                                                        <div className="space-y-4">
-                                                            {catFindings.map((finding: any, i: number) => renderFinding(finding, i))}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            {uncategorized.length > 0 && (
-                                                <div className="space-y-4">
-                                                    {uncategorized.map((finding: any, i: number) => renderFinding(finding, i))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                }
-
-                                return (
-                                    <div className="space-y-4">
-                                        {result.findings.map((finding: any, index: number) => renderFinding(finding, index))}
-                                    </div>
-                                );
-                            })()}
-                        </CardContent>
-                    </Card>
-                );
-            })}
+            <ScannerAccordion results={results} />
         </div>
     );
 }
