@@ -17,6 +17,9 @@ import {
     Scale,
     Radar,
     CheckCircle,
+    Database,
+    GitBranch,
+    Cpu,
 } from 'lucide-react';
 
 export default function NewScanPage() {
@@ -65,7 +68,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence'],
+                    scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'github_secrets', 'tech_stack'],
                 }),
             });
 
@@ -169,17 +172,20 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs all 5 checks automatically
+                            Every scan runs all 8 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
-                                { icon: Shield, name: 'Security Scanner', description: 'Vulnerabilities, headers, SSL, and more', color: 'text-red-500' },
+                                { icon: Shield, name: 'Security Scanner', description: 'Headers, CORS, cookies, SSL, CSP analysis', color: 'text-red-500' },
+                                { icon: Database, name: 'SQL Injection', description: 'Passive SQLi detection across forms and params', color: 'text-rose-500' },
                                 { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets', color: 'text-amber-500' },
+                                { icon: GitBranch, name: 'GitHub Secrets', description: 'Leaked credentials in public repositories', color: 'text-purple-500' },
+                                { icon: Cpu, name: 'Tech Stack', description: 'Technology detection and known CVE checks', color: 'text-indigo-500' },
+                                { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
                                 { icon: Search, name: 'SEO Analyzer', description: 'Meta tags, Core Web Vitals, schema', color: 'text-green-500' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
-                                { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
                             ].map((check) => (
                                 <div
                                     key={check.name}

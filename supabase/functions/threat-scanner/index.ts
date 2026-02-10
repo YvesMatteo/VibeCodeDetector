@@ -88,11 +88,14 @@ Deno.serve(async (req: Request) => {
             checks.push(checkVirusTotal(targetUrl, VIRUSTOTAL_KEY).then(res => {
                 if (res.malicious > 0) {
                     score -= (res.malicious * 10); // Deduct 10 points per engine detection
+                    const total = res.malicious + res.suspicious + res.harmless + res.undetected;
+                    const breakdown = `${res.malicious} malicious, ${res.suspicious} suspicious, ${res.harmless} clean, ${res.undetected} undetected (out of ${total} vendors)`;
                     findings.push({
                         title: "VirusTotal Detection",
                         severity: res.malicious > 2 ? "critical" : "high",
-                        description: `Flagged as malicious by ${res.malicious} security vendors.`,
-                        recommendation: "Check VirusTotal report for specific malware details."
+                        description: `Flagged as malicious by ${res.malicious} security vendors. Breakdown: ${breakdown}.`,
+                        recommendation: "Investigate the flagged URL immediately. If this is your site, check for compromised files, malicious scripts, or unauthorized redirects. Run a malware scan on your server.",
+                        reportUrl: res.reportUrl,
                     });
                 }
             }).catch(e => console.error("VirusTotal Error:", e)));
@@ -141,8 +144,9 @@ Deno.serve(async (req: Request) => {
                     findings.push({
                         title: "URLScan Malicious Verdict",
                         severity: "high",
-                        description: `URLScan verdict: ${res.verdict || 'malicious'}.`,
-                        recommendation: "Review URLScan report."
+                        description: `URLScan verdict: ${res.verdict || 'malicious'}. The page was analyzed and flagged as potentially dangerous.`,
+                        recommendation: "Investigate the page for phishing elements, malicious scripts, or suspicious redirects. If this is your site, review recent deployments for unauthorized changes.",
+                        reportUrl: res.resultUrl,
                     });
                 }
             }).catch(e => console.error("URLScan Error:", e)));
@@ -244,11 +248,17 @@ async function checkVirusTotal(url: string, key: string) {
         headers: { 'x-apikey': key }
     });
 
-    if (!response.ok) return { malicious: 0 };
+    if (!response.ok) return { malicious: 0, suspicious: 0, harmless: 0, undetected: 0, reportUrl: null };
 
     const data = await response.json();
+    const stats = data.data?.attributes?.last_analysis_stats || {};
+    const urlId = data.data?.id || encodedUrl;
     return {
-        malicious: data.data?.attributes?.last_analysis_stats?.malicious || 0
+        malicious: stats.malicious || 0,
+        suspicious: stats.suspicious || 0,
+        harmless: stats.harmless || 0,
+        undetected: stats.undetected || 0,
+        reportUrl: `https://www.virustotal.com/gui/url/${urlId}`,
     };
 }
 
@@ -282,7 +292,9 @@ async function checkUrlScan(url: string, key: string) {
         if (data.results && data.results.length > 0) {
             const latest = data.results[0];
             const malicious = latest.verdicts?.overall?.malicious;
-            return { malicious, verdict: malicious ? 'malicious' : 'clean' };
+            const resultUrl = latest.result || null;
+            const pageUrl = latest.page?.url || null;
+            return { malicious, verdict: malicious ? 'malicious' : 'clean', resultUrl, pageUrl };
         }
         return {};
     } catch {

@@ -22,8 +22,11 @@ import {
     Database,
     Server,
     Lock,
+    GitBranch,
+    Cpu,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
+
 import { getPlainEnglish } from '@/lib/plain-english';
 
 function getScoreColor(score: number) {
@@ -59,6 +62,9 @@ const scannerIcons: Record<string, any> = {
     api_keys: Key,
     legal: Scale,
     threat_intelligence: Radar,
+    sqli: Database,
+    github_secrets: GitBranch,
+    tech_stack: Cpu,
 };
 
 const scannerNames: Record<string, string> = {
@@ -67,6 +73,9 @@ const scannerNames: Record<string, string> = {
     api_keys: 'API Key Detector',
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
+    sqli: 'SQL Injection',
+    github_secrets: 'GitHub Secrets',
+    tech_stack: 'Tech Stack & CVEs',
 };
 
 // Define minimal types for the JSONB structure
@@ -311,7 +320,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     );
                 }
 
-                if (!result.findings || result.findings.length === 0) return null;
+                if ((!result.findings || result.findings.length === 0) && !(result as any).technologies?.length) return null;
 
                 return (
                     <Card key={key} className="mb-6 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
@@ -333,6 +342,20 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                             </div>
                         </CardHeader>
                         <CardContent>
+                            {/* Tech Stack Badges */}
+                            {key === 'tech_stack' && (result as any).technologies?.length > 0 && (
+                                <div className="mb-4 pb-4 border-b border-white/5">
+                                    <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Detected Technologies</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(result as any).technologies.map((tech: any, i: number) => (
+                                            <Badge key={i} variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30">
+                                                {tech.name}{tech.version ? ` ${tech.version}` : ''}
+                                                {tech.category && <span className="ml-1 text-zinc-500 text-xs">({tech.category})</span>}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {(() => {
                                 const renderFinding = (finding: any, index: number) => {
                                     const styles = getSeverityStyles(finding.severity);
@@ -376,6 +399,17 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                                         <p className="text-sm mt-2 text-muted-foreground">
                                                             <span className="font-medium text-purple-400">Recommendation:</span> {finding.recommendation}
                                                         </p>
+                                                    )}
+                                                    {finding.reportUrl && (
+                                                        <a
+                                                            href={finding.reportUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/20 rounded-md px-3 py-1.5"
+                                                        >
+                                                            <ExternalLink className="h-3 w-3" />
+                                                            View Full Report
+                                                        </a>
                                                     )}
                                                     {finding.evidence && (
                                                         <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
