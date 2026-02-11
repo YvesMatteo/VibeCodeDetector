@@ -1,14 +1,15 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import {
   generateApiKey,
   hashApiKey,
   keyPrefix,
+  getServiceClient,
   validateScopes,
   isValidDomain,
   isValidIpOrCidr,
   type Scope,
 } from '@/lib/api-keys';
+import { resolveAuth, requireScope } from '@/lib/api-auth';
 
 const MAX_KEYS_PER_USER = 10;
 const DEFAULT_EXPIRY_DAYS = 90;
@@ -19,11 +20,15 @@ const DEFAULT_EXPIRY_DAYS = 90;
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { context, error: authError } = await resolveAuth(req);
+    if (authError || !context) return authError!;
+
+    const scopeError = requireScope(context, 'keys:manage');
+    if (scopeError) return scopeError;
+
+    const userId = context.userId;
+
+    const supabase = getServiceClient();
 
     const body = await req.json();
     const {
@@ -59,10 +64,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Check key count limit
-    const { count } = await supabase
-      .from('api_keys' as any)
+    const table = supabase.from('api_keys' as any) as any;
+    const { count } = await table
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .is('revoked_at', null);
 
     if ((count ?? 0) >= MAX_KEYS_PER_USER) {
@@ -80,10 +85,10 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (expires_in_days || DEFAULT_EXPIRY_DAYS));
 
-    const { data: keyRow, error: insertError } = await supabase
-      .from('api_keys' as any)
+    const insertTable = supabase.from('api_keys' as any) as any;
+    const { data: keyRow, error: insertError } = await insertTable
       .insert({
-        user_id: user.id,
+        user_id: userId,
         key_hash: hash,
         key_prefix: prefix,
         name,
@@ -102,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     // Return the full key ONCE — it will never be shown again
     return NextResponse.json({
-      ...keyRow,
+      ...(keyRow as any),
       key: fullKey,
       message: 'Save this key now — it will not be shown again.',
     }, { status: 201 });
@@ -117,18 +122,19 @@ export async function POST(req: NextRequest) {
 // GET /api/keys — List user's API keys (no secrets, just metadata)
 // ---------------------------------------------------------------------------
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { context, error: authError } = await resolveAuth(req);
+    if (authError || !context) return authError!;
 
-    const { data: keys, error } = await supabase
-      .from('api_keys' as any)
+    const scopeError = requireScope(context, 'keys:read');
+    if (scopeError) return scopeError;
+
+    const supabase = getServiceClient();
+    const keysTable = supabase.from('api_keys' as any) as any;
+    const { data: keys, error } = await keysTable
       .select('id, key_prefix, name, scopes, allowed_domains, allowed_ips, expires_at, revoked_at, last_used_at, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', context.userId)
       .order('created_at', { ascending: false });
 
     if (error) {

@@ -1,28 +1,29 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { validateScopes, isValidDomain, isValidIpOrCidr } from '@/lib/api-keys';
+import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr } from '@/lib/api-keys';
+import { resolveAuth, requireScope } from '@/lib/api-auth';
 
 // ---------------------------------------------------------------------------
 // DELETE /api/keys/[id] — Revoke an API key (soft delete)
 // ---------------------------------------------------------------------------
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { context, error: authError } = await resolveAuth(req);
+    if (authError || !context) return authError!;
 
-    const { data, error } = await supabase
-      .from('api_keys' as any)
+    const scopeError = requireScope(context, 'keys:manage');
+    if (scopeError) return scopeError;
+
+    const supabase = getServiceClient();
+    const table = supabase.from('api_keys' as any) as any;
+    const { data, error } = await table
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', context.userId)
       .is('revoked_at', null)
       .select('id')
       .single();
@@ -49,11 +50,13 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { context, error: authError } = await resolveAuth(req);
+    if (authError || !context) return authError!;
+
+    const scopeError = requireScope(context, 'keys:manage');
+    if (scopeError) return scopeError;
+
+    const supabase = getServiceClient();
 
     const body = await req.json();
     const updates: Record<string, unknown> = {};
@@ -96,11 +99,11 @@ export async function PATCH(
     }
 
     // Only update active (non-revoked) keys
-    const { data, error } = await supabase
-      .from('api_keys' as any)
+    const table2 = supabase.from('api_keys' as any) as any;
+    const { data, error } = await table2
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', context.userId)
       .is('revoked_at', null)
       .select('id, key_prefix, name, scopes, allowed_domains, allowed_ips, expires_at, created_at')
       .single();

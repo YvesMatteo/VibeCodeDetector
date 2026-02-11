@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getServiceClient } from '@/lib/api-keys';
+import { resolveAuth, requireScope } from '@/lib/api-auth';
 
 // ---------------------------------------------------------------------------
 // GET /api/keys/[id]/usage — Get usage stats for a specific API key
@@ -11,18 +12,20 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { context, error: authError } = await resolveAuth(req);
+    if (authError || !context) return authError!;
+
+    const scopeError = requireScope(context, 'keys:read');
+    if (scopeError) return scopeError;
+
+    const supabase = getServiceClient();
 
     // Verify key belongs to user
-    const { data: key } = await supabase
-      .from('api_keys' as any)
+    const keyTable = supabase.from('api_keys' as any) as any;
+    const { data: key } = await keyTable
       .select('id')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', context.userId)
       .single();
 
     if (!key) {
@@ -35,8 +38,8 @@ export async function GET(
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Get recent usage logs
-    const { data: logs, error, count } = await supabase
-      .from('api_key_usage_log' as any)
+    const logTable = supabase.from('api_key_usage_log' as any) as any;
+    const { data: logs, error, count } = await logTable
       .select('endpoint, method, ip_address, status_code, created_at', { count: 'exact' })
       .eq('key_id', id)
       .order('created_at', { ascending: false })
