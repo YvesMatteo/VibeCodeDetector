@@ -142,18 +142,15 @@ export default function CreditsPage() {
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
             <div className="flex flex-col items-center text-center mb-12">
-                <Badge variant="secondary" className="mb-4 bg-purple-500/10 border-purple-500/20 text-purple-300">
-                    Pricing
-                </Badge>
-                <h1 className="text-2xl sm:text-4xl font-heading font-medium mb-4 tracking-tight text-white">
-                    Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Transparent</span> Plans
+                <h1 className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight text-white">
+                    Plans & Pricing
                 </h1>
-                <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mb-6">
+                <p className="text-sm sm:text-base text-zinc-500 max-w-xl mb-6">
                     Choose a plan that fits your needs. Upgrade or downgrade anytime.
                 </p>
 
                 {/* Billing Toggle */}
-                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+                <div className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] p-1">
                     <button
                         onClick={() => setBilling('monthly')}
                         className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${
@@ -202,7 +199,7 @@ export default function CreditsPage() {
                     </div>
                     <Button
                         variant="outline"
-                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                        className="bg-white/[0.04] border-white/[0.08] hover:bg-white/10 text-white"
                         onClick={handleManageSubscription}
                         disabled={portalLoading}
                     >
@@ -219,13 +216,13 @@ export default function CreditsPage() {
                         <Card
                             key={plan.id}
                             className={`relative transition-all duration-300 flex flex-col ${plan.highlighted
-                                ? 'bg-zinc-900/60 border-blue-500/30 lg:scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
-                                : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                                ? 'bg-white/[0.03] border-white/[0.12] lg:scale-[1.02] z-10'
+                                : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.08]'
                                 }`}
                         >
                             {plan.highlighted && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                                    <Badge className="bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] text-white border-0 px-4 py-1">
+                                    <Badge className="bg-white text-zinc-900 border-0 px-3 py-0.5 text-xs font-medium">
                                         {plan.badge}
                                     </Badge>
                                 </div>
@@ -263,7 +260,7 @@ export default function CreditsPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 flex flex-col">
-                                <ul className="space-y-4 mb-8 flex-1 px-2">
+                                <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1 px-1 sm:px-2">
                                     {plan.features.map((feature) => (
                                         <li key={feature} className="flex items-center gap-3">
                                             <div className="rounded-full bg-green-500/10 p-1">
@@ -277,7 +274,7 @@ export default function CreditsPage() {
                                 {plan.isContact ? (
                                     <Button
                                         size="lg"
-                                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                                        className="w-full bg-white/[0.04] border-white/[0.08] hover:bg-white/10 text-white"
                                         variant="outline"
                                         asChild
                                     >
@@ -289,7 +286,7 @@ export default function CreditsPage() {
                                 ) : isCurrent ? (
                                     <Button
                                         size="lg"
-                                        className="w-full bg-white/5 border-white/10 text-zinc-500"
+                                        className="w-full bg-white/[0.04] border-white/[0.08] text-zinc-500"
                                         variant="outline"
                                         disabled
                                     >
@@ -299,8 +296,8 @@ export default function CreditsPage() {
                                     <Button
                                         size="lg"
                                         className={`w-full ${plan.highlighted
-                                            ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
-                                            : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                                            ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium'
+                                            : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.08] text-zinc-300'
                                             }`}
                                         variant={plan.highlighted ? 'default' : 'outline'}
                                         onClick={() => handleSubscribe(plan.id)}

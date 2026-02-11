@@ -15,7 +15,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 
 function getScoreColor(score: number) {
-    if (score >= 80) return 'text-green-400';
+    if (score >= 80) return 'text-emerald-400';
     if (score >= 60) return 'text-amber-400';
     if (score >= 40) return 'text-orange-400';
     return 'text-red-400';
@@ -95,183 +95,143 @@ export default async function DashboardPage() {
     const domainsPct = domainsLimit > 0 ? Math.min((domainsUsed / domainsLimit) * 100, 100) : 0;
 
     return (
-        <div className="p-4 md:p-8">
+        <div className="p-4 md:p-8 max-w-5xl">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
+                    <h1 className="text-2xl font-semibold tracking-tight text-white">
                         Dashboard
                     </h1>
-                    <p className="text-zinc-400 mt-1">
-                        Manage your account and subscription
+                    <p className="text-zinc-500 text-sm mt-1">
+                        Overview of your account and recent activity
                     </p>
                 </div>
                 {plan !== 'enterprise' && (
-                    <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
+                    <Button asChild variant="outline" size="sm" className="bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.08] text-zinc-300 h-8 text-xs">
                         <Link href="/dashboard/credits">
-                            <Crown className="mr-2 h-4 w-4" />
-                            {plan === 'none' ? 'Subscribe' : 'Upgrade Plan'}
+                            <Crown className="mr-1.5 h-3.5 w-3.5" />
+                            {plan === 'none' ? 'Subscribe' : 'Upgrade'}
                         </Link>
                     </Button>
                 )}
             </div>
 
             {/* Account Card */}
-            <Card className="mb-6 bg-zinc-900/40 border-white/5">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <User className="h-5 w-5 text-blue-400" />
-                        <div>
-                            <CardTitle className="text-white">Account</CardTitle>
-                            <CardDescription className="text-zinc-400">{user.email}</CardDescription>
+            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0">
+                            <User className="h-4 w-4 text-zinc-400" />
+                        </div>
+                        <div className="min-w-0">
+                            <CardTitle className="text-white text-sm font-medium truncate">{user.email}</CardTitle>
+                            <CardDescription className="text-zinc-600 text-xs">
+                                Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </CardDescription>
                         </div>
                     </div>
                     <Badge
-                        variant={plan === 'none' ? 'secondary' : 'default'}
-                        className={plan === 'none'
-                            ? 'bg-zinc-700/50 text-zinc-300'
-                            : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
+                        variant="secondary"
+                        className={`shrink-0 ${plan === 'none'
+                            ? 'bg-zinc-800 text-zinc-500 border-0 text-[11px]'
+                            : 'bg-white/[0.06] text-zinc-300 border-0 text-[11px]'}`}
                     >
                         {planLabel}
                     </Badge>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex flex-wrap gap-6 text-sm text-zinc-400">
-                        <span>Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                        {plan !== 'none' && (
-                            <Link href="/dashboard/settings" className="text-blue-400 hover:text-blue-300 transition-colors">
-                                Manage subscription
-                            </Link>
-                        )}
-                    </div>
-                </CardContent>
             </Card>
 
-            {/* Usage Meters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Scans Usage */}
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                            <Activity className="h-5 w-5 text-purple-400" />
-                            <CardTitle className="text-white text-base">Scans This Month</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {plan === 'none' ? (
-                            <p className="text-sm text-zinc-500">Subscribe to start scanning</p>
-                        ) : (
-                            <>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-zinc-400">{planScansUsed} / {planScansLimit} used</span>
-                                    <span className="text-zinc-300 font-medium">{scansRemaining} remaining</span>
-                                </div>
-                                <div className="w-full bg-white/10 rounded-full h-2">
-                                    <div
-                                        className="bg-purple-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${scansPct}%` }}
-                                    />
-                                </div>
-                            </>
-                        )}
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    <CardContent className="p-4">
+                        <p className="text-xs text-zinc-600 mb-1">Scans this month</p>
+                        <p className="text-xl font-semibold text-white">{planScansUsed}<span className="text-zinc-600 text-sm font-normal">/{planScansLimit || '0'}</span></p>
                     </CardContent>
                 </Card>
-
-                {/* Domains Usage */}
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                            <Globe className="h-5 w-5 text-green-400" />
-                            <CardTitle className="text-white text-base">Domains</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {plan === 'none' ? (
-                            <p className="text-sm text-zinc-500">Subscribe to register domains</p>
-                        ) : (
-                            <>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-zinc-400">{domainsUsed} / {domainsLimit} used</span>
-                                    <span className="text-zinc-300 font-medium">{domainsRemaining} slot{domainsRemaining !== 1 ? 's' : ''} available</span>
-                                </div>
-                                <div className="w-full bg-white/10 rounded-full h-2">
-                                    <div
-                                        className="bg-green-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${domainsPct}%` }}
-                                    />
-                                </div>
-                            </>
-                        )}
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    <CardContent className="p-4">
+                        <p className="text-xs text-zinc-600 mb-1">Domains</p>
+                        <p className="text-xl font-semibold text-white">{domainsUsed}<span className="text-zinc-600 text-sm font-normal">/{domainsLimit || '0'}</span></p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    <CardContent className="p-4">
+                        <p className="text-xs text-zinc-600 mb-1">Lifetime scans</p>
+                        <p className="text-xl font-semibold text-white">{lifetimeScans || 0}</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    <CardContent className="p-4">
+                        <p className="text-xs text-zinc-600 mb-1">Avg score</p>
+                        <p className={`text-xl font-semibold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-600'}`}>
+                            {avgScore > 0 ? avgScore : '---'}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
+            {/* Usage Bars */}
+            {plan !== 'none' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                    <Card className="bg-white/[0.02] border-white/[0.06]">
+                        <CardContent className="p-4">
+                            <div className="flex justify-between text-xs mb-2">
+                                <span className="text-zinc-500">Scans used</span>
+                                <span className="text-zinc-400">{scansRemaining} remaining</span>
+                            </div>
+                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
+                                <div
+                                    className="bg-white h-1.5 rounded-full transition-all"
+                                    style={{ width: `${scansPct}%` }}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white/[0.02] border-white/[0.06]">
+                        <CardContent className="p-4">
+                            <div className="flex justify-between text-xs mb-2">
+                                <span className="text-zinc-500">Domains registered</span>
+                                <span className="text-zinc-400">{domainsRemaining} available</span>
+                            </div>
+                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
+                                <div
+                                    className="bg-white h-1.5 rounded-full transition-all"
+                                    style={{ width: `${domainsPct}%` }}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
             {/* Registered Domains */}
             {allowedDomains.length > 0 && (
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                     <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                            <Globe className="h-5 w-5 text-blue-400" />
-                            <div>
-                                <CardTitle className="text-white text-base">Registered Domains</CardTitle>
-                                <CardDescription className="text-zinc-500 text-xs">Domains register automatically when scanned</CardDescription>
-                            </div>
-                        </div>
+                        <CardTitle className="text-white text-sm font-medium">Registered Domains</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-2">
                             {allowedDomains.map((domain) => (
-                                <div key={domain} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5">
-                                    <Globe className="h-3.5 w-3.5 text-zinc-500" />
-                                    <span className="text-sm text-white font-mono">{domain}</span>
-                                </div>
+                                <span key={domain} className="text-xs text-zinc-400 font-mono px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06]">
+                                    {domain}
+                                </span>
                             ))}
                         </div>
                     </CardContent>
                 </Card>
             )}
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-white/5">
-                                <BarChart3 className="h-5 w-5 text-blue-400" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{lifetimeScans || 0}</p>
-                                <p className="text-xs text-zinc-500">Lifetime scans</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-white/5">
-                                <Activity className="h-5 w-5 text-amber-400" />
-                            </div>
-                            <div>
-                                <p className={`text-2xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-500'}`}>
-                                    {avgScore > 0 ? avgScore : '—'}
-                                </p>
-                                <p className="text-xs text-zinc-500">Average score</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
             {/* Recent Activity */}
-            <Card className="bg-zinc-900/40 border-white/5">
+            <Card className="bg-white/[0.02] border-white/[0.06]">
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle className="text-white text-base">Recent Activity</CardTitle>
+                    <CardTitle className="text-white text-sm font-medium">Recent Activity</CardTitle>
                     {recentScans && recentScans.length > 0 && (
-                        <Button variant="ghost" size="sm" asChild className="text-zinc-400 hover:text-white hover:bg-white/5">
+                        <Button variant="ghost" size="sm" asChild className="text-zinc-500 hover:text-white h-7 text-xs">
                             <Link href="/dashboard/scans">
-                                View all scans
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                View all
+                                <ArrowRight className="ml-1 h-3 w-3" />
                             </Link>
                         </Button>
                     )}
@@ -279,36 +239,33 @@ export default async function DashboardPage() {
                 <CardContent>
                     {!recentScans || recentScans.length === 0 ? (
                         <div className="text-center py-8">
-                            <p className="text-zinc-500 text-sm">No scans yet</p>
-                            <Button asChild size="sm" className="mt-3 bg-white text-black hover:bg-zinc-200 border-0">
+                            <p className="text-zinc-600 text-sm mb-3">No scans yet</p>
+                            <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 h-8 text-xs">
                                 <Link href="/dashboard/scans/new">Run your first scan</Link>
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             {recentScans.map((scan) => (
                                 <Link
                                     key={scan.id}
                                     href={`/dashboard/scans/${scan.id}`}
-                                    className="flex items-center justify-between p-3 rounded-lg border border-white/5 hover:border-white/10 hover:bg-white/5 transition-all"
+                                    className="flex items-center justify-between p-3 -mx-1 rounded-md hover:bg-white/[0.03] transition-colors cursor-pointer"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <Globe className="h-4 w-4 text-zinc-500 shrink-0" />
-                                        <span className="text-sm text-white truncate">{scan.url.replace(/^https?:\/\//, '')}</span>
+                                        <Globe className="h-4 w-4 text-zinc-600 shrink-0" />
+                                        <span className="text-sm text-zinc-300 truncate">{scan.url.replace(/^https?:\/\//, '')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         {scan.status === 'completed' && scan.overall_score != null && (
-                                            <span className={`text-sm font-bold ${getScoreColor(scan.overall_score)}`}>
+                                            <span className={`text-sm font-semibold tabular-nums ${getScoreColor(scan.overall_score)}`}>
                                                 {scan.overall_score}
                                             </span>
                                         )}
                                         {scan.status !== 'completed' && (
-                                            <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">
-                                                Scanning
-                                            </Badge>
+                                            <span className="text-xs text-zinc-500">Scanning...</span>
                                         )}
-                                        <span className="text-xs text-zinc-600 flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
+                                        <span className="text-xs text-zinc-700">
                                             {timeAgo(scan.completed_at || scan.created_at)}
                                         </span>
                                     </div>

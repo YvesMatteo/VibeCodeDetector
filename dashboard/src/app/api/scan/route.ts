@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
 
         // Backend provider: new format (backendType + backendUrl) or legacy (supabaseUrl)
         const backendType: string = body.backendType || (body.supabaseUrl ? 'supabase' : 'none');
+        const convexUrl: string = body.convexUrl || '';
         const backendUrl: string = body.backendUrl || body.supabaseUrl || '';
         const userSupabaseUrl = backendType === 'supabase' ? backendUrl : body.supabaseUrl;
 
@@ -452,6 +453,27 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // 13c. Convex Backend Scanner (Edge Function) — runs when convex is selected
+        if (backendType === 'convex') {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/convex-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({
+                        targetUrl,
+                        ...(convexUrl && typeof convexUrl === 'string' ? { convexUrl: convexUrl.trim() } : {}),
+                    }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.convex_backend = data; })
+                    .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
+            );
+        }
+
         // 14. Dependency Vulnerability Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
             scannerPromises.push(
@@ -588,6 +610,70 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // 22. Vercel Hosting Scanner (always runs, auto-detects)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/vercel-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.vercel_hosting = data; })
+                .catch(err => { results.vercel_hosting = { error: err.message, score: 0 }; })
+        );
+
+        // 23. Netlify Hosting Scanner (always runs, auto-detects)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/netlify-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.netlify_hosting = data; })
+                .catch(err => { results.netlify_hosting = { error: err.message, score: 0 }; })
+        );
+
+        // 24. Cloudflare Pages Hosting Scanner (always runs, auto-detects)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/cloudflare-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.cloudflare_hosting = data; })
+                .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
+        );
+
+        // 25. Railway Hosting Scanner (always runs, auto-detects)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/railway-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.railway_hosting = data; })
+                .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
@@ -604,11 +690,16 @@ export async function POST(req: NextRequest) {
             auth: 0.05,           // Authentication flow
             supabase_backend: 0.05, // Supabase misconfig
             firebase_backend: 0.05, // Firebase misconfig
+            convex_backend: 0.05, // Convex misconfig
             supabase_mgmt: 0.05,  // Supabase deep lint
             open_redirect: 0.04,  // Open redirects
             github_secrets: 0.04, // Leaked secrets in repo
             github_security: 0.04, // Dependabot/CodeQL/secret scanning
             dependencies: 0.04,   // Known CVEs in deps
+            vercel_hosting: 0.03, // Vercel platform checks
+            netlify_hosting: 0.03, // Netlify platform checks
+            cloudflare_hosting: 0.03, // Cloudflare Pages checks
+            railway_hosting: 0.03, // Railway platform checks
             scorecard: 0.03,      // OpenSSF supply chain score
             dns_email: 0.03,      // SPF/DMARC/DKIM
             threat_intelligence: 0.03, // Threat feeds

@@ -284,6 +284,75 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Storage buckets are publicly accessible.',
         whyItMatters: 'Anyone on the internet can read files from public buckets without authentication.',
     },
+    // Convex Backend findings
+    'convex-token-exposed': {
+        summary: 'Convex admin key or auth secret is in your frontend code.',
+        whyItMatters: 'Anyone can see this key in their browser and get full admin access to your Convex backend.',
+    },
+    'convex-functions-enumerable': {
+        summary: 'Anyone can list all your Convex functions.',
+        whyItMatters: 'Attackers can discover internal function names and signatures, making it easier to find vulnerabilities.',
+    },
+    'convex-cors-open': {
+        summary: 'Any website can call your Convex backend.',
+        whyItMatters: 'Without CORS restrictions, malicious websites can make requests to your Convex functions on behalf of logged-in users.',
+    },
+    // Vercel Hosting findings
+    'vercel-source-maps': {
+        summary: 'Your original source code is downloadable from Vercel.',
+        whyItMatters: 'Source maps reveal your unminified code, comments, and variable names — making it trivial to find vulnerabilities.',
+    },
+    'vercel-next-data-leak': {
+        summary: 'Server-side data is leaking through _next/data endpoints.',
+        whyItMatters: 'Data meant for server-side rendering is publicly accessible. This may include API keys, database queries, or user data.',
+    },
+    'vercel-env-exposed': {
+        summary: 'Your .env file is publicly accessible on Vercel.',
+        whyItMatters: 'Anyone can download your environment variables including API keys, database passwords, and secrets.',
+    },
+    'vercel-api-stack-trace': {
+        summary: 'Your API routes leak error details.',
+        whyItMatters: 'Stack traces reveal your code structure, file paths, and dependencies — giving attackers a roadmap.',
+    },
+    // Netlify Hosting findings
+    'netlify-functions-exposed': {
+        summary: 'Netlify Functions are accessible without authentication.',
+        whyItMatters: 'Attackers can discover and call your serverless functions directly, potentially triggering sensitive operations.',
+    },
+    'netlify-build-metadata': {
+        summary: 'Netlify build metadata is publicly visible.',
+        whyItMatters: 'Build metadata reveals site IDs, deployment configuration, and internal details that help attackers target your site.',
+    },
+    'netlify-env-exposed': {
+        summary: 'Configuration files are publicly accessible on Netlify.',
+        whyItMatters: 'Exposed .env or netlify.toml files can contain API keys, build secrets, and deployment configuration.',
+    },
+    // Cloudflare Pages findings
+    'cf-old-deploys-accessible': {
+        summary: 'Old Cloudflare Pages deployments may be accessible.',
+        whyItMatters: 'Previous deployments can contain outdated code with known vulnerabilities, debug settings, or removed features.',
+    },
+    'cf-source-maps': {
+        summary: 'Source maps are exposed on Cloudflare Pages.',
+        whyItMatters: 'Anyone can download your original source code, including comments and internal logic.',
+    },
+    'cf-workers-exposed': {
+        summary: 'Cloudflare Worker source code or API details are exposed.',
+        whyItMatters: 'Exposed Worker code reveals your server-side logic, and verbose API errors help attackers understand your backend.',
+    },
+    // Railway Hosting findings
+    'railway-error-disclosure': {
+        summary: 'Railway error pages reveal internal details.',
+        whyItMatters: 'Stack traces and environment variables in error pages give attackers your code structure, dependencies, and secrets.',
+    },
+    'railway-env-exposed': {
+        summary: 'Configuration files are publicly accessible on Railway.',
+        whyItMatters: 'Exposed .env or config files contain database URLs, API keys, and secrets that give full access to your backend.',
+    },
+    'railway-connection-string': {
+        summary: 'Database connection strings are exposed.',
+        whyItMatters: 'Connection strings include the hostname, username, password, and database name — everything needed to access your data.',
+    },
     'mgmt-rls-no-policies': {
         summary: 'Tables have RLS enabled but no policies.',
         whyItMatters: 'RLS with no policies means nobody (except service_role) can access the data — probably not what you intended.',

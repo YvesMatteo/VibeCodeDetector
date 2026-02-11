@@ -202,30 +202,30 @@ export function AIFixPrompt({ url, findings, techStack }: AIFixPromptProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 shadow-lg shadow-blue-500/20">
+                <Button className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium w-full sm:w-auto min-h-[44px]">
                     <Sparkles className="mr-2 h-4 w-4" />
                     Generate AI Fix Prompt
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl bg-[#0E0E10] border-white/10 text-white">
+            <DialogContent className="max-w-2xl w-[calc(100%-2rem)] bg-[#09090B] border-white/[0.08] text-white max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-xl">
-                        <Sparkles className="h-5 w-5 text-blue-400" />
+                    <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <Sparkles className="h-4 w-4 text-zinc-400" />
                         AI Remediation Prompt
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                        Copy this prompt and give it to your AI coding assistant (like Cursor or Windsurf) to fix these issues automatically.
+                    <DialogDescription className="text-zinc-500">
+                        Copy this prompt and give it to your AI coding assistant to fix these issues automatically.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="relative mt-4 group">
-                    <pre className="p-4 rounded-lg bg-black/50 border border-white/10 text-sm font-mono text-slate-300 overflow-auto max-h-[400px] whitespace-pre-wrap">
+                    <pre className="p-3 sm:p-4 rounded-lg bg-black/40 border border-white/[0.06] text-xs sm:text-sm font-mono text-zinc-300 overflow-auto max-h-[50dvh] sm:max-h-[400px] whitespace-pre-wrap">
                         {promptText}
                     </pre>
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="absolute top-2 right-2 h-8 w-8 bg-white/10 hover:bg-white/20 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 h-8 w-8 bg-white/[0.06] hover:bg-white/[0.12] text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         onClick={handleCopy}
                     >
                         {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
@@ -233,10 +233,10 @@ export function AIFixPrompt({ url, findings, techStack }: AIFixPromptProps) {
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-white/5 hover:text-white">
+                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-white/[0.04] hover:text-white text-zinc-400">
                         Close
                     </Button>
-                    <Button onClick={handleCopy} className="bg-blue-600 hover:bg-blue-500 text-white">
+                    <Button onClick={handleCopy} className="bg-white text-zinc-900 hover:bg-zinc-200 font-medium">
                         {copied ? (
                             <>
                                 <Check className="mr-2 h-4 w-4" />
