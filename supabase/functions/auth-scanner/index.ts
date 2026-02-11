@@ -379,10 +379,11 @@ Deno.serve(async (req: Request) => {
         // =================================================================
 
         // Check for hardcoded credentials in page source
+        // Require 8+ char passwords to avoid flagging short demo/placeholder values
         const credPatterns = [
-            /password\s*[:=]\s*["'][^"']{3,}["']/gi,
-            /api[_-]?key\s*[:=]\s*["'][^"']{10,}["']/gi,
-            /secret\s*[:=]\s*["'][^"']{10,}["']/gi,
+            /password\s*[:=]\s*["'][^"']{8,}["']/gi,
+            /api[_-]?key\s*[:=]\s*["'][^"']{16,}["']/gi,
+            /secret\s*[:=]\s*["'][^"']{16,}["']/gi,
         ];
 
         for (const pattern of credPatterns) {
@@ -404,10 +405,11 @@ Deno.serve(async (req: Request) => {
         }
 
         // Check for client-side auth logic that should be server-side
+        // Use exact key names to avoid false positives (e.g., "cache_token" matching "token")
         const clientAuthPatterns = [
             { pattern: /if\s*\(\s*password\s*===?\s*["'][^"']+["']\s*\)/i, issue: "Client-side password comparison" },
-            { pattern: /localStorage\.setItem\s*\(\s*["'](?:password|token|secret)["']/i, issue: "Storing secrets in localStorage" },
-            { pattern: /document\.cookie\s*=.*(?:token|session|auth).*(?:=)/i, issue: "Setting auth cookies via JavaScript" },
+            { pattern: /localStorage\.setItem\s*\(\s*["'](password|auth_token|access_token|secret_key|api_key)["']/i, issue: "Storing secrets in localStorage" },
+            { pattern: /document\.cookie\s*=.*(?:auth_token|session_id|access_token).*(?:=)/i, issue: "Setting auth cookies via JavaScript" },
         ];
 
         for (const { pattern, issue } of clientAuthPatterns) {

@@ -253,7 +253,6 @@ async function testParameterRedirects(
             { payload: `//${EVIL_DOMAIN}`, label: 'protocol-relative' },
             { payload: `/\\${EVIL_DOMAIN}`, label: 'backslash trick' },
             { payload: `${EVIL_URL}%23.${targetDomain}`, label: 'fragment injection' },
-            { payload: `https://${targetDomain}@${EVIL_DOMAIN}`, label: 'credential-based bypass' },
             { payload: `${EVIL_URL}?.${targetDomain}`, label: 'query-based bypass' },
         ];
     }

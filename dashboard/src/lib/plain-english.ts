@@ -181,6 +181,113 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Sensitive data is stored where any script can read it.',
         whyItMatters: 'localStorage has zero protection from XSS. Any third-party script or ad on your page can read these secrets.',
     },
+    'firebase-rtdb-open': {
+        summary: 'Your Firebase database is readable by anyone.',
+        whyItMatters: 'All data in your Realtime Database can be downloaded without logging in. This is the #1 Firebase security mistake.',
+    },
+    'firebase-storage-listable': {
+        summary: 'Anyone can browse your uploaded files.',
+        whyItMatters: 'Attackers can list and download every file in your Firebase Storage bucket, including user uploads and private documents.',
+    },
+    'firebase-firestore-open': {
+        summary: 'Your Firestore database is publicly readable.',
+        whyItMatters: 'All documents in your Firestore collections can be read by anyone. User data, private records — everything is exposed.',
+    },
+    'firebase-auth-enumeration': {
+        summary: 'Attackers can check if emails are registered.',
+        whyItMatters: 'The Firebase Auth API reveals which email addresses have accounts, enabling targeted phishing and credential stuffing attacks.',
+    },
+    'firebase-apikey-unrestricted': {
+        summary: 'Your Firebase API key works from anywhere.',
+        whyItMatters: 'Without referrer restrictions, anyone can use your API key from their own app, potentially exhausting your quota or creating fake accounts.',
+    },
+    // OpenSSF Scorecard findings
+    'scorecard-overall': {
+        summary: 'Overall supply chain security score.',
+        whyItMatters: 'The OpenSSF Scorecard evaluates how well your project follows supply chain security best practices.',
+    },
+    'scorecard-branch-protection': {
+        summary: 'Branch protection is weak or missing.',
+        whyItMatters: 'Without branch protection, anyone with push access can commit directly to main, bypassing code review.',
+    },
+    'scorecard-code-review': {
+        summary: 'Code changes lack review.',
+        whyItMatters: 'Unreviewed code is the top vector for introducing vulnerabilities or backdoors.',
+    },
+    'scorecard-dangerous-workflow': {
+        summary: 'GitHub Actions workflow has dangerous patterns.',
+        whyItMatters: 'Workflows using pull_request_target with PR checkout allow attackers to run arbitrary code in your CI.',
+    },
+    'scorecard-token-permissions': {
+        summary: 'GitHub token has excessive permissions.',
+        whyItMatters: 'Overly broad GITHUB_TOKEN permissions let compromised Actions steps do more damage.',
+    },
+    'scorecard-pinned-dependencies': {
+        summary: 'CI dependencies aren\'t pinned to hashes.',
+        whyItMatters: 'Mutable tags (like @v3) can be silently replaced with malicious code. Pin to SHA hashes.',
+    },
+    'scorecard-sast': {
+        summary: 'No static analysis in your CI.',
+        whyItMatters: 'SAST tools like CodeQL catch security bugs before they reach production.',
+    },
+    'scorecard-vulnerabilities': {
+        summary: 'Known vulnerabilities found.',
+        whyItMatters: 'Unpatched vulnerabilities are actively exploited by automated scanners.',
+    },
+    // GitHub Security findings
+    'gh-sec-dependabot-summary': {
+        summary: 'Dependabot found vulnerable dependencies.',
+        whyItMatters: 'Known CVEs in your dependencies are the easiest attack vector — automated tools exploit them within hours of disclosure.',
+    },
+    'gh-sec-dependabot-disabled': {
+        summary: 'Dependabot alerts aren\'t enabled.',
+        whyItMatters: 'Without Dependabot, you won\'t know when your dependencies have known vulnerabilities.',
+    },
+    'gh-sec-codescan-summary': {
+        summary: 'Code scanning found security issues.',
+        whyItMatters: 'These are potential vulnerabilities in YOUR code — SQL injection, XSS, path traversal, etc.',
+    },
+    'gh-sec-codescan-disabled': {
+        summary: 'Code scanning (SAST) isn\'t set up.',
+        whyItMatters: 'CodeQL and similar tools catch bugs that manual review misses. Free for public repos.',
+    },
+    'gh-sec-secrets-summary': {
+        summary: 'Leaked credentials found in your repo.',
+        whyItMatters: 'Exposed API keys and tokens get harvested by bots within minutes. Rotate them NOW.',
+    },
+    'gh-sec-secrets-disabled': {
+        summary: 'Secret scanning isn\'t enabled.',
+        whyItMatters: 'GitHub can detect 200+ secret types before they\'re committed. Free and easy to enable.',
+    },
+    // Supabase Management API findings
+    'mgmt-rls-disabled': {
+        summary: 'Tables are missing Row Level Security.',
+        whyItMatters: 'Without RLS, any authenticated user can read and modify ALL data in these tables via the Supabase client.',
+    },
+    'mgmt-policies-permissive': {
+        summary: 'RLS policies allow unrestricted access.',
+        whyItMatters: 'Policies using "true" as the condition don\'t actually restrict anything — they\'re security theater.',
+    },
+    'mgmt-auth-users-fk': {
+        summary: 'Public tables reference auth.users directly.',
+        whyItMatters: 'Foreign keys to auth.users can leak email addresses and user metadata through PostgREST JOINs.',
+    },
+    'mgmt-security-definer': {
+        summary: 'Functions bypass Row Level Security.',
+        whyItMatters: 'SECURITY DEFINER functions run as the owner (superuser), ignoring all RLS policies. If they accept user input, they\'re a privilege escalation risk.',
+    },
+    'mgmt-dangerous-extensions': {
+        summary: 'Dangerous database extensions are enabled.',
+        whyItMatters: 'Extensions like dblink and file_fdw can be used to access external systems or read local files.',
+    },
+    'mgmt-storage-public-buckets': {
+        summary: 'Storage buckets are publicly accessible.',
+        whyItMatters: 'Anyone on the internet can read files from public buckets without authentication.',
+    },
+    'mgmt-rls-no-policies': {
+        summary: 'Tables have RLS enabled but no policies.',
+        whyItMatters: 'RLS with no policies means nobody (except service_role) can access the data — probably not what you intended.',
+    },
     'heading order': {
         summary: 'Messy document structure.',
         whyItMatters: 'Headings should follow a hierarchy (H1 -> H2 -> H3). Skipping levels confuses screen readers and SEO bots.',

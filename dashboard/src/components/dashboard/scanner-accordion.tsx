@@ -26,6 +26,10 @@ import {
     Code,
     Package,
     ServerCrash,
+    Flame,
+    ClipboardCheck,
+    ShieldCheck,
+    Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +68,10 @@ const scannerIcons: Record<string, any> = {
     cookies: Cookie,
     auth: UserCheck,
     supabase_backend: ServerCrash,
+    firebase_backend: Flame,
+    scorecard: ClipboardCheck,
+    github_security: ShieldCheck,
+    supabase_mgmt: Settings2,
     dependencies: Package,
     ssl_tls: Lock,
     dns_email: Mail,
@@ -84,6 +92,10 @@ const scannerNames: Record<string, string> = {
     cookies: 'Cookie & Session Security',
     auth: 'Authentication Flow',
     supabase_backend: 'Supabase Backend',
+    firebase_backend: 'Firebase Backend',
+    scorecard: 'OpenSSF Scorecard',
+    github_security: 'GitHub Security Alerts',
+    supabase_mgmt: 'Supabase Deep Lint',
     dependencies: 'Dependency Vulnerabilities',
     ssl_tls: 'SSL/TLS Security',
     dns_email: 'DNS & Email Security',

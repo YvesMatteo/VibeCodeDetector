@@ -30,6 +30,9 @@ import {
     Cookie,
     UserCheck,
     Flame,
+    ClipboardCheck,
+    ShieldCheck,
+    Settings2,
 } from 'lucide-react';
 
 export default function NewScanPage() {
@@ -38,6 +41,7 @@ export default function NewScanPage() {
     const [githubRepo, setGithubRepo] = useState('');
     const [backendType, setBackendType] = useState<'none' | 'supabase' | 'firebase'>('none');
     const [backendUrl, setBackendUrl] = useState('');
+    const [supabasePAT, setSupabasePAT] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -82,10 +86,11 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
+                    ...(supabasePAT.trim() ? { supabasePAT: supabasePAT.trim() } : {}),
                 }),
             });
 
@@ -233,7 +238,7 @@ export default function NewScanPage() {
                                 <select
                                     id="backendType"
                                     value={backendType}
-                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase'); setBackendUrl(''); }}
+                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase'); setBackendUrl(''); setSupabasePAT(''); }}
                                     className="w-full h-10 rounded-md border bg-white/5 border-white/10 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 >
                                     <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
@@ -242,20 +247,42 @@ export default function NewScanPage() {
                                 </select>
                             </div>
                             {backendType === 'supabase' && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="backendUrl" className="text-zinc-300">Supabase Project URL</Label>
-                                    <Input
-                                        id="backendUrl"
-                                        type="text"
-                                        placeholder="https://yourproject.supabase.co"
-                                        value={backendUrl}
-                                        onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
-                                    />
-                                    <p className="text-xs text-zinc-500">
-                                        Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
-                                    </p>
-                                </div>
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="backendUrl" className="text-zinc-300">Supabase Project URL</Label>
+                                        <Input
+                                            id="backendUrl"
+                                            type="text"
+                                            placeholder="https://yourproject.supabase.co"
+                                            value={backendUrl}
+                                            onChange={(e) => setBackendUrl(e.target.value)}
+                                            className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
+                                        />
+                                        <p className="text-xs text-zinc-500">
+                                            Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="supabasePAT" className="text-zinc-300">
+                                            Supabase Access Token
+                                            <span className="text-xs font-normal text-zinc-500 ml-2">(optional — enables deep lint)</span>
+                                        </Label>
+                                        <Input
+                                            id="supabasePAT"
+                                            type="password"
+                                            placeholder="sbp_..."
+                                            value={supabasePAT}
+                                            onChange={(e) => setSupabasePAT(e.target.value)}
+                                            className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50 font-mono"
+                                        />
+                                        <p className="text-xs text-zinc-500">
+                                            Runs 12 deep SQL checks via the Management API: RLS status, permissive policies, SECURITY DEFINER functions, dangerous extensions, and more. Your token is used for this scan only and is never stored.{' '}
+                                            <a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                Generate a token &rarr;
+                                            </a>
+                                        </p>
+                                    </div>
+                                </>
                             )}
                             {backendType === 'firebase' && (
                                 <div className="space-y-2">
@@ -287,7 +314,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 18 checks automatically
+                            Every scan runs up to 20 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -310,6 +337,9 @@ export default function NewScanPage() {
                                 { icon: Mail, name: 'DNS & Email', description: 'SPF, DKIM, DMARC, DNSSEC, subdomain takeover', color: 'text-violet-500' },
                                 { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
                                 { icon: Cpu, name: 'Tech Stack & CVEs', description: 'Technology detection with live OSV.dev lookups', color: 'text-indigo-500' },
+                                { icon: ClipboardCheck, name: 'OpenSSF Scorecard', description: 'Supply chain security: branch protection, pinned deps', color: 'text-green-500' },
+                                { icon: ShieldCheck, name: 'GitHub Security', description: 'Dependabot, code scanning, and secret scanning alerts', color: 'text-blue-400' },
+                                { icon: Settings2, name: 'Supabase Deep Lint', description: 'RLS, policies, SECURITY DEFINER, extensions audit', color: 'text-emerald-300' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
                             ].map((check) => (
                                 <div

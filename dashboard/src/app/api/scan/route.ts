@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes, githubRepo } = body;
+        const { url, scanTypes, githubRepo, supabasePAT } = body;
 
         // Backend provider: new format (backendType + backendUrl) or legacy (supabaseUrl)
         const backendType: string = body.backendType || (body.supabaseUrl ? 'supabase' : 'none');
@@ -534,29 +534,86 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
         );
 
+        // 19. OpenSSF Scorecard Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/scorecard-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.scorecard = data; })
+                    .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 20. GitHub Native Security Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/github-security-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.github_security = data; })
+                    .catch(err => { results.github_security = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 21. Supabase Management API Scanner (Edge Function) — only if PAT provided
+        if (supabasePAT && typeof supabasePAT === 'string' && supabasePAT.startsWith('sbp_') && userSupabaseUrl) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-mgmt-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, supabasePAT, supabaseUrl: userSupabaseUrl.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.supabase_mgmt = data; })
+                    .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
+            );
+        }
+
         // Wait for all
         await Promise.all(scannerPromises);
 
-        // Calculate Overall Score using weighted average
+        // Calculate Overall Score using weighted average (weights sum to 1.0)
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.10,
-            sqli: 0.08,
-            xss: 0.08,
-            cors: 0.06,
-            csrf: 0.06,
-            cookies: 0.06,
-            auth: 0.06,
-            ssl_tls: 0.07,
-            open_redirect: 0.05,
-            api_keys: 0.07,
-            github_secrets: 0.05,
-            supabase_backend: 0.06,
-            firebase_backend: 0.06,
-            dependencies: 0.05,
-            dns_email: 0.04,
-            threat_intelligence: 0.04,
-            tech_stack: 0.03,
-            legal: 0.01,
+            security: 0.10,       // Security headers — broad impact
+            sqli: 0.07,           // SQL injection — critical vulnerability
+            xss: 0.07,            // XSS — critical vulnerability
+            ssl_tls: 0.06,        // TLS — foundational
+            api_keys: 0.06,       // Exposed keys — high impact
+            cors: 0.05,           // CORS misconfiguration
+            csrf: 0.05,           // CSRF protection
+            cookies: 0.05,        // Cookie security
+            auth: 0.05,           // Authentication flow
+            supabase_backend: 0.05, // Supabase misconfig
+            firebase_backend: 0.05, // Firebase misconfig
+            supabase_mgmt: 0.05,  // Supabase deep lint
+            open_redirect: 0.04,  // Open redirects
+            github_secrets: 0.04, // Leaked secrets in repo
+            github_security: 0.04, // Dependabot/CodeQL/secret scanning
+            dependencies: 0.04,   // Known CVEs in deps
+            scorecard: 0.03,      // OpenSSF supply chain score
+            dns_email: 0.03,      // SPF/DMARC/DKIM
+            threat_intelligence: 0.03, // Threat feeds
+            tech_stack: 0.03,     // Tech fingerprint & CVEs
+            legal: 0.01,          // Legal compliance
         };
 
         let weightedSum = 0;

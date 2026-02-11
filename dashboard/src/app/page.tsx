@@ -17,6 +17,8 @@ import {
   Code,
   Lock,
   GitBranch,
+  Search,
+  Server,
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
 import { useMotionValue, useTransform, useSpring } from "framer-motion";
@@ -32,46 +34,36 @@ import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 
 const features = [
   {
-    icon: Shield,
-    title: 'Security Headers',
-    description: 'Audit CSP, HSTS, X-Frame-Options, and 20+ security headers in real time.',
-    color: 'text-red-400',
-    glow: 'group-hover:shadow-red-500/20',
-  },
-  {
-    icon: Key,
-    title: 'API Key Detector',
-    description: 'Find exposed credentials, API keys, and sensitive data in client-side code.',
-    color: 'text-amber-400',
-    glow: 'group-hover:shadow-amber-500/20',
-  },
-  {
-    icon: Database,
-    title: 'SQL Injection',
-    description: 'Passive SQLi detection across forms, query parameters, and API endpoints.',
+    icon: Code,
+    title: 'Injection & Code Vulnerabilities',
+    description: 'SQL injection, XSS, open redirects, and CSRF detection across your live site.',
     color: 'text-rose-400',
     glow: 'group-hover:shadow-rose-500/20',
+    includes: ['SQLi', 'XSS', 'Open Redirect', 'CSRF'],
   },
   {
-    icon: Code,
-    title: 'XSS Detection',
-    description: 'Scan for DOM sinks, reflected XSS, and template injection vulnerabilities.',
-    color: 'text-pink-400',
-    glow: 'group-hover:shadow-pink-500/20',
+    icon: Search,
+    title: 'Secrets & Key Detection',
+    description: 'API keys, credentials, and secrets found in client-side code and git history.',
+    color: 'text-amber-400',
+    glow: 'group-hover:shadow-amber-500/20',
+    includes: ['API Keys', 'GitHub Deep Scan', 'GitHub Security Alerts'],
   },
   {
-    icon: Lock,
-    title: 'SSL/TLS Security',
-    description: 'Verify certificates, HSTS enforcement, TLS versions, and mixed content.',
+    icon: Shield,
+    title: 'Infrastructure Security',
+    description: 'SSL/TLS, security headers, CORS, cookies, and DNS/email configuration auditing.',
     color: 'text-emerald-400',
     glow: 'group-hover:shadow-emerald-500/20',
+    includes: ['SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS'],
   },
   {
-    icon: GitBranch,
-    title: 'GitHub Secret Scanning',
-    description: '40+ secret patterns checked across git history, branches, and commits.',
+    icon: Server,
+    title: 'Backend Security',
+    description: 'Supabase + Firebase misconfigs, auth flow analysis, and dependency CVEs.',
     color: 'text-purple-400',
     glow: 'group-hover:shadow-purple-500/20',
+    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Auth', 'Dependencies', 'OpenSSF Scorecard'],
   },
 ];
 
@@ -116,7 +108,7 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '17', label: 'Security Scanners' },
+  { value: '20', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
   { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
@@ -269,7 +261,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 17 more checks.
+              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 20 more checks.
             </motion.p>
           </div>
 
@@ -422,7 +414,7 @@ export default function HomePage() {
           >
             <p className="text-xs sm:text-sm font-medium uppercase tracking-widest text-zinc-500">Trusted by developers shipping with AI</p>
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-              {['17 Security Scanners', '150+ Checks', 'Real-Time CVE Lookups', 'GitHub Deep Scan'].map((item) => (
+              {['20 Security Scanners', '150+ Checks', 'Real-Time CVE Lookups', 'GitHub Deep Scan'].map((item) => (
                 <div key={item} className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.06]">
                   <CheckCircle className="h-3.5 w-3.5 text-blue-400" />
                   <span className="text-xs sm:text-sm text-zinc-300">{item}</span>
@@ -456,11 +448,11 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
             <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-              17 scanners that catch the issues vibe-coded sites commonly have.
+              20 scanners that catch the issues vibe-coded sites commonly have.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 stagger-children">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 stagger-children">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -479,9 +471,16 @@ export default function HomePage() {
                       </div>
                       <h3 className="text-lg font-medium text-white tracking-tight">{feature.title}</h3>
                     </div>
-                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">
                       {feature.description}
                     </p>
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                      {feature.includes.map((item) => (
+                        <span key={item} className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -647,7 +646,7 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              17 scanners. One click. Know exactly what to fix before you deploy.
+              20 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">

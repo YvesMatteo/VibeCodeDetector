@@ -309,10 +309,13 @@ Deno.serve(async (req: Request) => {
         }
 
         // GET forms that look state-changing (search is fine, but delete/update/action GET forms are bad)
+        // Use word boundaries and require action verbs (not substrings like "reset-password-link")
         const suspiciousGetForms = forms.filter(f => {
             if (f.method !== "GET") return false;
             const actionLower = (f.action || "").toLowerCase();
-            return /delete|remove|update|edit|create|add|modify|change|reset/i.test(actionLower);
+            // Must match action verb at a path boundary (after / or at start), not as substring
+            return /\/(delete|remove|destroy|drop)\b/i.test(actionLower) ||
+                /[?&](action|do)=(delete|remove|update|destroy)/i.test(actionLower);
         });
 
         for (const form of suspiciousGetForms) {
@@ -335,9 +338,15 @@ Deno.serve(async (req: Request) => {
         // Step 3: Analyze cookies for SameSite
         // =================================================================
         const { cookies } = analyzeCookies(response!.headers);
-        const sessionCookies = cookies.filter(c =>
-            /session|token|auth|sid|jwt|csrf|login|user/i.test(c.name),
-        );
+        // Match cookies that look like session identifiers — require exact name patterns,
+        // not substring matches (avoids flagging "user_theme", "login_attempt", etc.)
+        const sessionCookies = cookies.filter(c => {
+            const name = c.name.toLowerCase();
+            return /^(session[_-]?id|sessionid|sess|sid|ssid|connect\.sid|phpsessid|jsessionid|asp\.net_sessionid)$/i.test(name) ||
+                /^(auth[_-]?token|access[_-]?token|refresh[_-]?token|jwt|id[_-]?token)$/i.test(name) ||
+                /^(csrf[_-]?token|xsrf[_-]?token|_csrf)$/i.test(name) ||
+                /^sb-[a-z]+-auth-token/i.test(name);  // Supabase auth cookies
+        });
 
         for (const cookie of sessionCookies) {
             if (!cookie.sameSite) {
