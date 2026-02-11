@@ -119,7 +119,7 @@ export default function DemoResultsPage() {
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-white">Scan Results</h1>
+                        <h1 className="text-3xl font-bold">Scan Results</h1>
                         <div className="flex items-center gap-2 text-muted-foreground mt-1">
                             <a
                                 href={result.url}

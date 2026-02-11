@@ -32,11 +32,6 @@ import {
     ClipboardCheck,
     ShieldCheck,
     Settings2,
-    Zap,
-    Triangle,
-    Globe2,
-    Cloud,
-    TrainFront,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
@@ -77,11 +72,6 @@ const scannerIcons: Record<string, any> = {
     dns_email: Mail,
     xss: Code,
     open_redirect: ExternalLink,
-    convex_backend: Zap,
-    vercel_hosting: Triangle,
-    netlify_hosting: Globe2,
-    cloudflare_hosting: Cloud,
-    railway_hosting: TrainFront,
 };
 
 const scannerNames: Record<string, string> = {
@@ -106,11 +96,6 @@ const scannerNames: Record<string, string> = {
     dns_email: 'DNS & Email Security',
     xss: 'XSS Detection',
     open_redirect: 'Open Redirect',
-    convex_backend: 'Convex Backend',
-    vercel_hosting: 'Vercel Hosting',
-    netlify_hosting: 'Netlify Hosting',
-    cloudflare_hosting: 'Cloudflare Pages',
-    railway_hosting: 'Railway Hosting',
 };
 
 function getVibeRating(score: number): { label: string; emoji: string; color: string; bg: string } {
@@ -215,10 +200,10 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
     return (
         <div className="p-4 md:p-8">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 animate-fade-in-up">
                 <Link
                     href="/dashboard/scans"
-                    className="inline-flex items-center text-zinc-500 hover:text-white mb-4 transition-colors text-sm"
+                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Scans
@@ -227,33 +212,33 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-2xl font-semibold tracking-tight text-white break-all">{scan.url.replace(/^https?:\/\//, '')}</h1>
+                            <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white break-all">{scan.url.replace(/^https?:\/\//, '')}</h1>
                             <a
                                 href={scan.url.startsWith('http') ? scan.url : `https://${scan.url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             >
-                                <ExternalLink className="h-4 w-4" />
+                                <ExternalLink className="h-5 w-5" />
                             </a>
                         </div>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {new Date(scan.completed_at || scan.created_at).toLocaleString()}
+                                <Clock className="h-4 w-4" />
+                                Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
                             </div>
-                            <Badge variant="secondary" className="bg-white/[0.04] border-white/[0.08] text-zinc-400">{scan.status}</Badge>
+                            <Badge variant="secondary" className="bg-white/5 border-white/10">{scan.status}</Badge>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                         <AIFixPrompt url={scan.url} findings={allFindings} techStack={(results as any)?.tech_stack} />
                         <div className="flex gap-3">
-                            <Button variant="outline" disabled title="Coming soon" className="opacity-40 cursor-not-allowed bg-white/[0.04] border-white/[0.08] flex-1 text-zinc-500 min-h-[44px]">
+                            <Button variant="outline" disabled title="Coming soon" className="opacity-50 cursor-not-allowed bg-white/5 border-white/10 flex-1 sm:flex-none">
                                 <Download className="mr-2 h-4 w-4" />
                                 Export
                             </Button>
-                            <Button asChild className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium flex-1 min-h-[44px]">
+                            <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 border-0 flex-1 sm:flex-none hover:from-purple-500 hover:to-pink-500">
                                 <Link href={`/dashboard/scans/new?url=${encodeURIComponent(scan.url)}`}>
                                     <RefreshCw className="mr-2 h-4 w-4" />
                                     Rescan
@@ -265,7 +250,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </div>
 
             {/* Score Overview */}
-            <Card className="bg-white/[0.02] border-white/[0.06] mb-8">
+            <Card className="bg-zinc-900/40 border-white/5 mb-8 animate-fade-in-up">
                 <CardContent className="pt-6 pb-6 flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
                     <ScoreRing score={scan.overall_score || 0} size="large" />
                     <div className="flex flex-col items-center sm:items-start gap-3">
@@ -278,10 +263,10 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                                 </div>
                             );
                         })()}
-                        <p className="text-xl font-semibold text-white">
+                        <p className="text-2xl font-medium text-white">
                             {issueCount} {issueCount === 1 ? 'issue' : 'issues'} found
                         </p>
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-zinc-400">
                             across {Object.keys(results).length} scanners
                         </p>
                     </div>
@@ -289,32 +274,32 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
             </Card>
 
             {/* Findings Summary */}
-            <Card className="mb-8 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="pb-4">
-                    <CardTitle className="text-white text-sm font-medium">Findings Summary</CardTitle>
-                    <CardDescription className="text-zinc-600 text-xs">Issues grouped by severity</CardDescription>
+            <Card className="mb-8 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                <CardHeader>
+                    <CardTitle className="text-white">Findings Summary</CardTitle>
+                    <CardDescription className="text-zinc-400">Issues found during the scan, grouped by severity</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-4 md:gap-8">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                            <span className="font-medium text-sm">{totalFindings.critical}</span>
-                            <span className="text-zinc-500 text-sm">Critical</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-red-600 animate-pulse"></div>
+                            <span className="font-medium">{totalFindings.critical}</span>
+                            <span className="text-muted-foreground">Critical</span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                            <span className="font-medium text-sm">{totalFindings.high}</span>
-                            <span className="text-zinc-500 text-sm">High</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-orange-500 to-orange-600"></div>
+                            <span className="font-medium">{totalFindings.high}</span>
+                            <span className="text-muted-foreground">High</span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                            <span className="font-medium text-sm">{totalFindings.medium}</span>
-                            <span className="text-zinc-500 text-sm">Medium</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600"></div>
+                            <span className="font-medium">{totalFindings.medium}</span>
+                            <span className="text-muted-foreground">Medium</span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-zinc-500"></div>
-                            <span className="font-medium text-sm">{totalFindings.low}</span>
-                            <span className="text-zinc-500 text-sm">Low</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600"></div>
+                            <span className="font-medium">{totalFindings.low}</span>
+                            <span className="text-muted-foreground">Low</span>
                         </div>
                     </div>
                 </CardContent>

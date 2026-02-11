@@ -203,16 +203,16 @@ export default function ApiKeysPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-4xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-white mb-1">API Keys</h1>
-                    <p className="text-zinc-500 text-sm">
-                        Manage API keys for programmatic access
+                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white mb-2">API Keys</h1>
+                    <p className="text-zinc-400">
+                        Manage API keys for programmatic access to CheckVibe
                     </p>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium w-full sm:w-auto"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0"
                 >
                     <Plus className="mr-2 h-4 w-4" />
                     Create Key
@@ -220,7 +220,7 @@ export default function ApiKeysPage() {
             </div>
 
             {/* Getting Started */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader className="cursor-pointer" onClick={() => setDocsOpen(!docsOpen)}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export default function ApiKeysPage() {
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-xs text-zinc-400 mb-1">Run a scan:</p>
-                                    <pre className="p-3 bg-black/50 border border-white/[0.08] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl -X POST https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
@@ -254,14 +254,14 @@ export default function ApiKeysPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-zinc-400 mb-1">List scans:</p>
-                                    <pre className="p-3 bg-black/50 border border-white/[0.08] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
                                     </pre>
                                 </div>
                                 <div>
                                     <p className="text-xs text-zinc-400 mb-1">Get scan results:</p>
-                                    <pre className="p-3 bg-black/50 border border-white/[0.08] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                    <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl https://checkvibe.dev/api/scan/SCAN_ID \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
                                     </pre>
@@ -273,7 +273,7 @@ export default function ApiKeysPage() {
             </Card>
 
             {/* MCP Server Config */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader className="cursor-pointer" onClick={() => setMcpOpen(!mcpOpen)}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export default function ApiKeysPage() {
                             <p className="text-xs text-zinc-500">
                                 Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
                             </p>
-                            <pre className="p-3 bg-black/50 border border-white/[0.08] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                            <pre className="p-3 bg-black/50 border border-white/10 rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`{
   "mcpServers": {
     "checkvibe": {
@@ -315,7 +315,7 @@ export default function ApiKeysPage() {
             </Card>
 
             {/* Active Keys */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+            <Card className="mb-6 bg-zinc-900/40 border-white/5">
                 <CardHeader>
                     <div className="flex items-center gap-3">
                         <Key className="h-5 w-5 text-blue-400" />
@@ -353,7 +353,7 @@ export default function ApiKeysPage() {
 
             {/* Inactive Keys */}
             {inactiveKeys.length > 0 && (
-                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                <Card className="mb-6 bg-zinc-900/40 border-white/5">
                     <CardHeader>
                         <div className="flex items-center gap-3">
                             <Shield className="h-5 w-5 text-zinc-500" />
@@ -380,7 +380,7 @@ export default function ApiKeysPage() {
             )}
 
             {/* Security Notice */}
-            <Card className="bg-white/[0.02] border-white/[0.06]">
+            <Card className="bg-zinc-900/40 border-white/5">
                 <CardContent className="pt-6">
                     <div className="flex gap-3">
                         <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
@@ -399,7 +399,7 @@ export default function ApiKeysPage() {
 
             {/* ── Create Key Dialog ────────────────────────────── */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="bg-zinc-900 border-white/[0.08] sm:max-w-md">
+                <DialogContent className="bg-zinc-900 border-white/10 sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="text-white">Create API Key</DialogTitle>
                         <DialogDescription className="text-zinc-400">
@@ -414,7 +414,7 @@ export default function ApiKeysPage() {
                                 value={newKeyName}
                                 onChange={e => setNewKeyName(e.target.value)}
                                 placeholder="e.g., CI Pipeline, Monitoring Script"
-                                className="bg-white/[0.04] border-white/[0.08]"
+                                className="bg-white/5 border-white/10"
                                 maxLength={64}
                             />
                         </div>
@@ -430,7 +430,7 @@ export default function ApiKeysPage() {
                                         className={`text-left p-2.5 rounded-lg border transition-colors ${
                                             newKeyScopes.includes(scope.value)
                                                 ? 'border-blue-500/50 bg-blue-500/10'
-                                                : 'border-white/[0.08] bg-white/5 hover:bg-white/10'
+                                                : 'border-white/10 bg-white/5 hover:bg-white/10'
                                         }`}
                                     >
                                         <div className="text-xs font-medium text-white">{scope.label}</div>
@@ -446,7 +446,7 @@ export default function ApiKeysPage() {
                                 value={newKeyDomains}
                                 onChange={e => setNewKeyDomains(e.target.value)}
                                 placeholder="example.com, app.example.com"
-                                className="bg-white/[0.04] border-white/[0.08]"
+                                className="bg-white/5 border-white/10"
                             />
                             <p className="text-xs text-zinc-500">Comma-separated. Leave empty to allow all domains.</p>
                         </div>
@@ -459,19 +459,19 @@ export default function ApiKeysPage() {
                                 onChange={e => setNewKeyExpiry(e.target.value)}
                                 min={1}
                                 max={365}
-                                className="bg-white/[0.04] border-white/[0.08] w-24"
+                                className="bg-white/5 border-white/10 w-24"
                             />
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/[0.04] border-white/[0.08]">
+                        <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/5 border-white/10">
                             Cancel
                         </Button>
                         <Button
                             onClick={handleCreate}
                             disabled={creating || newKeyScopes.length === 0}
-                            className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0"
                         >
                             {creating ? 'Creating...' : 'Create Key'}
                         </Button>
@@ -481,7 +481,7 @@ export default function ApiKeysPage() {
 
             {/* ── Show-Once Key Dialog ────────────────────────── */}
             <Dialog open={!!createdKey} onOpenChange={() => setCreatedKey(null)}>
-                <DialogContent className="bg-zinc-900 border-white/[0.08] sm:max-w-lg" showCloseButton={false}>
+                <DialogContent className="bg-zinc-900 border-white/10 sm:max-w-lg" showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-white flex items-center gap-2">
                             <Check className="h-5 w-5 text-green-400" />
@@ -493,7 +493,7 @@ export default function ApiKeysPage() {
                     </DialogHeader>
 
                     <div className="relative">
-                        <code className="block p-3 bg-black/50 border border-white/[0.08] rounded-lg text-sm text-green-400 font-mono break-all">
+                        <code className="block p-3 bg-black/50 border border-white/10 rounded-lg text-sm text-green-400 font-mono break-all">
                             {createdKey}
                         </code>
                         <Button
@@ -507,7 +507,7 @@ export default function ApiKeysPage() {
                     </div>
 
                     <DialogFooter>
-                        <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/[0.08] hover:bg-white/20">
+                        <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/10 hover:bg-white/20">
                             Done
                         </Button>
                     </DialogFooter>
@@ -516,7 +516,7 @@ export default function ApiKeysPage() {
 
             {/* ── Revoke Confirmation Dialog ──────────────────── */}
             <Dialog open={showRevoke} onOpenChange={setShowRevoke}>
-                <DialogContent className="bg-zinc-900 border-white/[0.08] sm:max-w-sm">
+                <DialogContent className="bg-zinc-900 border-white/10 sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="text-white">Revoke API Key</DialogTitle>
                         <DialogDescription className="text-zinc-400">
@@ -524,7 +524,7 @@ export default function ApiKeysPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/[0.04] border-white/[0.08]">
+                        <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/5 border-white/10">
                             Cancel
                         </Button>
                         <Button
@@ -582,7 +582,7 @@ function KeyRow({
                         )}
                     </div>
 
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-zinc-600">
+                    <div className="flex gap-4 mt-2 text-[11px] text-zinc-600">
                         <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Created {formatDate(apiKey.created_at)}
