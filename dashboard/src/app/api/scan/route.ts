@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -534,6 +534,42 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
         );
 
+        // 19. OpenSSF Scorecard Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/scorecard-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.scorecard = data; })
+                    .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
+            );
+        }
+
+        // 20. GitHub Native Security Scanner (Edge Function) — only if repo URL provided
+        if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
+            scannerPromises.push(
+                fetchWithTimeout(`${supabaseUrl}/functions/v1/github-security-scanner`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                        'x-scanner-key': scannerSecretKey,
+                    },
+                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                })
+                    .then(res => res.json())
+                    .then(data => { results.github_security = data; })
+                    .catch(err => { results.github_security = { error: err.message, score: 0 }; })
+            );
+        }
+
         // Wait for all
         await Promise.all(scannerPromises);
 
@@ -550,6 +586,8 @@ export async function POST(req: NextRequest) {
             open_redirect: 0.05,
             api_keys: 0.07,
             github_secrets: 0.05,
+            github_security: 0.05,
+            scorecard: 0.04,
             supabase_backend: 0.06,
             firebase_backend: 0.06,
             dependencies: 0.05,

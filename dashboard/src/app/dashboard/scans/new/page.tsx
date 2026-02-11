@@ -82,7 +82,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
