@@ -14,11 +14,24 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
-function getScoreColor(score: number) {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-amber-400';
-    if (score >= 40) return 'text-orange-400';
+function getIssueCountColor(count: number) {
+    if (count === 0) return 'text-green-400';
+    if (count <= 3) return 'text-amber-400';
+    if (count <= 7) return 'text-orange-400';
     return 'text-red-400';
+}
+
+function countIssues(results: Record<string, any> | null): number {
+    if (!results) return 0;
+    let count = 0;
+    Object.values(results).forEach((r: any) => {
+        if (r.findings && Array.isArray(r.findings)) {
+            r.findings.forEach((f: any) => {
+                if (f.severity?.toLowerCase() !== 'info') count++;
+            });
+        }
+    });
+    return count;
 }
 
 function timeAgo(dateString: string) {
@@ -69,21 +82,22 @@ export default async function DashboardPage() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-    // Completed scans for avg score
+    // Completed scans for total issues
     const { data: completedScans } = await supabase
         .from('scans')
-        .select('overall_score')
+        .select('results')
         .eq('user_id', user.id)
         .eq('status', 'completed');
 
-    const avgScore = completedScans && completedScans.length > 0
-        ? Math.round(completedScans.reduce((sum, s) => sum + (s.overall_score || 0), 0) / completedScans.length)
-        : 0;
+    let totalIssues = 0;
+    completedScans?.forEach(s => {
+        totalIssues += countIssues(s.results as Record<string, any> | null);
+    });
 
     // Recent 3 scans for activity feed
     const { data: recentScans } = await supabase
         .from('scans')
-        .select('id, url, status, overall_score, created_at, completed_at')
+        .select('id, url, status, results, created_at, completed_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(3);
@@ -253,10 +267,10 @@ export default async function DashboardPage() {
                                 <Activity className="h-5 w-5 text-amber-400" />
                             </div>
                             <div>
-                                <p className={`text-2xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-500'}`}>
-                                    {avgScore > 0 ? avgScore : '—'}
+                                <p className={`text-2xl font-bold ${getIssueCountColor(totalIssues)}`}>
+                                    {totalIssues}
                                 </p>
-                                <p className="text-xs text-zinc-500">Average score</p>
+                                <p className="text-xs text-zinc-500">Issues found</p>
                             </div>
                         </div>
                     </CardContent>
@@ -297,11 +311,14 @@ export default async function DashboardPage() {
                                         <span className="text-sm text-white truncate">{scan.url.replace(/^https?:\/\//, '')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
-                                        {scan.status === 'completed' && scan.overall_score != null && (
-                                            <span className={`text-sm font-bold ${getScoreColor(scan.overall_score)}`}>
-                                                {scan.overall_score}
-                                            </span>
-                                        )}
+                                        {scan.status === 'completed' && (() => {
+                                            const issues = countIssues(scan.results as Record<string, any> | null);
+                                            return (
+                                                <span className={`text-sm font-bold ${getIssueCountColor(issues)}`}>
+                                                    {issues} {issues === 1 ? 'issue' : 'issues'}
+                                                </span>
+                                            );
+                                        })()}
                                         {scan.status !== 'completed' && (
                                             <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">
                                                 Scanning

@@ -2,27 +2,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ExternalLink, Clock } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-
-function getScoreColor(score: number) {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    if (score >= 40) return 'text-orange-500';
-    return 'text-red-500';
-}
-
-function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
+import { ScansTable } from '@/components/dashboard/scans-table';
 
 export default async function ScansPage() {
     const supabase = await createClient();
@@ -42,9 +24,6 @@ export default async function ScansPage() {
 
     // Compute stats from real data
     const completedScans = scanList.filter(s => s.status === 'completed');
-    const avgScore = completedScans.length > 0
-        ? Math.round(completedScans.reduce((sum, s) => sum + (s.overall_score || 0), 0) / completedScans.length)
-        : 0;
 
     let totalFindings = 0;
     let criticalCount = 0;
@@ -97,23 +76,23 @@ export default async function ScansPage() {
                 </Card>
                 <Card className="bg-zinc-900/40 border-white/5">
                     <CardContent className="pt-5 pb-4">
-                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Average Score</p>
-                        <div className="flex items-baseline gap-2">
-                            <span className={`text-2xl font-semibold tabular-nums ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-600'}`}>
-                                {avgScore > 0 ? avgScore : '—'}
-                            </span>
-                            <span className="text-xs text-zinc-500">{completedScans.length} scan{completedScans.length !== 1 ? 's' : ''}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardContent className="pt-5 pb-4">
                         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Issues Found</p>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-semibold tabular-nums text-white">{totalFindings}</span>
                             {(criticalCount > 0 || highCount > 0) && (
                                 <span className="text-xs text-zinc-500">{criticalCount} critical, {highCount} high</span>
                             )}
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardContent className="pt-5 pb-4">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Avg per Scan</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold tabular-nums text-white">
+                                {completedScans.length > 0 ? Math.round(totalFindings / completedScans.length) : '—'}
+                            </span>
+                            <span className="text-xs text-zinc-500">issues / scan</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -138,112 +117,7 @@ export default async function ScansPage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Website</TableHead>
-                                    <TableHead>Score</TableHead>
-                                    <TableHead className="hidden sm:table-cell">Issues</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="hidden sm:table-cell">Date</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {scanList.map((scan) => {
-                                    const results = scan.results as Record<string, any> | null;
-                                    let scanFindings = 0;
-                                    let scanCritical = 0;
-                                    let scanHigh = 0;
-                                    if (results) {
-                                        Object.values(results).forEach((r: any) => {
-                                            if (r.findings && Array.isArray(r.findings)) {
-                                                r.findings.forEach((f: any) => {
-                                                    const sev = f.severity?.toLowerCase();
-                                                    if (sev === 'info') return;
-                                                    scanFindings++;
-                                                    if (sev === 'critical') scanCritical++;
-                                                    if (sev === 'high') scanHigh++;
-                                                });
-                                            }
-                                        });
-                                    }
-
-                                    return (
-                                        <TableRow key={scan.id} className="hover:bg-white/[0.02] transition-colors">
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium">
-                                                        {scan.url.replace(/^https?:\/\//, '')}
-                                                    </span>
-                                                    <a
-                                                        href={scan.url.startsWith('http') ? scan.url : `https://${scan.url}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {scan.status === 'running' || scan.status === 'pending' ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                                        <span className="text-muted-foreground">Scanning</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className={`text-xl font-bold ${getScoreColor(scan.overall_score || 0)}`}>
-                                                        {scan.overall_score ?? '—'}
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="hidden sm:table-cell">
-                                                {scan.status === 'completed' ? (
-                                                    <div className="flex gap-1.5">
-                                                        {scanCritical > 0 && (
-                                                            <Badge variant="destructive" className="text-xs">
-                                                                {scanCritical} critical
-                                                            </Badge>
-                                                        )}
-                                                        {scanHigh > 0 && (
-                                                            <Badge variant="secondary" className="text-xs bg-orange-500/10 text-orange-500">
-                                                                {scanHigh} high
-                                                            </Badge>
-                                                        )}
-                                                        {scanCritical === 0 && scanHigh === 0 && (
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {scanFindings} issues
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground">—</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="secondary" className="text-xs capitalize">
-                                                    {scan.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="hidden sm:table-cell">
-                                                <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                                                    <Clock className="h-3 w-3" />
-                                                    {formatDate(scan.completed_at || scan.created_at)}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" asChild>
-                                                    <Link href={`/dashboard/scans/${scan.id}`}>View Details</Link>
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                        </div>
+                        <ScansTable scans={scanList} />
                     )}
                 </CardContent>
             </Card>

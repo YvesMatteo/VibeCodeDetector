@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
     ArrowLeft,
     Clock,
@@ -38,16 +37,11 @@ interface ScanResult {
     scanDuration: number;
 }
 
-function getScoreColor(score: number) {
-    if (score >= 90) return 'text-green-500';
-    if (score >= 50) return 'text-yellow-500';
+function getIssueCountColor(count: number) {
+    if (count === 0) return 'text-green-500';
+    if (count <= 3) return 'text-amber-500';
+    if (count <= 7) return 'text-orange-500';
     return 'text-red-500';
-}
-
-function getScoreBgColor(score: number) {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 50) return 'bg-yellow-500';
-    return 'bg-red-500';
 }
 
 function getImpactColor(impact: string) {
@@ -151,30 +145,34 @@ export default function DemoResultsPage() {
                 </div>
             </div>
 
-            {/* Overall Score */}
+            {/* Issues Overview */}
             <Card className="mb-6">
                 <CardContent className="p-6">
                     <div className="flex items-center gap-8">
                         <div className="text-center">
-                            <div className={`text-6xl font-bold ${getScoreColor(result.overallScore)}`}>
-                                {result.overallScore}
+                            <div className={`text-6xl font-bold ${getIssueCountColor(result.recommendations.length)}`}>
+                                {result.recommendations.length}
                             </div>
-                            <div className="text-sm text-muted-foreground mt-1">Overall Score</div>
+                            <div className="text-sm text-muted-foreground mt-1">Issues Found</div>
                         </div>
                         <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {scoreCategories.map((cat) => (
-                                <div key={cat.key} className="text-center p-4 rounded-lg bg-muted/50">
-                                    <cat.icon className={`h-5 w-5 mx-auto mb-2 ${getScoreColor(cat.score)}`} />
-                                    <div className={`text-2xl font-bold ${getScoreColor(cat.score)}`}>
-                                        {cat.score}
+                            {scoreCategories.map((cat) => {
+                                const catIssues = result.recommendations.filter(r => {
+                                    if (cat.key === 'seo') return r.title.toLowerCase().includes('seo') || r.title.toLowerCase().includes('meta');
+                                    if (cat.key === 'performance') return r.title.toLowerCase().includes('performance') || r.title.toLowerCase().includes('speed');
+                                    if (cat.key === 'accessibility') return r.title.toLowerCase().includes('accessibility') || r.title.toLowerCase().includes('a11y');
+                                    return false;
+                                }).length;
+                                return (
+                                    <div key={cat.key} className="text-center p-4 rounded-lg bg-muted/50">
+                                        <cat.icon className={`h-5 w-5 mx-auto mb-2 ${getIssueCountColor(catIssues)}`} />
+                                        <div className={`text-2xl font-bold ${getIssueCountColor(catIssues)}`}>
+                                            {catIssues}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">{cat.label}</div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground">{cat.label}</div>
-                                    <Progress
-                                        value={cat.score}
-                                        className="h-1 mt-2"
-                                    />
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </CardContent>

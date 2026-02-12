@@ -41,10 +41,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getPlainEnglish } from '@/lib/plain-english';
 
-function getScoreColor(score: number) {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-amber-400';
-    if (score >= 40) return 'text-orange-400';
+function getIssueCountColor(count: number) {
+    if (count === 0) return 'text-green-400';
+    if (count <= 3) return 'text-amber-400';
+    if (count <= 7) return 'text-orange-400';
     return 'text-red-400';
 }
 
@@ -547,7 +547,6 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 if (shouldHide(key, result)) return null;
 
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
-                const score = typeof result.score === 'number' ? result.score : 0;
                 const errorMessage = result.error;
                 const isOpen = openSections.has(key);
 
@@ -601,9 +600,14 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
-                                <span className={`text-lg font-semibold tabular-nums ${getScoreColor(score)}`}>
-                                    {score}
-                                </span>
+                                {(() => {
+                                    const issues = result.findings?.filter((f: any) => f.severity?.toLowerCase() !== 'info').length ?? 0;
+                                    return (
+                                        <span className={`text-lg font-semibold tabular-nums ${getIssueCountColor(issues)}`}>
+                                            {issues}
+                                        </span>
+                                    );
+                                })()}
                                 <ChevronDown
                                     className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                                 />
