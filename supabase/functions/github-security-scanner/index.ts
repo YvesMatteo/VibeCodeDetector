@@ -380,7 +380,7 @@ async function fetchSecretScanningAlerts(
 
         findings.push({
             id: "gh-sec-secrets-summary",
-            severity: alerts.length >= 5 ? "critical" : alerts.length >= 2 ? "high" : "medium",
+            severity: "critical",
             title: `${alerts.length} leaked secret${alerts.length > 1 ? "s" : ""} detected`,
             description: `GitHub secret scanning found ${alerts.length} exposed credential(s): ${typeList}. These secrets should be rotated immediately.`,
             recommendation:

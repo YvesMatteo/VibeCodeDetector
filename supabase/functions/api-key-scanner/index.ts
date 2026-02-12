@@ -22,7 +22,7 @@ const API_KEY_PATTERNS = [
 
     // Stripe
     { name: 'Stripe Live Secret Key', pattern: /sk_live_[a-zA-Z0-9]{24,}/g, severity: 'critical' },
-    { name: 'Stripe Test Secret Key', pattern: /sk_test_[a-zA-Z0-9]{24,}/g, severity: 'medium' },
+    { name: 'Stripe Test Secret Key', pattern: /sk_test_[a-zA-Z0-9]{24,}/g, severity: 'critical' },
     { name: 'Stripe Restricted Key', pattern: /rk_live_[a-zA-Z0-9]{24,}/g, severity: 'critical' },
 
     // OpenAI
@@ -33,17 +33,17 @@ const API_KEY_PATTERNS = [
     { name: 'Anthropic API Key', pattern: /sk-ant-[a-zA-Z0-9_-]{40,}/g, severity: 'critical' },
 
     // Hugging Face
-    { name: 'Hugging Face Token', pattern: /hf_[a-zA-Z0-9]{34,}/g, severity: 'high' },
+    { name: 'Hugging Face Token', pattern: /hf_[a-zA-Z0-9]{34,}/g, severity: 'critical' },
 
     // Replicate
-    { name: 'Replicate API Token', pattern: /r8_[a-zA-Z0-9]{20,}/g, severity: 'high' },
+    { name: 'Replicate API Token', pattern: /r8_[a-zA-Z0-9]{20,}/g, severity: 'critical' },
 
     // Google
-    { name: 'Google API Key', pattern: /AIza[0-9A-Za-z-_]{35}/g, severity: 'high' },
-    { name: 'Google OAuth Client ID', pattern: /[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com/g, severity: 'medium' },
+    { name: 'Google API Key', pattern: /AIza[0-9A-Za-z-_]{35}/g, severity: 'critical' },
+    { name: 'Google OAuth Client ID', pattern: /[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com/g, severity: 'critical' },
 
     // Firebase
-    { name: 'Firebase API Key', pattern: /(?:apiKey|FIREBASE_API_KEY)\s*[:=]\s*['"](AIza[0-9A-Za-z-_]{35})['"]/gi, severity: 'high' },
+    { name: 'Firebase API Key', pattern: /(?:apiKey|FIREBASE_API_KEY)\s*[:=]\s*['"](AIza[0-9A-Za-z-_]{35})['"]/gi, severity: 'critical' },
 
     // GitHub
     { name: 'GitHub Personal Access Token', pattern: /ghp_[a-zA-Z0-9]{36}/g, severity: 'critical' },
@@ -55,7 +55,7 @@ const API_KEY_PATTERNS = [
     { name: 'GitLab PAT', pattern: /glpat-[a-zA-Z0-9_-]{20,}/g, severity: 'critical' },
 
     // Supabase
-    { name: 'Supabase Service Role Key', pattern: /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*/g, severity: 'high', additionalCheck: (match: string) => match.includes('service_role') },
+    { name: 'Supabase Service Role Key', pattern: /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*/g, severity: 'critical', additionalCheck: (match: string) => match.includes('service_role') },
 
     // MongoDB
     { name: 'MongoDB Connection String', pattern: /mongodb(\+srv)?:\/\/[^:]+:[^@]+@[^\s'"]+/gi, severity: 'critical' },
@@ -70,16 +70,16 @@ const API_KEY_PATTERNS = [
     { name: 'MySQL Connection String', pattern: /mysql:\/\/[^:]+:[^@]+@[^\s'"]+/gi, severity: 'critical' },
 
     // Twilio
-    { name: 'Twilio API Key', pattern: /SK[a-f0-9]{32}/g, severity: 'high' },
+    { name: 'Twilio API Key', pattern: /SK[a-f0-9]{32}/g, severity: 'critical' },
     { name: 'Twilio Auth Token', pattern: /(?:twilio|TWILIO).*['"]\b[a-f0-9]{32}\b['"]/gi, severity: 'critical' },
 
     // Slack
     { name: 'Slack Bot Token', pattern: /xoxb-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}/g, severity: 'critical' },
-    { name: 'Slack Webhook URL', pattern: /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+/g, severity: 'high' },
+    { name: 'Slack Webhook URL', pattern: /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+/g, severity: 'critical' },
 
     // Discord
     { name: 'Discord Bot Token', pattern: /[MN][A-Za-z\d]{23,}\.[\w-]{6}\.[\w-]{27,}/g, severity: 'critical' },
-    { name: 'Discord Webhook', pattern: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/g, severity: 'high' },
+    { name: 'Discord Webhook', pattern: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/g, severity: 'critical' },
 
     // Telegram
     { name: 'Telegram Bot Token', pattern: /\d{8,10}:[A-Za-z0-9_-]{35}/g, severity: 'critical' },
@@ -88,13 +88,13 @@ const API_KEY_PATTERNS = [
     { name: 'SendGrid API Key', pattern: /SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}/g, severity: 'critical' },
 
     // Mailchimp
-    { name: 'Mailchimp API Key', pattern: /[a-f0-9]{32}-us[0-9]{1,2}/g, severity: 'high' },
+    { name: 'Mailchimp API Key', pattern: /[a-f0-9]{32}-us[0-9]{1,2}/g, severity: 'critical' },
 
     // Mailgun
     { name: 'Mailgun API Key', pattern: /key-[a-zA-Z0-9]{32}/g, severity: 'critical' },
 
     // Postmark
-    { name: 'Postmark Server Token', pattern: /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/g, severity: 'medium', requiresContext: true },
+    { name: 'Postmark Server Token', pattern: /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/g, severity: 'critical', requiresContext: true },
 
     // Square
     { name: 'Square Access Token', pattern: /sq0atp-[a-zA-Z0-9_-]{22,}/g, severity: 'critical' },
@@ -107,10 +107,10 @@ const API_KEY_PATTERNS = [
     { name: 'Doppler Token', pattern: /dp\.st\.[a-zA-Z0-9_-]{40,}/g, severity: 'critical' },
 
     // Vercel
-    { name: 'Vercel Token', pattern: /(?:vercel|VERCEL).*['"]\b[a-zA-Z0-9]{24}\b['"]/gi, severity: 'high' },
+    { name: 'Vercel Token', pattern: /(?:vercel|VERCEL).*['"]\b[a-zA-Z0-9]{24}\b['"]/gi, severity: 'critical' },
 
     // Netlify
-    { name: 'Netlify Token', pattern: /(?:netlify|NETLIFY).*['"]\b[a-zA-Z0-9_-]{40,}\b['"]/gi, severity: 'high' },
+    { name: 'Netlify Token', pattern: /(?:netlify|NETLIFY).*['"]\b[a-zA-Z0-9_-]{40,}\b['"]/gi, severity: 'critical' },
 
     // JWT Secret
     { name: 'JWT Secret', pattern: /(?:jwt[_-]?secret|JWT_SECRET)\s*[:=]\s*['"][^'"]{16,}['"]/gi, severity: 'critical' },
@@ -119,8 +119,8 @@ const API_KEY_PATTERNS = [
     { name: 'Private Key', pattern: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g, severity: 'critical' },
 
     // Generic patterns
-    { name: 'Generic API Key', pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"][a-zA-Z0-9_-]{20,}['"]/gi, severity: 'medium' },
-    { name: 'Generic Secret', pattern: /(?:secret|password|passwd|pwd)\s*[:=]\s*['"][^'"]{8,}['"]/gi, severity: 'high' },
+    { name: 'Generic API Key', pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"][a-zA-Z0-9_-]{20,}['"]/gi, severity: 'critical' },
+    { name: 'Generic Secret', pattern: /(?:secret|password|passwd|pwd)\s*[:=]\s*['"][^'"]{8,}['"]/gi, severity: 'critical' },
 ];
 
 // CDN domains to skip when fetching JS files

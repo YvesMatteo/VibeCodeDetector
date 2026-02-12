@@ -45,27 +45,27 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; label: string; severity: "critic
   { pattern: /glpat-[0-9a-zA-Z_-]{20,}/, label: "GitLab PAT", severity: "critical" },
   // Slack
   { pattern: /xox[bporas]-[0-9a-zA-Z-]{10,}/, label: "Slack Token", severity: "critical" },
-  { pattern: /https:\/\/hooks\.slack\.com\/services\/T[0-9A-Z]{8,}\/B[0-9A-Z]{8,}\/[0-9a-zA-Z]{24}/, label: "Slack Webhook", severity: "high" },
+  { pattern: /https:\/\/hooks\.slack\.com\/services\/T[0-9A-Z]{8,}\/B[0-9A-Z]{8,}\/[0-9a-zA-Z]{24}/, label: "Slack Webhook", severity: "critical" },
   // Discord
-  { pattern: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/, label: "Discord Webhook", severity: "high" },
+  { pattern: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/, label: "Discord Webhook", severity: "critical" },
   // SendGrid
   { pattern: /SG\.[0-9A-Za-z_-]{22}\.[0-9A-Za-z_-]{43}/, label: "SendGrid API Key", severity: "critical" },
   // Mailgun
   { pattern: /key-[a-zA-Z0-9]{32}/, label: "Mailgun API Key", severity: "critical" },
   // Mailchimp
-  { pattern: /[a-f0-9]{32}-us[0-9]{1,2}/, label: "Mailchimp API Key", severity: "high" },
+  { pattern: /[a-f0-9]{32}-us[0-9]{1,2}/, label: "Mailchimp API Key", severity: "critical" },
   // Twilio
-  { pattern: /SK[a-f0-9]{32}/, label: "Twilio API Key", severity: "high" },
+  { pattern: /SK[a-f0-9]{32}/, label: "Twilio API Key", severity: "critical" },
   // Telegram
   { pattern: /\d{8,10}:[A-Za-z0-9_-]{35}/, label: "Telegram Bot Token", severity: "critical" },
   // Google / Firebase
-  { pattern: /AIza[0-9A-Za-z-_]{35}/, label: "Google/Firebase API Key", severity: "high" },
+  { pattern: /AIza[0-9A-Za-z-_]{35}/, label: "Google/Firebase API Key", severity: "critical" },
   // Supabase service role / JWT
   { pattern: /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/, label: "JWT/Supabase Key", severity: "critical" },
   // Hugging Face
-  { pattern: /hf_[a-zA-Z0-9]{34,}/, label: "Hugging Face Token", severity: "high" },
+  { pattern: /hf_[a-zA-Z0-9]{34,}/, label: "Hugging Face Token", severity: "critical" },
   // Replicate
-  { pattern: /r8_[a-zA-Z0-9]{20,}/, label: "Replicate API Token", severity: "high" },
+  { pattern: /r8_[a-zA-Z0-9]{20,}/, label: "Replicate API Token", severity: "critical" },
   // NPM
   { pattern: /npm_[A-Za-z0-9]{36}/, label: "NPM Token", severity: "critical" },
   // PyPI
@@ -79,9 +79,9 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; label: string; severity: "critic
   // Doppler
   { pattern: /dp\.st\.[a-zA-Z0-9_-]{40,}/, label: "Doppler Token", severity: "critical" },
   // Snyk
-  { pattern: /snyk_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/, label: "Snyk API Token", severity: "high" },
+  { pattern: /snyk_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/, label: "Snyk API Token", severity: "critical" },
   // Linear
-  { pattern: /lin_api_[a-zA-Z0-9]{40,}/, label: "Linear API Key", severity: "high" },
+  { pattern: /lin_api_[a-zA-Z0-9]{40,}/, label: "Linear API Key", severity: "critical" },
   // Neon
   { pattern: /nk_[a-zA-Z0-9]{30,}/, label: "Neon Database Key", severity: "critical" },
   // Database connection strings
@@ -643,7 +643,7 @@ Deno.serve(async (req: Request) => {
             score -= 25;
             findings.push({
               id: `github-commit-secret-${commitSecretCount}`,
-              severity: secret.severity === "critical" ? "critical" : "high",
+              severity: "critical",
               title: `${secret.label} found in commit history`,
               description: `A ${secret.label} was detected in the diff of file "${secret.filePath}" in a recent commit. Even if it was later removed, the secret remains in git history.`,
               recommendation: "Rotate this credential immediately. Use BFG Repo-Cleaner or 'git filter-repo' to scrub it from history. Never commit secrets to source control.",
@@ -711,7 +711,7 @@ Deno.serve(async (req: Request) => {
                   score -= 15;
                   findings.push({
                     id: `github-branch-secret-${branch.name.replace(/[^a-z0-9]/gi, "-")}-${branchSecretCount}`,
-                    severity: m.severity === "critical" ? "critical" : "high",
+                    severity: "critical",
                     title: `${m.label} on branch "${branch.name}"`,
                     description: `A ${m.label} was found in file "${file.filename}" on branch "${branch.name}". Non-default branches are often overlooked during security reviews.`,
                     recommendation: `Rotate this credential. Remove it from the "${branch.name}" branch and its history. Ensure all branches are included in secret scanning.`,
