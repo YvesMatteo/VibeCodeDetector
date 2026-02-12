@@ -283,6 +283,53 @@ function isNonApplicableHosting(key: string, result: any): boolean {
     return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
 }
 
+function hasCritical(result: any): boolean {
+    return result.findings?.some((f: any) => f.severity === 'critical') ?? false;
+}
+
+// Display order — scanners listed here appear first (in this order).
+// Anything not listed falls to the end, sorted alphabetically.
+const SCANNER_ORDER: string[] = [
+    'api_keys',
+    'github_secrets',
+    'github_security',
+    'supabase_mgmt',
+    'supabase_backend',
+    'firebase_backend',
+    'convex_backend',
+    'security',
+    'auth',
+    'dependencies',
+    'xss',
+    'dns_email',
+    'vercel_hosting',
+    'netlify_hosting',
+    'cloudflare_hosting',
+    'railway_hosting',
+    'ssl_tls',
+    'sqli',
+    'cors',
+    'csrf',
+    'cookies',
+    'open_redirect',
+    'scorecard',
+    'threat_intelligence',
+    'tech_stack',
+    'legal',
+];
+
+function sortedEntries(results: Record<string, any>): [string, any][] {
+    const entries = Object.entries(results);
+    return entries.sort(([a], [b]) => {
+        const ia = SCANNER_ORDER.indexOf(a);
+        const ib = SCANNER_ORDER.indexOf(b);
+        const oa = ia === -1 ? SCANNER_ORDER.length : ia;
+        const ob = ib === -1 ? SCANNER_ORDER.length : ib;
+        if (oa !== ob) return oa - ob;
+        return a.localeCompare(b);
+    });
+}
+
 export function ScannerAccordion({ results }: ScannerAccordionProps) {
     // Auto-expand scanners that have critical or high findings
     const initialOpen = new Set<string>();
@@ -295,7 +342,9 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
 
     const [openSections, setOpenSections] = useState<Set<string>>(initialOpen);
 
+    // Scanners with critical findings can't be collapsed
     const toggle = (key: string) => {
+        if (hasCritical(results[key])) return;
         setOpenSections(prev => {
             const next = new Set(prev);
             if (next.has(key)) {
@@ -319,7 +368,12 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
     };
 
     const collapseAll = () => {
-        setOpenSections(new Set());
+        // Keep critical scanners expanded
+        const keep = new Set<string>();
+        Object.entries(results).forEach(([key, result]) => {
+            if (hasCritical(result)) keep.add(key);
+        });
+        setOpenSections(keep);
     };
 
     const allExpanded = Object.keys(results).every(key => {
@@ -327,6 +381,8 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
         if (result.error || (!result.findings?.length && !result.technologies?.length)) return true;
         return openSections.has(key);
     });
+
+    const sorted = sortedEntries(results);
 
     return (
         <div>
@@ -339,14 +395,15 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 </button>
             </div>
 
-            {Object.entries(results).map(([key, result], scannerIndex) => {
+            {sorted.map(([key, result], scannerIndex) => {
                 // Hide hosting scanners where the platform wasn't detected
                 if (isNonApplicableHosting(key, result)) return null;
 
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
                 const errorMessage = result.error;
-                const isOpen = openSections.has(key);
+                const isCritical = hasCritical(result);
+                const isOpen = isCritical || openSections.has(key);
 
                 // Error state - always show
                 if (errorMessage) {
@@ -377,11 +434,11 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 if ((!result.findings || result.findings.length === 0) && !result.technologies?.length) return null;
 
                 return (
-                    <Card key={key} className="mb-4 bg-zinc-900/40 border-white/5 animate-fade-in-up overflow-hidden" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                    <Card key={key} className={`mb-4 bg-zinc-900/40 animate-fade-in-up overflow-hidden ${isCritical ? 'border-red-500/40' : 'border-white/5'}`} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                         {/* Clickable header */}
                         <button
                             onClick={() => toggle(key)}
-                            className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                            className={`w-full text-left px-6 py-5 flex items-center justify-between gap-4 transition-colors ${isCritical ? 'cursor-default' : 'hover:bg-white/[0.02] cursor-pointer'}`}
                         >
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="relative shrink-0">
@@ -407,9 +464,11 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                 <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
                                     {score}<span className="text-sm text-zinc-500">/100</span>
                                 </div>
-                                <ChevronDown
-                                    className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                                />
+                                {!isCritical && (
+                                    <ChevronDown
+                                        className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                    />
+                                )}
                             </div>
                         </button>
 
