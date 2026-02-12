@@ -5,6 +5,10 @@ export interface PlainEnglishExplanation {
 }
 
 const definitions: Record<string, PlainEnglishExplanation> = {
+    'ai generation indicator': {
+        summary: 'This site appears to be AI-generated.',
+        whyItMatters: 'AI-generated sites often have generic content, poor accessibility, and security oversights that need human review.',
+    },
     'lcp': {
         summary: 'Content takes too long to appear.',
         whyItMatters: 'Users leave websites that don\'t load instantly. This is the #1 factor for perceived speed.',

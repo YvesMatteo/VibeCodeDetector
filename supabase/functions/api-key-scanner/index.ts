@@ -598,7 +598,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const result: ScanResult = {
-            scannerType: 'api-key-leak',
+            scannerType: 'api_keys',
             score: Math.max(0, Math.min(100, score)),
             findings,
             sourcesScanned: sources.length,
@@ -613,7 +613,7 @@ Deno.serve(async (req: Request) => {
         console.error('Scanner error:', error);
         return new Response(
             JSON.stringify({
-                scannerType: 'api-key-leak',
+                scannerType: 'api_keys',
                 score: 0,
                 error: 'Scan failed. Please try again.',
                 findings: [],

@@ -91,7 +91,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
@@ -337,7 +337,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 25 checks automatically
+                            Every scan runs up to 26 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -369,6 +369,7 @@ export default function NewScanPage() {
                                 { icon: Cloud, name: 'Cloudflare Pages', description: 'Workers, old deploys, source maps, config exposure', color: 'text-orange-300' },
                                 { icon: TrainFront, name: 'Railway Hosting', description: 'Error disclosure, config files, connection strings', color: 'text-purple-300' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
+                                { icon: Search, name: 'AI Detection', description: 'Detects AI-generated sites and vibe-coded patterns', color: 'text-pink-400' },
                             ].map((check) => (
                                 <div
                                     key={check.name}

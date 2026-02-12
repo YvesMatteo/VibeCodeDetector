@@ -83,6 +83,7 @@ const scannerIcons: Record<string, any> = {
     netlify_hosting: Globe2,
     cloudflare_hosting: Cloud,
     railway_hosting: TrainFront,
+    vibe_match: Search,
 };
 
 const scannerNames: Record<string, string> = {
@@ -112,6 +113,7 @@ const scannerNames: Record<string, string> = {
     netlify_hosting: 'Netlify Hosting',
     cloudflare_hosting: 'Cloudflare Pages',
     railway_hosting: 'Railway Hosting',
+    vibe_match: 'AI Detection',
 };
 
 function getVibeRating(score: number): { label: string; emoji: string; color: string; bg: string } {

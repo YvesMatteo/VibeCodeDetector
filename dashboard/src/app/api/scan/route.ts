@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -674,12 +674,28 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
         );
 
+        // 26. Vibe Match Scanner (AI detection, always runs)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/vibe-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.vibe_match = data; })
+                .catch(err => { results.vibe_match = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
         // Calculate Overall Score using weighted average (weights sum to 1.0)
         const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.10,       // Security headers — broad impact
+            security: 0.08,       // Security headers — broad impact
             sqli: 0.07,           // SQL injection — critical vulnerability
             xss: 0.07,            // XSS — critical vulnerability
             ssl_tls: 0.06,        // TLS — foundational
@@ -704,6 +720,7 @@ export async function POST(req: NextRequest) {
             cloudflare_hosting: 0.02, // Cloudflare Pages checks
             railway_hosting: 0.02, // Railway platform checks
             scorecard: 0.02,      // OpenSSF supply chain score
+            vibe_match: 0.02,     // AI generation detection
             legal: 0.01,          // Legal compliance
         };
 

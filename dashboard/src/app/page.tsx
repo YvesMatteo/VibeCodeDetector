@@ -108,7 +108,7 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '25', label: 'Security Scanners' },
+  { value: '26', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
   { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
@@ -261,7 +261,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 25 more checks.
+              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 26 more checks.
             </motion.p>
           </div>
 
@@ -414,7 +414,7 @@ export default function HomePage() {
           >
             <p className="text-xs sm:text-sm font-medium uppercase tracking-widest text-zinc-500">Trusted by developers shipping with AI</p>
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-              {['25 Security Scanners', '150+ Checks', 'Real-Time CVE Lookups', 'GitHub Deep Scan'].map((item) => (
+              {['26 Security Scanners', '150+ Checks', 'Real-Time CVE Lookups', 'GitHub Deep Scan'].map((item) => (
                 <div key={item} className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.06]">
                   <CheckCircle className="h-3.5 w-3.5 text-blue-400" />
                   <span className="text-xs sm:text-sm text-zinc-300">{item}</span>
@@ -448,7 +448,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
             <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-              25 scanners that catch the issues vibe-coded sites commonly have.
+              26 scanners that catch the issues vibe-coded sites commonly have.
             </p>
           </motion.div>
 
@@ -646,7 +646,7 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              25 scanners. One click. Know exactly what to fix before you deploy.
+              26 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href="/signup">

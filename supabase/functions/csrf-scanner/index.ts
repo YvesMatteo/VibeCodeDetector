@@ -321,7 +321,7 @@ Deno.serve(async (req: Request) => {
         for (const form of suspiciousGetForms) {
             score -= 10;
             findings.push({
-                id: `csrf-get-state-change-${findings.length}`,
+                id: `csrf-get-state-change-${form.action || 'unknown'}`,
                 severity: "high",
                 title: "State-changing action uses GET method",
                 description:

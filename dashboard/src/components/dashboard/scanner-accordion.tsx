@@ -90,6 +90,7 @@ const scannerIcons: Record<string, any> = {
     cloudflare_hosting: Cloud,
     railway_hosting: TrainFront,
     convex_backend: Zap,
+    vibe_match: Search,
 };
 
 const scannerNames: Record<string, string> = {
@@ -119,6 +120,7 @@ const scannerNames: Record<string, string> = {
     cloudflare_hosting: 'Cloudflare Pages',
     railway_hosting: 'Railway Hosting',
     convex_backend: 'Convex Backend',
+    vibe_match: 'AI Detection',
 };
 
 interface ScannerAccordionProps {
