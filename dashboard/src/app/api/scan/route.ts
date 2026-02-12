@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -658,22 +658,6 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
         );
 
-        // 25. Railway Hosting Scanner (always runs, auto-detects)
-        scannerPromises.push(
-            fetchWithTimeout(`${supabaseUrl}/functions/v1/railway-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.railway_hosting = data; })
-                .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
-        );
-
         // Wait for all
         await Promise.all(scannerPromises);
 
@@ -699,7 +683,6 @@ export async function POST(req: NextRequest) {
             vercel_hosting: 0.03, // Vercel platform checks
             netlify_hosting: 0.03, // Netlify platform checks
             cloudflare_hosting: 0.03, // Cloudflare Pages checks
-            railway_hosting: 0.03, // Railway platform checks
             scorecard: 0.03,      // OpenSSF supply chain score
             dns_email: 0.03,      // SPF/DMARC/DKIM
             threat_intelligence: 0.03, // Threat feeds

@@ -10,6 +10,9 @@ import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shar
  *   - Exposed .env files
  *   - Serverless function enumeration / verbose errors
  *   - Security headers audit
+ *   - Git repository exposure (.git/HEAD)
+ *   - Backup and sensitive file detection
+ *   - Platform configuration exposure (vercel.json)
  *
  * SECURITY GUARANTEES:
  *   - NEVER writes, updates, or deletes data on the target
@@ -324,6 +327,111 @@ function checkSecurityHeaders(
 }
 
 // ---------------------------------------------------------------------------
+// Check 6: Git Repository Exposure
+// ---------------------------------------------------------------------------
+
+async function checkGitExposure(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    try {
+        const gitUrl = new URL('/.git/HEAD', targetUrl).href;
+        const res = await fetchWithTimeout(gitUrl, {}, 5000);
+        if (res.status === 200) {
+            const text = await res.text();
+            if (text.startsWith('ref:') || /^[0-9a-f]{40}$/m.test(text)) {
+                findings.push({
+                    id: 'vercel-git-exposed',
+                    severity: 'critical',
+                    title: '.git directory is publicly accessible',
+                    description: 'The .git/HEAD file is accessible, meaning the entire git repository (including commit history, source code, and potentially secrets in old commits) can be downloaded.',
+                    recommendation: 'Block access to .git/ directory immediately via vercel.json headers or rewrites. Rotate any secrets that were ever committed to this repository.',
+                    evidence: '.git/HEAD returned valid git ref',
+                });
+                return 40;
+            }
+        }
+    } catch { /* skip */ }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Check 7: Backup File Detection
+// ---------------------------------------------------------------------------
+
+async function checkBackupFiles(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    const backupPaths = [
+        '/backup.sql', '/backup.sql.gz', '/dump.sql',
+        '/db.sql', '/database.sql',
+        '/backup.zip', '/site.zip', '/archive.zip',
+        '/wp-config.php.bak', '/config.php.bak',
+        '/.htpasswd', '/.htaccess',
+    ];
+    const found: string[] = [];
+
+    for (const path of backupPaths) {
+        try {
+            const probeUrl = new URL(path, targetUrl).href;
+            const res = await fetchWithTimeout(probeUrl, { method: 'HEAD' }, 4000);
+            if (res.status === 200) {
+                const cl = parseInt(res.headers.get('content-length') || '0', 10);
+                if (cl > 100) {
+                    found.push(`${path} (${cl} bytes)`);
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    if (found.length > 0) {
+        findings.push({
+            id: 'vercel-backup-files',
+            severity: 'high',
+            title: `${found.length} backup/sensitive file(s) publicly accessible`,
+            description: `The following backup or sensitive files are downloadable: ${found.join(', ')}. These may contain database dumps, source code, or credentials.`,
+            recommendation: 'Remove backup files from your deployment immediately. Add blocking rules in vercel.json to prevent access to common backup extensions.',
+            evidence: found.join('\n'),
+        });
+        return 25;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Check 8: Platform Configuration Exposure
+// ---------------------------------------------------------------------------
+
+async function checkPlatformConfig(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    try {
+        const configUrl = new URL('/vercel.json', targetUrl).href;
+        const res = await fetchWithTimeout(configUrl, {}, 5000);
+        if (res.status === 200) {
+            const text = await res.text();
+            if (text.startsWith('{') && text.length < 50000) {
+                const hasSecrets = /secret|password|token|api[_-]?key|credential/i.test(text);
+                findings.push({
+                    id: 'vercel-config-exposed',
+                    severity: hasSecrets ? 'high' : 'medium',
+                    title: 'vercel.json configuration file is publicly accessible',
+                    description: `The vercel.json file is downloadable and reveals deployment configuration including routes, rewrites, and headers.${hasSecrets ? ' It appears to contain references to secrets or API keys.' : ''}`,
+                    recommendation: 'While vercel.json is often committed to git, it should not be served publicly. Add a rewrite rule to block access, and ensure no secrets are referenced in it.',
+                });
+                return hasSecrets ? 20 : 10;
+            }
+        }
+    } catch { /* skip */ }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Main Handler
 // ---------------------------------------------------------------------------
 
@@ -393,17 +501,20 @@ Deno.serve(async (req: Request) => {
             recommendation: 'Review Vercel security best practices.',
         });
 
-        const [smDeduction, dataDeduction, envDeduction, apiDeduction] = await Promise.all([
+        const [smDeduction, dataDeduction, envDeduction, apiDeduction, gitDeduction, backupDeduction, configDeduction] = await Promise.all([
             (checksRun++, checkSourceMaps(targetUrl, html, findings)),
             (checksRun++, checkNextDataLeaks(targetUrl, html, findings)),
             (checksRun++, checkEnvExposed(targetUrl, findings)),
             (checksRun++, checkApiStackTraces(targetUrl, findings)),
+            (checksRun++, checkGitExposure(targetUrl, findings)),
+            (checksRun++, checkBackupFiles(targetUrl, findings)),
+            (checksRun++, checkPlatformConfig(targetUrl, findings)),
         ]);
 
         checksRun++;
         const headerDeduction = checkSecurityHeaders(headers, findings);
 
-        score -= smDeduction + dataDeduction + envDeduction + apiDeduction + headerDeduction;
+        score -= smDeduction + dataDeduction + envDeduction + apiDeduction + headerDeduction + gitDeduction + backupDeduction + configDeduction;
         score = Math.max(0, Math.min(100, score));
 
         const result: ScanResult = {

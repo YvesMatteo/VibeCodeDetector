@@ -393,7 +393,7 @@ async function fetchSecretScanningAlerts(
         for (const alert of top) {
             findings.push({
                 id: `gh-sec-secret-${alert.number}`,
-                severity: "high",
+                severity: "critical",
                 title: `Leaked: ${alert.secret_type_display_name || alert.secret_type || "credential"}`,
                 description: `A ${alert.secret_type_display_name || alert.secret_type} was found in the repository. Created: ${alert.created_at?.substring(0, 10) || "unknown"}.`,
                 recommendation: `Rotate this ${alert.secret_type_display_name || "credential"} immediately and revoke the old one.`,

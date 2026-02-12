@@ -10,6 +10,7 @@ import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shar
  *   - Client-side auth token or admin key leaks
  *   - Public function enumeration via list_functions endpoint
  *   - Open CORS policy on the Convex deployment
+ *   - Configuration and generated API file exposure
  *
  * SECURITY GUARANTEES:
  *   - NEVER writes, updates, or deletes data on the target
@@ -342,6 +343,51 @@ async function checkCorsPolicy(
 }
 
 // ---------------------------------------------------------------------------
+// Check 5: Convex Configuration Exposure
+// ---------------------------------------------------------------------------
+
+async function checkConvexConfig(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    const configPaths = [
+        { path: '/convex.json', name: 'convex.json', pattern: /^\s*\{/m },
+        { path: '/convex/_generated/api.js', name: 'convex/_generated/api.js', pattern: /export|import|module/i },
+        { path: '/convex/_generated/api.d.ts', name: 'convex/_generated/api.d.ts', pattern: /export|import|declare/i },
+    ];
+    const exposed: string[] = [];
+
+    for (const { path, name, pattern } of configPaths) {
+        try {
+            const configUrl = new URL(path, targetUrl).href;
+            const res = await fetchWithTimeout(configUrl, {}, 5000);
+            if (res.status === 200) {
+                const text = await res.text();
+                if (text.length > 5 && text.length < 100000 && pattern.test(text)) {
+                    exposed.push(name);
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    if (exposed.length > 0) {
+        const hasGenerated = exposed.some(e => e.includes('_generated'));
+        findings.push({
+            id: 'convex-config-exposed',
+            severity: hasGenerated ? 'medium' : 'low',
+            title: `Convex configuration file(s) accessible: ${exposed.join(', ')}`,
+            description: hasGenerated
+                ? `Generated Convex API type definitions are publicly accessible (${exposed.join(', ')}). These reveal all function names, argument types, and return types of your Convex backend.`
+                : `The convex.json configuration file is publicly accessible, revealing project settings.`,
+            recommendation: 'Ensure Convex configuration and generated files are not included in your frontend build output. These should only exist in your source tree, not in the deployed bundle.',
+        });
+        return hasGenerated ? 10 : 5;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Main Handler
 // ---------------------------------------------------------------------------
 
@@ -428,12 +474,13 @@ Deno.serve(async (req: Request) => {
         checksRun++;
         const tokenDeduction = checkTokenLeaks(combinedContent, findings);
 
-        const [enumDeduction, corsDeduction] = await Promise.all([
+        const [enumDeduction, corsDeduction, configExposureDeduction] = await Promise.all([
             (checksRun++, checkFunctionEnumeration(config, findings)),
             (checksRun++, checkCorsPolicy(config, findings)),
+            (checksRun++, checkConvexConfig(targetUrl, findings)),
         ]);
 
-        score -= urlDeduction + tokenDeduction + enumDeduction + corsDeduction;
+        score -= urlDeduction + tokenDeduction + enumDeduction + corsDeduction + configExposureDeduction;
         score = Math.max(0, Math.min(100, score));
 
         const hasNonInfoFindings = findings.some(f => f.severity !== 'info');

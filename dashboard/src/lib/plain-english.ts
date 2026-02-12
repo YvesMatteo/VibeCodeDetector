@@ -340,18 +340,57 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Cloudflare Worker source code or API details are exposed.',
         whyItMatters: 'Exposed Worker code reveals your server-side logic, and verbose API errors help attackers understand your backend.',
     },
-    // Railway Hosting findings
-    'railway-error-disclosure': {
-        summary: 'Railway error pages reveal internal details.',
-        whyItMatters: 'Stack traces and environment variables in error pages give attackers your code structure, dependencies, and secrets.',
+    'vercel-git-exposed': {
+        summary: 'Your git repository is downloadable from the Vercel deployment.',
+        whyItMatters: 'Attackers can reconstruct your entire source code, commit history, and any secrets ever committed.',
     },
-    'railway-env-exposed': {
-        summary: 'Configuration files are publicly accessible on Railway.',
-        whyItMatters: 'Exposed .env or config files contain database URLs, API keys, and secrets that give full access to your backend.',
+    'netlify-git-exposed': {
+        summary: 'Your git repository is downloadable from the Netlify deployment.',
+        whyItMatters: 'Attackers can reconstruct your entire source code, commit history, and any secrets ever committed.',
     },
-    'railway-connection-string': {
-        summary: 'Database connection strings are exposed.',
-        whyItMatters: 'Connection strings include the hostname, username, password, and database name — everything needed to access your data.',
+    'cf-git-exposed': {
+        summary: 'Your git repository is downloadable from the Cloudflare Pages deployment.',
+        whyItMatters: 'Attackers can reconstruct your entire source code, commit history, and any secrets ever committed.',
+    },
+    'railway-git-exposed': {
+        summary: 'Your git repository is downloadable from the Railway deployment.',
+        whyItMatters: 'Attackers can reconstruct your entire source code, commit history, and any secrets ever committed.',
+    },
+    'vercel-backup-files': {
+        summary: 'Backup or database dump files are publicly downloadable.',
+        whyItMatters: 'Backup files often contain full database contents, source code, or credentials in plain text.',
+    },
+    'netlify-backup-files': {
+        summary: 'Backup or database dump files are publicly downloadable.',
+        whyItMatters: 'Backup files often contain full database contents, source code, or credentials in plain text.',
+    },
+    'cf-backup-files': {
+        summary: 'Backup or database dump files are publicly downloadable.',
+        whyItMatters: 'Backup files often contain full database contents, source code, or credentials in plain text.',
+    },
+    'railway-backup-files': {
+        summary: 'Backup or database dump files are publicly downloadable.',
+        whyItMatters: 'Backup files often contain full database contents, source code, or credentials in plain text.',
+    },
+    'vercel-config-exposed': {
+        summary: 'Your vercel.json deployment config is publicly readable.',
+        whyItMatters: 'It reveals your routing rules, rewrites, and environment variable names — a roadmap for attackers.',
+    },
+    'netlify-config-exposed': {
+        summary: 'Netlify config files (_redirects, _headers) are publicly readable.',
+        whyItMatters: 'These reveal internal routing rules, API paths, and security header configuration.',
+    },
+    'cf-config-exposed': {
+        summary: 'Cloudflare config files (wrangler.toml, _headers) are publicly readable.',
+        whyItMatters: 'wrangler.toml can expose account IDs and Worker bindings. Config files reveal infrastructure details.',
+    },
+    'railway-config-exposed': {
+        summary: 'Deployment config files (Dockerfile, Procfile) are publicly readable.',
+        whyItMatters: 'Dockerfiles reveal base images and build steps. Procfiles reveal service architecture. Both help attackers plan attacks.',
+    },
+    'convex-config-exposed': {
+        summary: 'Convex configuration or generated API files are publicly accessible.',
+        whyItMatters: 'Generated API types reveal all your backend function names and data structures to potential attackers.',
     },
     'mgmt-rls-no-policies': {
         summary: 'Tables have RLS enabled but no policies.',

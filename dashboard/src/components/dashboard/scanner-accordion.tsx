@@ -50,8 +50,10 @@ function getSeverityStyles(severity: string) {
             return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' };
         case 'medium':
             return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' };
+        case 'low':
+            return { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
         default:
-            return { icon: CheckCircle, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
+            return { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30' };
     }
 }
 
@@ -77,6 +79,11 @@ const scannerIcons: Record<string, any> = {
     dns_email: Mail,
     xss: Code,
     open_redirect: ExternalLink,
+    vercel_hosting: Server,
+    netlify_hosting: Server,
+    cloudflare_hosting: Server,
+    railway_hosting: Server,
+    convex_backend: Database,
 };
 
 const scannerNames: Record<string, string> = {
@@ -101,6 +108,11 @@ const scannerNames: Record<string, string> = {
     dns_email: 'DNS & Email Security',
     xss: 'XSS Detection',
     open_redirect: 'Open Redirect',
+    vercel_hosting: 'Vercel Hosting',
+    netlify_hosting: 'Netlify Hosting',
+    cloudflare_hosting: 'Cloudflare Hosting',
+    railway_hosting: 'Railway Hosting',
+    convex_backend: 'Convex Backend',
 };
 
 interface ScannerAccordionProps {
@@ -262,6 +274,15 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
     );
 }
 
+// Check if a hosting scanner didn't detect its platform (all info, score 100)
+function isNonApplicableHosting(key: string, result: any): boolean {
+    if (!key.endsWith('_hosting')) return false;
+    if (result.error) return false;
+    if (typeof result.score !== 'number' || result.score !== 100) return false;
+    if (!result.findings || result.findings.length === 0) return true;
+    return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+}
+
 export function ScannerAccordion({ results }: ScannerAccordionProps) {
     // Auto-expand scanners that have critical or high findings
     const initialOpen = new Set<string>();
@@ -319,6 +340,9 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
             </div>
 
             {Object.entries(results).map(([key, result], scannerIndex) => {
+                // Hide hosting scanners where the platform wasn't detected
+                if (isNonApplicableHosting(key, result)) return null;
+
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
                 const errorMessage = result.error;

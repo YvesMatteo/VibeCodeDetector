@@ -32,6 +32,7 @@ import {
     ClipboardCheck,
     ShieldCheck,
     Settings2,
+    Layers,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
@@ -170,6 +171,26 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
     const results = scan.results as Record<string, ScanResultItem>;
 
+    // Separate tech_stack from scanner results
+    const techStack = (results as any).tech_stack;
+    const techStackCveFindings = techStack?.findings?.filter(
+        (f: any) => f.severity?.toLowerCase() !== 'info'
+    ) || [];
+
+    // Build scanner results without tech_stack for the accordion
+    const scannerResults = Object.fromEntries(
+        Object.entries(results).filter(([key]) => key !== 'tech_stack')
+    );
+
+    // Count visible scanners (exclude hidden hosting + tech_stack)
+    const visibleScannerCount = Object.entries(scannerResults).filter(([key, result]: [string, any]) => {
+        if (key.endsWith('_hosting') && result.score === 100 && !result.error) {
+            const allInfo = !result.findings?.length || result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+            if (allInfo) return false;
+        }
+        return true;
+    }).length;
+
     // Aggregate counts and findings
     const totalFindings = {
         critical: 0,
@@ -267,7 +288,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                             {issueCount} {issueCount === 1 ? 'issue' : 'issues'} found
                         </p>
                         <p className="text-sm text-zinc-400">
-                            across {Object.keys(results).length} scanners
+                            across {visibleScannerCount} scanners
                         </p>
                     </div>
                 </CardContent>
@@ -305,8 +326,57 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                 </CardContent>
             </Card>
 
+            {/* Detected Stack */}
+            {techStack && (techStack.technologies?.length > 0 || techStackCveFindings.length > 0) && (
+                <Card className="mb-8 bg-zinc-900/40 border-white/5 animate-fade-in-up" style={{ animationDelay: '450ms' }}>
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <Layers className="h-5 w-5 text-indigo-400" />
+                            <div>
+                                <CardTitle className="text-white">Detected Stack</CardTitle>
+                                <CardDescription className="text-zinc-400">Technologies and frameworks detected on this site</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {techStack.technologies?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {techStack.technologies.map((tech: any, i: number) => (
+                                    <Badge key={i} variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 text-sm px-3 py-1">
+                                        {tech.name}{tech.version ? ` ${tech.version}` : ''}
+                                        {tech.category && <span className="ml-1.5 text-zinc-500 text-xs">({tech.category})</span>}
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
+                        {techStackCveFindings.length > 0 && (
+                            <div className="space-y-3 mt-4 pt-4 border-t border-white/5">
+                                <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Known Vulnerabilities (CVEs)</h4>
+                                {techStackCveFindings.map((finding: any, i: number) => (
+                                    <div key={i} className="p-3 rounded-lg border bg-red-500/10 border-red-500/30">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <AlertTriangle className="h-4 w-4 text-red-400" />
+                                            <span className="font-medium text-sm">{finding.title}</span>
+                                            <Badge variant="outline" className="text-xs capitalize bg-red-500/10 text-red-400 border-0">
+                                                {finding.severity}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{finding.description}</p>
+                                        {finding.recommendation && (
+                                            <p className="text-sm mt-1 text-muted-foreground">
+                                                <span className="font-medium text-purple-400">Fix:</span> {finding.recommendation}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Detailed Results by Scanner */}
-            <ScannerAccordion results={results} />
+            <ScannerAccordion results={scannerResults} />
         </div>
     );
 }

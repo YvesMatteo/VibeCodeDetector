@@ -284,7 +284,7 @@ Deno.serve(async (req: Request) => {
             if (response.status === 404) {
                 findings.push({
                     id: "scorecard-not-found",
-                    severity: "info",
+                    severity: "low",
                     title: "Repository not found in OpenSSF Scorecard",
                     description: `The repository ${owner}/${repo} was not found in the Scorecard database. It may be private, too new, or not yet analyzed.`,
                     recommendation:

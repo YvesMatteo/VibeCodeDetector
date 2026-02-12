@@ -9,6 +9,9 @@ import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shar
  *   - Build metadata exposure
  *   - Exposed .env / config files
  *   - Deploy preview information leaks
+ *   - Git repository exposure (.git/HEAD)
+ *   - Backup and sensitive file detection
+ *   - Platform configuration exposure (_redirects, _headers)
  *
  * SECURITY GUARANTEES:
  *   - NEVER writes, updates, or deletes data on the target
@@ -251,6 +254,126 @@ function checkDeployPreview(
 }
 
 // ---------------------------------------------------------------------------
+// Check 5: Git Repository Exposure
+// ---------------------------------------------------------------------------
+
+async function checkGitExposure(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    try {
+        const gitUrl = new URL('/.git/HEAD', targetUrl).href;
+        const res = await fetchWithTimeout(gitUrl, {}, 5000);
+        if (res.status === 200) {
+            const text = await res.text();
+            if (text.startsWith('ref:') || /^[0-9a-f]{40}$/m.test(text)) {
+                findings.push({
+                    id: 'netlify-git-exposed',
+                    severity: 'critical',
+                    title: '.git directory is publicly accessible',
+                    description: 'The .git/HEAD file is accessible, meaning the entire git repository (including commit history, source code, and potentially secrets in old commits) can be downloaded.',
+                    recommendation: 'Add a redirect rule in netlify.toml to block /.git/*: [[redirects]] from = "/.git/*" to = "/404" status = 404 force = true',
+                    evidence: '.git/HEAD returned valid git ref',
+                });
+                return 40;
+            }
+        }
+    } catch { /* skip */ }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Check 6: Backup File Detection
+// ---------------------------------------------------------------------------
+
+async function checkBackupFiles(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    const backupPaths = [
+        '/backup.sql', '/backup.sql.gz', '/dump.sql',
+        '/db.sql', '/database.sql',
+        '/backup.zip', '/site.zip', '/archive.zip',
+        '/wp-config.php.bak', '/config.php.bak',
+        '/.htpasswd', '/.htaccess',
+    ];
+    const found: string[] = [];
+
+    for (const path of backupPaths) {
+        try {
+            const probeUrl = new URL(path, targetUrl).href;
+            const res = await fetchWithTimeout(probeUrl, { method: 'HEAD' }, 4000);
+            if (res.status === 200) {
+                const cl = parseInt(res.headers.get('content-length') || '0', 10);
+                if (cl > 100) {
+                    found.push(`${path} (${cl} bytes)`);
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    if (found.length > 0) {
+        findings.push({
+            id: 'netlify-backup-files',
+            severity: 'high',
+            title: `${found.length} backup/sensitive file(s) publicly accessible`,
+            description: `The following backup or sensitive files are downloadable: ${found.join(', ')}. These may contain database dumps, source code, or credentials.`,
+            recommendation: 'Remove backup files from your deployment. Add redirect rules in netlify.toml to block common backup file extensions.',
+            evidence: found.join('\n'),
+        });
+        return 25;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Check 7: Platform Configuration Exposure
+// ---------------------------------------------------------------------------
+
+async function checkPlatformConfig(
+    targetUrl: string,
+    findings: Finding[],
+): Promise<number> {
+    const configFiles = [
+        { path: '/_redirects', name: '_redirects', desc: 'redirect rules revealing internal paths and API endpoints' },
+        { path: '/_headers', name: '_headers', desc: 'custom header configuration that may reveal security policies' },
+    ];
+    const exposed: string[] = [];
+    let hasSecrets = false;
+
+    for (const { path, name, desc } of configFiles) {
+        try {
+            const configUrl = new URL(path, targetUrl).href;
+            const res = await fetchWithTimeout(configUrl, {}, 5000);
+            if (res.status === 200) {
+                const text = await res.text();
+                if (text.length > 5 && text.length < 50000) {
+                    exposed.push(name);
+                    if (/secret|password|token|api[_-]?key|credential/i.test(text)) {
+                        hasSecrets = true;
+                    }
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    if (exposed.length > 0) {
+        findings.push({
+            id: 'netlify-config-exposed',
+            severity: hasSecrets ? 'high' : 'low',
+            title: `Netlify config file(s) accessible: ${exposed.join(', ')}`,
+            description: `The following Netlify configuration files are publicly downloadable: ${exposed.join(', ')}. These reveal routing rules, internal paths, and deployment configuration.${hasSecrets ? ' References to secrets or API keys were detected.' : ''}`,
+            recommendation: 'Add redirect rules to block access to _redirects and _headers files, or move to netlify.toml-based configuration which is not served as static files.',
+        });
+        return hasSecrets ? 15 : 5;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Main Handler
 // ---------------------------------------------------------------------------
 
@@ -320,16 +443,19 @@ Deno.serve(async (req: Request) => {
             recommendation: 'Review Netlify security best practices.',
         });
 
-        const [fnDeduction, metaDeduction, envDeduction] = await Promise.all([
+        const [fnDeduction, metaDeduction, envDeduction, gitDeduction, backupDeduction, configDeduction] = await Promise.all([
             (checksRun++, checkFunctionEnumeration(targetUrl, findings)),
             (checksRun++, checkBuildMetadata(targetUrl, findings)),
             (checksRun++, checkEnvExposed(targetUrl, findings)),
+            (checksRun++, checkGitExposure(targetUrl, findings)),
+            (checksRun++, checkBackupFiles(targetUrl, findings)),
+            (checksRun++, checkPlatformConfig(targetUrl, findings)),
         ]);
 
         checksRun++;
         const previewDeduction = checkDeployPreview(headers, targetUrl, findings);
 
-        score -= fnDeduction + metaDeduction + envDeduction + previewDeduction;
+        score -= fnDeduction + metaDeduction + envDeduction + previewDeduction + gitDeduction + backupDeduction + configDeduction;
         score = Math.max(0, Math.min(100, score));
 
         const result: ScanResult = {
