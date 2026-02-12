@@ -15,7 +15,7 @@ const SCENE_DATA = [
     },
     {
         title: "The Uncomfortable Truth",
-        text: "But… did you check your security? Or did you just trust that the AI 'kinda handled it'? Most vibecoded apps ship with leaked API keys and open databases.",
+        text: "But… did you check your security? Or did you just trust that the AI 'kinda handled it'? Most vibecoded apps ship with possible leaked API keys and open databases.",
         color: "text-yellow-400",
         Component: VulnerabilityRevealAnimation
     },

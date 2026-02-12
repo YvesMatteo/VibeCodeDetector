@@ -440,9 +440,6 @@ function shouldHide(key: string, result: any): boolean {
     return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result);
 }
 
-function hasCritical(result: any): boolean {
-    return result.findings?.some((f: any) => f.severity === 'critical') ?? false;
-}
 
 // ---------------------------------------------------------------------------
 // Sort order
@@ -496,16 +493,8 @@ function sortedEntries(results: Record<string, any>): [string, any][] {
 // ---------------------------------------------------------------------------
 
 export function ScannerAccordion({ results }: ScannerAccordionProps) {
-    // Auto-expand scanners that have critical or high findings
-    const initialOpen = new Set<string>();
-    Object.entries(results).forEach(([key, result]) => {
-        if (result.error) return;
-        if (result.findings?.some((f: any) => f.severity === 'critical' || f.severity === 'high')) {
-            initialOpen.add(key);
-        }
-    });
-
-    const [openSections, setOpenSections] = useState<Set<string>>(initialOpen);
+    // All scanners start collapsed
+    const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
     const toggle = (key: string) => {
         setOpenSections(prev => {
@@ -560,7 +549,6 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
                 const errorMessage = result.error;
-                const isCritical = hasCritical(result);
                 const isOpen = openSections.has(key);
 
                 // Error state - always show
@@ -589,7 +577,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 if ((!result.findings || result.findings.length === 0) && !result.technologies?.length) return null;
 
                 return (
-                    <Card key={key} className={`mb-4 bg-zinc-900/40 animate-fade-in-up overflow-hidden ${isCritical ? 'border-red-500/40' : 'border-white/5'}`} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                    <Card key={key} className={"mb-4 bg-zinc-900/40 animate-fade-in-up overflow-hidden border-white/5"} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                         {/* Clickable header */}
                         <button
                             onClick={() => toggle(key)}

@@ -63,6 +63,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Validate expiry (1–365 days)
+    const expiryDays = Math.floor(Number(expires_in_days));
+    if (!Number.isFinite(expiryDays) || expiryDays < 1 || expiryDays > 365) {
+      return NextResponse.json(
+        { error: 'expires_in_days must be an integer between 1 and 365' },
+        { status: 400 }
+      );
+    }
+
     // Check key count limit
     const table = supabase.from('api_keys' as any) as any;
     const { count } = await table
@@ -83,7 +92,7 @@ export async function POST(req: NextRequest) {
     const prefix = keyPrefix(fullKey);
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + (expires_in_days || DEFAULT_EXPIRY_DAYS));
+    expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
     const insertTable = supabase.from('api_keys' as any) as any;
     const { data: keyRow, error: insertError } = await insertTable

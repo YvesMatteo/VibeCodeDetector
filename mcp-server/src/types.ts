@@ -36,6 +36,9 @@ export interface Finding {
   title: string;
   severity: string;
   description?: string;
+  recommendation?: string;
+  evidence?: string;
+  value?: string;
   [key: string]: unknown;
 }
 

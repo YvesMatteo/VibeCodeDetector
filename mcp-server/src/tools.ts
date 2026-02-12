@@ -29,6 +29,31 @@ function summarizeFindings(results: Record<string, ScannerResult>): string {
   return parts.length > 0 ? parts.join(', ') : 'No findings';
 }
 
+function formatFinding(f: Finding): string {
+  const lines = [`  [${f.severity}] ${f.title}`];
+  if (f.description) lines.push(`    Description: ${f.description}`);
+  if (f.recommendation) lines.push(`    Fix: ${f.recommendation}`);
+  const evidence = f.evidence || f.value;
+  if (evidence) lines.push(`    Evidence: ${evidence}`);
+  return lines.join('\n');
+}
+
+function collectCriticalHighFindings(results: Record<string, ScannerResult>): string[] {
+  const lines: string[] = [];
+  for (const [scannerName, result] of Object.entries(results)) {
+    if (!result.findings) continue;
+    const serious = result.findings.filter(
+      f => f.severity?.toLowerCase() === 'critical' || f.severity?.toLowerCase() === 'high'
+    );
+    if (serious.length === 0) continue;
+    lines.push(`\n[${scannerName}]`);
+    for (const f of serious) {
+      lines.push(formatFinding(f));
+    }
+  }
+  return lines;
+}
+
 export function registerTools(server: McpServer, client: CheckVibeClient) {
   server.tool(
     'run_scan',
@@ -47,18 +72,27 @@ export function registerTools(server: McpServer, client: CheckVibeClient) {
         .map(([name, r]) => `  ${name}: ${r.score}/100`)
         .join('\n');
 
+      const textParts = [
+        `Scan completed for ${result.url}`,
+        `Scan ID: ${result.scanId}`,
+        `Overall Score: ${result.overallScore}/100`,
+        `Findings: ${summary}`,
+        '',
+        'Scanner Scores:',
+        scannerScores,
+      ];
+
+      const criticalHigh = collectCriticalHighFindings(result.results);
+      if (criticalHigh.length > 0) {
+        textParts.push('', 'Critical & High Findings:', ...criticalHigh);
+      }
+
+      textParts.push('', `Use get_scan_results with scan_id "${result.scanId}" for the complete report.`);
+
       return {
         content: [{
           type: 'text' as const,
-          text: [
-            `Scan completed for ${result.url}`,
-            `Scan ID: ${result.scanId}`,
-            `Overall Score: ${result.overallScore}/100`,
-            `Findings: ${summary}`,
-            '',
-            'Scanner Scores:',
-            scannerScores,
-          ].join('\n'),
+          text: textParts.join('\n'),
         }],
       };
     }
@@ -89,7 +123,7 @@ export function registerTools(server: McpServer, client: CheckVibeClient) {
           }
           if (result.findings && result.findings.length > 0) {
             for (const f of result.findings) {
-              lines.push(`  [${f.severity}] ${f.title}${f.description ? ': ' + f.description : ''}`);
+              lines.push(formatFinding(f));
             }
           } else if (!result.error) {
             lines.push('  No issues found');

@@ -8,7 +8,7 @@ import { NetworkTrafficAnimation } from "../animations/NetworkTrafficAnimation";
 const { fontFamily } = loadFont();
 
 const features = [
-    { icon: "🔑", text: "Leaked API keys" },
+    { icon: "🔑", text: "Possible leaked API keys" },
     { icon: "🗄️", text: "Open and misconfigured databases" },
     { icon: "🔓", text: "Unprotected routes and missing auth" },
     { icon: "🤖", text: "Vulnerabilities AI quietly ships into production" },

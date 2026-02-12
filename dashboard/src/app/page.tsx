@@ -261,7 +261,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
             >
-              CheckVibe scans your live website for security holes, leaked API keys, SQL injection, XSS, and 26 more checks.
+              CheckVibe scans your live website for security holes, possible leaked API keys, SQL injection, XSS, and 26 more checks.
             </motion.p>
           </div>
 
