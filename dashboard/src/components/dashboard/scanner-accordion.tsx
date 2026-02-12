@@ -30,6 +30,7 @@ import {
     ClipboardCheck,
     ShieldCheck,
     Settings2,
+    Eye,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -118,6 +119,69 @@ const scannerNames: Record<string, string> = {
 interface ScannerAccordionProps {
     results: Record<string, any>;
 }
+
+// ---------------------------------------------------------------------------
+// Summary vs detail finding detection
+// ---------------------------------------------------------------------------
+
+const SUMMARY_IDS = new Set([
+    'gh-sec-dependabot-summary',
+    'gh-sec-codescan-summary',
+    'gh-sec-secrets-summary',
+    'scorecard-overall',
+]);
+
+function isSummaryFinding(f: any): boolean {
+    return SUMMARY_IDS.has(f.id);
+}
+
+/** Split findings into summaries and their associated detail findings. */
+function splitFindings(findings: any[]): { summaries: any[]; details: any[]; plain: any[] } {
+    const summaries: any[] = [];
+    const details: any[] = [];
+    const plain: any[] = [];
+
+    // Map summary IDs to their detail prefix
+    const prefixMap: Record<string, string> = {
+        'gh-sec-dependabot-summary': 'gh-sec-dependabot-',
+        'gh-sec-codescan-summary': 'gh-sec-codescan-',
+        'gh-sec-secrets-summary': 'gh-sec-secret-',
+        'scorecard-overall': 'scorecard-',
+    };
+
+    const summaryIds = new Set<string>();
+    const detailIds = new Set<string>();
+
+    for (const f of findings) {
+        if (isSummaryFinding(f)) {
+            summaries.push(f);
+            summaryIds.add(f.id);
+        }
+    }
+
+    // Collect detail findings that belong to a summary
+    for (const f of findings) {
+        if (summaryIds.has(f.id)) continue;
+        let isDetail = false;
+        for (const [sumId, prefix] of Object.entries(prefixMap)) {
+            if (summaryIds.has(sumId) && f.id?.startsWith(prefix)) {
+                details.push({ ...f, _summaryId: sumId });
+                detailIds.add(f.id);
+                isDetail = true;
+                break;
+            }
+        }
+        if (!isDetail) {
+            plain.push(f);
+        }
+    }
+
+    return { summaries, details, plain };
+}
+
+// ---------------------------------------------------------------------------
+// Components
+// ---------------------------------------------------------------------------
 
 function SeveritySummary({ findings }: { findings: any[] }) {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -221,6 +285,59 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
     );
 }
 
+/** A summary finding with expandable detail findings underneath. */
+function SummaryWithDetails({ summary, details }: { summary: any; details: any[] }) {
+    const [showDetails, setShowDetails] = useState(false);
+    const styles = getSeverityStyles(summary.severity);
+    const SeverityIcon = styles.icon;
+
+    return (
+        <div className={`rounded-lg border ${styles.bg} ${styles.border}`}>
+            <div className="p-4">
+                <div className="flex items-start gap-3">
+                    <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
+                    <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className="font-medium">{summary.title}</h4>
+                            <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
+                                {summary.severity}
+                            </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{summary.description}</p>
+                        {summary.recommendation && (
+                            <p className="text-sm mt-2 text-muted-foreground">
+                                <span className="font-medium text-purple-400">Recommendation:</span> {summary.recommendation}
+                            </p>
+                        )}
+                        {summary.evidence && (
+                            <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
+                                {summary.evidence}
+                            </pre>
+                        )}
+                        {details.length > 0 && (
+                            <button
+                                onClick={() => setShowDetails(v => !v)}
+                                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/20 rounded-md px-3 py-1.5"
+                            >
+                                <Eye className="h-3 w-3" />
+                                {showDetails ? 'Hide' : 'See'} {details.length} {details.length === 1 ? 'finding' : 'findings'}
+                                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+            {showDetails && details.length > 0 && (
+                <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3 ml-8">
+                    {details.map((d, i) => (
+                        <FindingCard key={i} finding={d} index={i} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function FindingsList({ scannerKey, result }: { scannerKey: string; result: any }) {
     // For api_keys scanner, group findings by category
     const hasCategories = scannerKey === 'api_keys' && result.findings.some((f: any) => f.category);
@@ -265,6 +382,23 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
         );
     }
 
+    // Check if this scanner has summary+detail findings
+    const { summaries, details, plain } = splitFindings(result.findings);
+
+    if (summaries.length > 0) {
+        return (
+            <div className="space-y-4">
+                {summaries.map((summary, i) => {
+                    const related = details.filter((d: any) => d._summaryId === summary.id);
+                    return <SummaryWithDetails key={summary.id || i} summary={summary} details={related} />;
+                })}
+                {plain.length > 0 && plain.map((finding: any, i: number) => (
+                    <FindingCard key={`plain-${i}`} finding={finding} index={i} />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-4">
             {result.findings.map((finding: any, index: number) => (
@@ -273,6 +407,10 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
         </div>
     );
 }
+
+// ---------------------------------------------------------------------------
+// Visibility helpers
+// ---------------------------------------------------------------------------
 
 // Check if a hosting scanner didn't detect its platform (all info, score 100)
 function isNonApplicableHosting(key: string, result: any): boolean {
@@ -283,9 +421,25 @@ function isNonApplicableHosting(key: string, result: any): boolean {
     return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
 }
 
+// Hide supabase_mgmt when it errored (JWT/token not provided) or has no real findings
+function isNonApplicableMgmt(key: string, result: any): boolean {
+    if (key !== 'supabase_mgmt') return false;
+    if (result.error) return true; // Token wasn't provided or invalid
+    if (!result.findings || result.findings.length === 0) return true;
+    return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+}
+
+function shouldHide(key: string, result: any): boolean {
+    return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result);
+}
+
 function hasCritical(result: any): boolean {
     return result.findings?.some((f: any) => f.severity === 'critical') ?? false;
 }
+
+// ---------------------------------------------------------------------------
+// Sort order
+// ---------------------------------------------------------------------------
 
 // Display order — scanners listed here appear first (in this order).
 // Anything not listed falls to the end, sorted alphabetically.
@@ -330,6 +484,10 @@ function sortedEntries(results: Record<string, any>): [string, any][] {
     });
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function ScannerAccordion({ results }: ScannerAccordionProps) {
     // Auto-expand scanners that have critical or high findings
     const initialOpen = new Set<string>();
@@ -342,9 +500,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
 
     const [openSections, setOpenSections] = useState<Set<string>>(initialOpen);
 
-    // Scanners with critical findings can't be collapsed
     const toggle = (key: string) => {
-        if (hasCritical(results[key])) return;
         setOpenSections(prev => {
             const next = new Set(prev);
             if (next.has(key)) {
@@ -368,12 +524,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
     };
 
     const collapseAll = () => {
-        // Keep critical scanners expanded
-        const keep = new Set<string>();
-        Object.entries(results).forEach(([key, result]) => {
-            if (hasCritical(result)) keep.add(key);
-        });
-        setOpenSections(keep);
+        setOpenSections(new Set());
     };
 
     const allExpanded = Object.keys(results).every(key => {
@@ -396,14 +547,14 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
             </div>
 
             {sorted.map(([key, result], scannerIndex) => {
-                // Hide hosting scanners where the platform wasn't detected
-                if (isNonApplicableHosting(key, result)) return null;
+                // Hide non-applicable scanners
+                if (shouldHide(key, result)) return null;
 
                 const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
                 const score = typeof result.score === 'number' ? result.score : 0;
                 const errorMessage = result.error;
                 const isCritical = hasCritical(result);
-                const isOpen = isCritical || openSections.has(key);
+                const isOpen = openSections.has(key);
 
                 // Error state - always show
                 if (errorMessage) {
@@ -438,7 +589,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                         {/* Clickable header */}
                         <button
                             onClick={() => toggle(key)}
-                            className={`w-full text-left px-6 py-5 flex items-center justify-between gap-4 transition-colors ${isCritical ? 'cursor-default' : 'hover:bg-white/[0.02] cursor-pointer'}`}
+                            className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
                         >
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="relative shrink-0">
@@ -464,11 +615,9 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                 <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
                                     {score}<span className="text-sm text-zinc-500">/100</span>
                                 </div>
-                                {!isCritical && (
-                                    <ChevronDown
-                                        className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                                    />
-                                )}
+                                <ChevronDown
+                                    className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                />
                             </div>
                         </button>
 
