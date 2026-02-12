@@ -2,19 +2,25 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shared/security.ts";
 
 /**
- * SQL Injection Scanner
- * Passively detects SQL injection vulnerabilities by:
- * 1. Checking for existing SQL error messages in page responses
- * 2. Extracting forms and URL parameters as injectable points
- * 3. Sending safe single-quote payloads to detect error-based SQLi
- * 4. Comparing response lengths for blind SQLi detection
+ * SQL Injection Scanner v2
+ * Detects SQL injection vulnerabilities via:
+ * 1. Error-based detection (multiple payloads: single/double quote, backslash, parenthesis)
+ * 2. Blind boolean-based detection (AND 1=1 vs AND 1=2)
+ * 3. Tautology detection (OR 1=1--)
+ * 4. UNION-based detection (column enumeration)
+ * 5. Time-based blind detection (SLEEP / pg_sleep / WAITFOR)
+ * 6. Stacked query detection (semicolon injection)
+ * 7. Encoding bypass probes (URL-encoded, double-encoded)
+ * 8. NoSQL injection detection (MongoDB operator injection)
+ * 9. Information disclosure patterns
+ * 10. WAF detection (blocked response analysis)
  *
  * Safety rules:
- * - Only non-destructive read-only payloads (single quote, AND/OR boolean)
+ * - Only non-destructive read-only payloads
  * - Never attempts data extraction or modification
- * - 5-second timeout per probe request
+ * - 5-second timeout per probe, 2s delay max for time-based
  * - Max 10 injection points tested per scan
- * - Only injects into parameter values, never into URL paths
+ * - Probes run in parallel within each parameter for speed
  */
 
 // ---------------------------------------------------------------------------
@@ -29,6 +35,7 @@ const SQL_ERROR_PATTERNS: Array<{ pattern: RegExp; engine: string }> = [
     { pattern: /MySQLSyntaxErrorException/i, engine: 'MySQL' },
     { pattern: /com\.mysql\.jdbc/i, engine: 'MySQL' },
     { pattern: /MySQL server version for the right syntax/i, engine: 'MySQL' },
+    { pattern: /MariaDB server version/i, engine: 'MySQL' },
 
     // PostgreSQL
     { pattern: /ERROR:\s+syntax error at or near/i, engine: 'PostgreSQL' },
@@ -36,12 +43,14 @@ const SQL_ERROR_PATTERNS: Array<{ pattern: RegExp; engine: string }> = [
     { pattern: /PSQLException/i, engine: 'PostgreSQL' },
     { pattern: /org\.postgresql/i, engine: 'PostgreSQL' },
     { pattern: /unterminated quoted string at or near/i, engine: 'PostgreSQL' },
+    { pattern: /invalid input syntax for type/i, engine: 'PostgreSQL' },
 
     // SQLite
     { pattern: /SQLite3::/i, engine: 'SQLite' },
     { pattern: /SQLITE_ERROR/i, engine: 'SQLite' },
     { pattern: /sqlite3\.OperationalError/i, engine: 'SQLite' },
     { pattern: /unrecognized token/i, engine: 'SQLite' },
+    { pattern: /near ".*": syntax error/i, engine: 'SQLite' },
 
     // Microsoft SQL Server
     { pattern: /Unclosed quotation mark/i, engine: 'MSSQL' },
@@ -50,12 +59,31 @@ const SQL_ERROR_PATTERNS: Array<{ pattern: RegExp; engine: string }> = [
     { pattern: /SqlException/i, engine: 'MSSQL' },
     { pattern: /Microsoft OLE DB Provider for SQL Server/i, engine: 'MSSQL' },
     { pattern: /Incorrect syntax near/i, engine: 'MSSQL' },
+    { pattern: /SQL Server.*?error/i, engine: 'MSSQL' },
 
     // Oracle
     { pattern: /ORA-0\d{4}/i, engine: 'Oracle' },
     { pattern: /oracle\.jdbc/i, engine: 'Oracle' },
     { pattern: /quoted string not properly terminated/i, engine: 'Oracle' },
     { pattern: /PLS-\d{5}/i, engine: 'Oracle' },
+
+    // Modern frameworks
+    { pattern: /django\.db\.utils\./i, engine: 'Django/PostgreSQL' },
+    { pattern: /ProgrammingError at \//i, engine: 'Django' },
+    { pattern: /OperationalError at \//i, engine: 'Django' },
+    { pattern: /SQLSTATE\[\w+\]/i, engine: 'PDO/PHP' },
+    { pattern: /PDOException/i, engine: 'PDO/PHP' },
+    { pattern: /Illuminate\\Database\\QueryException/i, engine: 'Laravel' },
+    { pattern: /SQLSTATE.*?syntax error or access violation/i, engine: 'Laravel/PDO' },
+    { pattern: /ActiveRecord::StatementInvalid/i, engine: 'Rails' },
+    { pattern: /PG::SyntaxError/i, engine: 'Rails/PostgreSQL' },
+    { pattern: /Mysql2::Error/i, engine: 'Rails/MySQL' },
+    { pattern: /SequelizeDatabaseError/i, engine: 'Sequelize/Node.js' },
+    { pattern: /error: (syntax error|relation .* does not exist)/i, engine: 'Node.js/PostgreSQL' },
+    { pattern: /knex.*?error/i, engine: 'Knex.js' },
+    { pattern: /prisma.*?error/i, engine: 'Prisma' },
+    { pattern: /TypeORMError/i, engine: 'TypeORM' },
+    { pattern: /MongoServerError/i, engine: 'MongoDB' },
 
     // General / multi-engine
     { pattern: /SQL syntax.*?error/i, engine: 'Unknown' },
@@ -65,6 +93,22 @@ const SQL_ERROR_PATTERNS: Array<{ pattern: RegExp; engine: string }> = [
     { pattern: /unterminated quoted string/i, engine: 'Unknown' },
     { pattern: /JDBC[A-Za-z]*Exception/i, engine: 'Unknown' },
     { pattern: /Dynamic SQL Error/i, engine: 'Unknown' },
+    { pattern: /column .* does not exist/i, engine: 'Unknown' },
+    { pattern: /Unknown column/i, engine: 'Unknown' },
+    { pattern: /supplied argument is not a valid/i, engine: 'Unknown' },
+];
+
+// ---------------------------------------------------------------------------
+// NoSQL error / injection patterns
+// ---------------------------------------------------------------------------
+
+const NOSQL_ERROR_PATTERNS: Array<{ pattern: RegExp; engine: string }> = [
+    { pattern: /MongoError/i, engine: 'MongoDB' },
+    { pattern: /MongoServerError/i, engine: 'MongoDB' },
+    { pattern: /BSON field/i, engine: 'MongoDB' },
+    { pattern: /\$[a-z]+.*?is not allowed/i, engine: 'MongoDB' },
+    { pattern: /CastError:.*?ObjectId/i, engine: 'MongoDB/Mongoose' },
+    { pattern: /ValidationError:.*?Path/i, engine: 'MongoDB/Mongoose' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -81,12 +125,10 @@ interface Finding {
 }
 
 interface InjectablePoint {
-    type: 'url_param' | 'form_input';
+    type: 'url_param' | 'form_input' | 'common_param';
     name: string;
-    /** The full URL to send the probe to */
     action: string;
     method: 'GET' | 'POST';
-    /** Other parameters to include in the request (with original values) */
     otherParams: Record<string, string>;
 }
 
@@ -96,17 +138,35 @@ interface FormInfo {
     inputs: Array<{ name: string; value: string }>;
 }
 
+interface ProbeResult {
+    body: string;
+    status: number;
+    length: number;
+    elapsed: number;
+}
+
 // ---------------------------------------------------------------------------
-// Helpers
+// Constants
 // ---------------------------------------------------------------------------
 
 const MAX_INJECTABLE_POINTS = 10;
 const PROBE_TIMEOUT_MS = 5000;
 const USER_AGENT = 'CheckVibe-Scanner/2.0';
+const TIME_DELAY_SEC = 2;
+const TIME_THRESHOLD_MS = 1500; // flag if response takes 1.5s+ longer than baseline
 
-/**
- * Fetch with a timeout and a safe User-Agent header.
- */
+// Common parameter names to test even if not found in page HTML
+const COMMON_PARAMS = [
+    'id', 'page', 'search', 'q', 'query', 'keyword',
+    'user', 'name', 'email', 'sort', 'order', 'filter',
+    'category', 'type', 'action', 'redirect', 'url',
+    'file', 'path', 'lang', 'token', 'ref',
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = PROBE_TIMEOUT_MS): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -126,19 +186,11 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
     }
 }
 
-/**
- * Truncate a string for evidence display. We keep it short to avoid leaking
- * large amounts of page content.
- */
 function truncateEvidence(text: string, maxLen = 200): string {
     if (text.length <= maxLen) return text;
     return text.substring(0, maxLen) + '...';
 }
 
-/**
- * Check a response body for SQL error messages.
- * Returns the first match found or null.
- */
 function findSqlErrors(body: string): { pattern: string; engine: string } | null {
     for (const { pattern, engine } of SQL_ERROR_PATTERNS) {
         const match = body.match(pattern);
@@ -149,14 +201,67 @@ function findSqlErrors(body: string): { pattern: string; engine: string } | null
     return null;
 }
 
+function findNoSqlErrors(body: string): { pattern: string; engine: string } | null {
+    for (const { pattern, engine } of NOSQL_ERROR_PATTERNS) {
+        const match = body.match(pattern);
+        if (match) {
+            return { pattern: match[0], engine };
+        }
+    }
+    return null;
+}
+
 /**
- * Parse <form> elements out of raw HTML using regex.
- * Since Deno edge functions don't have a DOM parser, we use careful regex
- * extraction.
+ * Send a probe and measure response time.
  */
+async function sendProbe(
+    point: InjectablePoint,
+    payload: string,
+): Promise<ProbeResult | null> {
+    try {
+        const params = new URLSearchParams(point.otherParams);
+        params.set(point.name, payload);
+        const start = Date.now();
+
+        if (point.method === 'GET') {
+            const probeUrl = `${point.action}?${params.toString()}`;
+            const response = await fetchWithTimeout(probeUrl, { method: 'GET' });
+            const body = await response.text();
+            return { body, status: response.status, length: body.length, elapsed: Date.now() - start };
+        } else {
+            const response = await fetchWithTimeout(point.action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString(),
+            });
+            const body = await response.text();
+            return { body, status: response.status, length: body.length, elapsed: Date.now() - start };
+        }
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Send a raw GET probe with a pre-built URL (for encoding bypass tests).
+ */
+async function sendRawProbe(url: string): Promise<ProbeResult | null> {
+    try {
+        const start = Date.now();
+        const response = await fetchWithTimeout(url, { method: 'GET' });
+        const body = await response.text();
+        return { body, status: response.status, length: body.length, elapsed: Date.now() - start };
+    } catch {
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// HTML parsing helpers
+// ---------------------------------------------------------------------------
+
 function extractForms(html: string, baseUrl: string): FormInfo[] {
     const forms: FormInfo[] = [];
-    // Match opening <form> tag to closing </form>
     const formRegex = /<form\b([^>]*)>([\s\S]*?)<\/form>/gi;
     let formMatch;
 
@@ -164,11 +269,9 @@ function extractForms(html: string, baseUrl: string): FormInfo[] {
         const attrs = formMatch[1];
         const innerHtml = formMatch[2];
 
-        // Extract action attribute
         const actionMatch = attrs.match(/action\s*=\s*["']([^"']*)["']/i);
         let action = actionMatch ? actionMatch[1] : '';
 
-        // Resolve relative action URLs
         if (!action || action === '#' || action === '') {
             action = baseUrl;
         } else if (action.startsWith('//')) {
@@ -184,23 +287,18 @@ function extractForms(html: string, baseUrl: string): FormInfo[] {
             }
         }
 
-        // Extract method attribute
         const methodMatch = attrs.match(/method\s*=\s*["']([^"']*)["']/i);
         const method = (methodMatch ? methodMatch[1] : 'GET').toUpperCase();
 
-        // Extract input fields
         const inputs: Array<{ name: string; value: string }> = [];
         const inputRegex = /<input\b([^>]*)>/gi;
         let inputMatch;
 
         while ((inputMatch = inputRegex.exec(innerHtml)) !== null) {
             const inputAttrs = inputMatch[1];
-
-            // Skip submit/button/image/reset/file types
             const typeMatch = inputAttrs.match(/type\s*=\s*["']([^"']*)["']/i);
             const inputType = typeMatch ? typeMatch[1].toLowerCase() : 'text';
             if (['submit', 'button', 'image', 'reset', 'file', 'hidden', 'checkbox', 'radio'].includes(inputType)) {
-                // Still include hidden fields as context params, but don't inject into them
                 if (inputType === 'hidden') {
                     const nameMatch = inputAttrs.match(/name\s*=\s*["']([^"']*)["']/i);
                     const valueMatch = inputAttrs.match(/value\s*=\s*["']([^"']*)["']/i);
@@ -218,20 +316,17 @@ function extractForms(html: string, baseUrl: string): FormInfo[] {
             }
         }
 
-        // Also extract <select> fields
         const selectRegex = /<select\b([^>]*)>[\s\S]*?<\/select>/gi;
         let selectMatch;
         while ((selectMatch = selectRegex.exec(innerHtml)) !== null) {
             const selectAttrs = selectMatch[0];
             const nameMatch = selectAttrs.match(/name\s*=\s*["']([^"']*)["']/i);
             if (nameMatch) {
-                // Get first option value
                 const optionMatch = selectAttrs.match(/<option\b[^>]*value\s*=\s*["']([^"']*)["']/i);
                 inputs.push({ name: nameMatch[1], value: optionMatch ? optionMatch[1] : '1' });
             }
         }
 
-        // Also extract <textarea> fields
         const textareaRegex = /<textarea\b([^>]*)>/gi;
         let textareaMatch;
         while ((textareaMatch = textareaRegex.exec(innerHtml)) !== null) {
@@ -250,16 +345,15 @@ function extractForms(html: string, baseUrl: string): FormInfo[] {
     return forms;
 }
 
-/**
- * Build the list of injectable points from URL params and form inputs.
- */
 function collectInjectablePoints(targetUrl: string, forms: FormInfo[]): InjectablePoint[] {
     const points: InjectablePoint[] = [];
+    const seenNames = new Set<string>();
 
     // 1. URL query parameters
     try {
         const parsed = new URL(targetUrl);
         for (const [name] of parsed.searchParams) {
+            seenNames.add(name.toLowerCase());
             const otherParams: Record<string, string> = {};
             for (const [k, v] of parsed.searchParams) {
                 if (k !== name) otherParams[k] = v;
@@ -273,12 +367,13 @@ function collectInjectablePoints(targetUrl: string, forms: FormInfo[]): Injectab
             });
         }
     } catch {
-        // If URL parsing fails, skip URL params
+        // skip
     }
 
-    // 2. Form inputs (only injectable text-like inputs)
+    // 2. Form inputs
     for (const form of forms) {
         for (const input of form.inputs) {
+            seenNames.add(input.name.toLowerCase());
             const otherParams: Record<string, string> = {};
             for (const other of form.inputs) {
                 if (other.name !== input.name) {
@@ -295,6 +390,25 @@ function collectInjectablePoints(targetUrl: string, forms: FormInfo[]): Injectab
         }
     }
 
+    // 3. Common parameter names not already found
+    try {
+        const parsed = new URL(targetUrl);
+        const baseAction = parsed.origin + parsed.pathname;
+        for (const param of COMMON_PARAMS) {
+            if (!seenNames.has(param)) {
+                points.push({
+                    type: 'common_param',
+                    name: param,
+                    action: baseAction,
+                    method: 'GET',
+                    otherParams: {},
+                });
+            }
+        }
+    } catch {
+        // skip
+    }
+
     // Deduplicate by name + action + method
     const seen = new Set<string>();
     const unique: InjectablePoint[] = [];
@@ -306,153 +420,367 @@ function collectInjectablePoints(targetUrl: string, forms: FormInfo[]): Injectab
         }
     }
 
-    // Cap at MAX_INJECTABLE_POINTS
     return unique.slice(0, MAX_INJECTABLE_POINTS);
 }
 
-/**
- * Send a probe request with the given payload injected into the target parameter.
- * Returns the response body text and status code.
- */
-async function sendProbe(
-    point: InjectablePoint,
-    payload: string,
-): Promise<{ body: string; status: number; length: number } | null> {
-    try {
-        const params = new URLSearchParams(point.otherParams);
-        params.set(point.name, payload);
+// ---------------------------------------------------------------------------
+// WAF detection
+// ---------------------------------------------------------------------------
 
-        if (point.method === 'GET') {
-            const probeUrl = `${point.action}?${params.toString()}`;
-            const response = await fetchWithTimeout(probeUrl, { method: 'GET' });
-            const body = await response.text();
-            return { body, status: response.status, length: body.length };
-        } else {
-            // POST with form-encoded body
-            const response = await fetchWithTimeout(point.action, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString(),
-            });
-            const body = await response.text();
-            return { body, status: response.status, length: body.length };
+function detectWaf(results: (ProbeResult | null)[]): boolean {
+    const blockedCodes = [403, 406, 429, 503];
+    let blockedCount = 0;
+    let totalValid = 0;
+    for (const r of results) {
+        if (!r) continue;
+        totalValid++;
+        if (blockedCodes.includes(r.status)) blockedCount++;
+        // Check for WAF-specific body patterns
+        if (/access denied|blocked|firewall|waf|cloudflare|sucuri|akamai|incapsula|imperva/i.test(r.body)) {
+            blockedCount++;
         }
-    } catch {
-        // Timeout or network error — silently skip
-        return null;
     }
+    return totalValid > 0 && blockedCount / totalValid > 0.5;
 }
 
-/**
- * Test a single injectable point for SQL injection vulnerabilities.
- * Returns any findings discovered.
- */
+// ---------------------------------------------------------------------------
+// Test a single injectable point (all techniques, parallelized)
+// ---------------------------------------------------------------------------
+
 async function testInjectionPoint(
     point: InjectablePoint,
-    findingIndex: number,
-): Promise<{ findings: Finding[]; checksRun: number }> {
+    idx: number,
+): Promise<{ findings: Finding[]; checksRun: number; probeResults: (ProbeResult | null)[] }> {
     const findings: Finding[] = [];
+    const allProbeResults: (ProbeResult | null)[] = [];
     let checksRun = 0;
-    const pointLabel = `${point.type === 'url_param' ? 'URL parameter' : 'form input'} "${point.name}"`;
+    const label = `${point.type === 'url_param' ? 'URL parameter' : point.type === 'form_input' ? 'form input' : 'common parameter'} "${point.name}"`;
 
     // -----------------------------------------------------------------------
-    // Test 1: Single quote (error-based detection)
+    // Phase 1: Error-based detection (4 payloads in parallel)
     // -----------------------------------------------------------------------
     checksRun++;
-    const singleQuoteResult = await sendProbe(point, "1'");
-    if (singleQuoteResult) {
-        const errorMatch = findSqlErrors(singleQuoteResult.body);
-        if (errorMatch) {
+    const errorPayloads = [
+        { payload: "1'", desc: 'single quote' },
+        { payload: '1"', desc: 'double quote' },
+        { payload: '1\\', desc: 'backslash' },
+        { payload: '1)', desc: 'closing parenthesis' },
+    ];
+
+    const errorResults = await Promise.all(
+        errorPayloads.map(p => sendProbe(point, p.payload))
+    );
+    allProbeResults.push(...errorResults);
+
+    let errorFound = false;
+    for (let i = 0; i < errorPayloads.length; i++) {
+        const result = errorResults[i];
+        if (!result) continue;
+        const errorMatch = findSqlErrors(result.body);
+        if (errorMatch && !errorFound) {
+            errorFound = true;
             findings.push({
-                id: `sqli-error-${findingIndex}-${point.name}`,
+                id: `sqli-error-${idx}-${point.name}`,
                 severity: 'critical',
-                title: `Error-Based SQL Injection in ${pointLabel}`,
-                description: `Injecting a single quote into ${pointLabel} at ${point.action} triggered a ${errorMatch.engine} SQL error. This strongly indicates the parameter is vulnerable to SQL injection, allowing attackers to read, modify, or delete database contents.`,
-                recommendation: `Use parameterized queries (prepared statements) for all database queries involving this parameter. Never concatenate user input directly into SQL strings. Apply input validation as a defense-in-depth measure.`,
+                title: `Error-Based SQL Injection in ${label}`,
+                description: `Injecting a ${errorPayloads[i].desc} into ${label} at ${point.action} triggered a ${errorMatch.engine} SQL error. This confirms the parameter is vulnerable to SQL injection, allowing attackers to read, modify, or delete database contents.`,
+                recommendation: `Use parameterized queries (prepared statements) for all database queries involving this parameter. Never concatenate user input directly into SQL strings.`,
                 evidence: truncateEvidence(errorMatch.pattern),
             });
         }
     }
 
     // -----------------------------------------------------------------------
-    // Test 2: Blind boolean-based SQLi
-    // Send "1 AND 1=1" (true) and "1 AND 1=2" (false). If responses differ
-    // significantly in length, the parameter may be injectable.
+    // Phase 2: Boolean blind + Tautology + Baseline (in parallel)
     // -----------------------------------------------------------------------
-    checksRun++;
-    const trueResult = await sendProbe(point, '1 AND 1=1');
-    const falseResult = await sendProbe(point, '1 AND 1=2');
+    checksRun += 2;
+    const [trueResult, falseResult, normalResult, orResult] = await Promise.all([
+        sendProbe(point, '1 AND 1=1'),
+        sendProbe(point, '1 AND 1=2'),
+        sendProbe(point, '1'),
+        sendProbe(point, '1 OR 1=1--'),
+    ]);
+    allProbeResults.push(trueResult, falseResult, normalResult, orResult);
 
+    // Boolean blind analysis
     if (trueResult && falseResult) {
         const lengthDiff = Math.abs(trueResult.length - falseResult.length);
         const maxLen = Math.max(trueResult.length, falseResult.length, 1);
         const diffRatio = lengthDiff / maxLen;
 
-        // Only flag if the length difference is significant (>5% and at least 50 chars)
-        // and neither response contains a SQL error (which would already be caught above)
-        if (diffRatio > 0.05 && lengthDiff > 50) {
-            const alreadyFoundError = findings.some(f => f.id.startsWith('sqli-error'));
-            if (!alreadyFoundError) {
+        if (diffRatio > 0.05 && lengthDiff > 50 && !errorFound) {
+            findings.push({
+                id: `sqli-blind-${idx}-${point.name}`,
+                severity: 'high',
+                title: `Possible Blind SQL Injection in ${label}`,
+                description: `Boolean-based blind SQL injection may be possible in ${label} at ${point.action}. Sending "1 AND 1=1" vs "1 AND 1=2" produced responses with a ${lengthDiff}-byte difference (${(diffRatio * 100).toFixed(1)}% variance), suggesting the SQL condition is being evaluated.`,
+                recommendation: `Use parameterized queries for all database queries involving this parameter.`,
+                evidence: `True: ${trueResult.length}b, False: ${falseResult.length}b (delta: ${lengthDiff}b)`,
+            });
+        }
+    }
+
+    // Tautology analysis
+    if (normalResult && orResult) {
+        const lengthDiff = orResult.length - normalResult.length;
+        const maxLen = Math.max(normalResult.length, 1);
+        const growthRatio = lengthDiff / maxLen;
+
+        if (growthRatio > 0.20 && lengthDiff > 200 && !errorFound && !findings.some(f => f.id.startsWith('sqli-blind'))) {
+            findings.push({
+                id: `sqli-tautology-${idx}-${point.name}`,
+                severity: 'high',
+                title: `Possible SQL Injection via Tautology in ${label}`,
+                description: `Injecting "1 OR 1=1--" into ${label} at ${point.action} caused the response to grow by ${lengthDiff} bytes (${(growthRatio * 100).toFixed(1)}%), suggesting a SQL tautology is returning extra rows.`,
+                recommendation: `Use parameterized queries. The OR 1=1 tautology bypasses WHERE clause conditions.`,
+                evidence: `Normal: ${normalResult.length}b, Tautology: ${orResult.length}b (delta: +${lengthDiff}b)`,
+            });
+        }
+
+        // Check tautology response for errors too
+        if (orResult) {
+            const errorMatch = findSqlErrors(orResult.body);
+            if (errorMatch && !errorFound) {
+                errorFound = true;
                 findings.push({
-                    id: `sqli-blind-${findingIndex}-${point.name}`,
-                    severity: 'high',
-                    title: `Possible Blind SQL Injection in ${pointLabel}`,
-                    description: `Boolean-based blind SQL injection may be possible in ${pointLabel} at ${point.action}. Sending "1 AND 1=1" vs "1 AND 1=2" produced responses with a ${lengthDiff}-byte difference (${(diffRatio * 100).toFixed(1)}% variance), suggesting the SQL condition is being evaluated by the database.`,
-                    recommendation: `Use parameterized queries (prepared statements) for all database queries involving this parameter. Investigate whether the application is incorporating user input into SQL WHERE clauses without proper sanitization.`,
-                    evidence: `True condition response: ${trueResult.length} bytes, False condition response: ${falseResult.length} bytes (delta: ${lengthDiff} bytes)`,
+                    id: `sqli-error-or-${idx}-${point.name}`,
+                    severity: 'critical',
+                    title: `Error-Based SQL Injection in ${label} (OR payload)`,
+                    description: `Injecting "1 OR 1=1--" into ${label} at ${point.action} triggered a ${errorMatch.engine} SQL error.`,
+                    recommendation: `Use parameterized queries for all database queries involving this parameter.`,
+                    evidence: truncateEvidence(errorMatch.pattern),
                 });
             }
         }
     }
 
     // -----------------------------------------------------------------------
-    // Test 3: OR-based tautology test
-    // "1 OR 1=1--" is a classic tautology. If it returns significantly more
-    // content than a normal request, data may be leaking.
+    // Phase 3: UNION-based detection (try 1-5 columns)
     // -----------------------------------------------------------------------
     checksRun++;
-    const normalResult = await sendProbe(point, '1');
-    const orResult = await sendProbe(point, '1 OR 1=1--');
+    const unionPayloads = [
+        '1 UNION SELECT NULL--',
+        '1 UNION SELECT NULL,NULL--',
+        '1 UNION SELECT NULL,NULL,NULL--',
+        '1 UNION SELECT NULL,NULL,NULL,NULL--',
+        '1 UNION SELECT NULL,NULL,NULL,NULL,NULL--',
+    ];
 
-    if (normalResult && orResult) {
-        const lengthDiff = orResult.length - normalResult.length;
-        const maxLen = Math.max(normalResult.length, 1);
-        const growthRatio = lengthDiff / maxLen;
+    const unionResults = await Promise.all(
+        unionPayloads.map(p => sendProbe(point, p))
+    );
+    allProbeResults.push(...unionResults);
 
-        // If the OR tautology returns significantly more content (>20% growth and 200+ extra bytes)
-        if (growthRatio > 0.20 && lengthDiff > 200) {
-            const alreadyFound = findings.some(f =>
-                f.id.startsWith('sqli-error') || f.id.startsWith('sqli-blind')
-            );
-            if (!alreadyFound) {
+    let unionDetected = false;
+    for (let i = 0; i < unionPayloads.length; i++) {
+        const result = unionResults[i];
+        if (!result || unionDetected) continue;
+
+        // UNION success: response differs from normal AND doesn't contain SQL error
+        // about wrong column count (which actually confirms SQL is being parsed!)
+        const hasColumnError = /number of columns|SELECTs have different number|UNION.*?select.*?different/i.test(result.body);
+        const hasSqlError = findSqlErrors(result.body);
+
+        if (hasColumnError && !errorFound) {
+            // Column mismatch error = SQL is being parsed = injectable!
+            errorFound = true;
+            unionDetected = true;
+            findings.push({
+                id: `sqli-union-${idx}-${point.name}`,
+                severity: 'critical',
+                title: `UNION-Based SQL Injection in ${label}`,
+                description: `UNION SELECT injection into ${label} at ${point.action} triggered a column count mismatch error, confirming the SQL query is executed with user input. An attacker can enumerate the correct column count and extract data from other tables.`,
+                recommendation: `Use parameterized queries. UNION-based SQLi allows full database data extraction.`,
+                evidence: truncateEvidence(result.body.match(/number of columns|SELECTs have different|UNION.*?select.*?different/i)?.[0] || `UNION with ${i + 1} column(s) triggered error`),
+            });
+        } else if (!hasSqlError && normalResult && Math.abs(result.length - normalResult.length) > 100) {
+            // Response changed significantly with UNION — possible data leak
+            if (!errorFound && !findings.some(f => f.id.includes('union'))) {
+                unionDetected = true;
                 findings.push({
-                    id: `sqli-tautology-${findingIndex}-${point.name}`,
+                    id: `sqli-union-data-${idx}-${point.name}`,
                     severity: 'high',
-                    title: `Possible SQL Injection via Tautology in ${pointLabel}`,
-                    description: `Injecting "1 OR 1=1--" into ${pointLabel} at ${point.action} caused the response to grow by ${lengthDiff} bytes (${(growthRatio * 100).toFixed(1)}% increase), suggesting a SQL tautology is returning extra rows from the database.`,
-                    recommendation: `Use parameterized queries (prepared statements) for all database queries. The OR 1=1 tautology bypasses WHERE clause conditions, which can expose unauthorized data.`,
-                    evidence: `Normal response: ${normalResult.length} bytes, Tautology response: ${orResult.length} bytes (delta: +${lengthDiff} bytes)`,
+                    title: `Possible UNION SQL Injection in ${label}`,
+                    description: `UNION SELECT NULL with ${i + 1} column(s) into ${label} at ${point.action} changed the response by ${Math.abs(result.length - (normalResult?.length || 0))} bytes. This may indicate data from additional tables is being returned.`,
+                    recommendation: `Use parameterized queries. Investigate whether UNION payloads affect query results.`,
+                    evidence: `Normal: ${normalResult?.length || '?'}b, UNION(${i + 1} cols): ${result.length}b`,
                 });
             }
         }
+    }
 
-        // Also check if the tautology response contains SQL errors
-        if (orResult) {
-            const errorMatch = findSqlErrors(orResult.body);
-            if (errorMatch) {
-                const alreadyFoundError = findings.some(f => f.id.startsWith('sqli-error'));
-                if (!alreadyFoundError) {
+    // -----------------------------------------------------------------------
+    // Phase 4: Time-based blind detection
+    // -----------------------------------------------------------------------
+    checksRun++;
+    const baselineElapsed = normalResult?.elapsed || 0;
+    const timePayloads = [
+        `1' AND SLEEP(${TIME_DELAY_SEC})--`,                        // MySQL
+        `1'; SELECT pg_sleep(${TIME_DELAY_SEC})--`,                  // PostgreSQL
+        `1'; WAITFOR DELAY '00:00:0${TIME_DELAY_SEC}'--`,           // MSSQL
+        `1' AND (SELECT * FROM (SELECT SLEEP(${TIME_DELAY_SEC}))a)--`, // MySQL subquery
+    ];
+
+    // Run time payloads one at a time to measure elapsed accurately
+    let timeDetected = false;
+    for (const payload of timePayloads) {
+        if (timeDetected) break;
+        const result = await sendProbe(point, payload);
+        allProbeResults.push(result);
+        if (!result) continue;
+
+        const extraTime = result.elapsed - baselineElapsed;
+        if (extraTime >= TIME_THRESHOLD_MS) {
+            timeDetected = true;
+            const dbHint = payload.includes('SLEEP') ? 'MySQL' :
+                payload.includes('pg_sleep') ? 'PostgreSQL' :
+                    payload.includes('WAITFOR') ? 'MSSQL' : 'Unknown';
+            findings.push({
+                id: `sqli-time-${idx}-${point.name}`,
+                severity: 'critical',
+                title: `Time-Based Blind SQL Injection in ${label}`,
+                description: `Injecting a ${dbHint} time-delay payload into ${label} at ${point.action} caused the response to take ${result.elapsed}ms (baseline: ${baselineElapsed}ms, delta: +${extraTime}ms). This strongly indicates the SQL delay function executed, confirming blind SQL injection.`,
+                recommendation: `Use parameterized queries. Time-based blind SQLi allows attackers to extract data one bit at a time by observing response delays.`,
+                evidence: `Baseline: ${baselineElapsed}ms, Delayed: ${result.elapsed}ms (payload: ${payload.substring(0, 40)}...)`,
+            });
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 5: Stacked query detection
+    // -----------------------------------------------------------------------
+    checksRun++;
+    const stackedResult = await sendProbe(point, "1; SELECT 1--");
+    allProbeResults.push(stackedResult);
+
+    if (stackedResult) {
+        const errorMatch = findSqlErrors(stackedResult.body);
+        if (errorMatch && !errorFound) {
+            findings.push({
+                id: `sqli-stacked-${idx}-${point.name}`,
+                severity: 'high',
+                title: `Stacked Query Injection Detected in ${label}`,
+                description: `Injecting a semicolon-separated query into ${label} at ${point.action} triggered a ${errorMatch.engine} SQL error. The application may allow stacked queries, which could enable an attacker to execute arbitrary SQL commands.`,
+                recommendation: `Use parameterized queries and ensure your database driver disables multi-statement execution if not needed.`,
+                evidence: truncateEvidence(errorMatch.pattern),
+            });
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 6: Encoding bypass (only if previous tests didn't find critical)
+    // -----------------------------------------------------------------------
+    if (!errorFound && point.method === 'GET') {
+        checksRun++;
+        try {
+            const parsed = new URL(point.action);
+            const otherParamStr = new URLSearchParams(point.otherParams).toString();
+            const base = otherParamStr
+                ? `${parsed.origin}${parsed.pathname}?${otherParamStr}&`
+                : `${parsed.origin}${parsed.pathname}?`;
+
+            // URL-encoded single quote: %27
+            const encodedUrl = `${base}${encodeURIComponent(point.name)}=1%27`;
+            // Double-encoded single quote: %2527
+            const doubleEncodedUrl = `${base}${encodeURIComponent(point.name)}=1%2527`;
+
+            const [encodedResult, doubleResult] = await Promise.all([
+                sendRawProbe(encodedUrl),
+                sendRawProbe(doubleEncodedUrl),
+            ]);
+            allProbeResults.push(encodedResult, doubleResult);
+
+            for (const [result, desc] of [[encodedResult, 'URL-encoded'], [doubleResult, 'double-URL-encoded']] as const) {
+                if (!result) continue;
+                const errorMatch = findSqlErrors(result.body);
+                if (errorMatch) {
+                    errorFound = true;
                     findings.push({
-                        id: `sqli-error-or-${findingIndex}-${point.name}`,
+                        id: `sqli-encoding-${idx}-${point.name}`,
                         severity: 'critical',
-                        title: `Error-Based SQL Injection in ${pointLabel} (OR payload)`,
-                        description: `Injecting "1 OR 1=1--" into ${pointLabel} at ${point.action} triggered a ${errorMatch.engine} SQL error, confirming the parameter is vulnerable to SQL injection.`,
-                        recommendation: `Use parameterized queries (prepared statements) for all database queries involving this parameter.`,
+                        title: `SQL Injection via ${desc} Payload in ${label}`,
+                        description: `A ${desc} single-quote payload bypassed input filtering in ${label} at ${point.action} and triggered a ${errorMatch.engine} SQL error. This indicates the application decodes URL-encoded input before using it in SQL queries without parameterization.`,
+                        recommendation: `Use parameterized queries. URL encoding should not be relied upon as a defense against SQL injection.`,
                         evidence: truncateEvidence(errorMatch.pattern),
+                    });
+                    break;
+                }
+            }
+        } catch {
+            // skip encoding tests on URL parse failure
+        }
+    }
+
+    return { findings, checksRun, probeResults: allProbeResults };
+}
+
+// ---------------------------------------------------------------------------
+// NoSQL injection tests
+// ---------------------------------------------------------------------------
+
+async function testNoSqlInjection(
+    targetUrl: string,
+    initialHtml: string,
+): Promise<{ findings: Finding[]; checksRun: number }> {
+    const findings: Finding[] = [];
+    let checksRun = 0;
+
+    // Check initial page for NoSQL errors
+    checksRun++;
+    const existingNoSql = findNoSqlErrors(initialHtml);
+    if (existingNoSql) {
+        findings.push({
+            id: 'nosql-existing-error',
+            severity: 'medium',
+            title: `${existingNoSql.engine} Error Message Visible`,
+            description: `The page already displays a ${existingNoSql.engine} error message, revealing the NoSQL database technology in use.`,
+            recommendation: `Configure custom error pages. Never expose raw database errors to end users.`,
+            evidence: truncateEvidence(existingNoSql.pattern),
+        });
+    }
+
+    // Test MongoDB operator injection on URL params
+    try {
+        const parsed = new URL(targetUrl);
+        const params = Array.from(parsed.searchParams.entries());
+        if (params.length > 0) {
+            checksRun++;
+            // Test first param with MongoDB operator injection
+            const [testParam] = params[0];
+            const baseUrl = parsed.origin + parsed.pathname;
+
+            // MongoDB $ne operator injection: param[$ne]=1
+            const nosqlUrl = `${baseUrl}?${testParam}[$ne]=`;
+            const nosqlResult = await sendRawProbe(nosqlUrl);
+            if (nosqlResult) {
+                const noSqlError = findNoSqlErrors(nosqlResult.body);
+                if (noSqlError) {
+                    findings.push({
+                        id: `nosql-operator-injection-${testParam}`,
+                        severity: 'high',
+                        title: `NoSQL Operator Injection in "${testParam}"`,
+                        description: `Injecting a MongoDB $ne operator into "${testParam}" triggered a ${noSqlError.engine} error. The application may be vulnerable to NoSQL injection, allowing attackers to bypass authentication or extract data.`,
+                        recommendation: `Sanitize user input and validate data types. Use MongoDB query builders that prevent operator injection. Never pass raw user input into query objects.`,
+                        evidence: truncateEvidence(noSqlError.pattern),
+                    });
+                }
+
+                // Check if response differs significantly (auth bypass)
+                const normalResult = await sendRawProbe(`${baseUrl}?${testParam}=1`);
+                if (normalResult && nosqlResult.length > normalResult.length + 200) {
+                    findings.push({
+                        id: `nosql-bypass-${testParam}`,
+                        severity: 'high',
+                        title: `Possible NoSQL Auth Bypass in "${testParam}"`,
+                        description: `MongoDB $ne operator in "${testParam}" returned ${nosqlResult.length - normalResult.length} extra bytes, suggesting it bypassed a filter or returned unauthorized data.`,
+                        recommendation: `Use explicit type checking and query builders. Validate that query parameters are the expected type (string, number) before using them in database queries.`,
+                        evidence: `Normal: ${normalResult.length}b, $ne injection: ${nosqlResult.length}b`,
                     });
                 }
             }
         }
+    } catch {
+        // skip
     }
 
     return { findings, checksRun };
@@ -463,7 +791,6 @@ async function testInjectionPoint(
 // ---------------------------------------------------------------------------
 
 Deno.serve(async (req: Request) => {
-    // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: getCorsHeaders(req) });
     }
@@ -498,7 +825,7 @@ Deno.serve(async (req: Request) => {
         let checksRun = 0;
 
         // -----------------------------------------------------------------
-        // Step 1: Fetch the initial page and check for existing SQL errors
+        // Step 1: Fetch the initial page
         // -----------------------------------------------------------------
         let initialHtml = '';
         try {
@@ -512,13 +839,12 @@ Deno.serve(async (req: Request) => {
                     id: 'sqli-existing-error-0',
                     severity: 'medium',
                     title: 'SQL Error Message Visible on Page',
-                    description: `The page at ${targetUrl} already displays a ${existingError.engine} SQL error message without any injection. This indicates a misconfiguration or bug that leaks database implementation details, which aids attackers in crafting SQL injection attacks.`,
-                    recommendation: `Configure custom error pages and disable detailed error output in production. Set display_errors=off (PHP), custom error handlers (Node.js), or equivalent for your framework. Never expose raw SQL errors to end users.`,
+                    description: `The page at ${targetUrl} already displays a ${existingError.engine} SQL error without any injection. This leaks database implementation details.`,
+                    recommendation: `Configure custom error pages and disable detailed error output in production.`,
                     evidence: truncateEvidence(existingError.pattern),
                 });
             }
         } catch {
-            // If we cannot fetch the page at all, return a minimal result
             return new Response(JSON.stringify({
                 scannerType: 'sqli',
                 score: 0,
@@ -527,7 +853,7 @@ Deno.serve(async (req: Request) => {
                     id: 'sqli-fetch-failed',
                     severity: 'info',
                     title: 'Unable to Fetch Target Page',
-                    description: `Could not retrieve the page at ${targetUrl}. The site may be unreachable, blocking automated requests, or experiencing downtime.`,
+                    description: `Could not retrieve ${targetUrl}. The site may be unreachable or blocking automated requests.`,
                     recommendation: 'Verify the URL is correct and the site is accessible.',
                 }],
                 scannedAt: new Date().toISOString(),
@@ -538,35 +864,57 @@ Deno.serve(async (req: Request) => {
         }
 
         // -----------------------------------------------------------------
-        // Step 2: Extract injectable points (URL params + form inputs)
+        // Step 2: Extract injectable points (URL + forms + common params)
         // -----------------------------------------------------------------
         const forms = extractForms(initialHtml, targetUrl);
         const injectablePoints = collectInjectablePoints(targetUrl, forms);
 
         if (injectablePoints.length === 0) {
-            // No parameters to test — add an informational note
             findings.push({
                 id: 'sqli-no-params',
                 severity: 'info',
                 title: 'No Injectable Parameters Detected',
-                description: `No URL query parameters or form inputs were found on ${targetUrl}. The scanner could not test for SQL injection because there are no input vectors on this page. This does not guarantee the site is free from SQL injection — other endpoints, APIs, or pages may be vulnerable.`,
-                recommendation: 'Consider scanning individual pages with query parameters or form fields for more thorough coverage. API endpoints accepting JSON or other data formats should be tested separately.',
+                description: `No URL query parameters, form inputs, or common parameter names produced testable injection points on ${targetUrl}. Other endpoints or APIs may still be vulnerable.`,
+                recommendation: 'Scan individual pages with query parameters or form fields. API endpoints should be tested separately.',
             });
         }
 
         // -----------------------------------------------------------------
-        // Step 3: Test each injectable point
+        // Step 3: Test each injectable point (all techniques)
         // -----------------------------------------------------------------
+        const allProbeResults: (ProbeResult | null)[] = [];
         for (let i = 0; i < injectablePoints.length; i++) {
             const point = injectablePoints[i];
             const result = await testInjectionPoint(point, i);
             findings.push(...result.findings);
             checksRun += result.checksRun;
+            allProbeResults.push(...result.probeResults);
         }
 
         // -----------------------------------------------------------------
-        // Step 4: Check for error-based information disclosure patterns
-        // that are not SQL-specific but aid SQLi attacks
+        // Step 4: NoSQL injection tests
+        // -----------------------------------------------------------------
+        const noSqlResult = await testNoSqlInjection(targetUrl, initialHtml);
+        findings.push(...noSqlResult.findings);
+        checksRun += noSqlResult.checksRun;
+
+        // -----------------------------------------------------------------
+        // Step 5: WAF detection
+        // -----------------------------------------------------------------
+        checksRun++;
+        const wafDetected = detectWaf(allProbeResults);
+        if (wafDetected) {
+            findings.push({
+                id: 'sqli-waf-detected',
+                severity: 'info',
+                title: 'Web Application Firewall Detected',
+                description: `A WAF appears to be blocking injection payloads (many responses returned 403/406 or contained WAF signatures). Scanner results may be incomplete as payloads are being filtered. The presence of a WAF adds defense-in-depth but should not be the sole protection against SQL injection.`,
+                recommendation: 'WAFs provide valuable protection but can be bypassed. Ensure parameterized queries are used at the application level as the primary defense.',
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // Step 6: Information disclosure patterns
         // -----------------------------------------------------------------
         checksRun++;
         const infoDisclosurePatterns = [
@@ -574,6 +922,11 @@ Deno.serve(async (req: Request) => {
             { pattern: /Traceback \(most recent call last\)/i, title: 'Python Traceback Exposed' },
             { pattern: /at\s+[\w$.]+\([\w/.]+:\d+:\d+\)/i, title: 'Application Stack Trace Exposed' },
             { pattern: /DB_HOST|DB_PASSWORD|DB_NAME|DATABASE_URL/i, title: 'Database Configuration Exposed' },
+            { pattern: /SQLCONNECTIONSTRING|CONNECTIONSTRING/i, title: 'Connection String Exposed' },
+            { pattern: /server version:.*?(mysql|mariadb|postgresql|microsoft sql)/i, title: 'Database Version Exposed' },
+            { pattern: /phpinfo\(\)/i, title: 'PHP Info Page Detected' },
+            { pattern: /DJANGO_SETTINGS_MODULE|SECRET_KEY\s*=/i, title: 'Framework Configuration Exposed' },
+            { pattern: /\.env\s+file|dotenv/i, title: 'Environment File Reference Exposed' },
         ];
 
         for (const { pattern, title } of infoDisclosurePatterns) {
@@ -582,31 +935,22 @@ Deno.serve(async (req: Request) => {
                     id: `sqli-info-disclosure-${title.toLowerCase().replace(/\s+/g, '-')}`,
                     severity: 'medium',
                     title,
-                    description: `The page response contains ${title.toLowerCase()} information that could help an attacker understand the application's database architecture and craft targeted SQL injection payloads.`,
-                    recommendation: 'Disable verbose error output and stack traces in production. Use a centralized logging system and display generic error messages to end users.',
+                    description: `The page response contains ${title.toLowerCase()} information that helps attackers understand the application's database architecture.`,
+                    recommendation: 'Disable verbose error output and stack traces in production. Use centralized logging.',
                     evidence: truncateEvidence(initialHtml.match(pattern)?.[0] || ''),
                 });
             }
         }
 
         // -----------------------------------------------------------------
-        // Step 5: Calculate score
+        // Step 7: Calculate score
         // -----------------------------------------------------------------
         for (const finding of findings) {
             switch (finding.severity) {
-                case 'critical':
-                    score -= 40;
-                    break;
-                case 'high':
-                    score -= 25;
-                    break;
-                case 'medium':
-                    score -= 15;
-                    break;
-                case 'low':
-                    score -= 5;
-                    break;
-                // 'info' findings do not affect the score
+                case 'critical': score -= 40; break;
+                case 'high': score -= 25; break;
+                case 'medium': score -= 15; break;
+                case 'low': score -= 5; break;
             }
         }
 
