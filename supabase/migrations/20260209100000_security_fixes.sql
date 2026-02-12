@@ -94,7 +94,7 @@ BEGIN
     SELECT * INTO v_profile FROM profiles WHERE id = p_user_id;
     IF v_profile IS NULL THEN
       -- User does not exist
-      RETURN QUERY SELECT false, 'free'::TEXT, 0, 0, 0, ARRAY[]::TEXT[];
+      RETURN QUERY SELECT false, 'none'::TEXT, 0, 0, 0, ARRAY[]::TEXT[];
     ELSE
       -- Limit reached: return current state with success = false
       RETURN QUERY SELECT false, v_profile.plan, v_profile.plan_scans_used, v_profile.plan_scans_limit, v_profile.plan_domains, v_profile.allowed_domains;

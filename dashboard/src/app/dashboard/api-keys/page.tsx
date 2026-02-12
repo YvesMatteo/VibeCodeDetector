@@ -72,6 +72,11 @@ export default function ApiKeysPage() {
     const [showRevoke, setShowRevoke] = useState(false);
     const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
 
+    // Permanent delete
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [showDelete, setShowDelete] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<ApiKey | null>(null);
+
     // Docs collapsed state
     const [docsOpen, setDocsOpen] = useState(true);
     const [mcpOpen, setMcpOpen] = useState(true);
@@ -158,6 +163,26 @@ export default function ApiKeysPage() {
             console.error('Failed to revoke key:', err);
         } finally {
             setRevoking(null);
+        }
+    }
+
+    async function handleDelete() {
+        if (!deleteTarget) return;
+        setDeleting(deleteTarget.id);
+        try {
+            const res = await fetch(`/api/keys/${deleteTarget.id}?permanent=true`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchKeys();
+                setShowDelete(false);
+                setDeleteTarget(null);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete key');
+            }
+        } catch (err) {
+            console.error('Failed to delete key:', err);
+        } finally {
+            setDeleting(null);
         }
     }
 
@@ -372,6 +397,7 @@ export default function ApiKeysPage() {
                                     status={getKeyStatus(key)}
                                     formatDate={formatDate}
                                     formatRelative={formatRelative}
+                                    onDelete={() => { setDeleteTarget(key); setShowDelete(true); }}
                                 />
                             ))}
                         </div>
@@ -537,6 +563,30 @@ export default function ApiKeysPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* ── Permanent Delete Confirmation Dialog ─────────── */}
+            <Dialog open={showDelete} onOpenChange={setShowDelete}>
+                <DialogContent className="bg-zinc-900 border-white/10 sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">Delete API Key</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Permanently delete <span className="font-mono text-zinc-300">{deleteTarget?.name}</span>? This removes all associated usage logs and cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-white/5 border-white/10">
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={!!deleting}
+                        >
+                            {deleting ? 'Deleting...' : 'Delete Forever'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -549,12 +599,14 @@ function KeyRow({
     formatDate,
     formatRelative,
     onRevoke,
+    onDelete,
 }: {
     apiKey: ApiKey;
     status: { label: string; variant: 'default' | 'destructive' | 'secondary' | 'outline' };
     formatDate: (d: string | null) => string;
     formatRelative: (d: string | null) => string;
     onRevoke?: () => void;
+    onDelete?: () => void;
 }) {
     return (
         <div className="p-4 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
@@ -602,6 +654,18 @@ function KeyRow({
                         size="sm"
                         onClick={onRevoke}
                         className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
+                        title="Revoke key"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                )}
+                {onDelete && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onDelete}
+                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
+                        title="Delete permanently"
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>

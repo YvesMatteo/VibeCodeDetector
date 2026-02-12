@@ -3,7 +3,9 @@ import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr } from
 import { resolveAuth, requireScope } from '@/lib/api-auth';
 
 // ---------------------------------------------------------------------------
-// DELETE /api/keys/[id] — Revoke an API key (soft delete)
+// DELETE /api/keys/[id] — Revoke or permanently delete an API key
+//   ?permanent=true  → hard delete (only if already revoked or expired)
+//   default          → soft revoke
 // ---------------------------------------------------------------------------
 
 export async function DELETE(
@@ -18,8 +20,45 @@ export async function DELETE(
     const scopeError = requireScope(context, 'keys:manage');
     if (scopeError) return scopeError;
 
+    const permanent = req.nextUrl.searchParams.get('permanent') === 'true';
     const supabase = getServiceClient();
     const table = supabase.from('api_keys' as any) as any;
+
+    if (permanent) {
+      // Only allow permanent deletion of inactive keys (revoked or expired)
+      const { data: existing } = await table
+        .select('id, revoked_at, expires_at')
+        .eq('id', id)
+        .eq('user_id', context.userId)
+        .single();
+
+      if (!existing) {
+        return NextResponse.json({ error: 'Key not found' }, { status: 404 });
+      }
+
+      const isRevoked = !!existing.revoked_at;
+      const isExpired = existing.expires_at && new Date(existing.expires_at) < new Date();
+
+      if (!isRevoked && !isExpired) {
+        return NextResponse.json(
+          { error: 'Only revoked or expired keys can be permanently deleted' },
+          { status: 400 },
+        );
+      }
+
+      const { error } = await table
+        .delete()
+        .eq('id', id)
+        .eq('user_id', context.userId);
+
+      if (error) {
+        return NextResponse.json({ error: 'Failed to delete key' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'API key permanently deleted' });
+    }
+
+    // Soft revoke
     const { data, error } = await table
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', id)
