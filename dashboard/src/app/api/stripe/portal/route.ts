@@ -28,7 +28,10 @@ export async function POST(req: Request) {
             .single();
 
         if (!profile?.stripe_customer_id) {
-            return new NextResponse('No subscription found', { status: 404 });
+            return NextResponse.json(
+                { error: 'No active subscription found. Please subscribe to a plan first.' },
+                { status: 404 },
+            );
         }
 
         const allowedOrigins = [

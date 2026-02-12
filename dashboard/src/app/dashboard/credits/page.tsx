@@ -127,6 +127,11 @@ export default function CreditsPage() {
                 headers: { 'Content-Type': 'application/json' },
             });
 
+            if (res.status === 404) {
+                setError('No active subscription found. Choose a plan below to get started.');
+                return;
+            }
+
             if (!res.ok) throw new Error('Portal failed');
 
             const { url } = await res.json();

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 export function ManageSubscriptionButton() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     const handleClick = async () => {
         setLoading(true);
@@ -15,6 +17,11 @@ export function ManageSubscriptionButton() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             });
+
+            if (res.status === 404) {
+                router.push('/dashboard/credits');
+                return;
+            }
 
             if (!res.ok) throw new Error('Portal failed');
 
