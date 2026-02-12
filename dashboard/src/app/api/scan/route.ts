@@ -684,26 +684,26 @@ export async function POST(req: NextRequest) {
             xss: 0.07,            // XSS — critical vulnerability
             ssl_tls: 0.06,        // TLS — foundational
             api_keys: 0.06,       // Exposed keys — high impact
-            cors: 0.05,           // CORS misconfiguration
-            csrf: 0.05,           // CSRF protection
-            cookies: 0.05,        // Cookie security
-            auth: 0.05,           // Authentication flow
-            supabase_backend: 0.05, // Supabase misconfig
-            firebase_backend: 0.05, // Firebase misconfig
-            convex_backend: 0.05, // Convex misconfig
-            supabase_mgmt: 0.05,  // Supabase deep lint
-            open_redirect: 0.04,  // Open redirects
-            github_secrets: 0.04, // Leaked secrets in repo
-            github_security: 0.04, // Dependabot/CodeQL/secret scanning
-            dependencies: 0.04,   // Known CVEs in deps
-            vercel_hosting: 0.03, // Vercel platform checks
-            netlify_hosting: 0.03, // Netlify platform checks
-            cloudflare_hosting: 0.03, // Cloudflare Pages checks
-            railway_hosting: 0.03, // Railway platform checks
-            scorecard: 0.03,      // OpenSSF supply chain score
+            cors: 0.04,           // CORS misconfiguration
+            csrf: 0.04,           // CSRF protection
+            cookies: 0.04,        // Cookie security
+            auth: 0.04,           // Authentication flow
+            supabase_backend: 0.04, // Supabase misconfig
+            firebase_backend: 0.04, // Firebase misconfig
+            convex_backend: 0.04, // Convex misconfig
+            supabase_mgmt: 0.04,  // Supabase deep lint
+            open_redirect: 0.03,  // Open redirects
+            github_secrets: 0.03, // Leaked secrets in repo
+            github_security: 0.03, // Dependabot/CodeQL/secret scanning
+            dependencies: 0.03,   // Known CVEs in deps
             dns_email: 0.03,      // SPF/DMARC/DKIM
             threat_intelligence: 0.03, // Threat feeds
             tech_stack: 0.03,     // Tech fingerprint & CVEs
+            vercel_hosting: 0.02, // Vercel platform checks
+            netlify_hosting: 0.02, // Netlify platform checks
+            cloudflare_hosting: 0.02, // Cloudflare Pages checks
+            railway_hosting: 0.02, // Railway platform checks
+            scorecard: 0.02,      // OpenSSF supply chain score
             legal: 0.01,          // Legal compliance
         };
 

@@ -31,6 +31,11 @@ import {
     ShieldCheck,
     Settings2,
     Eye,
+    Zap,
+    Triangle,
+    Globe2,
+    Cloud,
+    TrainFront,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -80,11 +85,11 @@ const scannerIcons: Record<string, any> = {
     dns_email: Mail,
     xss: Code,
     open_redirect: ExternalLink,
-    vercel_hosting: Server,
-    netlify_hosting: Server,
-    cloudflare_hosting: Server,
-    railway_hosting: Server,
-    convex_backend: Database,
+    vercel_hosting: Triangle,
+    netlify_hosting: Globe2,
+    cloudflare_hosting: Cloud,
+    railway_hosting: TrainFront,
+    convex_backend: Zap,
 };
 
 const scannerNames: Record<string, string> = {
@@ -111,7 +116,7 @@ const scannerNames: Record<string, string> = {
     open_redirect: 'Open Redirect',
     vercel_hosting: 'Vercel Hosting',
     netlify_hosting: 'Netlify Hosting',
-    cloudflare_hosting: 'Cloudflare Hosting',
+    cloudflare_hosting: 'Cloudflare Pages',
     railway_hosting: 'Railway Hosting',
     convex_backend: 'Convex Backend',
 };
