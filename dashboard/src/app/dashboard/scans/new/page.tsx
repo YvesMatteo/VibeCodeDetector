@@ -33,13 +33,18 @@ import {
     ClipboardCheck,
     ShieldCheck,
     Settings2,
+    Zap,
+    Triangle,
+    Globe2,
+    Cloud,
+    TrainFront,
 } from 'lucide-react';
 
 export default function NewScanPage() {
     const searchParams = useSearchParams();
     const [url, setUrl] = useState(searchParams.get('url') || '');
     const [githubRepo, setGithubRepo] = useState('');
-    const [backendType, setBackendType] = useState<'none' | 'supabase' | 'firebase'>('none');
+    const [backendType, setBackendType] = useState<'none' | 'supabase' | 'firebase' | 'convex'>('none');
     const [backendUrl, setBackendUrl] = useState('');
     const [supabasePAT, setSupabasePAT] = useState('');
     const [loading, setLoading] = useState(false);
@@ -86,10 +91,11 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
+                    ...(backendType === 'convex' && backendUrl.trim() ? { convexUrl: backendUrl.trim() } : {}),
                     ...(supabasePAT.trim() ? { supabasePAT: supabasePAT.trim() } : {}),
                 }),
             });
@@ -238,12 +244,13 @@ export default function NewScanPage() {
                                 <select
                                     id="backendType"
                                     value={backendType}
-                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase'); setBackendUrl(''); setSupabasePAT(''); }}
+                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase' | 'convex'); setBackendUrl(''); setSupabasePAT(''); }}
                                     className="w-full h-10 rounded-md border bg-white/5 border-white/10 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 >
                                     <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
                                     <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
                                     <option value="firebase" className="bg-zinc-900 text-white">Firebase</option>
+                                    <option value="convex" className="bg-zinc-900 text-white">Convex</option>
                                 </select>
                             </div>
                             {backendType === 'supabase' && (
@@ -300,9 +307,25 @@ export default function NewScanPage() {
                                     </p>
                                 </div>
                             )}
+                            {backendType === 'convex' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="backendUrl" className="text-zinc-300">Convex Deployment URL</Label>
+                                    <Input
+                                        id="backendUrl"
+                                        type="text"
+                                        placeholder="https://your-project.convex.cloud"
+                                        value={backendUrl}
+                                        onChange={(e) => setBackendUrl(e.target.value)}
+                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/50"
+                                    />
+                                    <p className="text-xs text-zinc-500">
+                                        Checks for exposed deployment URLs, admin key leaks, function enumeration, and CORS policy. Auto-detected if not provided.
+                                    </p>
+                                </div>
+                            )}
                             {backendType === 'none' && (
                                 <p className="text-xs text-zinc-500">
-                                    Both Supabase and Firebase are auto-detected from your site&apos;s source code. Select a provider to provide a specific project URL.
+                                    Supabase, Firebase, and Convex are auto-detected from your site&apos;s source code. Select a provider to provide a specific project URL.
                                 </p>
                             )}
                         </div>
@@ -314,7 +337,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 20 checks automatically
+                            Every scan runs up to 25 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -340,6 +363,11 @@ export default function NewScanPage() {
                                 { icon: ClipboardCheck, name: 'OpenSSF Scorecard', description: 'Supply chain security: branch protection, pinned deps', color: 'text-green-500' },
                                 { icon: ShieldCheck, name: 'GitHub Security', description: 'Dependabot, code scanning, and secret scanning alerts', color: 'text-blue-400' },
                                 { icon: Settings2, name: 'Supabase Deep Lint', description: 'RLS, policies, SECURITY DEFINER, extensions audit', color: 'text-emerald-300' },
+                                { icon: Zap, name: 'Convex Backend', description: 'Deployment URL, admin keys, function enum, CORS', color: 'text-yellow-400' },
+                                { icon: Triangle, name: 'Vercel Hosting', description: 'Source maps, .env, _next/data leaks, git exposure', color: 'text-white' },
+                                { icon: Globe2, name: 'Netlify Hosting', description: 'Functions, build metadata, config files, git exposure', color: 'text-teal-400' },
+                                { icon: Cloud, name: 'Cloudflare Pages', description: 'Workers, old deploys, source maps, config exposure', color: 'text-orange-300' },
+                                { icon: TrainFront, name: 'Railway Hosting', description: 'Error disclosure, config files, connection strings', color: 'text-purple-300' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
                             ].map((check) => (
                                 <div

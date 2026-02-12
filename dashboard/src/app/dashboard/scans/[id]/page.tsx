@@ -33,6 +33,11 @@ import {
     ShieldCheck,
     Settings2,
     Layers,
+    Zap,
+    Triangle,
+    Globe2,
+    Cloud,
+    TrainFront,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
@@ -73,6 +78,11 @@ const scannerIcons: Record<string, any> = {
     dns_email: Mail,
     xss: Code,
     open_redirect: ExternalLink,
+    convex_backend: Zap,
+    vercel_hosting: Triangle,
+    netlify_hosting: Globe2,
+    cloudflare_hosting: Cloud,
+    railway_hosting: TrainFront,
 };
 
 const scannerNames: Record<string, string> = {
@@ -97,6 +107,11 @@ const scannerNames: Record<string, string> = {
     dns_email: 'DNS & Email Security',
     xss: 'XSS Detection',
     open_redirect: 'Open Redirect',
+    convex_backend: 'Convex Backend',
+    vercel_hosting: 'Vercel Hosting',
+    netlify_hosting: 'Netlify Hosting',
+    cloudflare_hosting: 'Cloudflare Pages',
+    railway_hosting: 'Railway Hosting',
 };
 
 function getVibeRating(score: number): { label: string; emoji: string; color: string; bg: string } {
