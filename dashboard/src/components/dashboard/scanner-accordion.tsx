@@ -256,7 +256,7 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
                                 <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
                                     <div className="flex items-center gap-2 mb-1 text-blue-400">
                                         <Info className="h-4 w-4" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Plain English</span>
+                                        <span className="text-xs font-medium tracking-wide">What this means</span>
                                     </div>
                                     <p className="text-sm font-medium text-slate-200">{plainEnglish.summary}</p>
                                     <p className="text-xs text-slate-400 mt-1">{plainEnglish.whyItMatters}</p>
@@ -569,10 +569,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                         <Card key={key} className="mb-4 bg-zinc-900/40 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                             <CardHeader>
                                 <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <Icon className="h-6 w-6 text-red-400" />
-                                        <div className="absolute inset-0 bg-red-500/30 blur-xl" />
-                                    </div>
+                                    <Icon className="h-5 w-5 text-red-400 shrink-0" />
                                     <div>
                                         <CardTitle className="text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
                                         <p className="text-sm text-red-400/70">Scan Failed</p>
@@ -599,10 +596,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                             className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
                         >
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className="relative shrink-0">
-                                    <Icon className="h-6 w-6 text-purple-400" />
-                                    <div className="absolute inset-0 bg-purple-500/20 blur-xl" />
-                                </div>
+                                <Icon className="h-5 w-5 text-zinc-400 shrink-0" />
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-3 flex-wrap">
                                         <h3 className="font-semibold text-white">
@@ -619,9 +613,9 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
-                                <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-                                    {score}<span className="text-sm text-zinc-500">/100</span>
-                                </div>
+                                <span className={`text-lg font-semibold tabular-nums ${getScoreColor(score)}`}>
+                                    {score}
+                                </span>
                                 <ChevronDown
                                     className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                                 />

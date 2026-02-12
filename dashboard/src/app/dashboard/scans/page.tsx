@@ -85,36 +85,36 @@ export default async function ScansPage() {
             </div>
 
             {/* Usage Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <Card className="bg-zinc-900/40 border-white/5">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-zinc-400">Total Scans</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{scanList.length}</div>
-                        <p className="text-sm text-zinc-500">{completedScans.length} completed</p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/40 border-white/5">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-zinc-400">Average Score</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className={`text-3xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-600'}`}>
-                            {avgScore > 0 ? avgScore : '—'}
+                    <CardContent className="pt-5 pb-4">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Total Scans</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold tabular-nums text-white">{scanList.length}</span>
+                            <span className="text-xs text-zinc-500">{completedScans.length} completed</span>
                         </div>
-                        <p className="text-sm text-zinc-500">across {completedScans.length} scan{completedScans.length !== 1 ? 's' : ''}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-zinc-900/40 border-white/5">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-zinc-400">Total Issues Found</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-white">{totalFindings}</div>
-                        <p className="text-sm text-zinc-500">
-                            {criticalCount} critical, {highCount} high
-                        </p>
+                    <CardContent className="pt-5 pb-4">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Average Score</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className={`text-2xl font-semibold tabular-nums ${avgScore > 0 ? getScoreColor(avgScore) : 'text-zinc-600'}`}>
+                                {avgScore > 0 ? avgScore : '—'}
+                            </span>
+                            <span className="text-xs text-zinc-500">{completedScans.length} scan{completedScans.length !== 1 ? 's' : ''}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/40 border-white/5">
+                    <CardContent className="pt-5 pb-4">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Issues Found</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold tabular-nums text-white">{totalFindings}</span>
+                            {(criticalCount > 0 || highCount > 0) && (
+                                <span className="text-xs text-zinc-500">{criticalCount} critical, {highCount} high</span>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -171,7 +171,7 @@ export default async function ScansPage() {
                                     }
 
                                     return (
-                                        <TableRow key={scan.id}>
+                                        <TableRow key={scan.id} className="hover:bg-white/[0.02] transition-colors">
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium">

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Crown,
+    ArrowUpRight,
     Activity,
     Globe,
     ArrowRight,
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
                 {plan !== 'enterprise' && (
                     <Button asChild variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
                         <Link href="/dashboard/credits">
-                            <Crown className="mr-2 h-4 w-4" />
+                            <ArrowUpRight className="mr-2 h-4 w-4" />
                             {plan === 'none' ? 'Subscribe' : 'Upgrade Plan'}
                         </Link>
                     </Button>
