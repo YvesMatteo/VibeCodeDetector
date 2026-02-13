@@ -32,7 +32,22 @@ export async function GET(
       return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
     }
 
-    const markdown = generateScanMarkdown(scan);
+    // Fetch previous completed scan for diffing (same project or same URL)
+    let previousScan: any = null;
+    if (scan.project_id) {
+      const { data } = await supabase
+        .from('scans')
+        .select('*')
+        .eq('project_id', scan.project_id)
+        .eq('status', 'completed')
+        .lt('completed_at', scan.completed_at)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single();
+      previousScan = data;
+    }
+
+    const markdown = generateScanMarkdown(scan, previousScan ?? undefined);
     const domain = (scan.url || 'unknown').replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/[^a-zA-Z0-9.-]/g, '_');
     const date = new Date(scan.completed_at || scan.created_at).toISOString().slice(0, 10);
     const filename = `checkvibe-${domain}-${date}.md`;

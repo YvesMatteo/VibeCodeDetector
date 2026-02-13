@@ -12,6 +12,7 @@ import {
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport, processAuditData } from '@/components/dashboard/audit-report';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
+import { computeScanDiff } from '@/lib/scan-diff';
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -35,21 +36,27 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
 
     const p = project as any;
 
-    // Get latest completed scan
-    const { data: latestScan } = await supabase
+    // Get latest 2 completed scans (current + previous for diff)
+    const { data: recentScans } = await supabase
         .from('scans')
         .select('*')
         .eq('project_id', params.id)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(2);
+
+    const latestScan = recentScans?.[0] ?? null;
+    const previousScan = recentScans?.[1] ?? null;
 
     const hostname = (() => {
         try { return new URL(p.url).hostname; } catch { return p.url; }
     })();
 
     const auditData = latestScan ? processAuditData(latestScan.results as Record<string, any>) : null;
+    const scanDiff = (latestScan && previousScan)
+        ? computeScanDiff(latestScan.results as Record<string, any>, previousScan.results as Record<string, any>)
+        : null;
+    const previousScanDate = previousScan?.completed_at ?? previousScan?.created_at ?? null;
 
     return (
         <div className="p-4 md:p-8">
@@ -131,7 +138,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                         </Button>
                     </div>
 
-                    <AuditReport data={auditData!} />
+                    <AuditReport data={auditData!} diff={scanDiff} previousScanDate={previousScanDate} />
                 </>
             )}
         </div>

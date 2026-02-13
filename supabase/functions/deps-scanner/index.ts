@@ -54,6 +54,7 @@ interface Dependency {
     name: string;
     version: string;
     ecosystem: string;
+    confidence: "exact" | "range";
 }
 
 interface OsvVuln {
@@ -184,12 +185,43 @@ function parsePackageJson(content: string): Dependency[] {
                 }
                 const version = cleanVersion(rawVersion);
                 if (version && /^\d/.test(version)) {
-                    deps.push({ name, version, ecosystem: "npm" });
+                    deps.push({ name, version, ecosystem: "npm", confidence: "range" });
                 }
             }
         }
     } catch {
         // Invalid JSON — skip
+    }
+    return deps;
+}
+
+function parsePackageLockJson(content: string): Dependency[] {
+    const deps: Dependency[] = [];
+    try {
+        const lock = JSON.parse(content);
+        // lockfileVersion 2+ uses "packages" with node_modules/ keys
+        if (lock.packages && typeof lock.packages === "object") {
+            for (const [key, info] of Object.entries(lock.packages)) {
+                if (!key || key === "") continue; // skip root
+                const pkg = info as any;
+                if (!pkg.version) continue;
+                // key is like "node_modules/foo" or "node_modules/@scope/foo"
+                const name = key.replace(/^node_modules\//, "");
+                if (!name || name.includes("node_modules/")) continue; // skip nested
+                deps.push({ name, version: pkg.version, ecosystem: "npm", confidence: "exact" });
+            }
+        }
+        // lockfileVersion 1 uses "dependencies"
+        else if (lock.dependencies && typeof lock.dependencies === "object") {
+            for (const [name, info] of Object.entries(lock.dependencies)) {
+                const pkg = info as any;
+                if (pkg.version && /^\d/.test(pkg.version)) {
+                    deps.push({ name, version: pkg.version, ecosystem: "npm", confidence: "exact" });
+                }
+            }
+        }
+    } catch {
+        // Invalid JSON
     }
     return deps;
 }
@@ -208,7 +240,7 @@ function parseRequirementsTxt(content: string): Dependency[] {
         if (match) {
             const version = cleanVersion(match[2]);
             if (version && /^\d/.test(version)) {
-                deps.push({ name: match[1], version, ecosystem: "PyPI" });
+                deps.push({ name: match[1], version, ecosystem: "PyPI", confidence: "range" });
             }
         }
     }
@@ -247,6 +279,7 @@ function parseGemfileLock(content: string): Dependency[] {
                     name: match[1],
                     version: match[2],
                     ecosystem: "RubyGems",
+                    confidence: "exact",
                 });
             }
         }
@@ -269,6 +302,7 @@ function parseComposerLock(content: string): Dependency[] {
                             name: pkg.name,
                             version,
                             ecosystem: "Packagist",
+                            confidence: "exact",
                         });
                     }
                 }
@@ -298,6 +332,7 @@ function parseGoSum(content: string): Dependency[] {
                     name: match[1],
                     version: match[2],
                     ecosystem: "Go",
+                    confidence: "exact",
                 });
             }
         }
@@ -318,6 +353,7 @@ function parseCargoLock(content: string): Dependency[] {
                 name: nameMatch[1],
                 version: versionMatch[1],
                 ecosystem: "crates.io",
+                confidence: "exact",
             });
         }
     }
@@ -339,6 +375,7 @@ interface PackageVulns {
     name: string;
     version: string;
     ecosystem: string;
+    confidence: "exact" | "range";
     vulns: VulnInfo[];
 }
 
@@ -408,6 +445,7 @@ async function queryOsv(
                 name: dep.name,
                 version: dep.version,
                 ecosystem: dep.ecosystem,
+                confidence: dep.confidence,
                 vulns: [],
             });
         }
@@ -586,16 +624,22 @@ function buildFindings(vulnMap: Map<string, PackageVulns>): {
             recommendation = `Check for an updated version of ${pkg.name} that addresses these vulnerabilities. If no fix is available, consider using an alternative package.`;
         }
 
+        const confidenceLabel = pkg.confidence === "exact"
+            ? ""
+            : " [version inferred from range]";
+
         findings.push({
             id: `deps-vuln-${pkg.ecosystem}-${pkg.name}`.replace(
                 /[^a-z0-9_-]/gi,
                 "-",
             ),
             severity: mapSeverityToFindingSeverity(worstSeverity),
-            title: `${pkg.name}@${pkg.version} (${pkg.ecosystem}) -- ${uniqueVulns.length} known vulnerability${uniqueVulns.length > 1 ? "ies" : ""}`,
+            title: `${pkg.name}@${pkg.version} (${pkg.ecosystem}) -- ${uniqueVulns.length} known vulnerability${uniqueVulns.length > 1 ? "ies" : ""}${confidenceLabel}`,
             description: `Known vulnerabilities in ${pkg.name} ${pkg.version}:\n  ${cveList}${extraNote}`,
-            recommendation,
-            evidence: `Ecosystem: ${pkg.ecosystem}, Installed: ${pkg.version}, Vulnerabilities: ${uniqueVulns.map((v) => v.id).join(", ")}`,
+            recommendation: pkg.confidence === "range"
+                ? `${recommendation} Note: version ${pkg.version} was inferred from a semver range — the actual installed version may differ. Add a lockfile for exact results.`
+                : recommendation,
+            evidence: `Ecosystem: ${pkg.ecosystem}, Installed: ${pkg.version}, Version confidence: ${pkg.confidence}, Vulnerabilities: ${uniqueVulns.map((v) => v.id).join(", ")}`,
         });
     }
 
@@ -785,19 +829,21 @@ Deno.serve(async (req: Request) => {
         const depFiles: Array<{
             file: string;
             parser: (content: string) => Dependency[];
+            isLockfile?: boolean;
         }> = [
             { file: "package.json", parser: parsePackageJson },
+            { file: "package-lock.json", parser: parsePackageLockJson, isLockfile: true },
             { file: "requirements.txt", parser: parseRequirementsTxt },
-            { file: "Gemfile.lock", parser: parseGemfileLock },
-            { file: "composer.lock", parser: parseComposerLock },
-            { file: "go.sum", parser: parseGoSum },
-            { file: "Cargo.lock", parser: parseCargoLock },
+            { file: "Gemfile.lock", parser: parseGemfileLock, isLockfile: true },
+            { file: "composer.lock", parser: parseComposerLock, isLockfile: true },
+            { file: "go.sum", parser: parseGoSum, isLockfile: true },
+            { file: "Cargo.lock", parser: parseCargoLock, isLockfile: true },
         ];
 
         const fileResults = await Promise.all(
-            depFiles.map(async ({ file, parser }) => {
+            depFiles.map(async ({ file, parser, isLockfile }) => {
                 const content = await fetchRepoFile(repo, file, GITHUB_TOKEN!);
-                return { file, content, parser };
+                return { file, content, parser, isLockfile: !!isLockfile };
             }),
         );
 
@@ -805,11 +851,51 @@ Deno.serve(async (req: Request) => {
         const allDeps: Dependency[] = [];
         const filesFound: string[] = [];
 
-        for (const { file, content, parser } of fileResults) {
+        // Parse all files
+        const lockfileDeps: Dependency[] = [];
+        const manifestDeps: Dependency[] = [];
+        for (const { file, content, parser, isLockfile } of fileResults) {
             if (content === null) continue;
             filesFound.push(file);
             const parsed = parser(content);
-            allDeps.push(...parsed);
+            if (isLockfile) {
+                lockfileDeps.push(...parsed);
+            } else {
+                manifestDeps.push(...parsed);
+            }
+        }
+
+        // Build lockfile lookup: name+ecosystem → exact version
+        const lockfileVersions = new Map<string, string>();
+        for (const dep of lockfileDeps) {
+            lockfileVersions.set(`${dep.ecosystem}::${dep.name}`, dep.version);
+        }
+
+        // Upgrade manifest deps to exact if lockfile has them
+        for (const dep of manifestDeps) {
+            const key = `${dep.ecosystem}::${dep.name}`;
+            const exactVersion = lockfileVersions.get(key);
+            if (exactVersion) {
+                dep.version = exactVersion;
+                dep.confidence = "exact";
+            }
+        }
+
+        // Merge: use manifest deps (now upgraded), plus any lockfile-only deps
+        const seen = new Set<string>();
+        for (const dep of manifestDeps) {
+            const key = `${dep.ecosystem}::${dep.name}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                allDeps.push(dep);
+            }
+        }
+        for (const dep of lockfileDeps) {
+            const key = `${dep.ecosystem}::${dep.name}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                allDeps.push(dep);
+            }
         }
 
         // ---------------------------------------------------------------

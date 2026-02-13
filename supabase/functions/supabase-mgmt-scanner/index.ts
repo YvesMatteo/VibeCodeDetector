@@ -140,10 +140,10 @@ async function checkTablesWithoutRLS(ref: string, pat: string): Promise<LintResu
     };
 }
 
-// 2. Permissive RLS policies (using 'true' or no qual)
+// 2. Permissive RLS policies (role-aware — skips service_role, escalates anon writes)
 async function checkPermissivePolicies(ref: string, pat: string): Promise<LintResult> {
     const { data, error } = await runSQL(ref, pat, `
-        SELECT schemaname, tablename, policyname, permissive, cmd, qual
+        SELECT schemaname, tablename, policyname, permissive, cmd, qual, roles
         FROM pg_policies
         WHERE schemaname = 'public'
         AND (qual IS NULL OR qual::text = 'true' OR qual::text = '(true)');
@@ -154,18 +154,70 @@ async function checkPermissivePolicies(ref: string, pat: string): Promise<LintRe
         return { findings: [{ id: "mgmt-policies-ok", severity: "info", title: "No overly permissive RLS policies", description: "All RLS policies have proper conditions.", recommendation: "Continue writing restrictive policies." }], deduction: 0 };
     }
 
-    const details = data.map((r: any) => `${r.tablename}.${r.policyname} (${r.cmd})`).join(", ");
-    return {
-        findings: [{
+    // Partition by role context
+    const serviceRoleOnly: any[] = [];
+    const anonWrite: any[] = [];
+    const otherPermissive: any[] = [];
+
+    for (const row of data) {
+        const rolesStr = typeof row.roles === 'string' ? row.roles : JSON.stringify(row.roles || '');
+        const isServiceRoleOnly = rolesStr.includes('service_role') && !rolesStr.includes('authenticated') && !rolesStr.includes('anon') && !rolesStr.includes('public');
+        const hasAnon = rolesStr.includes('anon') || rolesStr.includes('public');
+        const isWrite = ['INSERT', 'UPDATE', 'DELETE', 'ALL'].includes((row.cmd || '').toUpperCase());
+
+        if (isServiceRoleOnly) {
+            serviceRoleOnly.push(row);
+        } else if (hasAnon && isWrite) {
+            anonWrite.push(row);
+        } else {
+            otherPermissive.push(row);
+        }
+    }
+
+    const findings: Finding[] = [];
+    let deduction = 0;
+
+    // service_role policies with 'true' → expected, info only
+    if (serviceRoleOnly.length > 0) {
+        const details = serviceRoleOnly.map((r: any) => `${r.tablename}.${r.policyname} (${r.cmd})`).join(", ");
+        findings.push({
+            id: "mgmt-policies-service-role",
+            severity: "info",
+            title: `${serviceRoleOnly.length} service_role polic${serviceRoleOnly.length > 1 ? "ies" : "y"} use 'true' (expected)`,
+            description: `Service role policies are expected to use 'true' as the condition because the backend authenticates via the service_role key and needs full access: ${details}`,
+            recommendation: "No action needed. These policies are correctly configured for backend operations.",
+            evidence: details,
+        });
+    }
+
+    // anon/public write policies with 'true' → critical
+    for (const row of anonWrite) {
+        findings.push({
+            id: `mgmt-policy-anon-write-${row.tablename}-${row.policyname}`,
+            severity: "critical",
+            title: `Unauthenticated write access on ${row.tablename}`,
+            description: `The policy '${row.policyname}' allows anonymous users to ${row.cmd} all rows in ${row.tablename} without restrictions. Anyone on the internet can modify this data.`,
+            recommendation: "Replace the 'true' condition with proper auth checks like (auth.uid() = user_id), or restrict to authenticated users only.",
+            evidence: `${row.tablename}.${row.policyname} (${row.cmd}) — roles: ${row.roles}`,
+        });
+        deduction += 15;
+    }
+
+    // authenticated/other with 'true' → high (original behavior)
+    if (otherPermissive.length > 0) {
+        const details = otherPermissive.map((r: any) => `${r.tablename}.${r.policyname} (${r.cmd})`).join(", ");
+        findings.push({
             id: "mgmt-policies-permissive",
             severity: "high",
-            title: `${data.length} overly permissive RLS polic${data.length > 1 ? "ies" : "y"}`,
-            description: `These policies use 'true' as the condition, effectively allowing unrestricted access: ${details}`,
+            title: `${otherPermissive.length} overly permissive RLS polic${otherPermissive.length > 1 ? "ies" : "y"}`,
+            description: `These policies use 'true' as the condition, allowing any authenticated user unrestricted access: ${details}`,
             recommendation: "Replace 'true' conditions with proper auth checks like (auth.uid() = user_id).",
             evidence: details,
-        }],
-        deduction: Math.min(data.length * 10, 30),
-    };
+        });
+        deduction += Math.min(otherPermissive.length * 10, 30);
+    }
+
+    return { findings, deduction: Math.min(deduction, 50) };
 }
 
 // 3. auth.users exposed via foreign keys or views

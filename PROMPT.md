@@ -1,29 +1,27 @@
 # Goal
 
-Implement a major upgrade to the CheckVibe scanner suite — rebuilding the GitHub secrets scanner for deep git history scanning, adding a Supabase backend infrastructure scanner, adding 5 new security scanners (SSL/TLS, DNS/Email, XSS, Open Redirect, Dependency Vulnerabilities), and enhancing the tech scanner with live CVE lookups.
+Implement 7 product improvements to CheckVibe that reduce false positives, separate signal from noise, and add scan diffing — transforming the audit report from a wall of findings into an actionable, trustworthy security tool.
 
 ## Context
 
-- **12 existing scanners** run as Supabase Deno Edge Functions (+ 1 local SEO), orchestrated by `dashboard/src/app/api/scan/route.ts`
-- Shared security utilities: `supabase/functions/_shared/security.ts`
-- Each scanner lives at: `supabase/functions/{name}-scanner/index.ts`
-- Scan form UI: `dashboard/src/app/dashboard/scans/new/page.tsx`
-- Scan results UI: `dashboard/src/app/dashboard/scans/[id]/page.tsx`
-- Scanner weights & valid types defined in `route.ts` (lines 7, 366-379)
-- GitHub scanner currently uses GitHub Search API (rate-limited, no history, limited patterns)
-- Tech scanner has ~100 hardcoded CVEs that become stale
-- No backend infrastructure scanning exists
-- No SSL/TLS, DNS, XSS, or open redirect scanners exist
+**Scanner Architecture:** 26 Deno edge functions in `supabase/functions/` return `{ score, findings[] }` objects. The scan API route (`dashboard/src/app/api/scan/route.ts`) runs all scanners in parallel, computes a weighted overall score, and stores results as JSONB in the `scans` table.
+
+**Display Layer:** `AuditReport` + `ScannerAccordion` components render findings. `processAuditData()` aggregates severity counts (already excludes `info` from the issue total). `export-markdown.ts` generates downloadable reports. `ProjectCard` shows issue count on the dashboard grid.
+
+**Key Files:**
+- Edge scanners: `supabase/functions/{api-key,supabase-mgmt,deps,github-security}-scanner/index.ts`
+- Scan route: `dashboard/src/app/api/scan/route.ts`
+- Report UI: `dashboard/src/components/dashboard/audit-report.tsx`, `scanner-accordion.tsx`
+- Export: `dashboard/src/lib/export-markdown.ts`
+- Project pages: `dashboard/src/app/dashboard/projects/[id]/page.tsx`, `history/page.tsx`
+- DB schema: `supabase/migrations/20260131173500_create_scans_table.sql`
 
 ## Requirements
 
-- All new scanners follow existing Edge Function pattern (Deno, `x-scanner-key` auth, CORS, SSRF protection via `_shared/security.ts`)
-- Non-destructive scanning only — never send payloads that modify data
-- Each scanner returns `{ scannerType, score, findings[], checksRun, scannedAt, url }`
-- Findings use standard severity: `critical | high | medium | low | info`
-- New scanners wired into `route.ts` orchestration with appropriate weights
-- `VALID_SCAN_TYPES` array updated for all new types
-- External API keys optional (graceful degradation if not set)
-- Scan form UI gets new optional inputs: Supabase project URL field
-- Secrets always redacted in findings output (first 4 chars + mask)
-- Total timeout remains 45s per scanner
+- **Fix 1 (Key Prefix Allowlist):** The API key scanner must not flag known-public key formats (Stripe `pk_live_*`, Supabase anon keys, Google Analytics `G-*`, etc.) as leaked secrets. Downgrade to `info` with a note explaining the key is public by design.
+- **Fix 2 (Separate Info from Issues):** Info findings are already excluded from the count, but they still appear mixed inline with real issues in the accordion. Add a separate collapsible "Passing Checks" section at the bottom of each scanner. Update the overview card to say "X actionable issues + Y passing checks".
+- **Fix 3 (RLS Role-Aware Analysis):** The `supabase-mgmt-scanner`'s `checkPermissivePolicies` must query the `roles` column from `pg_policies` and skip/downgrade policies that apply only to `service_role`.
+- **Fix 4 (Top 5 Actions Summary):** Add a prioritized "Recommended Actions" card at the top of every audit report. Pick the top 5 findings by severity, include a one-line fix hint and link to the scanner section.
+- **Fix 5 (Scan Diffing):** When a project has prior scans, compute and display a diff: new issues, resolved issues, unchanged issues. Show a summary banner on the report and individual badges per finding.
+- **Fix 6 (Dependency Version Confidence):** The deps scanner should report confidence level when version detection is ambiguous. Show "confidence: low" instead of asserting wrong versions.
+- **Fix 7 (Source Attribution):** Findings from GitHub's free tools (CodeQL, Dependabot, Secret Scanning) must be labeled with their source. CheckVibe-proprietary findings should be labeled distinctly.

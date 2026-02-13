@@ -1,4 +1,5 @@
 // Full markdown report generator for scan exports
+import { computeScanDiff } from './scan-diff';
 
 const scannerNames: Record<string, string> = {
   security: 'Security Scanner',
@@ -92,7 +93,7 @@ function sortedScannerKeys(results: Record<string, any>): string[] {
   });
 }
 
-export function generateScanMarkdown(scan: any): string {
+export function generateScanMarkdown(scan: any, previousScan?: any): string {
   const lines: string[] = [];
   const url = scan.url || 'Unknown URL';
   const domain = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
@@ -123,8 +124,34 @@ export function generateScanMarkdown(scan: any): string {
   lines.push(`**Status:** ${scan.status}  `);
   lines.push('');
 
+  // ── Scan Diff ──────────────────────────────────────────────────────────
+  if (previousScan?.results) {
+    const diff = computeScanDiff(results, previousScan.results as Record<string, any>);
+    const prevDate = new Date(previousScan.completed_at || previousScan.created_at).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    });
+    const parts: string[] = [];
+    if (diff.resolvedIssues.length > 0) parts.push(`${diff.resolvedIssues.length} resolved`);
+    if (diff.newIssues.length > 0) parts.push(`${diff.newIssues.length} new`);
+    if (diff.unchangedIssues.length > 0) parts.push(`${diff.unchangedIssues.length} unchanged`);
+    if (parts.length > 0) {
+      lines.push(`**Changes since ${prevDate}:** ${parts.join(' · ')}  `);
+      lines.push('');
+    }
+  }
+
+  // Count info/passing checks
+  let infoCount = 0;
+  Object.values(results).forEach((r: any) => {
+    if (r.findings && Array.isArray(r.findings)) {
+      r.findings.forEach((f: any) => {
+        if (f.severity?.toLowerCase() === 'info') infoCount++;
+      });
+    }
+  });
+
   // ── Issues Overview ─────────────────────────────────────────────────────
-  lines.push(`## Issues Found: ${totalIssueCount} — ${rating}`);
+  lines.push(`## Issues Found: ${totalIssueCount} actionable — ${rating}${infoCount > 0 ? ` (${infoCount} passing checks)` : ''}`);
   lines.push('');
 
   // ── Severity Summary ────────────────────────────────────────────────────
@@ -146,6 +173,33 @@ export function generateScanMarkdown(scan: any): string {
   lines.push(`| 🔵 Low | ${counts.low} |`);
   lines.push(`| ℹ️ Info | ${counts.info} |`);
   lines.push('');
+
+  // ── Recommended Actions ─────────────────────────────────────────────────
+  const sevOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+  const allActionable: Array<{ finding: any; scannerKey: string }> = [];
+  for (const [key, r] of Object.entries(results)) {
+    if (!r || !(r as any).findings) continue;
+    for (const f of (r as any).findings) {
+      if (f.severity === 'info') continue;
+      allActionable.push({ finding: f, scannerKey: key });
+    }
+  }
+  allActionable.sort((a, b) => (sevOrder[a.finding.severity] ?? 4) - (sevOrder[b.finding.severity] ?? 4));
+  const topActions = allActionable.slice(0, 5);
+
+  if (topActions.length > 0) {
+    lines.push(`## Recommended Actions (Priority Order)`);
+    lines.push('');
+    topActions.forEach(({ finding, scannerKey }, i) => {
+      const emoji = severityEmoji(finding.severity);
+      const name = scannerNames[scannerKey] || scannerKey;
+      lines.push(`${i + 1}. ${emoji} **${finding.title}** — ${name}`);
+      if (finding.recommendation) {
+        lines.push(`   Fix: ${finding.recommendation}`);
+      }
+    });
+    lines.push('');
+  }
 
   // ── Scanner Summary Table ───────────────────────────────────────────────
   lines.push(`## Scanner Summary`);
@@ -223,7 +277,10 @@ export function generateScanMarkdown(scan: any): string {
       continue;
     }
 
-    for (const finding of allFindings) {
+    const actionableFindings = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+    const passingFindings = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
+
+    for (const finding of actionableFindings) {
       const sev = finding.severity || 'info';
       lines.push(`#### ${severityEmoji(sev)} ${finding.title || 'Untitled Finding'}`);
       lines.push('');
@@ -242,6 +299,15 @@ export function generateScanMarkdown(scan: any): string {
         lines.push('```');
         lines.push(finding.evidence);
         lines.push('```');
+      }
+      lines.push('');
+    }
+
+    if (passingFindings.length > 0) {
+      lines.push(`#### Passing Checks`);
+      lines.push('');
+      for (const f of passingFindings) {
+        lines.push(`- ✅ ${f.title || 'Check passed'}`);
       }
       lines.push('');
     }

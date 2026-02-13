@@ -123,6 +123,57 @@ const API_KEY_PATTERNS = [
     { name: 'Generic Secret', pattern: /(?:secret|password|passwd|pwd)\s*[:=]\s*['"][^'"]{8,}['"]/gi, severity: 'critical' },
 ];
 
+// ---------------------------------------------------------------------------
+// Public key allowlist — keys that are designed to be in client-side code.
+// If a matched secret matches one of these, downgrade to info severity.
+// ---------------------------------------------------------------------------
+const PUBLIC_KEY_ALLOWLIST: Array<{
+    name: string;
+    test: (match: string, context: string) => boolean;
+    note: string;
+}> = [
+    {
+        name: 'Stripe Publishable Key',
+        test: (m) => /^pk_(?:live|test)_/.test(m),
+        note: 'Stripe publishable keys are safe to expose in client-side code. They can only create tokens, not read data.',
+    },
+    {
+        name: 'Google Analytics ID',
+        test: (m) => /^G-[A-Z0-9]{4,12}$/.test(m),
+        note: 'Google Analytics measurement IDs are public tracking identifiers.',
+    },
+    {
+        name: 'Google AdSense ID',
+        test: (m) => /^ca-pub-\d{10,16}$/.test(m),
+        note: 'AdSense publisher IDs are public by design.',
+    },
+    {
+        name: 'reCAPTCHA Site Key',
+        test: (m, ctx) => /recaptcha|captcha|sitekey/i.test(ctx) && /^6L[a-zA-Z0-9_-]{38}$/.test(m),
+        note: 'reCAPTCHA site keys are designed to be public.',
+    },
+];
+
+/**
+ * Check if a matched secret is a known public key.
+ * Returns the allowlist entry if matched, null otherwise.
+ */
+function checkPublicKey(match: string, surroundingContext: string): typeof PUBLIC_KEY_ALLOWLIST[number] | null {
+    for (const entry of PUBLIC_KEY_ALLOWLIST) {
+        if (entry.test(match, surroundingContext)) return entry;
+    }
+    return null;
+}
+
+/**
+ * Get ~200 chars of surrounding context for a match in content.
+ */
+function getSurroundingContext(content: string, matchIndex: number, matchLength: number): string {
+    const start = Math.max(0, matchIndex - 100);
+    const end = Math.min(content.length, matchIndex + matchLength + 100);
+    return content.substring(start, end);
+}
+
 // CDN domains to skip when fetching JS files
 const CDN_SKIP_LIST = [
     'cdn.', 'unpkg.com', 'cdnjs.', 'jsdelivr.net', 'ajax.aspnetcdn.com',
@@ -555,16 +606,33 @@ Deno.serve(async (req: Request) => {
 
                     const isSourceMap = location.startsWith('Source map:');
 
-                    findings.push({
-                        id: `leak-${name.toLowerCase().replace(/\s+/g, '-')}-${findings.length}`,
-                        severity: severity as Finding['severity'],
-                        title: `Exposed ${name}`,
-                        description: `Found a potential ${name} exposed in ${isSourceMap ? 'a downloadable source map' : 'client-side code'}. This could allow attackers to access your services.`,
-                        recommendation: `Immediately revoke this key and generate a new one. Never expose secret keys in client-side code. Use environment variables and server-side API routes instead.${isSourceMap ? ' Disable source map generation in production builds.' : ''}`,
-                        location,
-                        evidence: redactSecret(secret),
-                        category: 'credentials',
-                    });
+                    // Check if this is a known public key (no score deduction)
+                    const context = getSurroundingContext(content, match.index, secret.length);
+                    const publicKey = checkPublicKey(secret, context);
+
+                    if (publicKey) {
+                        findings.push({
+                            id: `public-key-${name.toLowerCase().replace(/\s+/g, '-')}-${findings.length}`,
+                            severity: 'info',
+                            title: `Public Key: ${publicKey.name}`,
+                            description: publicKey.note,
+                            recommendation: 'No action required. This is a publishable key intended for client-side use.',
+                            location,
+                            evidence: redactSecret(secret),
+                            category: 'credentials',
+                        });
+                    } else {
+                        findings.push({
+                            id: `leak-${name.toLowerCase().replace(/\s+/g, '-')}-${findings.length}`,
+                            severity: severity as Finding['severity'],
+                            title: `Exposed ${name}`,
+                            description: `Found a potential ${name} exposed in ${isSourceMap ? 'a downloadable source map' : 'client-side code'}. This could allow attackers to access your services.`,
+                            recommendation: `Immediately revoke this key and generate a new one. Never expose secret keys in client-side code. Use environment variables and server-side API routes instead.${isSourceMap ? ' Disable source map generation in production builds.' : ''}`,
+                            location,
+                            evidence: redactSecret(secret),
+                            category: 'credentials',
+                        });
+                    }
                 }
             }
         }

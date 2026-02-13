@@ -1,4 +1,4 @@
-# Implementation Plan — Scanner Suite v3 Upgrade
+# Implementation Plan — CheckVibe Product Improvements v7
 
 ## Status
 - [x] Planning
@@ -7,599 +7,635 @@
 
 ## Overview
 
-8 workstreams, ordered by priority. Each produces a deployable Edge Function + route.ts wiring.
+7 fixes across edge functions (backend) and dashboard (frontend), ordered by priority. Each fix is independent and can be deployed separately.
 
 ---
 
-## Phase 1: P0 — GitHub Deep Secrets Scanner (Rebuild)
+## Fix 1: Key Prefix Allowlist (Kill False Positives)
 
-### [MODIFY] `supabase/functions/github-scanner/index.ts`
+### [MODIFY] `supabase/functions/api-key-scanner/index.ts`
 
-Complete rewrite. The current scanner uses GitHub Search API which can't scan git history and has severe rate limits (30 searches/min). The rebuild uses GitHub's Git Data API to walk commit trees.
-
-**New approach — 8 checks (up from 5):**
-
-1. **Check 1: Current .env files** (keep existing logic)
-   - `GET /repos/{owner}/{repo}/contents/{file}` for `.env`, `.env.local`, `.env.production`, `.env.staging`, `.env.development`
-   - Decode base64 content, scan for real secrets vs placeholders
-
-2. **Check 2: Git history for deleted .env files** (keep existing logic)
-   - `GET /repos/{owner}/{repo}/commits?path={file}&per_page=1`
-
-3. **Check 3: .gitignore validation** (keep existing logic)
-   - `GET /repos/{owner}/{repo}/contents/.gitignore`
-
-4. **Check 4: Deep commit history scanning** (NEW — replaces old search-based check)
-   - `GET /repos/{owner}/{repo}/commits?per_page=30` → get last 30 commits on default branch
-   - For each commit, `GET /repos/{owner}/{repo}/commits/{sha}` → get `files[]` array with `patch` diffs
-   - Scan each patch/diff against the full 50+ secret pattern list (see below)
-   - Group findings by file, deduplicate, cap at 10 findings
-   - This catches secrets that were committed and then removed in later commits
-
-5. **Check 5: Multi-branch scanning** (NEW)
-   - `GET /repos/{owner}/{repo}/branches?per_page=10` → get all branches
-   - For non-default branches, check latest commit diff for secrets
-   - Flag if secrets found on non-default branches (often forgotten)
-
-6. **Check 6: Dangerous file detection** (expanded from old check 5)
-   - Search for via tree API: `GET /repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1`
-   - Scan file paths for: `.pem`, `.key`, `id_rsa`, `id_ed25519`, `.pfx`, `.p12`, `credentials.json`, `service-account.json`, `terraform.tfstate`, `.tfvars`, `kubeconfig`, `docker-compose.yml` (if contains passwords), `.npmrc` (if contains token), `.pypirc`
-
-7. **Check 7: Dependency file secret scan** (NEW)
-   - Check `docker-compose.yml`, `docker-compose.yaml` for hardcoded passwords
-   - Check `.github/workflows/*.yml` for hardcoded secrets (not using `${{ secrets.* }}`)
-   - Check `Makefile`, `Dockerfile` for hardcoded credentials via `ENV` or `ARG`
-
-8. **Check 8: .env.example with real values** (NEW)
-   - Fetch `.env.example`, `.env.sample`, `.env.template`
-   - Check if they contain actual secret values instead of placeholders
-
-**Expanded secret patterns (50+ total):**
-
-```typescript
-const SECRET_PATTERNS = [
-  // Keep all 16 existing patterns, PLUS add:
-  { pattern: /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/, label: "Supabase Service Role Key", severity: "critical", validate: (m: string) => atob(m.split('.')[1]).includes('"role":"service_role"') },
-  { pattern: /sk-ant-[a-zA-Z0-9_-]{40,}/, label: "Anthropic API Key", severity: "critical" },
-  { pattern: /sk-proj-[a-zA-Z0-9]{48,}/, label: "OpenAI Project Key", severity: "critical" },
-  { pattern: /hf_[a-zA-Z0-9]{34,}/, label: "Hugging Face Token", severity: "high" },
-  { pattern: /r8_[a-zA-Z0-9]{20,}/, label: "Replicate API Token", severity: "high" },
-  { pattern: /AIza[0-9A-Za-z-_]{35}/, label: "Google/Firebase API Key", severity: "high" },
-  { pattern: /SK[a-f0-9]{32}/, label: "Twilio API Key", severity: "high" },
-  { pattern: /SG\.[0-9A-Za-z_-]{22}\.[0-9A-Za-z_-]{43}/, label: "SendGrid API Key", severity: "critical" },
-  { pattern: /key-[a-zA-Z0-9]{32}/, label: "Mailgun API Key", severity: "critical" },
-  { pattern: /[a-f0-9]{32}-us[0-9]{1,2}/, label: "Mailchimp API Key", severity: "high" },
-  { pattern: /shppa_[0-9a-fA-F]{32}/, label: "Shopify Private App Token", severity: "critical" },
-  { pattern: /https:\/\/hooks\.slack\.com\/services\/T[0-9A-Z]{8,}\/B[0-9A-Z]{8,}\/[0-9a-zA-Z]{24}/, label: "Slack Webhook URL", severity: "high" },
-  { pattern: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/, label: "Discord Webhook URL", severity: "high" },
-  { pattern: /\d{8,10}:[A-Za-z0-9_-]{35}/, label: "Telegram Bot Token", severity: "critical" },
-  { pattern: /npm_[A-Za-z0-9]{36}/, label: "NPM Token", severity: "critical" },
-  { pattern: /pypi-AgEIcHlwaS5vcmc[A-Za-z0-9_-]{50,}/, label: "PyPI API Token", severity: "critical" },
-  { pattern: /dckr_pat_[A-Za-z0-9_-]{20,}/, label: "Docker Hub PAT", severity: "critical" },
-  { pattern: /glpat-[0-9a-zA-Z_-]{20,}/, label: "GitLab PAT", severity: "critical" },
-  { pattern: /v1\.[0-9a-f]{40}/, label: "Cloudflare API Token", severity: "high", requiresContext: true },
-  { pattern: /sq0atp-[0-9A-Za-z_-]{22,}/, label: "Square Access Token", severity: "critical" },
-  { pattern: /dp\.st\.[a-zA-Z0-9_-]{40,}/, label: "Doppler Token", severity: "critical" },
-  { pattern: /snyk_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/, label: "Snyk API Token", severity: "high" },
-  { pattern: /lin_api_[a-zA-Z0-9]{40,}/, label: "Linear API Key", severity: "high" },
-  { pattern: /nk_[a-zA-Z0-9]{30,}/, label: "Neon Database Key", severity: "critical" },
-  // Database connection strings (enhanced)
-  { pattern: /mongodb(\+srv)?:\/\/[^:]+:[^@\s]+@[^\s'"]+/, label: "MongoDB Connection String", severity: "critical" },
-  { pattern: /postgres(ql)?:\/\/[^:]+:[^@\s]+@[^\s'"]+/, label: "PostgreSQL Connection String", severity: "critical" },
-  { pattern: /mysql:\/\/[^:]+:[^@\s]+@[^\s'"]+/, label: "MySQL Connection String", severity: "critical" },
-  { pattern: /redis:\/\/[^:]*:[^@\s]+@[^\s'"]+/, label: "Redis Connection String", severity: "critical" },
-  { pattern: /amqp:\/\/[^:]+:[^@\s]+@[^\s'"]+/, label: "RabbitMQ Connection String", severity: "critical" },
-];
-```
-
-**Scoring (unchanged):**
-- Real secrets in .env: -30
-- Potential creds: -20
-- .env exists without secrets: -5
-- History secrets: -20
-- Missing .gitignore: -10
-- Private keys: -25
-- Secrets in commit diffs: -25
-- Secrets on non-default branch: -15
-- Dangerous files: -15
-- .env.example with real values: -10
-
----
-
-## Phase 2: P0 — Supabase Backend Scanner (New)
-
-### [NEW] `supabase/functions/supabase-scanner/index.ts`
-
-**Scanner type ID:** `supabase_backend`
-
-**Input:** `{ targetUrl, supabaseUrl? }` — supabaseUrl is the user's Supabase project URL (optional, auto-detected from HTML if not provided)
-
-**Detection strategy:**
-1. **Auto-detect Supabase URL** from HTML/JS of the target site:
-   - Search for `https://*.supabase.co` patterns in page source and JS files
-   - Extract anon key from `supabase.createClient()` calls or env-like patterns
-
-2. **Test 1: Anon key capability audit** (using detected anon key)
-   - `GET {supabaseUrl}/rest/v1/` with anon key → enumerate exposed tables via PostgREST schema
-   - For each table found, try `GET {supabaseUrl}/rest/v1/{table}?limit=1` → check if data is readable
-   - Flag tables that return data (RLS may be disabled or too permissive)
-   - Severity: critical if returns user data, high if returns any data
-
-3. **Test 2: Service role key detection**
-   - Scan HTML/JS for JWT tokens matching `eyJ...`
-   - Decode JWT payload, check for `"role": "service_role"` claim
-   - If found: critical finding (-40) — service role key bypasses all RLS
-   - Evidence: first 20 chars of token + "...[REDACTED]"
-
-4. **Test 3: Storage bucket enumeration**
-   - `GET {supabaseUrl}/storage/v1/bucket` with anon key
-   - Check response for public buckets
-   - For each public bucket, try `GET {supabaseUrl}/storage/v1/object/list/{bucket}` → check if files are listable
-   - Severity: high if buckets listable, medium if just bucket names exposed
-
-5. **Test 4: Auth configuration exposure**
-   - `GET {supabaseUrl}/auth/v1/settings` → check if auth settings are publicly readable
-   - Check for insecure defaults: email confirmation disabled, weak password policy
-
-6. **Test 5: Edge Function auth check**
-   - If Supabase URL detected, try common function paths without auth:
-   - `POST {supabaseUrl}/functions/v1/{common-name}` with no auth header
-   - Flag if functions respond with 200 instead of 401
-
-7. **Test 6: Realtime channel exposure**
-   - Check if `{supabaseUrl}/realtime/v1` is accessible
-   - Try subscribing to common channel names without auth
-
-8. **Test 7: PostgREST introspection**
-   - `GET {supabaseUrl}/rest/v1/rpc/` → check if RPC functions are enumerable
-   - Flag dangerous functions (delete_, drop_, admin_)
-
-**Scoring:**
-- Service role key leaked: -40 (critical)
-- Tables readable without auth: -25 per table (critical, capped at -50)
-- Public storage buckets listable: -15 (high)
-- Auth settings exposed: -10 (medium)
-- Functions accessible without auth: -15 (high)
-- Realtime accessible: -10 (medium)
-- RPC functions exposed: -10 (medium)
-- Supabase detected but all secure: +info finding "Good: Supabase properly configured"
-
----
-
-## Phase 3: P1 — Dependency Vulnerability Scanner (New)
-
-### [NEW] `supabase/functions/deps-scanner/index.ts`
-
-**Scanner type ID:** `dependencies`
-
-**Input:** `{ targetUrl, githubRepo? }` — needs githubRepo to read dependency files
-
-**Approach:**
-1. If `githubRepo` provided, fetch dependency files via GitHub Contents API:
-   - `package.json`, `package-lock.json` (npm/Node)
-   - `requirements.txt`, `Pipfile.lock` (Python)
-   - `Gemfile.lock` (Ruby)
-   - `composer.lock` (PHP)
-   - `go.sum` (Go)
-   - `Cargo.lock` (Rust)
-
-2. Parse dependency names + versions from each file
-
-3. For each dependency, query **OSV.dev API** (free, no key required):
-   ```
-   POST https://api.osv.dev/v1/query
-   { "package": { "name": "lodash", "ecosystem": "npm" }, "version": "4.17.15" }
-   ```
-
-4. Batch queries using `POST https://api.osv.dev/v1/querybatch` (up to 1000 at once)
-
-5. Map OSV severity to findings:
-   - CRITICAL → critical finding (-20)
-   - HIGH → high finding (-15)
-   - MODERATE → medium finding (-8)
-   - LOW → low finding (-3)
-
-6. Cap deductions at -80 (always show some findings even if many vulns)
-
-7. Group findings by package for cleaner output
-
-**Fallback:** If no githubRepo, detect technology from tech scanner results and show an info-level finding suggesting the user provide a repo URL.
-
----
-
-## Phase 4: P1 — SSL/TLS Scanner (New)
-
-### [NEW] `supabase/functions/ssl-scanner/index.ts`
-
-**Scanner type ID:** `ssl_tls`
-
-**Approach — use SSL Labs API** (free, no key required):
-
-1. Submit analysis: `GET https://api.ssllabs.com/api/v3/analyze?host={domain}&startNew=on&all=done`
-2. Poll for completion: `GET https://api.ssllabs.com/api/v3/analyze?host={domain}`
-3. Parse results for:
-   - **Certificate expiry**: warn if <30 days, critical if expired
-   - **Certificate chain**: flag incomplete chains
-   - **Protocol support**: flag TLS 1.0/1.1 (high), SSL 3.0 (critical)
-   - **Cipher suites**: flag RC4, DES, NULL, EXPORT ciphers
-   - **Grade**: map SSL Labs grade (A+/A/B/C/D/E/F/T) to score
-   - **HSTS preload**: check if domain is in preload list
-   - **Key size**: flag RSA <2048 or ECDSA <256
-   - **Certificate transparency**: check CT logs
-
-4. **Fallback** (if SSL Labs is slow/unavailable): Basic TLS check via Deno's `Deno.connectTls`:
-   - Check certificate validity dates
-   - Check certificate chain depth
-   - Extract protocol version
-
-**Scoring:**
-- Grade A+/A: 100, B: 80, C: 60, D: 40, F: 0
-- Expired cert: -50
-- TLS 1.0/1.1 supported: -20
-- Weak ciphers: -15
-- <30 days until expiry: -10
-- Missing HSTS preload: -5
-
-**Timeout strategy:** SSL Labs analysis can take 60+ seconds. Solution:
-- On first scan, submit analysis and return partial result with `"pending": true`
-- On subsequent scans of same domain, check if analysis is complete
-- Cache results for 24 hours
-
-Alternative faster approach: Skip SSL Labs, use Deno TLS directly + check crt.sh for certificate info.
-
----
-
-## Phase 5: P1 — DNS & Email Security Scanner (New)
-
-### [NEW] `supabase/functions/dns-scanner/index.ts`
-
-**Scanner type ID:** `dns_email`
-
-**Approach — DNS lookups via public DNS-over-HTTPS APIs** (no special libraries needed in Deno):
-
-Use Google's DNS-over-HTTPS: `GET https://dns.google/resolve?name={domain}&type={type}`
-Or Cloudflare: `GET https://cloudflare-dns.com/dns-query?name={domain}&type={type}` with `Accept: application/dns-json`
-
-**Checks:**
-
-1. **SPF Record** (`TXT` lookup for `v=spf1`):
-   - Missing: -15 (high) — email spoofing possible
-   - Too permissive (`+all`): -10 (high)
-   - Uses `~all` (softfail): -3 (low)
-   - Correct (`-all` or `redirect`): pass
-
-2. **DKIM** (`TXT` lookup for common selectors: `default._domainkey`, `google._domainkey`, `selector1._domainkey`, `selector2._domainkey`, `k1._domainkey`):
-   - At least one DKIM record found: pass
-   - None found: -10 (medium) — can't verify email authenticity
-
-3. **DMARC** (`TXT` lookup for `_dmarc.{domain}`):
-   - Missing: -15 (high)
-   - `p=none`: -5 (medium) — monitoring only, no enforcement
-   - `p=quarantine`: -2 (low)
-   - `p=reject`: pass (strict)
-
-4. **DNSSEC** (`ANY` or specific lookup with DO flag via DNS.google `&do=1`):
-   - Check for `ad` (authenticated data) flag in response
-   - Missing: -5 (low/info)
-
-5. **CAA Record** (`CAA` type lookup):
-   - Missing: -3 (low) — any CA can issue certificates
-   - Present: pass
-
-6. **MX Record analysis**:
-   - Check if MX points to known secure providers (Google, Microsoft, Proton, etc.)
-   - Flag open relay indicators
-
-7. **Dangling CNAME / Subdomain Takeover** (bonus):
-   - Fetch `https://crt.sh/?q=%.{domain}&output=json` for CT log subdomains
-   - For each subdomain CNAME, check if target resolves → if not, flag as potential takeover
-   - Limit to first 20 subdomains from CT logs
-
-**Scoring:**
-- All checks pass: 100
-- Missing SPF: -15, Missing DMARC: -15, Missing DKIM: -10
-- Permissive SPF: -10, DMARC p=none: -5
-- Missing CAA: -3, Missing DNSSEC: -5
-
----
-
-## Phase 6: P2 — XSS Scanner (New)
-
-### [NEW] `supabase/functions/xss-scanner/index.ts`
-
-**Scanner type ID:** `xss`
-
-**Approach — passive + light active testing:**
-
-1. **DOM XSS sink detection** (passive — scan JS sources):
-   - Scan for dangerous sinks: `innerHTML`, `outerHTML`, `document.write()`, `document.writeln()`, `eval()`, `setTimeout(string)`, `setInterval(string)`, `Function()`, `$.html()`, `.insertAdjacentHTML()`
-   - Scan for dangerous sources being passed to sinks: `location.hash`, `location.search`, `document.URL`, `document.referrer`, `window.name`, `postMessage`
-   - Score: per sink-source pair found, -10 (medium)
-
-2. **Reflected XSS probing** (active — safe payloads):
-   - Extract URL parameters from the target URL
-   - For each parameter, inject a unique canary string: `cvbxss12345`
-   - Check if the canary appears unescaped in the response HTML
-   - If reflected, try a harmless HTML probe: `<cvb test="1">` (no script, no event handlers)
-   - If HTML tags are reflected unescaped: high finding (-20)
-   - If only text is reflected: low finding (info, properly escaped)
-
-3. **Template injection probing:**
-   - Inject `{{7*7}}` in parameters, check if `49` appears in response (Angular/Vue template injection)
-   - Inject `${7*7}` for template literal injection
-   - If computed: critical finding (-30)
-
-4. **CSP bypass indicators** (from existing security-headers results):
-   - If `unsafe-inline` in CSP script-src: amplifies XSS risk → note in findings
-
-**Safety:**
-- NEVER inject `<script>`, `onerror`, `onload`, or any executable payload
-- Only inject canary strings and harmless HTML tags
-- Max 10 parameters tested
-- 5s timeout per probe
-
-**Scoring:**
-- Template injection: -30 (critical)
-- Reflected HTML unescaped: -20 (high)
-- DOM XSS sink+source pair: -10 (medium) each, capped at -30
-- Reflected but escaped: info only
-
----
-
-## Phase 7: P2 — Open Redirect Scanner (New)
-
-### [NEW] `supabase/functions/redirect-scanner/index.ts`
-
-**Scanner type ID:** `open_redirect`
-
-**Approach:**
-
-1. **Parameter-based redirect testing:**
-   - Common redirect parameters: `redirect`, `redirect_uri`, `redirect_url`, `next`, `url`, `return`, `return_to`, `returnTo`, `continue`, `dest`, `destination`, `goto`, `target`, `rurl`, `redir`, `callback`, `forward`
-   - For each found parameter (from URL + discovered auth pages), set value to:
-     - `https://evil.example.com`
-     - `//evil.example.com`
-     - `/\evil.example.com`
-     - `https://evil.example.com%00.{target_domain}` (null byte bypass)
-   - Follow redirects manually (max 3 hops), check if final URL is `evil.example.com`
-   - Use `redirect: 'manual'` in fetch to inspect Location header
-
-2. **Path-based redirect testing:**
-   - Try `{targetUrl}/redirect?url=https://evil.example.com`
-   - Try `{targetUrl}/oauth/authorize?redirect_uri=https://evil.example.com`
-   - Try `{targetUrl}/login?next=https://evil.example.com`
-
-3. **Meta refresh / JS redirect detection:**
-   - Check if response HTML contains `<meta http-equiv="refresh" content="0;url={param_value}">`
-   - Check for `window.location = param_value` or `window.location.href = param_value`
-
-**Scoring:**
-- Full redirect to external domain: -25 (critical)
-- Protocol-relative redirect (//evil.com): -20 (high)
-- Redirect with bypass technique: -25 (critical)
-- JS/meta redirect: -15 (high)
-- No redirects: 100
-
----
-
-## Phase 8: P2 — Tech Scanner Enhancement (Live CVE)
-
-### [MODIFY] `supabase/functions/tech-scanner/index.ts`
+**Problem:** The scanner flags Stripe publishable keys (`pk_live_*`, `pk_test_*`), Supabase anon keys (`eyJ...` with role=anon), Google Analytics IDs (`G-*`), and other designed-to-be-public keys as CRITICAL leaked secrets.
 
 **Changes:**
 
-1. **Add OSV.dev API integration** alongside existing hardcoded CVE list:
-   - After detecting technologies, batch-query OSV.dev:
-     ```
-     POST https://api.osv.dev/v1/querybatch
-     { "queries": [
-       { "package": { "name": "next", "ecosystem": "npm" }, "version": "14.0.0" },
-       { "package": { "name": "jquery", "ecosystem": "npm" }, "version": "3.4.1" }
-     ]}
-     ```
-   - Map technology names to ecosystem: Next.js→npm:next, jQuery→npm:jquery, PHP→Packagist:php, etc.
-   - Merge OSV results with hardcoded CVE results (deduplicate by CVE ID)
+1. Add a `PUBLIC_KEY_PATTERNS` allowlist array right after the existing `API_KEY_PATTERNS` array (after line 124):
 
-2. **Keep hardcoded CVE list as fallback** (if OSV API is down)
+```typescript
+const PUBLIC_KEY_PATTERNS: Array<{
+    name: string;
+    pattern: RegExp;
+    note: string;
+}> = [
+    // Stripe publishable keys (designed for client-side)
+    { name: 'Stripe Publishable Key', pattern: /pk_(?:live|test)_[a-zA-Z0-9]{24,}/g, note: 'Stripe publishable keys are safe to expose in client-side code.' },
 
-3. **Add technology-to-ecosystem mapping:**
-   ```typescript
-   const TECH_TO_ECOSYSTEM: Record<string, { ecosystem: string; packageName: string }> = {
-     'Next.js': { ecosystem: 'npm', packageName: 'next' },
-     'React': { ecosystem: 'npm', packageName: 'react' },
-     'Vue.js': { ecosystem: 'npm', packageName: 'vue' },
-     'Angular': { ecosystem: 'npm', packageName: '@angular/core' },
-     'jQuery': { ecosystem: 'npm', packageName: 'jquery' },
-     'Bootstrap': { ecosystem: 'npm', packageName: 'bootstrap' },
-     'Express': { ecosystem: 'npm', packageName: 'express' },
-     'WordPress': { ecosystem: 'Packagist', packageName: 'wordpress/wordpress' },
-     'Drupal': { ecosystem: 'Packagist', packageName: 'drupal/core' },
-     'Laravel': { ecosystem: 'Packagist', packageName: 'laravel/framework' },
-     'Django': { ecosystem: 'PyPI', packageName: 'Django' },
-     'Ruby on Rails': { ecosystem: 'RubyGems', packageName: 'rails' },
-   };
-   ```
+    // Supabase anon/publishable key (public by design)
+    { name: 'Supabase Anon Key', pattern: /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*/g, note: 'Supabase anon keys are designed for client-side use with RLS.' },
+    // This one needs an additional check: decode JWT, confirm role === "anon"
+
+    // Google Analytics Measurement ID
+    { name: 'Google Analytics ID', pattern: /\bG-[A-Z0-9]{6,12}\b/g, note: 'Google Analytics measurement IDs are public tracking identifiers.' },
+
+    // Google AdSense Publisher ID
+    { name: 'Google AdSense ID', pattern: /\bca-pub-\d{10,16}\b/g, note: 'AdSense publisher IDs are public by design.' },
+
+    // Google Maps API Key (often restricted by referrer, low risk)
+    { name: 'Google Maps API Key', pattern: /AIzaSy[0-9A-Za-z-_]{33}/g, note: 'Google Maps API keys are commonly used client-side with HTTP referrer restrictions. Verify domain restrictions are set in Google Cloud Console.' },
+
+    // Firebase client config keys
+    { name: 'Firebase Config Key', pattern: /(?:apiKey|FIREBASE_API_KEY)\s*[:=]\s*['"](AIza[0-9A-Za-z-_]{35})['"]/gi, note: 'Firebase API keys are designed for client-side use. They are not secrets — Firebase Security Rules provide access control.' },
+
+    // Supabase URL pattern (not a secret)
+    { name: 'Supabase Project URL', pattern: /https:\/\/[a-z0-9]+\.supabase\.co/g, note: 'Supabase project URLs are public identifiers, not secrets.' },
+
+    // Publishable API keys with explicit "publishable" prefix
+    { name: 'Publishable Key', pattern: /(?:pk|pub|publishable)[_-][a-zA-Z0-9_-]{16,}/gi, note: 'This appears to be a publishable/public key intended for client-side use.' },
+
+    // Recaptcha site key (public by design)
+    { name: 'reCAPTCHA Site Key', pattern: /\b6L[a-zA-Z0-9_-]{38}\b/g, note: 'reCAPTCHA site keys are designed to be public.' },
+];
+```
+
+2. Add a helper function `isPublicKey(match: string, patterns: typeof PUBLIC_KEY_PATTERNS)` that checks if a matched string is a known public key format. For the Supabase case, decode the JWT payload and check `role === "anon"`.
+
+3. In the main scanning loop (where `API_KEY_PATTERNS` are matched against page content), before creating a finding, call `isPublicKey()`. If it returns a match:
+   - Change severity from `critical` → `info`
+   - Prepend the finding title with "Public Key: "
+   - Set description to the `note` from the allowlist
+   - Set recommendation to "No action required. This is a publishable key intended for client-side use."
+
+4. Special handling for `Google API Key` pattern (`AIza...`): Currently flagged as `critical` at line 42. Check if it matches the Firebase config pattern or is near `maps` / `analytics` context. If so, downgrade to `info`. If standalone and no context clues, downgrade to `low` (not critical) with recommendation to verify domain restrictions.
+
+5. Special handling for Supabase JWT (`eyJ...`): The existing pattern at line 58 already has `additionalCheck: (match) => match.includes('service_role')`. This means it only flags service_role tokens. **Keep this behavior** — but also add a separate check: if a JWT is found with `role: "anon"`, emit an `info` finding: "Supabase anon key detected (public by design)."
+
+**Score impact:** Public keys should not deduct from the scanner score. Only add `info` findings (0 deduction).
 
 ---
 
-## Phase 9: Wire Everything Together
+## Fix 2: Separate Info/Passing Checks from Real Issues
 
-### [MODIFY] `dashboard/src/app/api/scan/route.ts`
+### [MODIFY] `dashboard/src/components/dashboard/audit-report.tsx`
 
-1. **Update `VALID_SCAN_TYPES`:**
+**Problem:** The overview card shows issue count correctly (excludes info), but there's no visibility into how many "all clear" checks passed. Users see "12 issues" but don't know there were 27 passing checks — which would build trust.
+
+**Changes to `processAuditData()` (line 39-77):**
+
+1. Add `passingCheckCount` to the return type and computation:
+```typescript
+// After the existing forEach that counts totalFindings:
+let passingCheckCount = 0;
+Object.values(results).forEach((result: any) => {
+    if (result.findings && Array.isArray(result.findings)) {
+        result.findings.forEach((f: any) => {
+            if (f.severity?.toLowerCase() === 'info') passingCheckCount++;
+        });
+    }
+});
+```
+
+2. Update `AuditReportData` interface (line 27) to include `passingCheckCount: number`.
+
+3. In the overview card JSX (line 94), change the "issues" label:
+```tsx
+<span className="text-xs text-zinc-500 mt-1">
+    {issueCount === 1 ? 'issue' : 'issues'}
+</span>
+// Add below:
+{passingCheckCount > 0 && (
+    <span className="text-xs text-emerald-500/70 mt-0.5">
+        + {passingCheckCount} passing checks
+    </span>
+)}
+```
+
+### [MODIFY] `dashboard/src/components/dashboard/scanner-accordion.tsx`
+
+**Changes to each scanner's finding list rendering:**
+
+In the accordion content area where findings are rendered, split findings into two groups:
+- `actionableFindings` = findings with severity !== 'info'
+- `passingChecks` = findings with severity === 'info'
+
+Render actionable findings as-is (current behavior). After them, if `passingChecks.length > 0`, render a collapsible "Passing Checks" section:
+
+```tsx
+{passingChecks.length > 0 && (
+    <details className="mt-4 pt-3 border-t border-white/5">
+        <summary className="cursor-pointer text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5" />
+            {passingChecks.length} passing check{passingChecks.length !== 1 ? 's' : ''}
+        </summary>
+        <div className="mt-2 space-y-2">
+            {passingChecks.map((f, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 text-xs text-zinc-500 bg-zinc-900/30 rounded">
+                    <CheckCircle className="h-3.5 w-3.5 text-green-500/50 mt-0.5 shrink-0" />
+                    <span>{f.title}</span>
+                </div>
+            ))}
+        </div>
+    </details>
+)}
+```
+
+### [MODIFY] `dashboard/src/lib/export-markdown.ts`
+
+**Changes to `generateScanMarkdown()` (line 95):**
+
+1. In the "Issues Found" header (line 127), change to:
+```
+## Issues Found: ${totalIssueCount} actionable (${infoCount} passing checks)
+```
+
+2. In the per-scanner detail section (line 226), render info findings under a "### Passing Checks" sub-header instead of mixed in with real issues.
+
+---
+
+## Fix 3: RLS Role-Aware Analysis
+
+### [MODIFY] `supabase/functions/supabase-mgmt-scanner/index.ts`
+
+**Problem:** `checkPermissivePolicies()` (line 143-169) queries `pg_policies` for rows where `qual IS NULL OR qual::text = 'true'` but doesn't check the `roles` column. service_role policies with `true` are expected/correct.
+
+**Changes to `checkPermissivePolicies()` function:**
+
+1. Update the SQL query (line 145-149) to also select the `roles` column:
+```sql
+SELECT schemaname, tablename, policyname, permissive, cmd, qual,
+       roles
+FROM pg_policies
+WHERE schemaname = 'public'
+AND (qual IS NULL OR qual::text = 'true' OR qual::text = '(true)');
+```
+
+2. After fetching results, partition them into three categories:
+```typescript
+const serviceRolePolicies = data.filter((r: any) => {
+    const roles = r.roles;
+    // roles is a text[] like {service_role} or {authenticated,anon}
+    if (!roles) return false;
+    const rolesStr = typeof roles === 'string' ? roles : JSON.stringify(roles);
+    return rolesStr.includes('service_role') && !rolesStr.includes('authenticated') && !rolesStr.includes('anon');
+});
+
+const anonWritePolicies = data.filter((r: any) => {
+    const rolesStr = typeof r.roles === 'string' ? r.roles : JSON.stringify(r.roles || '');
+    const isWrite = ['INSERT', 'UPDATE', 'DELETE', 'ALL'].includes((r.cmd || '').toUpperCase());
+    return rolesStr.includes('anon') && isWrite;
+});
+
+const otherPermissive = data.filter((r: any) =>
+    !serviceRolePolicies.includes(r) && !anonWritePolicies.includes(r)
+);
+```
+
+3. Generate findings per category:
+
+- **`serviceRolePolicies`**: Emit a single `info` finding:
+  ```
+  id: "mgmt-policies-service-role"
+  severity: "info"
+  title: "${serviceRolePolicies.length} service_role policies use 'true' (expected)"
+  description: "Service role policies are expected to use 'true' as the condition because the backend authenticates via the service_role key and needs full access."
+  recommendation: "No action needed. These policies are correctly configured for backend operations."
+  ```
+  Deduction: 0
+
+- **`anonWritePolicies`**: Emit a `critical` finding per policy:
+  ```
+  id: "mgmt-policy-anon-write-{tablename}"
+  severity: "critical"
+  title: "Unauthenticated write access on {tablename}"
+  description: "The policy '{policyname}' allows anonymous users to {cmd} all rows in {tablename} without restrictions."
+  recommendation: "Replace the 'true' condition with proper auth checks, or restrict to authenticated users only."
+  ```
+  Deduction: 15 per policy
+
+- **`otherPermissive`** (authenticated with true): Keep existing behavior — `high` severity, 10 deduction per policy.
+
+4. Update the deduction calculation to reflect the three categories.
+
+---
+
+## Fix 4: Top 5 Actions Summary
+
+### [NEW] `dashboard/src/components/dashboard/recommended-actions.tsx`
+
+Create a new component that takes `AuditReportData` and renders a prioritized action list.
+
+**Logic to pick top 5:**
+```typescript
+function getTopActions(data: AuditReportData): Action[] {
+    const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+
+    // Collect all non-info findings with their scanner key
+    const allActionable: Array<{ finding: any; scannerKey: string }> = [];
+    for (const [key, result] of Object.entries(data.scannerResults)) {
+        if (!result.findings) continue;
+        for (const f of result.findings) {
+            if (f.severity === 'info') continue;
+            allActionable.push({ finding: f, scannerKey: key });
+        }
+    }
+    // Also include tech stack CVEs
+    for (const f of data.techStackCveFindings) {
+        allActionable.push({ finding: f, scannerKey: 'tech_stack' });
+    }
+
+    // Sort by severity, then by scanner weight (higher weight = more important)
+    allActionable.sort((a, b) => {
+        const sevDiff = (SEVERITY_ORDER[a.finding.severity] ?? 4) - (SEVERITY_ORDER[b.finding.severity] ?? 4);
+        if (sevDiff !== 0) return sevDiff;
+        return 0; // Stable sort preserves scanner order
+    });
+
+    return allActionable.slice(0, 5).map(({ finding, scannerKey }) => ({
+        severity: finding.severity,
+        title: finding.title,
+        recommendation: finding.recommendation || 'Review and remediate this finding.',
+        scannerKey,
+        scannerName: scannerNames[scannerKey] || scannerKey,
+    }));
+}
+```
+
+**JSX:**
+```tsx
+<Card className="bg-zinc-900/40 border-white/5 mb-8">
+    <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-amber-400" />
+            <CardTitle className="text-white text-base">Recommended Actions</CardTitle>
+        </div>
+    </CardHeader>
+    <CardContent>
+        <ol className="space-y-3">
+            {actions.map((action, i) => (
+                <li key={i} className="flex items-start gap-3">
+                    <span className="text-sm font-mono text-zinc-500 mt-0.5">{i + 1}.</span>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <SeverityDot severity={action.severity} />
+                            <span className="text-sm font-medium text-white">{action.title}</span>
+                        </div>
+                        <p className="text-xs text-zinc-400">{action.recommendation}</p>
+                        <span className="text-xs text-zinc-600">— {action.scannerName}</span>
+                    </div>
+                </li>
+            ))}
+        </ol>
+    </CardContent>
+</Card>
+```
+
+### [MODIFY] `dashboard/src/components/dashboard/audit-report.tsx`
+
+Insert `<RecommendedActions data={data} />` as the FIRST child inside the fragment (before the Findings Overview card, line 89). Only render if `issueCount > 0`.
+
+### [MODIFY] `dashboard/src/lib/export-markdown.ts`
+
+Add a "## Recommended Actions (Priority Order)" section right after the severity summary table (after line 148). Use the same top-5 picking logic. Format:
+
+```markdown
+## Recommended Actions (Priority Order)
+
+1. 🔴 **Rotate leaked Supabase Service Key** — GitHub Security Alerts
+   Fix: Rotate the key immediately and remove from repository history.
+2. 🟠 **Fix 3 clear-text logging issues** — GitHub Security Alerts
+   Fix: Use structured logging with secret masking.
+...
+```
+
+---
+
+## Fix 5: Scan Diffing Between Runs
+
+### [NEW] `dashboard/src/lib/scan-diff.ts`
+
+Create a utility that compares two scans' findings:
+
+```typescript
+interface ScanDiff {
+    newIssues: DiffFinding[];        // In current but not previous
+    resolvedIssues: DiffFinding[];   // In previous but not current
+    unchangedIssues: DiffFinding[];  // In both
+}
+
+interface DiffFinding {
+    finding: any;
+    scannerKey: string;
+}
+
+export function computeScanDiff(
+    currentResults: Record<string, any>,
+    previousResults: Record<string, any>
+): ScanDiff {
+    // Build fingerprints for each finding:
+    // fingerprint = `${scannerKey}::${finding.id || finding.title}::${finding.severity}`
+    // This handles findings that have stable IDs (most do) plus title-based fallback
+
+    const currentFingerprints = new Map<string, DiffFinding>();
+    const previousFingerprints = new Map<string, DiffFinding>();
+
+    for (const [key, result] of Object.entries(currentResults)) {
+        if (!result?.findings) continue;
+        for (const f of result.findings) {
+            if (f.severity === 'info') continue;
+            const fp = `${key}::${f.id || f.title}::${f.severity}`;
+            currentFingerprints.set(fp, { finding: f, scannerKey: key });
+        }
+    }
+
+    for (const [key, result] of Object.entries(previousResults)) {
+        if (!result?.findings) continue;
+        for (const f of result.findings) {
+            if (f.severity === 'info') continue;
+            const fp = `${key}::${f.id || f.title}::${f.severity}`;
+            previousFingerprints.set(fp, { finding: f, scannerKey: key });
+        }
+    }
+
+    const newIssues: DiffFinding[] = [];
+    const resolvedIssues: DiffFinding[] = [];
+    const unchangedIssues: DiffFinding[] = [];
+
+    for (const [fp, df] of currentFingerprints) {
+        if (previousFingerprints.has(fp)) unchangedIssues.push(df);
+        else newIssues.push(df);
+    }
+    for (const [fp, df] of previousFingerprints) {
+        if (!currentFingerprints.has(fp)) resolvedIssues.push(df);
+    }
+
+    return { newIssues, resolvedIssues, unchangedIssues };
+}
+```
+
+### [NEW] `dashboard/src/components/dashboard/scan-diff-banner.tsx`
+
+A banner component that shows the diff summary:
+
+```tsx
+interface ScanDiffBannerProps {
+    diff: ScanDiff;
+    previousScanDate: string;
+}
+
+// Renders:
+// ┌─────────────────────────────────────────────────────┐
+// │ Since last scan (Feb 12, 2026):                     │
+// │ ✅ 5 issues resolved  ⚠️ 2 new issues  ─ 7 unchanged │
+// └─────────────────────────────────────────────────────┘
+```
+
+Use emerald for resolved, red for new, zinc for unchanged. Make it a Card with flex row layout.
+
+### [MODIFY] `dashboard/src/app/dashboard/projects/[id]/page.tsx`
+
+1. After fetching the latest completed scan, also fetch the **second most recent** completed scan for the same project:
+```typescript
+const { data: previousScans } = await supabase
+    .from('scans')
+    .select('id, results, completed_at')
+    .eq('project_id', params.id)
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .range(1, 1);  // Skip first (current), get second
+
+const previousScan = previousScans?.[0] || null;
+```
+
+2. If both current and previous scans exist, compute the diff:
+```typescript
+const diff = previousScan
+    ? computeScanDiff(latestScan.results, previousScan.results)
+    : null;
+```
+
+3. Pass `diff` and `previousScan.completed_at` to the `AuditReport` component as optional props.
+
+### [MODIFY] `dashboard/src/components/dashboard/audit-report.tsx`
+
+1. Add optional `diff` and `previousScanDate` props to `AuditReportProps`.
+2. If `diff` is provided, render `<ScanDiffBanner diff={diff} previousScanDate={previousScanDate} />` between the Findings Overview card and the Detected Stack section.
+
+### [MODIFY] `dashboard/src/lib/export-markdown.ts`
+
+If diff data is available (passed as optional param to `generateScanMarkdown`), add a "## Changes Since Last Scan" section after the severity summary:
+
+```markdown
+## Changes Since Last Scan (Feb 12, 2026)
+
+- ✅ **5 issues resolved**
+- ⚠️ **2 new issues detected**
+- **7 issues unchanged**
+
+### New Issues
+1. 🔴 Missing HSTS header — Security Scanner
+2. 🟠 Open redirect on /login — Open Redirect
+
+### Resolved Issues
+1. 🔴 Leaked service_role key — GitHub Security Alerts
+...
+```
+
+---
+
+## Fix 6: Dependency Version Confidence
+
+### [MODIFY] `supabase/functions/deps-scanner/index.ts`
+
+**Problem:** The scanner reads `package.json` (which has version ranges like `^4.30.0`) and reports the minimum version from the range as the actual installed version. This leads to stale version reports (e.g., reporting 4.30.0 when 4.57.6 is actually installed).
+
+**Changes:**
+
+1. Add a `confidence` field to the internal `Dependency` interface:
+```typescript
+interface Dependency {
+    name: string;
+    version: string;
+    ecosystem: string;
+    confidence: 'high' | 'medium' | 'low';
+}
+```
+
+2. In each parser function, set confidence based on the source:
+   - `package-lock.json` / `Gemfile.lock` / `composer.lock` / `Cargo.lock` → `confidence: 'high'` (exact pinned versions)
+   - `requirements.txt` with `==` operator → `confidence: 'high'`
+   - `requirements.txt` with `>=` or `~=` → `confidence: 'low'`
+   - `package.json` dependencies (semver range) → `confidence: 'low'`
+   - `go.sum` → `confidence: 'high'` (exact hashes)
+
+3. Prioritize lockfiles over manifests:
+   - In `parseNpmDeps()`, attempt `package-lock.json` first. If found, use it and set `confidence: 'high'`. Only fall back to `package.json` (with `confidence: 'low'`) if no lockfile exists.
+   - Currently (line 168-196), the scanner already tries `package.json`. Add a preceding attempt for `package-lock.json`.
+
+4. In the finding output, include confidence in the description when it's `low`:
+```typescript
+if (dep.confidence === 'low') {
+    finding.description += ` (Version ${dep.version} detected from manifest — actual installed version may differ. Verify with lockfile.)`;
+}
+```
+
+5. In the overall scanner summary finding, if >50% of deps have `confidence: 'low'`, add a warning finding:
+```typescript
+{
+    id: "deps-confidence-warning",
+    severity: "info",
+    title: "Version detection based on manifests, not lockfiles",
+    description: "No lockfile (package-lock.json, yarn.lock, etc.) was found. Versions were inferred from version ranges in the manifest. Actual installed versions may be newer.",
+    recommendation: "Commit your lockfile to the repository for accurate vulnerability scanning."
+}
+```
+
+---
+
+## Fix 7: Source Attribution on Findings
+
+### [MODIFY] `supabase/functions/github-security-scanner/index.ts`
+
+**Problem:** Dependabot, CodeQL, and Secret Scanning are GitHub's free built-in tools. The findings appear as if CheckVibe found them, reducing perceived value-add.
+
+**Changes:**
+
+1. Add a `source` field to every finding emitted by this scanner. In each of the three sub-functions:
+
+   - `fetchDependabotAlerts()`: Add `source: "GitHub Dependabot (free)"` to every finding
+   - `fetchCodeScanningAlerts()`: Add `source: "GitHub CodeQL (free)"` to every finding
+   - `fetchSecretScanningAlerts()`: Add `source: "GitHub Secret Scanning (free)"` to every finding
+
+2. This is a simple change: in each `findings.push({...})` call, add the `source` field:
    ```typescript
-   const VALID_SCAN_TYPES = [
-     'security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli',
-     'tech_stack', 'cors', 'csrf', 'cookies', 'auth',
-     // New in v3:
-     'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email',
-     'xss', 'open_redirect',
-   ] as const;
+   findings.push({
+       id: `gh-sec-dependabot-${alert.number}`,
+       severity: sev,
+       title: `...`,
+       description: `...`,
+       recommendation: `...`,
+       source: "GitHub Dependabot (free)",  // ← ADD THIS
+   });
    ```
 
-2. **Add new scanner invocations** (same pattern as existing):
-   ```typescript
-   // 13. Supabase Backend Scanner
-   scannerPromises.push(
-     fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken || supabaseAnonKey}`, 'x-scanner-key': scannerSecretKey },
-       body: JSON.stringify({ targetUrl, supabaseUrl: body.supabaseUrl }),
-     }).then(res => res.json()).then(data => { results.supabase_backend = data; }).catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
-   );
+### [MODIFY] Other edge function scanners
 
-   // 14. Dependency Scanner (only if githubRepo provided)
-   if (githubRepo && typeof githubRepo === 'string') {
-     scannerPromises.push(/* deps-scanner invocation */);
-   }
+For ALL other scanners (api-key, supabase, supabase-mgmt, cors, csrf, etc.), add `source: "CheckVibe"` to every finding they emit. This creates a clear contrast.
 
-   // 15. SSL/TLS Scanner
-   scannerPromises.push(/* ssl-scanner invocation */);
+**Scanners to update (add `source: "CheckVibe"` to all findings.push calls):**
+- `api-key-scanner/index.ts`
+- `supabase-scanner/index.ts`
+- `supabase-mgmt-scanner/index.ts`
+- `security-headers-scanner/index.ts`
+- `cors-scanner/index.ts`
+- `csrf-scanner/index.ts`
+- `cookie-scanner/index.ts`
+- `auth-scanner/index.ts`
+- `sqli-scanner/index.ts`
+- `xss-scanner/index.ts`
+- `redirect-scanner/index.ts`
+- `ssl-scanner/index.ts`
+- `dns-scanner/index.ts`
+- `deps-scanner/index.ts`
+- `threat-scanner/index.ts`
+- `legal-scanner/index.ts`
+- `tech-scanner/index.ts`
+- `vibe-scanner/index.ts`
+- `vercel-scanner/index.ts`
+- `netlify-scanner/index.ts`
+- `cloudflare-scanner/index.ts`
+- `railway-scanner/index.ts`
+- `scorecard-scanner/index.ts`
+- `firebase-scanner/index.ts`
+- `convex-scanner/index.ts`
+- `github-scanner/index.ts`
 
-   // 16. DNS/Email Scanner
-   scannerPromises.push(/* dns-scanner invocation */);
+### [MODIFY] `dashboard/src/components/dashboard/scanner-accordion.tsx`
 
-   // 17. XSS Scanner
-   scannerPromises.push(/* xss-scanner invocation */);
+In the `FindingCard` component, display the `source` badge if present:
 
-   // 18. Open Redirect Scanner
-   scannerPromises.push(/* redirect-scanner invocation */);
-   ```
+```tsx
+{finding.source && (
+    <Badge
+        variant="outline"
+        className={
+            finding.source.includes('free')
+                ? 'text-zinc-500 border-zinc-700 text-[10px]'
+                : 'text-indigo-400 border-indigo-500/30 text-[10px]'
+        }
+    >
+        {finding.source}
+    </Badge>
+)}
+```
 
-3. **Update `SCANNER_WEIGHTS`:**
-   ```typescript
-   const SCANNER_WEIGHTS: Record<string, number> = {
-     security: 0.12,
-     sqli: 0.10,
-     cors: 0.08,
-     csrf: 0.08,
-     cookies: 0.07,
-     auth: 0.08,
-     api_keys: 0.08,
-     xss: 0.08,            // NEW
-     supabase_backend: 0.06, // NEW
-     open_redirect: 0.05,   // NEW
-     ssl_tls: 0.05,         // NEW
-     dns_email: 0.04,       // NEW
-     dependencies: 0.04,    // NEW
-     threat_intelligence: 0.04,
-     github_secrets: 0.04,
-     tech_stack: 0.03,
-     seo: 0.02,
-     legal: 0.01,
-   };
-   ```
+Position it next to the severity badge in the finding header.
 
-4. **Pass `supabaseUrl` from request body** to supabase-scanner:
-   ```typescript
-   const { url, scanTypes, githubRepo, supabaseUrl } = body;
-   ```
+### [MODIFY] `dashboard/src/lib/export-markdown.ts`
 
-### [MODIFY] `dashboard/src/app/dashboard/scans/new/page.tsx`
-
-1. **Add Supabase URL input field** (optional, after GitHub repo field):
-   ```tsx
-   <div className="space-y-2">
-     <Label htmlFor="supabaseUrl">Supabase Project URL (optional)</Label>
-     <Input
-       id="supabaseUrl"
-       placeholder="https://yourproject.supabase.co"
-       value={supabaseUrl}
-       onChange={(e) => setSupabaseUrl(e.target.value)}
-     />
-     <p className="text-xs text-muted-foreground">
-       Auto-detected from your site if not provided. Enables deep backend security scanning.
-     </p>
-   </div>
-   ```
-
-2. **Add new scanner descriptions** to the "What's Included" section:
-   - XSS Scanner icon + description
-   - Open Redirect Scanner icon + description
-   - SSL/TLS Scanner icon + description
-   - DNS/Email Security icon + description
-   - Backend Infrastructure icon + description
-   - Dependency Vulnerabilities icon + description
-
-3. **Pass `supabaseUrl` in fetch body:**
-   ```typescript
-   body: JSON.stringify({
-     url,
-     scanTypes: ['security', 'api_keys', 'seo', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'supabase_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect'],
-     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
-     ...(supabaseUrl.trim() ? { supabaseUrl: supabaseUrl.trim() } : {}),
-   }),
-   ```
-
-### [MODIFY] `dashboard/src/app/dashboard/scans/[id]/page.tsx`
-
-1. **Add result display components** for each new scanner type
-2. **Add icons** for new scanner categories (use Lucide: `Shield`, `Lock`, `Mail`, `Code`, `AlertTriangle`, `Package`)
-3. **Handle "pending" state** for SSL/TLS scanner (which may return a pending result on first scan)
+In the per-finding markdown output (line 226-247), append source if available:
+```typescript
+if (finding.source) {
+    lines.push(`**Source:** ${finding.source}  `);
+}
+```
 
 ---
 
 ## Verification
 
-### Deploy & Test Each Scanner
-
+### Build Verification
 ```bash
-# Deploy all new scanners
-supabase functions deploy github-scanner --no-verify-jwt
-supabase functions deploy supabase-scanner --no-verify-jwt
+cd dashboard && npm run build
+```
+
+### Deploy Updated Edge Functions
+```bash
+# Fix 1: API Key Scanner
+supabase functions deploy api-key-scanner --no-verify-jwt
+
+# Fix 3: Supabase Mgmt Scanner
+supabase functions deploy supabase-mgmt-scanner --no-verify-jwt
+
+# Fix 6: Deps Scanner
 supabase functions deploy deps-scanner --no-verify-jwt
-supabase functions deploy ssl-scanner --no-verify-jwt
-supabase functions deploy dns-scanner --no-verify-jwt
-supabase functions deploy xss-scanner --no-verify-jwt
-supabase functions deploy redirect-scanner --no-verify-jwt
 
-# Set secrets for new scanners (if needed)
-# No new API keys required! All new scanners use free APIs:
-# - OSV.dev: free, no key
-# - SSL Labs: free, no key
-# - DNS-over-HTTPS: free, no key
-# - GitHub API: already configured (GITHUB_TOKEN)
+# Fix 7: All scanners (source attribution)
+# Deploy all 26 edge functions
+for scanner in security-headers-scanner api-key-scanner legal-scanner threat-scanner sqli-scanner tech-scanner github-scanner cors-scanner csrf-scanner cookie-scanner auth-scanner supabase-scanner firebase-scanner convex-scanner deps-scanner ssl-scanner dns-scanner xss-scanner redirect-scanner scorecard-scanner github-security-scanner supabase-mgmt-scanner vercel-scanner netlify-scanner cloudflare-scanner railway-scanner vibe-scanner; do
+    supabase functions deploy $scanner --no-verify-jwt
+done
+```
 
-# Test each scanner individually
-curl -X POST https://vlffoepzknlbyxhkmwmn.supabase.co/functions/v1/dns-scanner \
+### Manual Testing
+```bash
+# Test API key scanner (Fix 1) — should NOT flag pk_live_ as critical
+curl -X POST https://vlffoepzknlbyxhkmwmn.supabase.co/functions/v1/api-key-scanner \
   -H "Content-Type: application/json" \
   -H "x-scanner-key: $SCANNER_SECRET_KEY" \
   -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-  -d '{"targetUrl": "https://example.com"}'
-```
+  -d '{"targetUrl": "https://checkvibe.dev"}'
 
-### Test Full Scan
-
-```bash
-# Run full scan with all new scanner types
-curl -X POST http://localhost:3000/api/scan \
+# Test supabase-mgmt scanner (Fix 3) — should separate service_role from real issues
+curl -X POST https://vlffoepzknlbyxhkmwmn.supabase.co/functions/v1/supabase-mgmt-scanner \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer cvd_live_..." \
-  -d '{
-    "url": "https://example.com",
-    "githubRepo": "owner/repo",
-    "supabaseUrl": "https://project.supabase.co"
-  }'
-```
+  -H "x-scanner-key: $SCANNER_SECRET_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -d '{"targetUrl": "https://checkvibe.dev", "supabasePAT": "...", "supabaseUrl": "https://vlffoepzknlbyxhkmwmn.supabase.co"}'
 
-### Build Verification
-
-```bash
-cd dashboard && npm run build
+# Full scan test — verify all fixes work together
+# Run two scans on the same project to test diff (Fix 5)
 ```
 
 ---
 
 ## Summary Table
 
-| Phase | Scanner | Type ID | Priority | External APIs | New Files |
-|-------|---------|---------|----------|---------------|-----------|
-| 1 | GitHub Deep Secrets | `github_secrets` | P0 | GitHub API (existing) | Modify `github-scanner/index.ts` |
-| 2 | Supabase Backend | `supabase_backend` | P0 | None (Supabase REST) | New `supabase-scanner/index.ts` |
-| 3 | Dependencies | `dependencies` | P1 | OSV.dev (free) | New `deps-scanner/index.ts` |
-| 4 | SSL/TLS | `ssl_tls` | P1 | SSL Labs (free) | New `ssl-scanner/index.ts` |
-| 5 | DNS/Email | `dns_email` | P1 | Google DNS-over-HTTPS (free) | New `dns-scanner/index.ts` |
-| 6 | XSS | `xss` | P2 | None | New `xss-scanner/index.ts` |
-| 7 | Open Redirect | `open_redirect` | P2 | None | New `redirect-scanner/index.ts` |
-| 8 | Tech CVE Enhancement | `tech_stack` | P2 | OSV.dev (free) | Modify `tech-scanner/index.ts` |
-| 9 | Wire Together | — | — | — | Modify `route.ts`, scan form, results page |
+| Fix | Priority | Scope | Files Modified | New Files |
+|-----|----------|-------|---------------|-----------|
+| 1. Key Prefix Allowlist | P1 | Backend | `api-key-scanner/index.ts` | — |
+| 2. Separate Info/Passing | P2 | Frontend | `audit-report.tsx`, `scanner-accordion.tsx`, `export-markdown.ts` | — |
+| 3. RLS Role-Aware | P3 | Backend | `supabase-mgmt-scanner/index.ts` | — |
+| 4. Top 5 Actions | P4 | Frontend | `audit-report.tsx`, `export-markdown.ts` | `recommended-actions.tsx` |
+| 5. Scan Diffing | P5 | Full-stack | `projects/[id]/page.tsx`, `audit-report.tsx`, `export-markdown.ts` | `scan-diff.ts`, `scan-diff-banner.tsx` |
+| 6. Dep Version Confidence | P6 | Backend | `deps-scanner/index.ts` | — |
+| 7. Source Attribution | P7 | Full-stack | All 26 edge functions, `scanner-accordion.tsx`, `export-markdown.ts` | — |
