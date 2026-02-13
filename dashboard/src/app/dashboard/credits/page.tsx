@@ -17,7 +17,7 @@ const pricingPlans = [
         description: 'For solo makers',
         domains: 1,
         scans: 5,
-        features: ['1 domain', '5 scans/month', 'Full scan suite', 'PDF export'],
+        features: ['1 project', '5 scans/month', 'Full scan suite', 'PDF export'],
         highlighted: false,
     },
     {
@@ -28,7 +28,7 @@ const pricingPlans = [
         description: 'For growing projects',
         domains: 3,
         scans: 20,
-        features: ['3 domains', '20 scans/month', 'Full scan suite', 'Priority support'],
+        features: ['3 projects', '20 scans/month', 'Full scan suite', 'Priority support'],
         highlighted: true,
         badge: 'Most Popular',
     },
@@ -40,7 +40,7 @@ const pricingPlans = [
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
-        features: ['10 domains', '75 scans/month', 'Full scan suite', 'Dedicated support'],
+        features: ['10 projects', '75 scans/month', 'Full scan suite', 'Dedicated support'],
         highlighted: false,
     },
     {
@@ -51,7 +51,7 @@ const pricingPlans = [
         description: 'For large organizations',
         domains: null,
         scans: null,
-        features: ['Unlimited domains', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
+        features: ['Unlimited projects', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
         highlighted: false,
         isContact: true,
     },
@@ -201,7 +201,7 @@ export default function CreditsPage() {
                                 Current plan: <span className="capitalize">{currentPlan}</span>
                             </p>
                             <p className="text-sm text-zinc-400">
-                                {scansUsed}/{scansLimit} scans used &middot; {domainsUsed}/{domainsLimit} domains registered
+                                {scansUsed}/{scansLimit} scans used &middot; {domainsUsed}/{domainsLimit} projects
                             </p>
                         </div>
                     </div>

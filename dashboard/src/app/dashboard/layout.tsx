@@ -20,8 +20,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import {
-    LayoutDashboard,
-    Scan,
+    FolderKanban,
     CreditCard,
     Settings,
     LogOut,
@@ -33,8 +32,7 @@ import {
 import { useEffect, useState } from 'react';
 
 const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Scans', href: '/dashboard/scans', icon: Scan },
+    { name: 'Projects', href: '/dashboard', icon: FolderKanban },
     { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
     { name: 'Credits', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -65,12 +63,12 @@ function SidebarContent({
                 </Link>
             </div>
 
-            {/* New Scan Button */}
+            {/* New Project Button */}
             <div className="p-4">
                 <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 border-0 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
-                    <Link href="/dashboard/scans/new" onClick={onNavClick}>
+                    <Link href="/dashboard/projects/new" onClick={onNavClick}>
                         <Plus className="mr-2 h-4 w-4" />
-                        New Scan
+                        New Project
                     </Link>
                 </Button>
             </div>
@@ -79,7 +77,8 @@ function SidebarContent({
             <nav className="flex-1 px-4 space-y-1">
                 {navigation.map((item) => {
                     const isActive = pathname === item.href ||
-                        (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                        (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
+                        (item.href === '/dashboard' && pathname.startsWith('/dashboard/projects'));
 
                     return (
                         <Link
@@ -182,9 +181,9 @@ export default function DashboardLayout({
                     </Link>
                 </div>
                 <Button asChild size="sm" className="bg-white text-black hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs">
-                    <Link href="/dashboard/scans/new">
+                    <Link href="/dashboard/projects/new">
                         <Plus className="mr-1 h-3.5 w-3.5" />
-                        New Scan
+                        New Project
                     </Link>
                 </Button>
             </header>

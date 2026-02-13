@@ -28,19 +28,24 @@ export async function GET(req: NextRequest) {
         const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 100);
         const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
         const statusFilter = searchParams.get('status');
+        const projectIdFilter = searchParams.get('projectId');
         const VALID_STATUSES = ['pending', 'running', 'completed', 'failed'];
 
         const supabase = auth.keyId ? getServiceClient() : await createClient();
 
         let query = supabase
             .from('scans')
-            .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
+            .select('id, url, status, overall_score, created_at, completed_at, results, project_id', { count: 'exact' })
             .eq('user_id', auth.userId)
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
         if (statusFilter && VALID_STATUSES.includes(statusFilter)) {
             query = query.eq('status', statusFilter);
+        }
+
+        if (projectIdFilter) {
+            query = query.eq('project_id', projectIdFilter);
         }
 
         const { data: scans, count, error: queryError } = await query;
@@ -108,7 +113,35 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes, githubRepo, supabasePAT } = body;
+        let { url, scanTypes, githubRepo, supabasePAT } = body;
+        const projectId: string | undefined = body.projectId;
+
+        // If projectId is provided, fetch project and use its config
+        let resolvedProjectId: string | undefined;
+        if (projectId) {
+            const projectClient = auth.keyId ? getServiceClient() : await createClient();
+            const { data: project, error: projectError } = await projectClient
+                .from('projects' as any)
+                .select('*')
+                .eq('id', projectId)
+                .eq('user_id', auth.userId)
+                .single();
+
+            if (projectError || !project) {
+                return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+            }
+
+            // Use project config
+            url = (project as any).url;
+            githubRepo = (project as any).github_repo || githubRepo;
+            supabasePAT = (project as any).supabase_pat || supabasePAT;
+            body.backendType = (project as any).backend_type || body.backendType;
+            body.backendUrl = (project as any).backend_url || body.backendUrl;
+            if ((project as any).backend_type === 'convex' && (project as any).backend_url) {
+                body.convexUrl = (project as any).backend_url;
+            }
+            resolvedProjectId = projectId;
+        }
 
         // Backend provider: new format (backendType + backendUrl) or legacy (supabaseUrl)
         const backendType: string = body.backendType || (body.supabaseUrl ? 'supabase' : 'none');
@@ -172,21 +205,23 @@ export async function POST(req: NextRequest) {
         // ==========================================
         const supabase = auth.keyId ? getServiceClient() : await createClient();
 
-        // First, handle domain registration atomically
-        const { data: domainResult, error: domRegError } = await supabase
-            .rpc('register_scan_domain', { p_user_id: auth.userId, p_domain: domain });
+        // Domain registration (skip when running via project — project creation enforced limit)
+        if (!resolvedProjectId) {
+            const { data: domainResult, error: domRegError } = await supabase
+                .rpc('register_scan_domain', { p_user_id: auth.userId, p_domain: domain });
 
-        if (domRegError) {
-            console.error('Domain registration error:', domRegError);
-            return NextResponse.json({ error: 'Failed to verify domain' }, { status: 500 });
-        }
+            if (domRegError) {
+                console.error('Domain registration error:', domRegError);
+                return NextResponse.json({ error: 'Failed to verify domain' }, { status: 500 });
+            }
 
-        if (domainResult && domainResult.length > 0 && !domainResult[0].success) {
-            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
-            return NextResponse.json({
-                error: `Domain limit reached. Your plan allows ${domainResult[0].allowed_domains?.length || 0} domains.`,
-                code: 'DOMAIN_LIMIT_REACHED',
-            }, { status: 402 });
+            if (domainResult && domainResult.length > 0 && !domainResult[0].success) {
+                logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
+                return NextResponse.json({
+                    error: `Domain limit reached. Your plan allows ${domainResult[0].allowed_domains?.length || 0} domains.`,
+                    code: 'DOMAIN_LIMIT_REACHED',
+                }, { status: 402 });
+            }
         }
 
         // Atomic scan usage increment
@@ -755,6 +790,7 @@ export async function POST(req: NextRequest) {
                 overall_score: overallScore,
                 results,
                 completed_at: new Date().toISOString(),
+                ...(resolvedProjectId ? { project_id: resolvedProjectId } : {}),
             })
             .select()
             .single();
