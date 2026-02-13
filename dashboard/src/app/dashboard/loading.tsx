@@ -7,10 +7,10 @@ export default function DashboardLoading() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-32 bg-zinc-900/50 border border-white/5 rounded-xl animate-pulse" />
+                    <div key={i} className="h-32 bg-slate-900/50 border border-slate-700/20 rounded-xl animate-pulse" />
                 ))}
             </div>
-            <div className="h-64 bg-zinc-900/50 border border-white/5 rounded-xl animate-pulse" />
+            <div className="h-64 bg-slate-900/50 border border-slate-700/20 rounded-xl animate-pulse" />
         </div>
     );
 }

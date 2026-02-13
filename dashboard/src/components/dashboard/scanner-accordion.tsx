@@ -345,9 +345,34 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
     );
 }
 
+/** Collapsible section for info/passing-check findings. */
+function PassingChecksSection({ findings }: { findings: any[] }) {
+    if (findings.length === 0) return null;
+    return (
+        <details className="mt-4 pt-3 border-t border-white/5">
+            <summary className="cursor-pointer text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors flex items-center gap-1.5 select-none">
+                <CheckCircle className="h-3.5 w-3.5" />
+                {findings.length} passing check{findings.length !== 1 ? 's' : ''}
+            </summary>
+            <div className="mt-2 space-y-1.5">
+                {findings.map((f: any, i: number) => (
+                    <div key={i} className="flex items-start gap-2 px-3 py-2 text-xs text-zinc-500 bg-slate-900/40 rounded">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500/50 mt-0.5 shrink-0" />
+                        <span>{f.title}</span>
+                    </div>
+                ))}
+            </div>
+        </details>
+    );
+}
+
 function FindingsList({ scannerKey, result }: { scannerKey: string; result: any }) {
+    const allFindings: any[] = result.findings || [];
+    const actionable = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+    const passingChecks = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
+
     // For api_keys scanner, group findings by category
-    const hasCategories = scannerKey === 'api_keys' && result.findings.some((f: any) => f.category);
+    const hasCategories = scannerKey === 'api_keys' && actionable.some((f: any) => f.category);
 
     if (hasCategories) {
         const categories = [
@@ -355,12 +380,12 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
             { key: 'infrastructure', label: 'Exposed Infrastructure', icon: Server, color: 'text-orange-400' },
             { key: 'databases', label: 'Exposed Databases', icon: Database, color: 'text-amber-400' },
         ];
-        const uncategorized = result.findings.filter((f: any) => !f.category);
+        const uncategorized = actionable.filter((f: any) => !f.category);
 
         return (
             <div className="space-y-6">
                 {categories.map(cat => {
-                    const catFindings = result.findings.filter((f: any) => f.category === cat.key);
+                    const catFindings = actionable.filter((f: any) => f.category === cat.key);
                     if (catFindings.length === 0) return null;
                     const CatIcon = cat.icon;
                     return (
@@ -385,12 +410,13 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
                         ))}
                     </div>
                 )}
+                <PassingChecksSection findings={passingChecks} />
             </div>
         );
     }
 
     // Check if this scanner has summary+detail findings
-    const { summaries, details, plain } = splitFindings(result.findings);
+    const { summaries, details, plain } = splitFindings(actionable);
 
     if (summaries.length > 0) {
         return (
@@ -402,15 +428,17 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
                 {plain.length > 0 && plain.map((finding: any, i: number) => (
                     <FindingCard key={`plain-${i}`} finding={finding} index={i} />
                 ))}
+                <PassingChecksSection findings={passingChecks} />
             </div>
         );
     }
 
     return (
         <div className="space-y-4">
-            {result.findings.map((finding: any, index: number) => (
+            {actionable.map((finding: any, index: number) => (
                 <FindingCard key={index} finding={finding} index={index} />
             ))}
+            <PassingChecksSection findings={passingChecks} />
         </div>
     );
 }
@@ -553,7 +581,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 // Error state - always show
                 if (errorMessage) {
                     return (
-                        <Card key={key} className="mb-4 bg-zinc-900/40 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                        <Card key={key} className="mb-4 bg-slate-900/50 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                             <CardHeader>
                                 <div className="flex items-center gap-3">
                                     <Icon className="h-5 w-5 text-red-400 shrink-0" />
@@ -576,7 +604,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                 if ((!result.findings || result.findings.length === 0) && !result.technologies?.length) return null;
 
                 return (
-                    <Card key={key} className={"mb-4 bg-zinc-900/40 animate-fade-in-up overflow-hidden border-white/5"} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                    <Card key={key} className={"mb-4 bg-slate-900/50 animate-fade-in-up overflow-hidden border-slate-700/20"} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                         {/* Clickable header */}
                         <button
                             onClick={() => toggle(key)}

@@ -130,7 +130,7 @@ export default function ProjectSettingsPage() {
             </div>
 
             <form onSubmit={handleSave}>
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <CardTitle className="text-white">Configuration</CardTitle>
                     </CardHeader>
@@ -147,7 +147,7 @@ export default function ProjectSettingsPage() {
                                 <Input
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="bg-white/5 border-white/10 text-white"
+                                    className="bg-slate-800/30 border-slate-600/20 text-white"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -155,7 +155,7 @@ export default function ProjectSettingsPage() {
                                 <Input
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="bg-white/5 border-white/10 text-white"
+                                    className="bg-slate-800/30 border-slate-600/20 text-white"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function ProjectSettingsPage() {
                                     value={githubRepo}
                                     onChange={(e) => setGithubRepo(e.target.value)}
                                     placeholder="https://github.com/org/repo"
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600"
+                                    className="bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -172,7 +172,7 @@ export default function ProjectSettingsPage() {
                                 <select
                                     value={backendType}
                                     onChange={(e) => { setBackendType(e.target.value as any); setBackendUrl(''); setSupabasePAT(''); }}
-                                    className="w-full h-10 rounded-md border bg-white/5 border-white/10 text-white px-3 text-sm"
+                                    className="w-full h-10 rounded-md border bg-slate-800/30 border-slate-600/20 text-white px-3 text-sm"
                                 >
                                     <option value="none" className="bg-zinc-900">None (auto-detect)</option>
                                     <option value="supabase" className="bg-zinc-900">Supabase</option>
@@ -190,7 +190,7 @@ export default function ProjectSettingsPage() {
                                     <Input
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="bg-white/5 border-white/10 text-white"
+                                        className="bg-slate-800/30 border-slate-600/20 text-white"
                                     />
                                 </div>
                             )}
@@ -202,7 +202,7 @@ export default function ProjectSettingsPage() {
                                         value={supabasePAT}
                                         onChange={(e) => setSupabasePAT(e.target.value)}
                                         placeholder="sbp_..."
-                                        className="bg-white/5 border-white/10 text-white font-mono placeholder:text-zinc-600"
+                                        className="bg-slate-800/30 border-slate-600/20 text-white font-mono placeholder:text-zinc-600"
                                     />
                                 </div>
                             )}

@@ -34,7 +34,7 @@ export default async function SettingsPage() {
             </div>
 
             {/* Profile */}
-            <Card className="mb-6 bg-zinc-900/40 border-white/5">
+            <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                 <CardHeader>
                     <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-blue-400" />
@@ -47,16 +47,16 @@ export default async function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue={user?.email || ''} disabled className="bg-white/5 border-white/10" />
+                        <Input id="email" type="email" defaultValue={user?.email || ''} disabled className="bg-slate-800/30 border-slate-600/20" />
                         <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                     </div>
                     <div className="space-y-2">
                         <Label>Account ID</Label>
-                        <Input defaultValue={user?.id || ''} disabled className="bg-white/5 border-white/10 font-mono text-xs" />
+                        <Input defaultValue={user?.id || ''} disabled className="bg-slate-800/30 border-slate-600/20 font-mono text-xs" />
                     </div>
                     <div className="space-y-2">
                         <Label>Member since</Label>
-                        <Input defaultValue={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''} disabled className="bg-white/5 border-white/10" />
+                        <Input defaultValue={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''} disabled className="bg-slate-800/30 border-slate-600/20" />
                     </div>
                     <div className="pt-2">
                         <Link href="/dashboard" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
@@ -72,7 +72,7 @@ export default async function SettingsPage() {
             </Card>
 
             {/* Security */}
-            <Card className="mb-6 bg-zinc-900/40 border-white/5">
+            <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                 <CardHeader>
                     <div className="flex items-center gap-3">
                         <Shield className="h-5 w-5 text-blue-400" />
@@ -89,11 +89,11 @@ export default async function SettingsPage() {
                                 <p className="font-medium">Password</p>
                                 <p className="text-sm text-muted-foreground">Change your account password</p>
                             </div>
-                            <Button variant="outline" size="sm" asChild className="bg-white/5 border-white/10 hover:bg-white/10">
+                            <Button variant="outline" size="sm" asChild className="bg-slate-800/30 border-slate-600/20 hover:bg-slate-700/20">
                                 <Link href="/update-password">Change</Link>
                             </Button>
                         </div>
-                        <Separator className="bg-white/10" />
+                        <Separator className="bg-slate-700/20" />
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="font-medium text-red-400">Delete account</p>

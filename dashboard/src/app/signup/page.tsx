@@ -95,10 +95,11 @@ export default function SignupPage() {
     return (
         <div className="min-h-screen flex relative overflow-clip">
             {/* Background */}
-            <div className="absolute inset-0 bg-[#0E0E10]" aria-hidden="true">
-                <div className="absolute top-[-15%] left-[20%] w-[50%] h-[50%] bg-[#497EE9]/15 blur-[140px] rounded-full" />
-                <div className="absolute bottom-[-15%] right-[10%] w-[40%] h-[40%] bg-[#749CFF]/10 blur-[140px] rounded-full" />
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+            <div className="absolute inset-0 bg-[#0B1120]" aria-hidden="true">
+                <div className="absolute top-[-15%] left-[20%] w-[50%] h-[50%] bg-[#2563EB]/25 blur-[140px] rounded-full" />
+                <div className="absolute bottom-[-15%] right-[10%] w-[40%] h-[40%] bg-[#3B82F6]/18 blur-[140px] rounded-full" />
+                <div className="absolute top-[40%] right-[30%] w-[30%] h-[30%] bg-[#1D4ED8]/12 blur-[160px] rounded-full" />
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(100,150,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(100,150,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
             </div>
 
             {/* Left Panel - Branding (hidden on mobile) */}

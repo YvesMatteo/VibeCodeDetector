@@ -7,7 +7,7 @@ export default function ScansLoading() {
             </div>
             <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-zinc-900/50 border border-white/5 rounded-lg animate-pulse" />
+                    <div key={i} className="h-16 bg-slate-900/50 border border-slate-700/20 rounded-lg animate-pulse" />
                 ))}
             </div>
         </div>

@@ -2,6 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Layers } from 'lucide-react';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
+import { RecommendedActions } from '@/components/dashboard/recommended-actions';
+import { ScanDiffBanner } from '@/components/dashboard/scan-diff-banner';
+import type { ScanDiff } from '@/lib/scan-diff';
 
 function getIssueCountColor(count: number) {
     if (count === 0) return 'text-emerald-400';
@@ -29,6 +32,7 @@ export interface AuditReportData {
     allFindings: any[];
     totalFindings: { critical: number; high: number; medium: number; low: number };
     issueCount: number;
+    passingCheckCount: number;
     visibleScannerCount: number;
     techStack: any;
     techStackCveFindings: any[];
@@ -73,25 +77,47 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
 
     const issueCount = totalFindings.critical + totalFindings.high + totalFindings.medium + totalFindings.low;
 
-    return { results, allFindings, totalFindings, issueCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults };
+    let passingCheckCount = 0;
+    Object.values(results).forEach((result: any) => {
+        if (result.findings && Array.isArray(result.findings)) {
+            result.findings.forEach((f: any) => {
+                if (f.severity?.toLowerCase() === 'info') passingCheckCount++;
+            });
+        }
+    });
+
+    return { results, allFindings, totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults };
 }
 
 interface AuditReportProps {
     data: AuditReportData;
+    diff?: ScanDiff | null;
+    previousScanDate?: string | null;
 }
 
-export function AuditReport({ data }: AuditReportProps) {
-    const { totalFindings, issueCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
+export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) {
+    const { totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
 
     return (
         <>
+            {/* Recommended Actions (top 5 by severity) */}
+            <RecommendedActions data={data} />
+
+            {/* Scan Diff Banner */}
+            {diff && previousScanDate && (
+                <ScanDiffBanner diff={diff} previousScanDate={previousScanDate} />
+            )}
+
             {/* Findings Overview */}
-            <Card className="bg-zinc-900/40 border-white/5 mb-8">
+            <Card className="bg-slate-900/50 border-slate-700/20 mb-8">
                 <CardContent className="py-6">
                     <div className="flex flex-col sm:flex-row items-center gap-8">
                         <div className="flex flex-col items-center justify-center" style={{ width: 120, height: 120 }}>
                             <span className={`text-5xl font-bold ${getIssueCountColor(issueCount)}`}>{issueCount}</span>
                             <span className="text-xs text-zinc-500 mt-1">{issueCount === 1 ? 'issue' : 'issues'}</span>
+                            {passingCheckCount > 0 && (
+                                <span className="text-[11px] text-emerald-500/70 mt-0.5">+ {passingCheckCount} passing</span>
+                            )}
                         </div>
                         <div className="flex-1 flex flex-col items-center sm:items-start gap-4">
                             <div className="flex flex-wrap items-center gap-3">
@@ -136,7 +162,7 @@ export function AuditReport({ data }: AuditReportProps) {
 
             {/* Detected Stack */}
             {techStack && (techStack.technologies?.length > 0 || techStackCveFindings.length > 0) && (
-                <Card className="mb-8 bg-zinc-900/40 border-white/5">
+                <Card className="mb-8 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <div className="flex items-center gap-3">
                             <Layers className="h-5 w-5 text-indigo-400" />

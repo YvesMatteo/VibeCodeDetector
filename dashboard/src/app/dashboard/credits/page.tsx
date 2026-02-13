@@ -158,7 +158,7 @@ export default function CreditsPage() {
                 </p>
 
                 {/* Billing Toggle */}
-                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+                <div className="inline-flex items-center rounded-full border border-slate-600/20 bg-slate-800/30 p-1">
                     <button
                         onClick={() => setBilling('monthly')}
                         className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${
@@ -207,7 +207,7 @@ export default function CreditsPage() {
                     </div>
                     <Button
                         variant="outline"
-                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                        className="bg-slate-800/30 border-slate-600/20 hover:bg-white/10 text-white"
                         onClick={handleManageSubscription}
                         disabled={portalLoading}
                     >
@@ -225,7 +225,7 @@ export default function CreditsPage() {
                             key={plan.id}
                             className={`relative transition-all duration-300 flex flex-col ${plan.highlighted
                                 ? 'bg-zinc-900/60 border-blue-500/30 lg:scale-105 z-10 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
-                                : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                                : 'bg-slate-900/50 border-slate-700/20 hover:border-slate-600/20'
                                 }`}
                         >
                             {plan.highlighted && (
@@ -282,7 +282,7 @@ export default function CreditsPage() {
                                 {plan.isContact ? (
                                     <Button
                                         size="lg"
-                                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                                        className="w-full bg-slate-800/30 border-slate-600/20 hover:bg-white/10 text-white"
                                         variant="outline"
                                         asChild
                                     >
@@ -294,7 +294,7 @@ export default function CreditsPage() {
                                 ) : isCurrent ? (
                                     <Button
                                         size="lg"
-                                        className="w-full bg-white/5 border-white/10 text-zinc-500"
+                                        className="w-full bg-slate-800/30 border-slate-600/20 text-zinc-500"
                                         variant="outline"
                                         disabled
                                     >
@@ -305,7 +305,7 @@ export default function CreditsPage() {
                                         size="lg"
                                         className={`w-full ${plan.highlighted
                                             ? 'shimmer-button bg-gradient-to-r from-[#749CFF] to-[#A5B4FC] hover:from-[#749CFF] hover:to-[#A5B4FC] border-0 text-white'
-                                            : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                                            : 'bg-slate-800/30 border-slate-600/20 hover:bg-white/10 text-white'
                                             }`}
                                         variant={plan.highlighted ? 'default' : 'outline'}
                                         onClick={() => handleSubscribe(plan.id)}

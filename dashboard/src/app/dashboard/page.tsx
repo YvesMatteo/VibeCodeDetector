@@ -93,7 +93,7 @@ export default async function DashboardPage() {
             {/* Usage bars */}
             {plan !== 'none' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-zinc-900/40">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/20 bg-slate-900/50">
                         <Activity className="h-4 w-4 text-purple-400 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between text-xs mb-1">
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-zinc-900/40">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/20 bg-slate-900/50">
                         <FolderKanban className="h-4 w-4 text-green-400 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between text-xs mb-1">

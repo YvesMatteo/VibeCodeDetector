@@ -54,7 +54,7 @@ function SidebarContent({
     return (
         <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex h-16 items-center px-6 border-b border-white/5">
+            <div className="flex h-16 items-center px-6 border-b border-slate-700/20">
                 <Link href="/" className="flex items-center space-x-2 group">
                     <div className="relative">
                         <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
@@ -167,7 +167,7 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background">
             {/* Mobile Header */}
-            <header className="fixed top-0 left-0 right-0 z-40 h-14 bg-[#0E0E10] border-b border-white/5 flex items-center justify-between px-4 md:hidden">
+            <header className="fixed top-0 left-0 right-0 z-40 h-14 bg-[#070D19] border-b border-slate-700/20 flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileOpen(true)}
@@ -190,7 +190,7 @@ export default function DashboardLayout({
 
             {/* Mobile Drawer */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="w-64 p-0 bg-[#0E0E10] border-white/5" showCloseButton={false}>
+                <SheetContent side="left" className="w-64 p-0 bg-[#070D19] border-slate-700/20" showCloseButton={false}>
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     <SidebarContent
                         pathname={pathname}
@@ -203,7 +203,7 @@ export default function DashboardLayout({
             </Sheet>
 
             {/* Desktop Sidebar */}
-            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-[#0E0E10] border-r border-white/5">
+            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-[#070D19] border-r border-slate-700/20">
                 <SidebarContent
                     pathname={pathname}
                     userEmail={userEmail}
@@ -216,8 +216,8 @@ export default function DashboardLayout({
             <main className="md:pl-64 pt-14 md:pt-0 relative">
                 {/* Subtle blue gradient background */}
                 <div className="fixed inset-0 md:left-64 pointer-events-none" aria-hidden="true">
-                    <div className="absolute top-[-10%] left-[10%] w-[40%] h-[40%] bg-[#497EE9]/[0.07] blur-[120px] rounded-full" />
-                    <div className="absolute bottom-[-10%] right-[5%] w-[35%] h-[35%] bg-[#749CFF]/[0.05] blur-[120px] rounded-full" />
+                    <div className="absolute top-[-10%] left-[10%] w-[40%] h-[40%] bg-[#2563EB]/20 blur-[120px] rounded-full" />
+                    <div className="absolute bottom-[-10%] right-[5%] w-[35%] h-[35%] bg-[#3B82F6]/15 blur-[120px] rounded-full" />
                 </div>
                 <div className="relative min-h-screen animate-fade-in-up">
                     {children}

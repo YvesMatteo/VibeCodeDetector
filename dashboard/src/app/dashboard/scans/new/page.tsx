@@ -138,7 +138,7 @@ export default function NewScanPage() {
 
             <form onSubmit={handleSubmit}>
                 {/* URL Input */}
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <Globe className="h-5 w-5 text-blue-400" />
@@ -178,7 +178,7 @@ export default function NewScanPage() {
                                     placeholder="https://example.com"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="text-lg flex-1 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="text-lg flex-1 bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
                                 />
                                 {isValidUrl(url) && (
                                     <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
@@ -196,7 +196,7 @@ export default function NewScanPage() {
                 </Card>
 
                 {/* GitHub Repository (optional) */}
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <GitBranch className="h-5 w-5 text-purple-400" />
@@ -216,7 +216,7 @@ export default function NewScanPage() {
                                 placeholder="https://github.com/your-org/your-repo"
                                 value={githubRepo}
                                 onChange={(e) => setGithubRepo(e.target.value)}
-                                className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-purple-500/50"
+                                className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-purple-500/50"
                             />
                             <p className="text-xs text-zinc-500">
                                 Checks for .env files, git history leaks, missing .gitignore rules, hardcoded credentials, and private key files.
@@ -226,7 +226,7 @@ export default function NewScanPage() {
                 </Card>
 
                 {/* Backend Provider (optional) */}
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <ServerCrash className="h-5 w-5 text-emerald-400" />
@@ -245,12 +245,12 @@ export default function NewScanPage() {
                                     id="backendType"
                                     value={backendType}
                                     onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase' | 'convex'); setBackendUrl(''); setSupabasePAT(''); }}
-                                    className="w-full h-10 rounded-md border bg-white/5 border-white/10 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                    className="w-full h-10 rounded-md border bg-slate-800/30 border-slate-600/20 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 >
-                                    <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
-                                    <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
-                                    <option value="firebase" className="bg-zinc-900 text-white">Firebase</option>
-                                    <option value="convex" className="bg-zinc-900 text-white">Convex</option>
+                                    <option value="none" className="bg-slate-900 text-white">None (auto-detect)</option>
+                                    <option value="supabase" className="bg-slate-900 text-white">Supabase</option>
+                                    <option value="firebase" className="bg-slate-900 text-white">Firebase</option>
+                                    <option value="convex" className="bg-slate-900 text-white">Convex</option>
                                 </select>
                             </div>
                             {backendType === 'supabase' && (
@@ -263,7 +263,7 @@ export default function NewScanPage() {
                                             placeholder="https://yourproject.supabase.co"
                                             value={backendUrl}
                                             onChange={(e) => setBackendUrl(e.target.value)}
-                                            className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
+                                            className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50"
                                         />
                                         <p className="text-xs text-zinc-500">
                                             Checks for exposed tables, storage bucket access, auth config, RLS policies, and service role key exposure. Auto-detected if not provided.
@@ -280,7 +280,7 @@ export default function NewScanPage() {
                                             placeholder="sbp_..."
                                             value={supabasePAT}
                                             onChange={(e) => setSupabasePAT(e.target.value)}
-                                            className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50 font-mono"
+                                            className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500/50 font-mono"
                                         />
                                         <p className="text-xs text-zinc-500">
                                             Runs 12 deep SQL checks via the Management API: RLS status, permissive policies, SECURITY DEFINER functions, dangerous extensions, and more. Your token is used for this scan only and is never stored.{' '}
@@ -300,7 +300,7 @@ export default function NewScanPage() {
                                         placeholder="your-project-id or https://your-project.firebaseapp.com"
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-orange-500/50"
+                                        className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-orange-500/50"
                                     />
                                     <p className="text-xs text-zinc-500">
                                         Checks for open Realtime Database, listable Storage, Firestore access, API key restrictions, and auth enumeration. Auto-detected if not provided.
@@ -316,7 +316,7 @@ export default function NewScanPage() {
                                         placeholder="https://your-project.convex.cloud"
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="text-lg bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/50"
+                                        className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-yellow-500/50"
                                     />
                                     <p className="text-xs text-zinc-500">
                                         Checks for exposed deployment URLs, admin key leaks, function enumeration, and CORS policy. Auto-detected if not provided.
@@ -333,7 +333,7 @@ export default function NewScanPage() {
                 </Card>
 
                 {/* What's Included */}
-                <Card className="mb-6 bg-zinc-900/40 border-white/5">
+                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
@@ -373,7 +373,7 @@ export default function NewScanPage() {
                             ].map((check) => (
                                 <div
                                     key={check.name}
-                                    className="relative p-3.5 rounded-lg border border-white/5 bg-white/5"
+                                    className="relative p-3.5 rounded-lg border border-slate-700/20 bg-slate-800/30"
                                 >
                                     <div className="flex items-center gap-3">
                                         <check.icon className={`h-5 w-5 ${check.color} shrink-0`} />
@@ -393,7 +393,7 @@ export default function NewScanPage() {
 
                 {/* Submit */}
                 <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
-                    <Button type="button" variant="outline" asChild className="bg-transparent border-white/10 hover:bg-white/5 text-zinc-300">
+                    <Button type="button" variant="outline" asChild className="bg-transparent border-slate-600/20 hover:bg-slate-800/30 text-zinc-300">
                         <Link href="/dashboard/scans">Cancel</Link>
                     </Button>
                     <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
