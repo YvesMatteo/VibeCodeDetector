@@ -10,7 +10,7 @@ import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shar
 const API_KEY_PATTERNS = [
     // AWS
     { name: 'AWS Access Key', pattern: /AKIA[0-9A-Z]{16}/g, severity: 'critical' },
-    { name: 'AWS Secret Key', pattern: /(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])/g, severity: 'critical', requiresContext: true },
+    { name: 'AWS Secret Key', pattern: /(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])/g, severity: 'critical', requiresContext: true, contextKeywords: /aws|amazon|AKIA|secret.?key|access.?key|s3[^a-z]|ec2|iam|lambda|dynamodb|cloudfront|cognito|AWS_/i },
     { name: 'AWS MWS Token', pattern: /amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, severity: 'critical' },
 
     // Azure
@@ -582,7 +582,7 @@ Deno.serve(async (req: Request) => {
 
         // Scan sources for credential patterns
         for (const { content, location } of sources) {
-            for (const { name, pattern, severity, requiresContext, additionalCheck } of API_KEY_PATTERNS) {
+            for (const { name, pattern, severity, requiresContext, additionalCheck, contextKeywords } of API_KEY_PATTERNS) {
                 // Reset regex lastIndex
                 pattern.lastIndex = 0;
 
@@ -593,10 +593,15 @@ Deno.serve(async (req: Request) => {
                     // Skip if already found
                     if (foundSecrets.has(secret)) continue;
 
+                    const context = getSurroundingContext(content, match.index, secret.length);
+
                     // Skip low entropy matches for generic patterns
                     if (requiresContext) {
                         const entropy = calculateEntropy(secret);
                         if (entropy < 4.0) continue;
+
+                        // If pattern requires specific context keywords, verify they're present
+                        if (contextKeywords && !contextKeywords.test(context)) continue;
                     }
 
                     // Run additional check if specified
@@ -605,9 +610,6 @@ Deno.serve(async (req: Request) => {
                     foundSecrets.add(secret);
 
                     const isSourceMap = location.startsWith('Source map:');
-
-                    // Check if this is a known public key (no score deduction)
-                    const context = getSurroundingContext(content, match.index, secret.length);
                     const publicKey = checkPublicKey(secret, context);
 
                     if (publicKey) {

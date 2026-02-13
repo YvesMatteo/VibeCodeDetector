@@ -65,7 +65,7 @@ export default async function ScansPage() {
 
             {/* Usage Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                <Card className="bg-slate-900/50 border-slate-700/20">
+                <Card className="bg-white/[0.02] border-white/[0.06]">
                     <CardContent className="pt-5 pb-4">
                         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Total Scans</p>
                         <div className="flex items-baseline gap-2">
@@ -74,7 +74,7 @@ export default async function ScansPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-slate-900/50 border-slate-700/20">
+                <Card className="bg-white/[0.02] border-white/[0.06]">
                     <CardContent className="pt-5 pb-4">
                         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Issues Found</p>
                         <div className="flex items-baseline gap-2">
@@ -85,7 +85,7 @@ export default async function ScansPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-slate-900/50 border-slate-700/20">
+                <Card className="bg-white/[0.02] border-white/[0.06]">
                     <CardContent className="pt-5 pb-4">
                         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Avg per Scan</p>
                         <div className="flex items-baseline gap-2">
@@ -99,8 +99,8 @@ export default async function ScansPage() {
             </div>
 
             {/* Scans Table */}
-            <Card className="bg-slate-900/50 border-slate-700/20">
-                <CardHeader className="border-b border-slate-700/20 pb-4">
+            <Card className="bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="border-b border-white/[0.06] pb-4">
                     <CardTitle className="font-heading text-xl font-medium text-white">All Scans</CardTitle>
                     <CardDescription className="text-zinc-400">Complete history of all your website scans</CardDescription>
                 </CardHeader>

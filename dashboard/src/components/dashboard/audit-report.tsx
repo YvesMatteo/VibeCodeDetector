@@ -2,8 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Layers } from 'lucide-react';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
-import { RecommendedActions } from '@/components/dashboard/recommended-actions';
-import { ScanDiffBanner } from '@/components/dashboard/scan-diff-banner';
+import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import type { ScanDiff } from '@/lib/scan-diff';
 
 function getIssueCountColor(count: number) {
@@ -98,16 +97,11 @@ interface AuditReportProps {
 export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) {
     const { totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
 
+    const hasResolvedIssues = diff && diff.resolvedIssues.length > 0;
+    const hasNewIssues = diff && diff.newIssues.length > 0;
+
     return (
         <>
-            {/* Recommended Actions (top 5 by severity) */}
-            <RecommendedActions data={data} />
-
-            {/* Scan Diff Banner */}
-            {diff && previousScanDate && (
-                <ScanDiffBanner diff={diff} previousScanDate={previousScanDate} />
-            )}
-
             {/* Findings Overview */}
             <Card className="bg-slate-900/50 border-slate-700/20 mb-8">
                 <CardContent className="py-6">
@@ -155,6 +149,24 @@ export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) 
                                     <span className="text-sm text-zinc-500">Low</span>
                                 </div>
                             </div>
+                            {/* Diff from previous scan */}
+                            {diff && (hasResolvedIssues || hasNewIssues) && (
+                                <div className="flex flex-wrap items-center gap-4 pt-1">
+                                    {hasResolvedIssues && (
+                                        <div className="flex items-center gap-1.5">
+                                            <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-400" />
+                                            <span className="text-sm font-medium text-emerald-400">{diff.resolvedIssues.length} resolved</span>
+                                            <span className="text-xs text-zinc-500">since last scan</span>
+                                        </div>
+                                    )}
+                                    {hasNewIssues && (
+                                        <div className="flex items-center gap-1.5">
+                                            <ArrowUpCircle className="h-3.5 w-3.5 text-red-400" />
+                                            <span className="text-sm font-medium text-red-400">{diff.newIssues.length} new</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -198,7 +210,7 @@ export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) 
                                         <p className="text-sm text-muted-foreground">{finding.description}</p>
                                         {finding.recommendation && (
                                             <p className="text-sm mt-1 text-muted-foreground">
-                                                <span className="font-medium text-purple-400">Fix:</span> {finding.recommendation}
+                                                <span className="font-medium text-blue-400">Fix:</span> {finding.recommendation}
                                             </p>
                                         )}
                                     </div>

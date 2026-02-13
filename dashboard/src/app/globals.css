@@ -95,37 +95,37 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.035 265);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.165 0.035 265);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.165 0.035 265);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.22 0.035 265);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.22 0.035 265);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.22 0.04 265);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.40 0.06 265 / 12%);
-  --input: oklch(0.40 0.06 265 / 18%);
-  --ring: oklch(0.55 0.19 265);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.11 0.035 265);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.6 0.2 265);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.22 0.035 265);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.40 0.06 265 / 12%);
-  --sidebar-ring: oklch(0.55 0.19 265);
+  --background: oklch(0.09 0.005 270);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.12 0.005 270);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.12 0.005 270);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0.12 0 0);
+  --secondary: oklch(0.17 0.005 270);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.17 0.005 270);
+  --muted-foreground: oklch(0.63 0 0);
+  --accent: oklch(0.17 0.005 270);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.22 0 0);
+  --ring: oklch(0.59 0.16 255);
+  --chart-1: oklch(0.59 0.16 255);
+  --chart-2: oklch(0.70 0.17 162);
+  --chart-3: oklch(0.77 0.19 70);
+  --chart-4: oklch(0.63 0.20 300);
+  --chart-5: oklch(0.65 0.25 16);
+  --sidebar: oklch(0.07 0.005 270);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.59 0.16 255);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.17 0.005 270);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.18 0 0);
+  --sidebar-ring: oklch(0.59 0.16 255);
 }
 
 @layer base {
@@ -263,83 +263,37 @@
   }
 }
 
-/* Glassmorphism Classes */
+/* Clean Card Classes */
 .glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s ease;
 }
 
 @media (hover: hover) {
   .glass-card:hover {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-      0 0 40px rgba(59, 130, 246, 0.08);
-    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.12);
   }
 }
 
 .dark .glass {
-  background: rgba(8, 15, 30, 0.5);
-  border-color: rgba(59, 130, 246, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 .dark .glass-card {
-  background: rgba(8, 15, 30, 0.6);
-  border-color: rgba(59, 130, 246, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4, #22d3ee);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Glow Effects */
-.glow-on-hover {
-  transition: box-shadow 0.3s ease;
-}
-
-.glow-on-hover:hover {
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3),
-    0 0 60px rgba(59, 130, 246, 0.1);
-}
-
-.glow-animated {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
-
-/* Shimmer Button */
-.shimmer-button {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  color: white;
 }
 
 /* Float Animations */
@@ -384,61 +338,35 @@
 
 /* Hover Lift */
 .hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .hover-lift:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* Floating Orbs (for backgrounds) */
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.5;
-  animation: float-slow 8s ease-in-out infinite;
-}
-
-/* Note: Named .orb-purple for legacy reasons, but actually renders as blue */
-.orb-purple {
-  background: rgba(59, 130, 246, 0.4);
-}
-
-/* Note: Named .orb-pink for legacy reasons, but actually renders as cyan */
-.orb-pink {
-  background: rgba(6, 182, 212, 0.4);
-}
-
-.orb-blue {
-  background: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Animated Gradient Background (Auth pages) */
+/* Auth page background */
 .bg-gradient-animated {
-  background: linear-gradient(135deg, #0B1120 0%, #162040 25%, #0B1120 50%, #0E1A38 75%, #0B1120 100%);
-  background-size: 400% 400%;
-  animation: gradient-flow 15s ease infinite;
+  background: #09090B;
 }
 
 /* Reduced Motion */

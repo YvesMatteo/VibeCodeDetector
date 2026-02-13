@@ -54,27 +54,25 @@ function SidebarContent({
     return (
         <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex h-16 items-center px-6 border-b border-slate-700/20">
-                <Link href="/" className="flex items-center space-x-2 group">
-                    <div className="relative">
-                        <Image src="/logo-nobg.png" alt="CheckVibe" width={28} height={28} className="h-7 w-7 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
-                    </div>
-                    <span className="font-heading text-xl font-bold tracking-tight">CheckVibe</span>
+            <div className="flex h-14 items-center px-5 border-b border-white/[0.06]">
+                <Link href="/" className="flex items-center space-x-2.5">
+                    <Image src="/logo-nobg.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
+                    <span className="font-heading text-[15px] font-semibold tracking-tight text-white">CheckVibe</span>
                 </Link>
             </div>
 
             {/* New Project Button */}
-            <div className="p-4">
-                <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 border-0 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+            <div className="p-3">
+                <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors">
                     <Link href="/dashboard/projects/new" onClick={onNavClick}>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
                         New Project
                     </Link>
                 </Button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-1">
+            <nav className="flex-1 px-3 space-y-0.5">
                 {navigation.map((item) => {
                     const isActive = pathname === item.href ||
                         (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
@@ -85,48 +83,45 @@ function SidebarContent({
                             key={item.name}
                             href={item.href}
                             onClick={onNavClick}
-                            className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive
-                                ? 'text-white font-medium'
-                                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+                            className={`group relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors ${isActive
+                                ? 'text-white bg-white/[0.06]'
+                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
                                 }`}
                         >
-                            {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                            )}
-                            <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? 'text-blue-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                            <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
                             {item.name}
                         </Link>
                     );
                 })}
             </nav>
 
-            <Separator className="bg-white/5" />
+            <Separator className="bg-white/[0.06]" />
 
             {/* User Menu */}
-            <div className="p-4">
+            <div className="p-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-start gap-3 px-3 hover:bg-white/5">
-                            <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-xs">
+                        <Button variant="ghost" className="w-full justify-start gap-2.5 px-3 h-10 hover:bg-white/[0.04]">
+                            <Avatar className="h-7 w-7">
+                                <AvatarFallback className="bg-zinc-800 text-zinc-400 text-[11px] font-medium">
                                     {initials}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="flex-1 text-left text-sm truncate">
+                            <span className="flex-1 text-left text-[13px] text-zinc-400 truncate">
                                 {userEmail || 'Loading...'}
                             </span>
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56 glass-card border-white/10">
-                        <DropdownMenuItem asChild className="hover:bg-white/5 focus:bg-white/5">
+                    <DropdownMenuContent align="start" className="w-56 bg-zinc-900 border-white/[0.08]">
+                        <DropdownMenuItem asChild className="text-zinc-300 hover:bg-white/[0.04] focus:bg-white/[0.04]">
                             <Link href="/dashboard/settings">
                                 <Settings className="mr-2 h-4 w-4" />
                                 Settings
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/10" />
-                        <DropdownMenuItem onClick={handleLogout} className="text-red-400 hover:bg-red-500/10 focus:bg-red-500/10">
+                        <DropdownMenuSeparator className="bg-white/[0.06]" />
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-400 hover:bg-red-500/8 focus:bg-red-500/8">
                             <LogOut className="mr-2 h-4 w-4" />
                             Log out
                         </DropdownMenuItem>
@@ -167,20 +162,20 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background">
             {/* Mobile Header */}
-            <header className="fixed top-0 left-0 right-0 z-40 h-14 bg-[#070D19] border-b border-slate-700/20 flex items-center justify-between px-4 md:hidden">
+            <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-background border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileOpen(true)}
-                        className="p-2.5 -ml-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="p-2 -ml-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
                     >
                         <Menu className="h-5 w-5" />
                     </button>
                     <Link href="/" className="flex items-center space-x-2">
-                        <Image src="/logo-nobg.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
-                        <span className="font-heading text-lg font-bold tracking-tight">CheckVibe</span>
+                        <Image src="/logo-nobg.png" alt="CheckVibe" width={20} height={20} className="h-5 w-5 object-contain" />
+                        <span className="font-heading text-sm font-semibold tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
-                <Button asChild size="sm" className="bg-white text-black hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs">
+                <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-1 h-3.5 w-3.5" />
                         New Project
@@ -190,7 +185,7 @@ export default function DashboardLayout({
 
             {/* Mobile Drawer */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="w-64 p-0 bg-[#070D19] border-slate-700/20" showCloseButton={false}>
+                <SheetContent side="left" className="w-60 p-0 bg-background border-white/[0.06]" showCloseButton={false}>
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     <SidebarContent
                         pathname={pathname}
@@ -203,7 +198,7 @@ export default function DashboardLayout({
             </Sheet>
 
             {/* Desktop Sidebar */}
-            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-[#070D19] border-r border-slate-700/20">
+            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-56 bg-background border-r border-white/[0.06]">
                 <SidebarContent
                     pathname={pathname}
                     userEmail={userEmail}
@@ -213,13 +208,8 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="md:pl-64 pt-14 md:pt-0 relative">
-                {/* Subtle blue gradient background */}
-                <div className="fixed inset-0 md:left-64 pointer-events-none" aria-hidden="true">
-                    <div className="absolute top-[-10%] left-[10%] w-[40%] h-[40%] bg-[#2563EB]/20 blur-[120px] rounded-full" />
-                    <div className="absolute bottom-[-10%] right-[5%] w-[35%] h-[35%] bg-[#3B82F6]/15 blur-[120px] rounded-full" />
-                </div>
-                <div className="relative min-h-screen animate-fade-in-up">
+            <main className="md:pl-56 pt-12 md:pt-0 relative min-h-screen">
+                <div className="animate-fade-in-up">
                     {children}
                 </div>
             </main>

@@ -202,7 +202,7 @@ export function AIFixPrompt({ url, findings, techStack }: AIFixPromptProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 shadow-lg shadow-blue-500/20">
+                <Button className="bg-white text-zinc-900 hover:bg-zinc-200 border-0">
                     <Sparkles className="mr-2 h-4 w-4" />
                     Generate AI Fix Prompt
                 </Button>

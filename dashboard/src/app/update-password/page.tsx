@@ -57,7 +57,6 @@ export default function UpdatePasswordPage() {
         }
     }
 
-    // Password strength indicator
     const getPasswordStrength = () => {
         if (!password) return { width: '0%', color: 'bg-white/10', label: '' };
         let score = 0;
@@ -70,62 +69,48 @@ export default function UpdatePasswordPage() {
         if (score <= 1) return { width: '20%', color: 'bg-red-500', label: 'Weak' };
         if (score === 2) return { width: '40%', color: 'bg-orange-500', label: 'Fair' };
         if (score === 3) return { width: '60%', color: 'bg-amber-500', label: 'Good' };
-        if (score === 4) return { width: '80%', color: 'bg-green-400', label: 'Strong' };
-        return { width: '100%', color: 'bg-green-500', label: 'Very Strong' };
+        if (score === 4) return { width: '80%', color: 'bg-emerald-400', label: 'Strong' };
+        return { width: '100%', color: 'bg-emerald-500', label: 'Very Strong' };
     };
 
     const strength = getPasswordStrength();
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-clip">
-            {/* Animated Background */}
-            <div className="absolute inset-0 bg-gradient-animated" />
-
-            {/* Floating Orbs */}
-            <div className="orb orb-blue w-48 h-48 sm:w-96 sm:h-96 -top-24 sm:-top-48 -left-24 sm:-left-48" style={{ animationDelay: '0s' }} />
-            <div className="orb orb-blue w-40 h-40 sm:w-80 sm:h-80 top-1/4 -right-20 sm:-right-40" style={{ animationDelay: '2s' }} />
-            <div className="orb orb-blue w-32 h-32 sm:w-64 sm:h-64 bottom-20 left-1/4" style={{ animationDelay: '4s' }} />
-
-            {/* Grid Pattern Overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
-
-            <div className="w-full max-w-md relative z-10 animate-fade-in-up">
+        <div className="min-h-screen flex items-center justify-center px-4 bg-[#09090B]">
+            <div className="w-full max-w-md animate-fade-in-up">
                 <div className="flex justify-center mb-8">
-                    <Link href="/" className="flex items-center space-x-2 group">
-                        <div className="relative">
-                            <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                            <div className="absolute inset-0 bg-blue-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <span className="text-2xl font-bold">CheckVibe</span>
+                    <Link href="/" className="flex items-center space-x-2.5">
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                        <span className="text-xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
 
-                <Card className="glass-card border-white/10">
+                <Card className="border-white/[0.06] bg-white/[0.02]">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">Update password</CardTitle>
-                        <CardDescription>Enter your new password below</CardDescription>
+                        <CardTitle className="text-xl text-white">Update password</CardTitle>
+                        <CardDescription className="text-zinc-500">Enter your new password below</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {success ? (
                             <div className="text-center space-y-4">
                                 <div className="flex justify-center">
-                                    <CheckCircle2 className="h-12 w-12 text-green-400" />
+                                    <CheckCircle2 className="h-12 w-12 text-emerald-400" />
                                 </div>
                                 <div>
                                     <p className="text-white font-medium">Password updated successfully</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Redirecting to login...</p>
+                                    <p className="text-sm text-zinc-500 mt-1">Redirecting to login...</p>
                                 </div>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {error && (
-                                    <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
+                                    <div className="p-3 text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg">
                                         {error}
                                     </div>
                                 )}
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="password" className="text-muted-foreground">New Password</Label>
+                                    <Label htmlFor="password" className="text-zinc-400 text-sm">New Password</Label>
                                     <Input
                                         id="password"
                                         type="password"
@@ -134,29 +119,28 @@ export default function UpdatePasswordPage() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                         minLength={8}
-                                        className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
+                                        className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                     />
-                                    {/* Password Strength Indicator */}
                                     {password && (
                                         <div className="space-y-1">
-                                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full ${strength.color} transition-all duration-300`}
                                                     style={{ width: strength.width }}
                                                 />
                                             </div>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-zinc-600">
                                                 Password strength: <span className={strength.color.replace('bg-', 'text-')}>{strength.label}</span>
                                             </p>
                                         </div>
                                     )}
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-zinc-600">
                                         Must be 8+ characters with uppercase, lowercase, and a number
                                     </p>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="confirm-password" className="text-muted-foreground">Confirm New Password</Label>
+                                    <Label htmlFor="confirm-password" className="text-zinc-400 text-sm">Confirm New Password</Label>
                                     <Input
                                         id="confirm-password"
                                         type="password"
@@ -164,13 +148,13 @@ export default function UpdatePasswordPage() {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         required
-                                        className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
+                                        className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                     />
                                 </div>
 
                                 <Button
                                     type="submit"
-                                    className="w-full shimmer-button bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 mt-2"
+                                    className="w-full h-11 bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium transition-colors mt-2"
                                     disabled={loading}
                                 >
                                     {loading ? (
@@ -185,8 +169,8 @@ export default function UpdatePasswordPage() {
                             </form>
                         )}
 
-                        <div className="mt-6 text-center text-sm text-muted-foreground">
-                            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                        <div className="mt-6 text-center text-sm text-zinc-600">
+                            <Link href="/login" className="text-white hover:text-zinc-300 font-medium transition-colors">
                                 Back to login
                             </Link>
                         </div>

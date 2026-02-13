@@ -267,7 +267,7 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
                     })()}
                     {finding.recommendation && (
                         <p className="text-sm mt-2 text-muted-foreground">
-                            <span className="font-medium text-purple-400">Recommendation:</span> {finding.recommendation}
+                            <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
                         </p>
                     )}
                     {finding.reportUrl && (
@@ -275,7 +275,7 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
                             href={finding.reportUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/20 rounded-md px-3 py-1.5"
+                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
                         >
                             <ExternalLink className="h-3 w-3" />
                             View Full Report
@@ -313,7 +313,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
                         <p className="text-sm text-muted-foreground">{summary.description}</p>
                         {summary.recommendation && (
                             <p className="text-sm mt-2 text-muted-foreground">
-                                <span className="font-medium text-purple-400">Recommendation:</span> {summary.recommendation}
+                                <span className="font-medium text-blue-400">Recommendation:</span> {summary.recommendation}
                             </p>
                         )}
                         {summary.evidence && (
@@ -324,7 +324,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
                         {details.length > 0 && (
                             <button
                                 onClick={() => setShowDetails(v => !v)}
-                                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 border border-purple-500/20 rounded-md px-3 py-1.5"
+                                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
                             >
                                 <Eye className="h-3 w-3" />
                                 {showDetails ? 'Hide' : 'See'} {details.length} {details.length === 1 ? 'finding' : 'findings'}

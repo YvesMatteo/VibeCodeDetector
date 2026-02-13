@@ -112,7 +112,7 @@ export default function NewProjectPage() {
 
             <form onSubmit={handleSubmit}>
                 {/* Project Info */}
-                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
+                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <FolderKanban className="h-5 w-5 text-blue-400" />
@@ -147,7 +147,7 @@ export default function NewProjectPage() {
                                     placeholder="My App"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -159,7 +159,7 @@ export default function NewProjectPage() {
                                         placeholder="https://example.com"
                                         value={url}
                                         onChange={(e) => handleUrlChange(e.target.value)}
-                                        className="text-lg flex-1 bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                        className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
                                     />
                                     {isValidUrl(url) && (
                                         <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
@@ -178,10 +178,10 @@ export default function NewProjectPage() {
                 </Card>
 
                 {/* GitHub */}
-                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
+                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
-                            <GitBranch className="h-5 w-5 text-purple-400" />
+                            <GitBranch className="h-5 w-5 text-zinc-400" />
                             GitHub Repository
                             <span className="text-xs font-normal text-zinc-500">(optional)</span>
                         </CardTitle>
@@ -195,13 +195,13 @@ export default function NewProjectPage() {
                             placeholder="https://github.com/your-org/your-repo"
                             value={githubRepo}
                             onChange={(e) => setGithubRepo(e.target.value)}
-                            className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 focus-visible:ring-purple-500/50"
+                            className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-white/20"
                         />
                     </CardContent>
                 </Card>
 
                 {/* Backend */}
-                <Card className="mb-6 bg-slate-900/50 border-slate-700/20">
+                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
                             <ServerCrash className="h-5 w-5 text-emerald-400" />
@@ -217,7 +217,7 @@ export default function NewProjectPage() {
                             <select
                                 value={backendType}
                                 onChange={(e) => { setBackendType(e.target.value as any); setBackendUrl(''); setSupabasePAT(''); }}
-                                className="w-full h-10 rounded-md border bg-slate-800/30 border-slate-600/20 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full h-10 rounded-md border bg-white/[0.03] border-white/[0.08] text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
                                 <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
@@ -233,7 +233,7 @@ export default function NewProjectPage() {
                                             placeholder="https://yourproject.supabase.co"
                                             value={backendUrl}
                                             onChange={(e) => setBackendUrl(e.target.value)}
-                                            className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600"
+                                            className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -246,7 +246,7 @@ export default function NewProjectPage() {
                                             placeholder="sbp_..."
                                             value={supabasePAT}
                                             onChange={(e) => setSupabasePAT(e.target.value)}
-                                            className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600 font-mono"
+                                            className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 font-mono"
                                         />
                                     </div>
                                 </>
@@ -259,7 +259,7 @@ export default function NewProjectPage() {
                                         placeholder="your-project-id or https://your-project.firebaseapp.com"
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600"
+                                        className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                     />
                                 </div>
                             )}
@@ -271,7 +271,7 @@ export default function NewProjectPage() {
                                         placeholder="https://your-project.convex.cloud"
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="text-lg bg-slate-800/30 border-slate-600/20 text-white placeholder:text-zinc-600"
+                                        className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                     />
                                 </div>
                             )}
@@ -286,7 +286,7 @@ export default function NewProjectPage() {
 
                 {/* Submit */}
                 <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
-                    <Button type="button" variant="outline" asChild className="bg-transparent border-slate-600/20 hover:bg-slate-800/30 text-zinc-300">
+                    <Button type="button" variant="outline" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-zinc-300">
                         <Link href="/dashboard">Cancel</Link>
                     </Button>
                     <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">

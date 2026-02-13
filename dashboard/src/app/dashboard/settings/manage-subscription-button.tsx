@@ -39,7 +39,7 @@ export function ManageSubscriptionButton() {
         <div className="flex flex-col items-end gap-2">
             {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">{error}</div>}
             <Button
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0"
+                className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
                 onClick={handleClick}
                 disabled={loading}
             >

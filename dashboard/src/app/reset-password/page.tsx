@@ -37,16 +37,15 @@ export default function ResetPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-4 relative overflow-clip">
-                <div className="absolute inset-0 bg-gradient-animated" />
-                <Card className="w-full max-w-md relative z-10 glass-card border-white/10">
+            <div className="min-h-screen flex items-center justify-center px-4 bg-[#09090B]">
+                <Card className="w-full max-w-md border-white/[0.06] bg-white/[0.02]">
                     <CardContent className="pt-6 text-center">
-                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-                        <p className="text-muted-foreground mb-6">
-                            We&apos;ve sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+                        <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-white mb-2">Check your email</h2>
+                        <p className="text-zinc-500 text-sm mb-6">
+                            We&apos;ve sent a password reset link to <span className="font-medium text-white">{email}</span>.
                         </p>
-                        <Button variant="outline" asChild>
+                        <Button variant="outline" asChild className="border-white/[0.08] bg-transparent hover:bg-white/5">
                             <Link href="/login">Back to Login</Link>
                         </Button>
                     </CardContent>
@@ -56,44 +55,30 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-clip">
-            {/* Animated Background */}
-            <div className="absolute inset-0 bg-gradient-animated" />
-
-            {/* Floating Orbs */}
-            <div className="orb orb-blue w-48 h-48 sm:w-96 sm:h-96 -top-24 sm:-top-48 -left-24 sm:-left-48" style={{ animationDelay: '0s' }} />
-            <div className="orb orb-blue w-40 h-40 sm:w-80 sm:h-80 top-1/4 -right-20 sm:-right-40" style={{ animationDelay: '2s' }} />
-            <div className="orb orb-blue w-32 h-32 sm:w-64 sm:h-64 bottom-20 left-1/4" style={{ animationDelay: '4s' }} />
-
-            {/* Grid Pattern Overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
-
-            <div className="w-full max-w-md relative z-10">
+        <div className="min-h-screen flex items-center justify-center px-4 bg-[#09090B]">
+            <div className="w-full max-w-md">
                 <div className="flex justify-center mb-8">
-                    <Link href="/" className="flex items-center space-x-2 group">
-                        <div className="relative">
-                            <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                            <div className="absolute inset-0 bg-blue-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <span className="text-2xl font-bold">CheckVibe</span>
+                    <Link href="/" className="flex items-center space-x-2.5">
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                        <span className="text-xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
 
-                <Card className="glass-card border-white/10">
+                <Card className="border-white/[0.06] bg-white/[0.02]">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">Reset your password</CardTitle>
-                        <CardDescription>Enter your email and we&apos;ll send you a reset link</CardDescription>
+                        <CardTitle className="text-xl text-white">Reset your password</CardTitle>
+                        <CardDescription className="text-zinc-500">Enter your email and we&apos;ll send you a reset link</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleReset} className="space-y-4">
                             {error && (
-                                <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
+                                <div className="p-3 text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg">
                                     {error}
                                 </div>
                             )}
 
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-muted-foreground">Email</Label>
+                                <Label htmlFor="email" className="text-zinc-400 text-sm">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -101,11 +86,15 @@ export default function ResetPasswordPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
+                                    className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                 />
                             </div>
 
-                            <Button type="submit" className="w-full shimmer-button bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 mt-2" disabled={loading}>
+                            <Button
+                                type="submit"
+                                className="w-full h-11 bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium transition-colors mt-2"
+                                disabled={loading}
+                            >
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -117,9 +106,9 @@ export default function ResetPasswordPage() {
                             </Button>
                         </form>
 
-                        <div className="mt-6 text-center text-sm text-muted-foreground">
+                        <div className="mt-6 text-center text-sm text-zinc-600">
                             Remember your password?{' '}
-                            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                            <Link href="/login" className="text-white hover:text-zinc-300 font-medium transition-colors">
                                 Sign in
                             </Link>
                         </div>

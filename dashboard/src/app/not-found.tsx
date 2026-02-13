@@ -12,7 +12,7 @@ export default function NotFound() {
       <div className="mt-10 flex flex-col sm:flex-row gap-4">
         <Button
           asChild
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0"
+          className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
         >
           <Link href="/">Go home</Link>
         </Button>

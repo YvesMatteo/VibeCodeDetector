@@ -174,33 +174,6 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   lines.push(`| ℹ️ Info | ${counts.info} |`);
   lines.push('');
 
-  // ── Recommended Actions ─────────────────────────────────────────────────
-  const sevOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-  const allActionable: Array<{ finding: any; scannerKey: string }> = [];
-  for (const [key, r] of Object.entries(results)) {
-    if (!r || !(r as any).findings) continue;
-    for (const f of (r as any).findings) {
-      if (f.severity === 'info') continue;
-      allActionable.push({ finding: f, scannerKey: key });
-    }
-  }
-  allActionable.sort((a, b) => (sevOrder[a.finding.severity] ?? 4) - (sevOrder[b.finding.severity] ?? 4));
-  const topActions = allActionable.slice(0, 5);
-
-  if (topActions.length > 0) {
-    lines.push(`## Recommended Actions (Priority Order)`);
-    lines.push('');
-    topActions.forEach(({ finding, scannerKey }, i) => {
-      const emoji = severityEmoji(finding.severity);
-      const name = scannerNames[scannerKey] || scannerKey;
-      lines.push(`${i + 1}. ${emoji} **${finding.title}** — ${name}`);
-      if (finding.recommendation) {
-        lines.push(`   Fix: ${finding.recommendation}`);
-      }
-    });
-    lines.push('');
-  }
-
   // ── Scanner Summary Table ───────────────────────────────────────────────
   lines.push(`## Scanner Summary`);
   lines.push('');

@@ -40,7 +40,7 @@ export function ProjectCard({ id, name, url, latestScore, issueCount = 0, lastAu
 
     return (
         <Link href={`/dashboard/projects/${id}`}>
-            <Card className="bg-slate-900/50 border-slate-700/20 hover:border-blue-500/25 transition-all cursor-pointer group h-full">
+            <Card className="bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] transition-colors cursor-pointer group h-full">
                 <CardContent className="p-5">
                     <div className="flex items-start gap-3 mb-4">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

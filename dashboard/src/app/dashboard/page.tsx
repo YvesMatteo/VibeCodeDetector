@@ -93,27 +93,27 @@ export default async function DashboardPage() {
             {/* Usage bars */}
             {plan !== 'none' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/20 bg-slate-900/50">
-                        <Activity className="h-4 w-4 text-purple-400 shrink-0" />
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+                        <Activity className="h-4 w-4 text-zinc-400 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between text-xs mb-1">
-                                <span className="text-zinc-400">Scans</span>
+                                <span className="text-zinc-500">Scans</span>
                                 <span className="text-zinc-300">{planScansUsed}/{planScansLimit}</span>
                             </div>
-                            <div className="w-full bg-white/10 rounded-full h-1.5">
-                                <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{ width: `${scansPct}%` }} />
+                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
+                                <div className="bg-white/40 h-1.5 rounded-full transition-all" style={{ width: `${scansPct}%` }} />
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/20 bg-slate-900/50">
-                        <FolderKanban className="h-4 w-4 text-green-400 shrink-0" />
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+                        <FolderKanban className="h-4 w-4 text-zinc-400 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between text-xs mb-1">
-                                <span className="text-zinc-400">Projects</span>
+                                <span className="text-zinc-500">Projects</span>
                                 <span className="text-zinc-300">{projectList.length}/{projectLimit}</span>
                             </div>
-                            <div className="w-full bg-white/10 rounded-full h-1.5">
-                                <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${projectsPct}%` }} />
+                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
+                                <div className="bg-emerald-500/60 h-1.5 rounded-full transition-all" style={{ width: `${projectsPct}%` }} />
                             </div>
                         </div>
                     </div>
