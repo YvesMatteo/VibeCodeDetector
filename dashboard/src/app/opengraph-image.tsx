@@ -52,40 +52,35 @@ export default async function Image() {
           }}
         />
 
-        {/* Logo / Brand mark */}
+        {/* Logo icon */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: "24px",
+            marginBottom: "32px",
+            gap: "20px",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://checkvibe.dev"}/icon.png`}
+            width={90}
+            height={90}
+            alt=""
+            style={{ borderRadius: "16px" }}
+          />
           <div
             style={{
-              fontSize: "80px",
-              fontWeight: 800,
-              color: "#3b82f6",
-              letterSpacing: "-2px",
+              fontSize: "64px",
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "-1px",
               display: "flex",
             }}
           >
-            CV
+            checkvibe
           </div>
-        </div>
-
-        {/* Title */}
-        <div
-          style={{
-            fontSize: "56px",
-            fontWeight: 800,
-            color: "#ffffff",
-            letterSpacing: "-1px",
-            display: "flex",
-            marginBottom: "16px",
-          }}
-        >
-          CheckVibe
         </div>
 
         {/* Tagline */}
@@ -138,7 +133,7 @@ export default async function Image() {
             display: "flex",
           }}
         >
-          checkvibe.online
+          checkvibe.dev
         </div>
       </div>
     ),

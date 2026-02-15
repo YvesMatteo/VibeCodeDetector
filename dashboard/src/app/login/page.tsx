@@ -45,7 +45,7 @@ export default function LoginPage() {
 
                 <div className="relative">
                     <Link href="/" className="flex items-center space-x-2.5">
-                        <Image src="/logo.png" alt="CheckVibe Logo" width={36} height={36} className="h-9 w-9 object-contain" />
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={36} height={36} className="h-9 w-9 object-contain rounded-lg" />
                         <span className="text-lg font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
                     {/* Mobile logo */}
                     <div className="flex justify-center mb-10 lg:hidden">
                         <Link href="/" className="flex items-center space-x-2.5">
-                            <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                            <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain rounded-lg" />
                             <span className="text-xl font-semibold text-white tracking-tight">CheckVibe</span>
                         </Link>
                     </div>

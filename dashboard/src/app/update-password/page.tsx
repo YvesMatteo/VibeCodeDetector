@@ -80,7 +80,7 @@ export default function UpdatePasswordPage() {
             <div className="w-full max-w-md animate-fade-in-up">
                 <div className="flex justify-center mb-8">
                     <Link href="/" className="flex items-center space-x-2.5">
-                        <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={40} height={40} className="h-10 w-10 object-contain rounded-lg" />
                         <span className="text-xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>

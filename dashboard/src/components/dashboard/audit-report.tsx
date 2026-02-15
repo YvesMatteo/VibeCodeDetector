@@ -50,6 +50,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     ) as Record<string, ScanResultItem>;
 
     const visibleScannerCount = Object.entries(scannerResults).filter(([key, result]: [string, any]) => {
+        if (result.skipped) return false;
         if (key.endsWith('_hosting') && result.score === 100 && !result.error) {
             const allInfo = !result.findings?.length || result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
             if (allInfo) return false;
@@ -61,6 +62,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     const allFindings: any[] = [];
 
     Object.values(results).forEach((result: any) => {
+        if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
             allFindings.push(...result.findings);
             result.findings.forEach((f: any) => {
@@ -78,6 +80,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
 
     let passingCheckCount = 0;
     Object.values(results).forEach((result: any) => {
+        if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
             result.findings.forEach((f: any) => {
                 if (f.severity?.toLowerCase() === 'info') passingCheckCount++;

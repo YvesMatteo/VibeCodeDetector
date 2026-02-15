@@ -154,7 +154,7 @@ export default function HomePage() {
           className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
         >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
-            <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
+            <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain rounded" />
             <span className="font-bold text-white tracking-tight">CheckVibe</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
@@ -664,7 +664,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
             <div className="flex items-center gap-2">
-              <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
+              <Image src="/logo.png" alt="CheckVibe Logo" width={24} height={24} className="w-6 h-6 object-contain rounded" />
               <span className="font-bold text-white">CheckVibe</span>
             </div>
             <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-zinc-400">

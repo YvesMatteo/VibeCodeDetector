@@ -10,7 +10,7 @@ import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shar
 const API_KEY_PATTERNS = [
     // AWS
     { name: 'AWS Access Key', pattern: /AKIA[0-9A-Z]{16}/g, severity: 'critical' },
-    { name: 'AWS Secret Key', pattern: /(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])/g, severity: 'critical', requiresContext: true, contextKeywords: /aws|amazon|AKIA|secret.?key|access.?key|s3[^a-z]|ec2|iam|lambda|dynamodb|cloudfront|cognito|AWS_/i },
+    { name: 'AWS Secret Key', pattern: /(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])/g, severity: 'critical', requiresContext: true, contextKeywords: /AKIA[0-9A-Z]{16}|aws_secret_access_key|AWS_SECRET_ACCESS_KEY|aws_secret_key|AWS_SECRET_KEY/i },
     { name: 'AWS MWS Token', pattern: /amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, severity: 'critical' },
 
     // Azure

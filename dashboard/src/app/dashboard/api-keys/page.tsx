@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -226,103 +227,97 @@ export default function ApiKeysPage() {
     const inactiveKeys = keys.filter(k => k.revoked_at || (k.expires_at && new Date(k.expires_at) < new Date()));
 
     return (
-        <div className="p-5 md:p-10 max-w-4xl">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-10">
+        <div className="p-4 md:p-8 max-w-4xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl md:text-[42px] font-heading font-semibold tracking-tight text-white leading-[1.1] mb-3">
-                        API Keys
-                    </h1>
-                    <p className="text-zinc-500 text-[15px]">
+                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white mb-2">API Keys</h1>
+                    <p className="text-zinc-400 text-sm sm:text-base">
                         Manage API keys for programmatic access to CheckVibe
                     </p>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 w-full sm:w-auto shrink-0 rounded-lg text-[13px] font-medium"
+                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 w-full sm:w-auto shrink-0"
                 >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Create Key
                 </Button>
             </div>
 
             {/* Getting Started */}
-            <div className="mb-5">
-                <button
-                    onClick={() => setDocsOpen(!docsOpen)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.10] transition-colors"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                            <BookOpen className="h-4 w-4 text-blue-400" />
-                        </div>
-                        <div className="text-left">
-                            <p className="text-[14px] font-medium text-white">Getting Started</p>
-                            <p className="text-[12px] text-zinc-500">Authentication and API usage</p>
-                        </div>
-                    </div>
-                    {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
-                </button>
-                {docsOpen && (
-                    <div className="mt-1 px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] space-y-4">
-                        <div>
-                            <h4 className="text-[13px] font-medium text-zinc-300 mb-2">Authentication</h4>
-                            <p className="text-[12px] text-zinc-500 mb-3">
-                                Include your API key in the Authorization header:
-                            </p>
-                        </div>
-                        <div className="space-y-3">
+            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="cursor-pointer" onClick={() => setDocsOpen(!docsOpen)}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <BookOpen className="h-5 w-5 text-blue-400" />
                             <div>
-                                <p className="text-[12px] text-zinc-400 mb-1">Run a scan:</p>
-                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-[12px] text-green-400 font-mono overflow-x-auto">
+                                <CardTitle className="text-white">Getting Started</CardTitle>
+                                <CardDescription className="text-zinc-400">Authentication and API usage</CardDescription>
+                            </div>
+                        </div>
+                        {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
+                    </div>
+                </CardHeader>
+                {docsOpen && (
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-sm font-medium text-zinc-300 mb-2">Authentication</h4>
+                                <p className="text-xs text-zinc-500 mb-3">
+                                    Include your API key in the Authorization header:
+                                </p>
+                            </div>
+                            <div className="space-y-3">
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">Run a scan:</p>
+                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl -X POST https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com"}'`}
-                                </pre>
-                            </div>
-                            <div>
-                                <p className="text-[12px] text-zinc-400 mb-1">List scans:</p>
-                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-[12px] text-green-400 font-mono overflow-x-auto">
+                                    </pre>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">List scans:</p>
+                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
-                                </pre>
-                            </div>
-                            <div>
-                                <p className="text-[12px] text-zinc-400 mb-1">Get scan results:</p>
-                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-[12px] text-green-400 font-mono overflow-x-auto">
+                                    </pre>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-zinc-400 mb-1">Get scan results:</p>
+                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`curl https://checkvibe.dev/api/scan/SCAN_ID \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
-                                </pre>
+                                    </pre>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </CardContent>
                 )}
-            </div>
+            </Card>
 
             {/* MCP Server Config */}
-            <div className="mb-8">
-                <button
-                    onClick={() => setMcpOpen(!mcpOpen)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.10] transition-colors"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0">
-                            <Cpu className="h-4 w-4 text-zinc-400" />
+            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="cursor-pointer" onClick={() => setMcpOpen(!mcpOpen)}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Cpu className="h-5 w-5 text-zinc-400" />
+                            <div>
+                                <CardTitle className="text-white">Use with Claude Code (MCP)</CardTitle>
+                                <CardDescription className="text-zinc-400">Let coding agents run security scans</CardDescription>
+                            </div>
                         </div>
-                        <div className="text-left">
-                            <p className="text-[14px] font-medium text-white">Use with Claude Code (MCP)</p>
-                            <p className="text-[12px] text-zinc-500">Let coding agents run security scans</p>
-                        </div>
+                        {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
                     </div>
-                    {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
-                </button>
+                </CardHeader>
                 {mcpOpen && (
-                    <div className="mt-1 px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02] space-y-3">
-                        <p className="text-[12px] text-zinc-500">
-                            Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
-                        </p>
-                        <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-[12px] text-green-400 font-mono overflow-x-auto">
+                    <CardContent>
+                        <div className="space-y-3">
+                            <p className="text-xs text-zinc-500">
+                                Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
+                            </p>
+                            <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
 {`{
   "mcpServers": {
     "checkvibe": {
@@ -334,36 +329,38 @@ export default function ApiKeysPage() {
     }
   }
 }`}
-                        </pre>
-                        <div className="flex items-center gap-2 text-[12px] text-zinc-500">
-                            <Terminal className="h-3.5 w-3.5" />
-                            <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
+                            </pre>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                <Terminal className="h-3.5 w-3.5" />
+                                <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
+                            </div>
                         </div>
-                    </div>
+                    </CardContent>
                 )}
-            </div>
+            </Card>
 
             {/* Active Keys */}
-            <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1">
-                    <Key className="h-4 w-4 text-blue-400" />
-                    <h2 className="text-lg font-heading font-medium text-white">Active Keys ({activeKeys.length})</h2>
-                </div>
-                <p className="text-[13px] text-zinc-600 mb-4">Keys that can authenticate API requests</p>
-
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <Key className="h-5 w-5 text-blue-400" />
+                        <div>
+                            <CardTitle className="text-white">Active Keys ({activeKeys.length})</CardTitle>
+                            <CardDescription className="text-zinc-400">Keys that can authenticate API requests</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
                     {loading ? (
-                        <div className="text-zinc-500 text-[13px] p-5">Loading...</div>
+                        <div className="text-zinc-500 text-sm py-4">Loading...</div>
                     ) : activeKeys.length === 0 ? (
-                        <div className="text-center py-10 px-5">
-                            <div className="h-10 w-10 rounded-xl bg-white/[0.04] flex items-center justify-center mx-auto mb-3">
-                                <Key className="h-4 w-4 text-zinc-600" />
-                            </div>
-                            <p className="text-zinc-500 text-[13px]">No active API keys</p>
-                            <p className="text-zinc-600 text-[12px] mt-1">Create a key to get started with the API</p>
+                        <div className="text-center py-8">
+                            <Key className="h-8 w-8 text-zinc-600 mx-auto mb-3" />
+                            <p className="text-zinc-500 text-sm">No active API keys</p>
+                            <p className="text-zinc-600 text-xs mt-1">Create a key to get started with the API</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-white/[0.04]">
+                        <div className="space-y-3">
                             {activeKeys.map(key => (
                                 <KeyRow
                                     key={key.id}
@@ -376,73 +373,80 @@ export default function ApiKeysPage() {
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {/* Inactive Keys */}
             {inactiveKeys.length > 0 && (
-                <div className="mb-5">
-                    <div className="flex items-center gap-2.5 mb-1">
-                        <Shield className="h-4 w-4 text-zinc-500" />
-                        <h2 className="text-lg font-heading font-medium text-zinc-400">Inactive Keys ({inactiveKeys.length})</h2>
-                    </div>
-                    <p className="text-[13px] text-zinc-600 mb-4">Revoked or expired keys</p>
-
-                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden divide-y divide-white/[0.04]">
-                        {inactiveKeys.map(key => (
-                            <KeyRow
-                                key={key.id}
-                                apiKey={key}
-                                status={getKeyStatus(key)}
-                                formatDate={formatDate}
-                                formatRelative={formatRelative}
-                                onDelete={() => { setDeleteTarget(key); setShowDelete(true); }}
-                            />
-                        ))}
-                    </div>
-                </div>
+                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <Shield className="h-5 w-5 text-zinc-500" />
+                            <div>
+                                <CardTitle className="text-zinc-400">Inactive Keys ({inactiveKeys.length})</CardTitle>
+                                <CardDescription className="text-zinc-500">Revoked or expired keys</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {inactiveKeys.map(key => (
+                                <KeyRow
+                                    key={key.id}
+                                    apiKey={key}
+                                    status={getKeyStatus(key)}
+                                    formatDate={formatDate}
+                                    formatRelative={formatRelative}
+                                    onDelete={() => { setDeleteTarget(key); setShowDelete(true); }}
+                                />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Security Notice */}
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
-                <div className="flex gap-3">
-                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                        <p className="text-[13px] font-medium text-zinc-300 mb-1.5">Security Best Practices</p>
-                        <ul className="space-y-1 text-[12px] text-zinc-500">
-                            <li>Use the minimum scopes needed for your integration</li>
-                            <li>Restrict keys to specific domains when possible</li>
-                            <li>Rotate keys regularly (default expiry: 90 days)</li>
-                            <li>Revoke any key that may have been exposed</li>
-                        </ul>
+            <Card className="bg-white/[0.02] border-white/[0.06]">
+                <CardContent className="pt-6">
+                    <div className="flex gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="text-sm text-zinc-400">
+                            <p className="font-medium text-zinc-300 mb-1">Security Best Practices</p>
+                            <ul className="space-y-1 text-zinc-500">
+                                <li>Use the minimum scopes needed for your integration</li>
+                                <li>Restrict keys to specific domains when possible</li>
+                                <li>Rotate keys regularly (default expiry: 90 days)</li>
+                                <li>Revoke any key that may have been exposed</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {/* ── Create Key Dialog ────────────────────────────── */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-md rounded-xl">
+                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-white text-[15px]">Create API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400 text-[13px]">
+                        <DialogTitle className="text-white">Create API Key</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
                             Generate a new key for programmatic access
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
-                            <Label className="text-[13px]">Name</Label>
+                            <Label>Name</Label>
                             <Input
                                 value={newKeyName}
                                 onChange={e => setNewKeyName(e.target.value)}
                                 placeholder="e.g., CI Pipeline, Monitoring Script"
-                                className="bg-white/[0.02] border-white/[0.06] rounded-lg"
+                                className="bg-white/[0.02] border-white/[0.06]"
                                 maxLength={64}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[13px]">Scopes</Label>
+                            <Label>Scopes</Label>
                             <div className="grid grid-cols-2 gap-2">
                                 {SCOPE_OPTIONS.map(scope => (
                                     <button
@@ -455,45 +459,45 @@ export default function ApiKeysPage() {
                                                 : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]'
                                         }`}
                                     >
-                                        <div className="text-[12px] font-medium text-white">{scope.label}</div>
-                                        <div className="text-[11px] text-zinc-500 mt-0.5">{scope.description}</div>
+                                        <div className="text-xs font-medium text-white">{scope.label}</div>
+                                        <div className="text-xs text-zinc-500 mt-0.5">{scope.description}</div>
                                     </button>
                                 ))}
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[13px]">Restrict to Domains (optional)</Label>
+                            <Label>Restrict to Domains (optional)</Label>
                             <Input
                                 value={newKeyDomains}
                                 onChange={e => setNewKeyDomains(e.target.value)}
                                 placeholder="example.com, app.example.com"
-                                className="bg-white/[0.02] border-white/[0.06] rounded-lg"
+                                className="bg-white/[0.02] border-white/[0.06]"
                             />
-                            <p className="text-[11px] text-zinc-500">Comma-separated. Leave empty to allow all domains.</p>
+                            <p className="text-xs text-zinc-500">Comma-separated. Leave empty to allow all domains.</p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[13px]">Expires in (days)</Label>
+                            <Label>Expires in (days)</Label>
                             <Input
                                 type="number"
                                 value={newKeyExpiry}
                                 onChange={e => setNewKeyExpiry(e.target.value)}
                                 min={1}
                                 max={365}
-                                className="bg-white/[0.02] border-white/[0.06] w-24 rounded-lg"
+                                className="bg-white/[0.02] border-white/[0.06] w-24"
                             />
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/[0.02] border-white/[0.06] rounded-lg text-[13px]">
+                        <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/[0.02] border-white/[0.06]">
                             Cancel
                         </Button>
                         <Button
                             onClick={handleCreate}
                             disabled={creating || newKeyScopes.length === 0}
-                            className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 rounded-lg text-[13px]"
+                            className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
                         >
                             {creating ? 'Creating...' : 'Create Key'}
                         </Button>
@@ -503,19 +507,19 @@ export default function ApiKeysPage() {
 
             {/* ── Show-Once Key Dialog ────────────────────────── */}
             <Dialog open={!!createdKey} onOpenChange={() => setCreatedKey(null)}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-lg rounded-xl" showCloseButton={false}>
+                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-lg" showCloseButton={false}>
                     <DialogHeader>
-                        <DialogTitle className="text-white flex items-center gap-2 text-[15px]">
+                        <DialogTitle className="text-white flex items-center gap-2">
                             <Check className="h-5 w-5 text-green-400" />
                             API Key Created
                         </DialogTitle>
-                        <DialogDescription className="text-amber-400 font-medium text-[13px]">
+                        <DialogDescription className="text-amber-400 font-medium">
                             Copy this key now. It will not be shown again.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="relative">
-                        <code className="block p-3 bg-black/30 border border-white/[0.06] rounded-lg text-[13px] text-green-400 font-mono break-all">
+                        <code className="block p-3 bg-black/30 border border-white/[0.06] rounded-lg text-sm text-green-400 font-mono break-all">
                             {createdKey}
                         </code>
                         <Button
@@ -529,7 +533,7 @@ export default function ApiKeysPage() {
                     </div>
 
                     <DialogFooter>
-                        <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/[0.08] hover:bg-white/20 rounded-lg text-[13px]">
+                        <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/[0.08] hover:bg-white/20">
                             Done
                         </Button>
                     </DialogFooter>
@@ -538,22 +542,21 @@ export default function ApiKeysPage() {
 
             {/* ── Revoke Confirmation Dialog ──────────────────── */}
             <Dialog open={showRevoke} onOpenChange={setShowRevoke}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm rounded-xl">
+                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="text-white text-[15px]">Revoke API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400 text-[13px]">
+                        <DialogTitle className="text-white">Revoke API Key</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
                             Are you sure you want to revoke <span className="font-mono text-zinc-300">{revokeTarget?.name}</span>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/[0.02] border-white/[0.06] rounded-lg text-[13px]">
+                        <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/[0.02] border-white/[0.06]">
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleRevoke}
                             disabled={!!revoking}
-                            className="rounded-lg text-[13px]"
                         >
                             {revoking ? 'Revoking...' : 'Revoke Key'}
                         </Button>
@@ -563,22 +566,21 @@ export default function ApiKeysPage() {
 
             {/* ── Permanent Delete Confirmation Dialog ─────────── */}
             <Dialog open={showDelete} onOpenChange={setShowDelete}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm rounded-xl">
+                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="text-white text-[15px]">Delete API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400 text-[13px]">
+                        <DialogTitle className="text-white">Delete API Key</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
                             Permanently delete <span className="font-mono text-zinc-300">{deleteTarget?.name}</span>? This removes all associated usage logs and cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-white/[0.02] border-white/[0.06] rounded-lg text-[13px]">
+                        <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-white/[0.02] border-white/[0.06]">
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
                             disabled={!!deleting}
-                            className="rounded-lg text-[13px]"
                         >
                             {deleting ? 'Deleting...' : 'Delete Forever'}
                         </Button>
@@ -607,25 +609,25 @@ function KeyRow({
     onDelete?: () => void;
 }) {
     return (
-        <div className="px-5 py-4 hover:bg-white/[0.02] transition-colors">
+        <div className="p-4 rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[14px] font-medium text-white">{apiKey.name}</span>
-                        <Badge variant={status.variant} className="text-[10px] px-1.5 py-0 rounded-md">
+                        <span className="font-medium text-white text-sm">{apiKey.name}</span>
+                        <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
                             {status.label}
                         </Badge>
                     </div>
-                    <code className="text-[12px] text-zinc-500 font-mono">{apiKey.key_prefix}...****</code>
+                    <code className="text-xs text-zinc-500 font-mono">{apiKey.key_prefix}...••••</code>
 
                     <div className="flex flex-wrap gap-1.5 mt-2">
                         {apiKey.scopes.map(scope => (
-                            <span key={scope} className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            <span key={scope} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                 {scope}
                             </span>
                         ))}
                         {apiKey.allowed_domains && apiKey.allowed_domains.length > 0 && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
                                 <Globe className="h-2.5 w-2.5" />
                                 {apiKey.allowed_domains.length} domain{apiKey.allowed_domains.length > 1 ? 's' : ''}
                             </span>
@@ -651,7 +653,7 @@ function KeyRow({
                         variant="ghost"
                         size="sm"
                         onClick={onRevoke}
-                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0 rounded-lg"
+                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
                         title="Revoke key"
                     >
                         <Trash2 className="h-4 w-4" />
@@ -662,7 +664,7 @@ function KeyRow({
                         variant="ghost"
                         size="sm"
                         onClick={onDelete}
-                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0 rounded-lg"
+                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
                         title="Delete permanently"
                     >
                         <Trash2 className="h-4 w-4" />

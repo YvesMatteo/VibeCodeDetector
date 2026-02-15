@@ -39,6 +39,7 @@ import {
     Upload,
     FileText,
     Smartphone,
+    CircleSlash,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -468,8 +469,10 @@ function isNonApplicableHosting(key: string, result: any): boolean {
 }
 
 // Hide supabase_mgmt when it errored (JWT/token not provided) or has no real findings
+// But don't hide if it's explicitly skipped (we want to show the "missing config" message)
 function isNonApplicableMgmt(key: string, result: any): boolean {
     if (key !== 'supabase_mgmt') return false;
+    if (result.skipped) return false; // Show skipped scanners
     if (result.error) return true; // Token wasn't provided or invalid
     if (!result.findings || result.findings.length === 0) return true;
     return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
@@ -555,7 +558,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
         const all = new Set<string>();
         Object.keys(results).forEach(key => {
             const result = results[key];
-            if (!result.error && (result.findings?.length > 0 || result.technologies?.length > 0)) {
+            if (!result.error && !result.skipped && (result.findings?.length > 0 || result.technologies?.length > 0)) {
                 all.add(key);
             }
         });
@@ -568,7 +571,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
 
     const allExpanded = Object.keys(results).every(key => {
         const result = results[key];
-        if (result.error || (!result.findings?.length && !result.technologies?.length)) return true;
+        if (result.error || result.skipped || (!result.findings?.length && !result.technologies?.length)) return true;
         return openSections.has(key);
     });
 
@@ -611,6 +614,37 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                     {errorMessage}
                                 </p>
                             </CardContent>
+                        </Card>
+                    );
+                }
+
+                // Skipped state — scanner didn't run because config is missing
+                if (result.skipped) {
+                    const configHints: Record<string, string> = {
+                        githubRepo: 'Add a GitHub repository link in your project settings to enable this scanner.',
+                        supabasePAT: 'Add a Supabase Personal Access Token in your project settings to enable this scanner.',
+                    };
+                    const hint = configHints[result.missingConfig] || result.reason;
+                    return (
+                        <Card key={key} className="mb-4 bg-slate-900/30 border-zinc-800/50 animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                            <div className="px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Icon className="h-5 w-5 text-zinc-600 shrink-0" />
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <h3 className="font-semibold text-zinc-500">
+                                                {scannerNames[key as keyof typeof scannerNames] || key}
+                                            </h3>
+                                            <span className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-full px-2 py-0.5">
+                                                <CircleSlash className="h-3 w-3" />
+                                                Skipped
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-zinc-600 mt-1">{hint}</p>
+                                    </div>
+                                </div>
+                                <span className="text-lg font-semibold tabular-nums text-zinc-700">—</span>
+                            </div>
                         </Card>
                     );
                 }

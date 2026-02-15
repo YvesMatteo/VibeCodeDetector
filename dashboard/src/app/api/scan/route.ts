@@ -383,6 +383,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.github_secrets = data; })
                     .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.github_secrets = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 9. CORS Scanner (Edge Function)
@@ -525,6 +527,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.dependencies = data; })
                     .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.dependencies = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 15. SSL/TLS Scanner (Edge Function)
@@ -607,6 +611,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.scorecard = data; })
                     .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.scorecard = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 20. GitHub Native Security Scanner (Edge Function) — only if repo URL provided
@@ -625,6 +631,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.github_security = data; })
                     .catch(err => { results.github_security = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.github_security = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 21. Supabase Management API Scanner (Edge Function) — only if PAT provided
@@ -643,6 +651,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.supabase_mgmt = data; })
                     .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
             );
+        } else if (backendType === 'supabase' || userSupabaseUrl) {
+            results.supabase_mgmt = { skipped: true, reason: 'Supabase PAT not provided', missingConfig: 'supabasePAT' };
         }
 
         // 22. Vercel Hosting Scanner (always runs, auto-detects)
