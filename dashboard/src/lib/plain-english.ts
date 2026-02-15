@@ -400,6 +400,62 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Tables have RLS enabled but no policies.',
         whyItMatters: 'RLS with no policies means nobody (except service_role) can access the data — probably not what you intended.',
     },
+    // DDoS Protection Scanner findings
+    'no waf or cdn protection': {
+        summary: 'Your site has no shield against attacks.',
+        whyItMatters: 'Without a WAF or CDN, your server is directly exposed to DDoS attacks and automated exploitation attempts.',
+    },
+    'no rate limiting detected': {
+        summary: 'Anyone can flood your server with requests.',
+        whyItMatters: 'Without rate limiting, a single attacker can overwhelm your server, cause downtime, or brute-force user accounts.',
+    },
+    'no bot protection': {
+        summary: 'Bots can freely interact with your site.',
+        whyItMatters: 'Without CAPTCHA or bot detection, automated scripts can scrape data, stuff credentials, and abuse your forms.',
+    },
+    // File Upload Security Scanner findings
+    'file upload accepts all file types': {
+        summary: 'Users can upload anything, including malware.',
+        whyItMatters: 'Unrestricted file uploads let attackers upload executable files, web shells, or oversized files that crash your server.',
+    },
+    'file upload over insecure http': {
+        summary: 'Uploaded files are sent without encryption.',
+        whyItMatters: 'Files uploaded over HTTP can be intercepted and modified by anyone on the same network.',
+    },
+    // Audit Logging & Monitoring Scanner findings
+    'no error monitoring or observability': {
+        summary: 'You\'re flying blind in production.',
+        whyItMatters: 'Without monitoring, you won\'t know when something breaks, when you\'re being attacked, or what happened when a customer reports an issue.',
+    },
+    'no security event reporting': {
+        summary: 'Security incidents go undetected.',
+        whyItMatters: 'Without reporting headers, your browser can\'t tell you when your security policies are violated.',
+    },
+    'no security.txt': {
+        summary: 'Security researchers can\'t reach you.',
+        whyItMatters: 'Without security.txt, researchers who find vulnerabilities have no way to report them to you responsibly.',
+    },
+    'error pages leak stack traces': {
+        summary: 'Your error pages reveal your code internals.',
+        whyItMatters: 'Stack traces tell attackers exactly what framework, libraries, and file paths you use — making targeted attacks much easier.',
+    },
+    // Mobile API Rate Limiting Scanner findings
+    'mobile requests lack rate limiting': {
+        summary: 'Your mobile API is wide open to abuse.',
+        whyItMatters: 'Attackers target mobile APIs specifically because developers often forget to rate-limit them.',
+    },
+    'authentication endpoint not rate-limited': {
+        summary: 'Attackers can try unlimited passwords.',
+        whyItMatters: 'Without rate limiting on login, an attacker can try millions of password combinations. This is the #1 way accounts get hacked.',
+    },
+    'graphql introspection enabled': {
+        summary: 'Anyone can see your entire API schema.',
+        whyItMatters: 'GraphQL introspection reveals every query, mutation, and type in your API — giving attackers a complete map of your attack surface.',
+    },
+    'graphql endpoint lacks rate limiting': {
+        summary: 'Your GraphQL API can be overwhelmed.',
+        whyItMatters: 'A single GraphQL query can request massive amounts of nested data. Without rate limiting, attackers can exhaust your server.',
+    },
     'heading order': {
         summary: 'Messy document structure.',
         whyItMatters: 'Headings should follow a hierarchy (H1 -> H2 -> H3). Skipping levels confuses screen readers and SEO bots.',

@@ -105,9 +105,9 @@ export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) 
             {/* Findings Overview */}
             <Card className="bg-slate-900/50 border-slate-700/20 mb-8">
                 <CardContent className="py-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-8">
-                        <div className="flex flex-col items-center justify-center" style={{ width: 120, height: 120 }}>
-                            <span className={`text-5xl font-bold ${getIssueCountColor(issueCount)}`}>{issueCount}</span>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+                        <div className="flex flex-col items-center justify-center w-24 h-24 sm:w-[120px] sm:h-[120px]">
+                            <span className={`text-4xl sm:text-5xl font-bold ${getIssueCountColor(issueCount)}`}>{issueCount}</span>
                             <span className="text-xs text-zinc-500 mt-1">{issueCount === 1 ? 'issue' : 'issues'}</span>
                             {passingCheckCount > 0 && (
                                 <span className="text-[11px] text-emerald-500/70 mt-0.5">+ {passingCheckCount} passing</span>
@@ -127,7 +127,7 @@ export function AuditReport({ data, diff, previousScanDate }: AuditReportProps) 
                                     across {visibleScannerCount} scanners
                                 </span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-5">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-5">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
                                     <span className="text-sm font-medium text-white">{totalFindings.critical}</span>

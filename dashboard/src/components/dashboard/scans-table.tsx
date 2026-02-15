@@ -169,9 +169,9 @@ export function ScansTable({ scans }: ScansTableProps) {
                   className="hover:bg-white/[0.02] transition-colors cursor-pointer"
                   onClick={() => router.push(`/dashboard/scans/${scan.id}`)}
                 >
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">
+                  <TableCell className="max-w-[180px] sm:max-w-none">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium truncate">
                         {scan.url.replace(/^https?:\/\//, '')}
                       </span>
                       <a

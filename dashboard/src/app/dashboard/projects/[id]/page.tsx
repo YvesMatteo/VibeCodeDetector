@@ -80,7 +80,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                         />
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                                     {p.name}
                                 </h1>
                                 <a

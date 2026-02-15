@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -725,6 +725,70 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.vibe_match = { error: err.message, score: 0 }; })
         );
 
+        // 27. DDoS Protection Scanner (always runs)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/ddos-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.ddos_protection = data; })
+                .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
+        );
+
+        // 28. File Upload Security Scanner (always runs)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/upload-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.file_upload = data; })
+                .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
+        );
+
+        // 29. Audit Logging & Monitoring Scanner (always runs)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/audit-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.audit_logging = data; })
+                .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
+        );
+
+        // 30. Mobile API Rate Limiting Scanner (always runs)
+        scannerPromises.push(
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/mobile-scanner`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+                    'x-scanner-key': scannerSecretKey,
+                },
+                body: JSON.stringify({ targetUrl }),
+            })
+                .then(res => res.json())
+                .then(data => { results.mobile_api = data; })
+                .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
+        );
+
         // Wait for all
         await Promise.all(scannerPromises);
 
@@ -757,6 +821,10 @@ export async function POST(req: NextRequest) {
             scorecard: 0.02,      // OpenSSF supply chain score
             vibe_match: 0.02,     // AI generation detection
             legal: 0.01,          // Legal compliance
+            ddos_protection: 0.04, // DDoS/WAF protection
+            file_upload: 0.03,    // File upload security
+            audit_logging: 0.02,  // Monitoring & audit readiness
+            mobile_api: 0.03,     // Mobile API rate limiting
         };
 
         let weightedSum = 0;

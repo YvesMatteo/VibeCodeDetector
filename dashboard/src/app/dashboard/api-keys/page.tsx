@@ -228,16 +228,16 @@ export default function ApiKeysPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-4xl">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white mb-2">API Keys</h1>
-                    <p className="text-zinc-400">
+                    <p className="text-zinc-400 text-sm sm:text-base">
                         Manage API keys for programmatic access to CheckVibe
                     </p>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
+                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 w-full sm:w-auto shrink-0"
                 >
                     <Plus className="mr-2 h-4 w-4" />
                     Create Key

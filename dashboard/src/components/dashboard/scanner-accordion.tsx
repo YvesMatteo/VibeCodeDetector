@@ -36,6 +36,9 @@ import {
     Globe2,
     Cloud,
     TrainFront,
+    Upload,
+    FileText,
+    Smartphone,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +94,10 @@ const scannerIcons: Record<string, any> = {
     railway_hosting: TrainFront,
     convex_backend: Zap,
     vibe_match: Search,
+    ddos_protection: ShieldCheck,
+    file_upload: Upload,
+    audit_logging: FileText,
+    mobile_api: Smartphone,
 };
 
 const scannerNames: Record<string, string> = {
@@ -121,6 +128,10 @@ const scannerNames: Record<string, string> = {
     railway_hosting: 'Railway Hosting',
     convex_backend: 'Convex Backend',
     vibe_match: 'AI Detection',
+    ddos_protection: 'DDoS Protection',
+    file_upload: 'File Upload Security',
+    audit_logging: 'Audit Logging & Monitoring',
+    mobile_api: 'Mobile API Rate Limiting',
 };
 
 interface ScannerAccordionProps {
@@ -202,7 +213,7 @@ function SeveritySummary({ findings }: { findings: any[] }) {
     });
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {counts.critical > 0 && (
                 <span className="flex items-center gap-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-2 py-0.5">
                     {counts.critical} critical
@@ -335,7 +346,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
                 </div>
             </div>
             {showDetails && details.length > 0 && (
-                <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3 ml-8">
+                <div className="px-3 sm:px-4 pb-4 space-y-3 border-t border-white/5 pt-3 ml-0 sm:ml-8">
                     {details.map((d, i) => (
                         <FindingCard key={i} finding={d} index={i} />
                     ))}
@@ -484,6 +495,7 @@ const SCANNER_ORDER: string[] = [
     'firebase_backend',
     'convex_backend',
     'security',
+    'ddos_protection',
     'auth',
     'dependencies',
     'xss',
@@ -492,6 +504,9 @@ const SCANNER_ORDER: string[] = [
     'netlify_hosting',
     'cloudflare_hosting',
     'railway_hosting',
+    'file_upload',
+    'audit_logging',
+    'mobile_api',
     'ssl_tls',
     'sqli',
     'cors',
@@ -608,7 +623,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                         {/* Clickable header */}
                         <button
                             onClick={() => toggle(key)}
-                            className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                            className="w-full text-left px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
                         >
                             <div className="flex items-center gap-3 min-w-0">
                                 <Icon className="h-5 w-5 text-zinc-400 shrink-0" />
@@ -647,7 +662,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                             className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                         >
                             <div className="overflow-hidden">
-                                <div className="px-6 pb-6 pt-2 border-t border-white/5">
+                                <div className="px-3 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-white/5">
                                     {/* Tech Stack Badges */}
                                     {key === 'tech_stack' && result.technologies?.length > 0 && (
                                         <div className="mb-4 pb-4 border-b border-white/5">
