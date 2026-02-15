@@ -34,26 +34,26 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
         .order('created_at', { ascending: false });
 
     return (
-        <div className="p-4 md:p-8">
-            <div className="mb-8">
+        <div className="p-5 md:p-10 max-w-6xl">
+            <div className="mb-10">
                 <Link
                     href={`/dashboard/projects/${params.id}`}
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                    className="inline-flex items-center text-zinc-500 hover:text-white text-[13px] mb-6 transition-colors"
                 >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                     Back to {p.name}
                 </Link>
-                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
+                <h1 className="text-3xl md:text-[42px] font-heading font-semibold tracking-tight text-white leading-[1.1] mb-3">
                     Audit History
                 </h1>
-                <p className="text-zinc-400 mt-1">
+                <p className="text-zinc-500 text-[15px]">
                     All audits for {p.name}
                 </p>
             </div>
 
             {!scans || scans.length === 0 ? (
-                <div className="text-center py-20">
-                    <p className="text-zinc-500 text-sm">No audits have been run for this project yet.</p>
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-12 text-center">
+                    <p className="text-zinc-500 text-[13px]">No audits have been run for this project yet.</p>
                 </div>
             ) : (
                 <ScansTable scans={scans} />

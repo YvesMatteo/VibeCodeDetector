@@ -59,80 +59,79 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     const previousScanDate = previousScan?.completed_at ?? previousScan?.created_at ?? null;
 
     return (
-        <div className="p-4 md:p-8">
-            {/* Header */}
-            <div className="mb-8">
-                <Link
-                    href="/dashboard"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
-                >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Projects
-                </Link>
+        <div className="p-5 md:p-10 max-w-6xl">
+            {/* Back link */}
+            <Link
+                href="/dashboard"
+                className="inline-flex items-center text-zinc-500 hover:text-white text-[13px] mb-6 transition-colors"
+            >
+                <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+                Back to Projects
+            </Link>
 
-                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div className="flex items-start gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
-                            alt=""
-                            className="h-10 w-10 rounded-lg object-contain mt-0.5 shrink-0"
-                        />
-                        <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
-                                    {p.name}
-                                </h1>
-                                <a
-                                    href={p.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                                >
-                                    <ExternalLink className="h-5 w-5" />
-                                </a>
-                            </div>
-                            <p className="text-sm text-zinc-500">{hostname}</p>
+            {/* Project Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
+                <div className="flex items-start gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                        alt=""
+                        className="h-12 w-12 rounded-xl object-contain shrink-0 bg-white/[0.04] p-1.5"
+                    />
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-2xl md:text-3xl font-heading font-semibold tracking-tight text-white">
+                                {p.name}
+                            </h1>
+                            <a
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0"
+                            >
+                                <ExternalLink className="h-4 w-4" />
+                            </a>
                         </div>
+                        <p className="text-[13px] text-zinc-500">{hostname}</p>
                     </div>
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0">
-                        <RunAuditButton projectId={params.id} />
-                        <Link
-                            href={`/dashboard/projects/${params.id}/history`}
-                            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                        >
-                            <History className="h-4 w-4" />
-                            History
-                        </Link>
-                        <Link
-                            href={`/dashboard/projects/${params.id}/settings`}
-                            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                        >
-                            <Settings className="h-4 w-4" />
-                            Settings
-                        </Link>
-                    </div>
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
+                    <RunAuditButton projectId={params.id} />
+                    <Link
+                        href={`/dashboard/projects/${params.id}/history`}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] text-zinc-500 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+                    >
+                        <History className="h-3.5 w-3.5" />
+                        History
+                    </Link>
+                    <Link
+                        href={`/dashboard/projects/${params.id}/settings`}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] text-zinc-500 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+                    >
+                        <Settings className="h-3.5 w-3.5" />
+                        Settings
+                    </Link>
                 </div>
             </div>
 
             {/* Content */}
             {!latestScan ? (
-                <div className="text-center py-20">
-                    <h2 className="text-lg font-medium text-white mb-2">No audits yet</h2>
-                    <p className="text-zinc-500 text-sm mb-6">
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-12 text-center">
+                    <h2 className="text-lg font-heading font-medium text-white mb-2">No audits yet</h2>
+                    <p className="text-zinc-500 text-[13px] mb-6">
                         Run your first audit to see security findings for this project.
                     </p>
                     <RunAuditButton projectId={params.id} size="lg" />
                 </div>
             ) : (
                 <>
-                    {/* Action bar for latest audit */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                    {/* Action bar */}
+                    <div className="flex flex-col sm:flex-row gap-2 mb-8">
                         <AIFixPrompt url={p.url} findings={auditData!.allFindings} techStack={auditData!.techStack} />
-                        <Button variant="outline" asChild className="bg-white/5 border-white/10">
+                        <Button variant="outline" asChild className="bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] text-zinc-300 rounded-lg">
                             <a href={`/api/scan/${latestScan.id}/export`} download>
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="mr-1.5 h-3.5 w-3.5" />
                                 Export .md
                             </a>
                         </Button>

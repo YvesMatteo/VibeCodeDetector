@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -20,6 +19,8 @@ import {
     Loader2,
     Save,
     Trash2,
+    Settings,
+    AlertTriangle,
 } from 'lucide-react';
 
 export default function ProjectSettingsPage() {
@@ -109,70 +110,79 @@ export default function ProjectSettingsPage() {
 
     if (loading) {
         return (
-            <div className="p-4 md:p-8 flex items-center justify-center min-h-[50vh]">
+            <div className="p-5 md:p-10 flex items-center justify-center min-h-[50vh]">
                 <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
             </div>
         );
     }
 
     return (
-        <div className="p-4 md:p-8 pb-16 max-w-3xl mx-auto">
-            <div className="mb-8">
+        <div className="p-5 md:p-10 pb-16 max-w-3xl mx-auto">
+            {/* Header */}
+            <div className="mb-10">
                 <Link
                     href={`/dashboard/projects/${projectId}`}
-                    className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
+                    className="inline-flex items-center text-zinc-500 hover:text-white text-[13px] mb-6 transition-colors"
                 >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                     Back to Project
                 </Link>
-                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">Project Settings</h1>
-                <p className="text-zinc-400 mt-1">Update your project configuration</p>
+                <h1 className="text-3xl md:text-[42px] font-heading font-semibold tracking-tight text-white leading-[1.1] mb-3">
+                    Project Settings
+                </h1>
+                <p className="text-zinc-500 text-[15px]">
+                    Update your project configuration
+                </p>
             </div>
 
             <form onSubmit={handleSave}>
-                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader>
-                        <CardTitle className="text-white">Configuration</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                {/* Configuration */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-2.5 mb-1">
+                        <Settings className="h-4 w-4 text-zinc-500" />
+                        <h2 className="text-lg font-heading font-medium text-white">Configuration</h2>
+                    </div>
+                    <p className="text-[13px] text-zinc-600 mb-5">Project details and integrations</p>
+
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                         {error && (
-                            <div className="mb-4 p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">{error}</div>
+                            <div className="mb-4 p-3 text-[13px] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">{error}</div>
                         )}
                         {success && (
-                            <div className="mb-4 p-3 text-sm text-green-500 bg-green-500/10 border border-green-500/20 rounded-lg">Settings saved.</div>
+                            <div className="mb-4 p-3 text-[13px] text-green-500 bg-green-500/10 border border-green-500/20 rounded-lg">Settings saved.</div>
                         )}
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-zinc-300">Project Name</Label>
+                                <Label className="text-zinc-400 text-[13px]">Project Name</Label>
                                 <Input
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="bg-white/[0.03] border-white/[0.08] text-white"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-lg"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-300">Target URL</Label>
+                                <Label className="text-zinc-400 text-[13px]">Target URL</Label>
                                 <Input
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="bg-white/[0.03] border-white/[0.08] text-white"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-lg"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-300">GitHub Repository</Label>
+                                <Label className="text-zinc-400 text-[13px]">GitHub Repository</Label>
                                 <Input
                                     value={githubRepo}
                                     onChange={(e) => setGithubRepo(e.target.value)}
                                     placeholder="https://github.com/org/repo"
-                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 rounded-lg"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-300">Backend Provider</Label>
+                                <Label className="text-zinc-400 text-[13px]">Backend Provider</Label>
                                 <select
                                     value={backendType}
                                     onChange={(e) => { setBackendType(e.target.value as any); setBackendUrl(''); setSupabasePAT(''); }}
-                                    className="w-full h-10 rounded-md border bg-white/[0.03] border-white/[0.08] text-white px-3 text-sm"
+                                    className="w-full h-10 rounded-lg border bg-white/[0.03] border-white/[0.08] text-white px-3 text-[13px]"
                                 >
                                     <option value="none" className="bg-zinc-900">None (auto-detect)</option>
                                     <option value="supabase" className="bg-zinc-900">Supabase</option>
@@ -182,7 +192,7 @@ export default function ProjectSettingsPage() {
                             </div>
                             {backendType !== 'none' && (
                                 <div className="space-y-2">
-                                    <Label className="text-zinc-300">
+                                    <Label className="text-zinc-400 text-[13px]">
                                         {backendType === 'supabase' ? 'Supabase Project URL' :
                                          backendType === 'firebase' ? 'Firebase Project URL' :
                                          'Convex Deployment URL'}
@@ -190,70 +200,71 @@ export default function ProjectSettingsPage() {
                                     <Input
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
-                                        className="bg-white/[0.03] border-white/[0.08] text-white"
+                                        className="bg-white/[0.03] border-white/[0.08] text-white rounded-lg"
                                     />
                                 </div>
                             )}
                             {backendType === 'supabase' && (
                                 <div className="space-y-2">
-                                    <Label className="text-zinc-300">Supabase Access Token</Label>
+                                    <Label className="text-zinc-400 text-[13px]">Supabase Access Token</Label>
                                     <Input
                                         type="password"
                                         value={supabasePAT}
                                         onChange={(e) => setSupabasePAT(e.target.value)}
                                         placeholder="sbp_..."
-                                        className="bg-white/[0.03] border-white/[0.08] text-white font-mono placeholder:text-zinc-600"
+                                        className="bg-white/[0.03] border-white/[0.08] text-white font-mono placeholder:text-zinc-600 rounded-lg"
                                     />
                                 </div>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 <div className="flex justify-end mb-12">
-                    <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                    <Button type="submit" disabled={saving} className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 rounded-lg text-[13px] font-medium">
                         {saving ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                            <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving...</>
                         ) : (
-                            <><Save className="mr-2 h-4 w-4" /> Save Changes</>
+                            <><Save className="mr-1.5 h-3.5 w-3.5" /> Save Changes</>
                         )}
                     </Button>
                 </div>
             </form>
 
             {/* Danger Zone */}
-            <Card className="border-red-500/20 bg-red-500/5">
-                <CardHeader>
-                    <CardTitle className="text-red-400">Danger Zone</CardTitle>
-                    <CardDescription className="text-zinc-400">
-                        Deleting a project is permanent. Audit history will be preserved but unlinked.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+            <div className="mb-6">
+                <div className="flex items-center gap-2.5 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-red-400" />
+                    <h2 className="text-lg font-heading font-medium text-red-400">Danger Zone</h2>
+                </div>
+                <p className="text-[13px] text-zinc-600 mb-5">Deleting a project is permanent. Audit history will be preserved but unlinked.</p>
+
+                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5">
                     <Button
                         variant="destructive"
                         onClick={() => setDeleteOpen(true)}
+                        className="rounded-lg text-[13px]"
                     >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                         Delete Project
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                <DialogContent>
+                <DialogContent className="bg-[#111113] border-white/[0.08] rounded-xl">
                     <DialogHeader>
-                        <DialogTitle>Delete Project</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-white text-[15px]">Delete Project</DialogTitle>
+                        <DialogDescription className="text-zinc-400 text-[13px]">
                             Are you sure you want to delete <span className="font-medium text-white">{name}</span>?
                             Existing audit reports will be preserved but unlinked from this project.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                        <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting} className="bg-white/[0.02] border-white/[0.06] rounded-lg text-[13px]">
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                        <Button variant="destructive" onClick={handleDelete} disabled={deleting} className="rounded-lg text-[13px]">
                             {deleting ? 'Deleting...' : 'Delete Project'}
                         </Button>
                     </DialogFooter>
