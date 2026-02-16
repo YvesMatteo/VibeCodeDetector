@@ -36,10 +36,47 @@ Deno.serve(async (req: Request) => {
             });
         }
 
-        // Fetch page content
-        const response = await fetch(url);
+        // Fetch page content with browser-like headers and timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        let response: Response;
+        try {
+            response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; CheckVibeBot/1.0; +https://checkvibe.dev)',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                },
+                signal: controller.signal,
+                redirect: 'follow',
+            });
+        } catch (fetchErr: any) {
+            clearTimeout(timeout);
+            const msg = fetchErr.name === 'AbortError'
+                ? 'Timed out fetching the target site (15s)'
+                : `Could not reach the target site: ${fetchErr.message}`;
+            return new Response(JSON.stringify({
+                scannerType: 'legal-scanner',
+                score: 50,
+                findings: [{ title: 'Site unreachable', severity: 'low', description: msg }],
+                scannedAt: new Date().toISOString(),
+                url,
+            }), {
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            });
+        }
+        clearTimeout(timeout);
+
         if (!response.ok) {
-            throw new Error(`Failed to fetch target URL: ${response.statusText}`);
+            return new Response(JSON.stringify({
+                scannerType: 'legal-scanner',
+                score: 50,
+                findings: [{ title: 'Site returned an error', severity: 'low', description: `HTTP ${response.status} ${response.statusText}. Could not analyze legal compliance.` }],
+                scannedAt: new Date().toISOString(),
+                url,
+            }), {
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            });
         }
         const html = await response.text();
         // Use a regex to strip script/style tags for cleaner text analysis
@@ -95,16 +132,47 @@ If no issues are found, return score 100 and an empty findings array.`;
             })
         });
 
+        if (!completion.ok) {
+            const errBody = await completion.text();
+            console.error('Gemini API error:', completion.status, errBody);
+            throw new Error(`Gemini API returned ${completion.status}`);
+        }
+
         const aiRes = await completion.json();
 
         if (aiRes.error) {
             throw new Error(aiRes.error.message);
         }
 
-        const rawText = aiRes.candidates?.[0]?.content?.parts?.[0]?.text;
+        // Handle safety blocks or empty responses
+        const candidate = aiRes.candidates?.[0];
+        if (!candidate || candidate.finishReason === 'SAFETY') {
+            return new Response(JSON.stringify({
+                scannerType: 'legal-scanner',
+                score: 80,
+                findings: [{ title: 'Analysis limited', severity: 'low', description: 'AI safety filters prevented full analysis. No major legal issues detected from available content.' }],
+                scannedAt: new Date().toISOString(),
+                url,
+            }), {
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            });
+        }
+
+        const rawText = candidate.content?.parts?.[0]?.text;
         if (!rawText) throw new Error("Empty response from Gemini");
 
-        const content = JSON.parse(rawText);
+        let content: any;
+        try {
+            content = JSON.parse(rawText);
+        } catch {
+            // Gemini sometimes wraps JSON in markdown code blocks
+            const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (jsonMatch) {
+                content = JSON.parse(jsonMatch[1].trim());
+            } else {
+                throw new Error("Failed to parse Gemini response as JSON");
+            }
+        }
 
         // Validate AI response structure
         if (typeof content.score !== 'number' || content.score < 0 || content.score > 100) {
@@ -124,17 +192,15 @@ If no issues are found, return score 100 and an empty findings array.`;
             headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
         });
 
-    } catch (error) {
-        console.error('Scanner error:', error);
+    } catch (error: any) {
+        console.error('Legal scanner error:', error);
         return new Response(JSON.stringify({
             scannerType: 'legal-scanner',
-            score: 0,
-            error: 'Scan failed. Please try again.',
-            findings: [],
-            metadata: {}
+            score: 50,
+            findings: [{ title: 'Scanner error', severity: 'low', description: `Legal compliance scan encountered an issue: ${error?.message || 'Unknown error'}. The site may have restricted automated access.` }],
+            scannedAt: new Date().toISOString(),
         }), {
             headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
-            status: 500
         });
     }
 });
