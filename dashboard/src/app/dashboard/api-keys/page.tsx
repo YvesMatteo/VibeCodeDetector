@@ -25,8 +25,8 @@ import {
     Terminal,
     ChevronDown,
     ChevronUp,
+    Info,
 } from 'lucide-react';
-import Image from 'next/image';
 import { toast } from 'sonner';
 
 interface ApiKey {
@@ -298,7 +298,7 @@ export default function ApiKeysPage() {
                 <CardHeader className="cursor-pointer py-4" onClick={() => setMcpOpen(!mcpOpen)}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Image src="/claude-code.png" alt="Claude Code" width={28} height={14} className="rounded-[3px]" />
+                            <Terminal className="h-4 w-4 text-zinc-400" />
                             <div>
                                 <CardTitle className="text-white text-sm font-medium">Use with Claude Code (MCP)</CardTitle>
                                 <CardDescription className="text-zinc-500 text-xs">Let coding agents run security scans</CardDescription>
@@ -597,9 +597,18 @@ function KeyRow({
     onRevoke?: () => void;
     onDelete?: () => void;
 }) {
+    const [showInfo, setShowInfo] = useState(false);
+
+    const scopeInfo: Record<string, { label: string; description: string }> = {
+        'scan:read': { label: 'Read Scans', description: 'View scan results and history' },
+        'scan:write': { label: 'Run Scans', description: 'Trigger new security scans' },
+        'keys:read': { label: 'List Keys', description: 'View your API keys' },
+        'keys:manage': { label: 'Manage Keys', description: 'Create and revoke API keys' },
+    };
+
     return (
-        <div className="p-4 rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-            <div className="flex items-start justify-between gap-4">
+        <div className="rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
+            <div className="p-4 flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-white text-sm">{apiKey.name}</span>
@@ -609,31 +618,26 @@ function KeyRow({
                     </div>
                     <code className="text-xs text-zinc-500 font-mono">{apiKey.key_prefix}...••••</code>
 
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                        {apiKey.scopes.map(scope => (
-                            <span key={scope} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                {scope}
+                    <div className="flex items-center gap-3 mt-2">
+                        <button
+                            onClick={() => setShowInfo(v => !v)}
+                            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${showInfo ? 'text-blue-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Info className="h-3.5 w-3.5" />
+                            {showInfo ? 'Hide details' : 'View details'}
+                        </button>
+                        <div className="flex gap-4 text-[11px] text-zinc-600">
+                            <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Created {formatDate(apiKey.created_at)}
                             </span>
-                        ))}
-                        {apiKey.allowed_domains && apiKey.allowed_domains.length > 0 && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
-                                <Globe className="h-2.5 w-2.5" />
-                                {apiKey.allowed_domains.length} domain{apiKey.allowed_domains.length > 1 ? 's' : ''}
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex gap-4 mt-2 text-[11px] text-zinc-600">
-                        <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Created {formatDate(apiKey.created_at)}
-                        </span>
-                        {apiKey.last_used_at && (
-                            <span>Last used {formatRelative(apiKey.last_used_at)}</span>
-                        )}
-                        {apiKey.expires_at && (
-                            <span>Expires {formatDate(apiKey.expires_at)}</span>
-                        )}
+                            {apiKey.last_used_at && (
+                                <span>Last used {formatRelative(apiKey.last_used_at)}</span>
+                            )}
+                            {apiKey.expires_at && (
+                                <span>Expires {formatDate(apiKey.expires_at)}</span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -660,6 +664,52 @@ function KeyRow({
                     </Button>
                 )}
             </div>
+
+            {showInfo && (
+                <div className="px-4 pb-4 pt-1 border-t border-white/[0.04] space-y-3">
+                    <div>
+                        <h4 className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider mb-2">Permissions</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                            {apiKey.scopes.map(scope => {
+                                const info = scopeInfo[scope];
+                                return (
+                                    <div key={scope} className="flex items-start gap-2 p-2 rounded-md bg-white/[0.02] border border-white/[0.05]">
+                                        <Check className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-medium text-zinc-300">{info?.label ?? scope}</p>
+                                            <p className="text-[11px] text-zinc-500">{info?.description ?? scope}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider mb-2">Restrictions</h4>
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs">
+                                <Globe className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                                {apiKey.allowed_domains && apiKey.allowed_domains.length > 0 ? (
+                                    <span className="text-zinc-300">
+                                        Restricted to: {apiKey.allowed_domains.join(', ')}
+                                    </span>
+                                ) : (
+                                    <span className="text-zinc-500">No domain restrictions (all domains allowed)</span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                                <Clock className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                                {apiKey.expires_at ? (
+                                    <span className="text-zinc-300">Expires {formatDate(apiKey.expires_at)}</span>
+                                ) : (
+                                    <span className="text-zinc-500">No expiration set</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
