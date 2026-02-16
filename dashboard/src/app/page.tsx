@@ -512,7 +512,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
+      <section id="pricing" className="relative pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" aria-hidden="true"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
