@@ -44,9 +44,9 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
 
                 <div className="relative">
-                    <Link href="/" className="flex items-center space-x-2.5">
-                        <Image src="/logo.png" alt="CheckVibe Logo" width={36} height={36} className="h-9 w-9 object-contain rounded-lg" />
-                        <span className="text-lg font-semibold text-white tracking-tight">CheckVibe</span>
+                    <Link href="/" className="flex items-center space-x-3">
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain rounded-lg" />
+                        <span className="text-2xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
 
