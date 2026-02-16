@@ -164,12 +164,30 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
             <Card className="bg-slate-900/50 border-slate-700/20 mb-8">
                 <CardContent className="py-6">
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                        <div className="flex flex-col items-center justify-center w-24 h-24 sm:w-[120px] sm:h-[120px]">
-                            <span className={`text-4xl sm:text-5xl font-bold ${getIssueCountColor(adjusted.total)}`}>{adjusted.total}</span>
-                            <span className="text-xs text-zinc-500 mt-1">{adjusted.total === 1 ? 'issue' : 'issues'}</span>
-                            {passingCheckCount > 0 && (
-                                <span className="text-[11px] text-emerald-500/70 mt-0.5">+ {passingCheckCount} passing</span>
-                            )}
+                        <div className="relative w-28 h-28 sm:w-[130px] sm:h-[130px] shrink-0">
+                            <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="5" className="text-white/[0.06]" />
+                                <circle
+                                    cx="60" cy="60" r="52" fill="none" strokeWidth="5"
+                                    strokeLinecap="round"
+                                    stroke="url(#scoreGradient)"
+                                    strokeDasharray={`${Math.max(0, (1 - adjusted.total / 50)) * 326.73} 326.73`}
+                                    className="transition-all duration-1000 ease-out"
+                                />
+                                <defs>
+                                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#3b82f6" />
+                                        <stop offset="100%" stopColor="#06b6d4" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className={`text-4xl sm:text-5xl font-bold ${getIssueCountColor(adjusted.total)}`}>{adjusted.total}</span>
+                                <span className="text-[10px] text-zinc-500 mt-0.5">{adjusted.total === 1 ? 'issue' : 'issues'}</span>
+                                {passingCheckCount > 0 && (
+                                    <span className="text-[10px] text-emerald-500/70">+{passingCheckCount} passing</span>
+                                )}
+                            </div>
                         </div>
                         <div className="flex-1 flex flex-col items-center sm:items-start gap-4">
                             <div className="flex flex-wrap items-center gap-3">

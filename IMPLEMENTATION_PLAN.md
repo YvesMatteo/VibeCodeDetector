@@ -1,4 +1,4 @@
-# Implementation Plan — 4 New Security Scanners (v8)
+# Implementation Plan — Dashboard UX Improvements
 
 ## Status
 - [x] Planning
@@ -7,534 +7,694 @@
 
 ## Overview
 
-4 new edge function scanners + wiring into scan route and frontend. Each scanner is independent. New scan type IDs: `ddos_protection`, `file_upload`, `audit_logging`, `mobile_api`.
+10 incremental UI/UX improvements based on user quiz preferences. Each change is surgical — no full redesigns. Dark theme, existing layouts, and all functionality preserved.
+
+**New dependency**: `sonner` (toast library)
 
 ---
 
-## Scanner 1: DDoS Protection Scanner
+## Change 1: Install Sonner Toast Library
 
-### [NEW] `supabase/functions/ddos-scanner/index.ts`
+### [MODIFY] `dashboard/package.json`
 
-**Purpose:** Detect whether the target has DDoS protection, WAF, CDN, and rate limiting at the infrastructure level. The existing security-headers scanner only passively checks for rate limit headers — this scanner actively probes for protection.
+Add `"sonner": "^2.0.0"` to dependencies.
 
-**Checks (6 probes, all non-destructive):**
+### [MODIFY] `dashboard/src/app/layout.tsx`
 
-#### 1a. WAF Detection (header analysis)
-Fetch the target URL and inspect response headers for known WAF signatures:
+Add `<Toaster />` from sonner at the root layout level:
 
-```typescript
-const WAF_SIGNATURES: Array<{ name: string; headers: Record<string, RegExp | string> }> = [
-    { name: 'Cloudflare', headers: { 'cf-ray': /.+/, 'server': /cloudflare/i } },
-    { name: 'AWS WAF/CloudFront', headers: { 'x-amz-cf-id': /.+/ } },
-    { name: 'Akamai', headers: { 'x-akamai-transformed': /.+/ } },
-    { name: 'Sucuri', headers: { 'x-sucuri-id': /.+/ } },
-    { name: 'Imperva/Incapsula', headers: { 'x-cdn': /incapsula/i } },
-    { name: 'Fastly', headers: { 'x-served-by': /.+/, 'x-cache': /.+/, 'via': /varnish/i } },
-    { name: 'Azure Front Door', headers: { 'x-azure-ref': /.+/ } },
-    { name: 'Google Cloud Armor', headers: { 'x-cloud-trace-context': /.+/ } },
-    { name: 'Vercel Edge', headers: { 'x-vercel-id': /.+/ } },
-    { name: 'Netlify', headers: { 'x-nf-request-id': /.+/ } },
-];
+```tsx
+import { Toaster } from 'sonner';
+// Inside the body:
+<Toaster position="bottom-center" theme="dark" richColors />
 ```
 
-- If WAF detected: `info` finding "WAF/CDN detected: {name}" — no deduction
-- If NO WAF/CDN detected: `medium` finding "No WAF or CDN protection detected" — deduct 15
+**Rationale**: All inline green/red alert boxes across the app will be replaced with `toast.success()` / `toast.error()` calls from sonner.
 
-#### 1b. Active Rate Limiting Probe
-Send 5 rapid sequential GET requests (100ms apart) to the target URL. Check:
-- If any returns HTTP 429 → `info` "Rate limiting active" (good)
-- If rate limit headers (`X-RateLimit-*`, `RateLimit-*`, `Retry-After`) appear → `info` "Rate limit headers present"
-- If none of the above → `high` "No rate limiting detected after 5 rapid requests" — deduct 15
+---
 
-```typescript
-const RAPID_REQUEST_COUNT = 5;
-const RAPID_REQUEST_DELAY_MS = 100;
-let gotRateLimited = false;
-let foundRateLimitHeaders = false;
+## Change 2: Collapsible Sidebar
 
-for (let i = 0; i < RAPID_REQUEST_COUNT; i++) {
-    const res = await fetchWithTimeout(targetUrl, { method: 'GET' });
-    if (res.status === 429) { gotRateLimited = true; break; }
-    const rlHeaders = ['x-ratelimit-limit', 'ratelimit-limit', 'x-rate-limit-limit', 'retry-after'];
-    if (rlHeaders.some(h => res.headers.get(h))) { foundRateLimitHeaders = true; }
-    if (i < RAPID_REQUEST_COUNT - 1) await new Promise(r => setTimeout(r, RAPID_REQUEST_DELAY_MS));
+### [MODIFY] `dashboard/src/app/dashboard/layout.tsx`
+
+**Current**: Fixed `w-56` sidebar, always showing labels.
+
+**Changes**:
+
+1. Add `collapsed` state with `localStorage` persistence:
+```tsx
+const [collapsed, setCollapsed] = useState(false);
+
+useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    if (saved === 'true') setCollapsed(true);
+}, []);
+
+function toggleCollapse() {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('sidebar-collapsed', String(next));
 }
 ```
 
-#### 1c. Connection Security
-Check for:
-- `Strict-Transport-Security` with `includeSubDomains` and `preload` → `info` (HSTS strong)
-- Missing HSTS → `medium` deduct 5
-- Check `X-Request-ID` or similar request tracking header → indicates infrastructure maturity
+2. Update `<aside>` width: `w-56` → `collapsed ? 'w-14' : 'w-56'` with `transition-all duration-200`
 
-#### 1d. Server IP Exposure
-Check if the server IP is directly exposed (not behind a proxy):
-- If `server` header reveals origin server software with version → `low` "Origin server exposed"
-- If behind CDN/WAF (from check 1a) → `info` "Origin IP protected by CDN/WAF"
+3. Update `<main>` padding: `md:pl-56` → `collapsed ? 'md:pl-14' : 'md:pl-56'` with matching transition
 
-#### 1e. Bot Protection Detection
-Fetch the HTML body and check for:
-- Cloudflare Turnstile script (`challenges.cloudflare.com/turnstile`)
-- hCaptcha / reCAPTCHA presence
-- JavaScript challenge pages (detect common challenge patterns)
-- If found → `info` "Bot protection detected"
-- If NOT found → `low` "No bot protection detected" — deduct 3
+4. Add collapse toggle button at bottom of sidebar (above user menu):
+```tsx
+<button onClick={toggleCollapse} className="mx-3 p-2 rounded-md text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors">
+    {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+</button>
+```
 
-#### 1f. DDoS-Resilient Architecture Indicators
-Check for:
-- Multiple `A` records (load balancing) — not feasible from edge function (no DNS resolution), skip
-- `X-Cache` or `Age` headers (caching layer present) → `info`
-- `Vary` header with useful values → shows proper cache configuration
+5. Update `SidebarContent` to accept `collapsed` prop:
+   - Logo section: Hide text span when collapsed, show only logo icon
+   - New Project button: Show only `<Plus>` icon when collapsed, full text when expanded
+   - Nav items: Hide text, show only icons when collapsed. Add `title` attribute for tooltip
+   - User menu: Show only avatar when collapsed, full row when expanded
 
-**Scoring:**
-- Start at 100
-- No WAF/CDN: -15
-- No rate limiting: -15
-- No HSTS: -5
-- No bot protection: -3
-- Clamp to [0, 100]
+6. Add imports: `PanelLeftOpen`, `PanelLeftClose` from lucide-react
+
+**Mobile stays unchanged** — collapse only affects desktop sidebar.
 
 ---
 
-## Scanner 2: File Upload Security Scanner
+## Change 3: Two-Step Project Creation Form
 
-### [NEW] `supabase/functions/upload-scanner/index.ts`
+### [MODIFY] `dashboard/src/app/dashboard/projects/new/page.tsx`
 
-**Purpose:** Detect file upload forms on the page and check whether they have proper client-side security restrictions. Server-side validation can't be tested without actually uploading, but missing client-side restrictions are a strong signal of insecure upload handling.
+**Current**: Single form with 3 cards (Project Details, GitHub, Backend) all visible.
 
-**Checks (4 analysis areas):**
+**Changes**:
 
-#### 2a. Upload Form Detection
-Fetch the HTML body and parse for:
-- `<input type="file">` elements
-- `<form enctype="multipart/form-data">` elements
-- Dropzone/upload library indicators (class names: `dropzone`, `file-upload`, `upload-area`)
-- JavaScript upload patterns (regex scan for `FormData`, `file-upload`, `multer`, `busboy`)
-
-```typescript
-const FILE_INPUT_REGEX = /<input[^>]*type=["']file["'][^>]*>/gi;
-const MULTIPART_FORM_REGEX = /<form[^>]*enctype=["']multipart\/form-data["'][^>]*>/gi;
-const UPLOAD_LIB_REGEX = /(?:dropzone|filepond|uppy|fine-uploader|plupload|resumable)/gi;
-const UPLOAD_JS_REGEX = /(?:new\s+FormData|\.upload\(|fileInput|handleUpload|onFileChange)/gi;
+1. Add step state:
+```tsx
+const [step, setStep] = useState(1);
 ```
 
-If no upload forms/indicators detected → return early with `info` "No file upload functionality detected" and score 100.
+2. Add step indicator at top of form (2 connected dots):
+```tsx
+<div className="flex items-center gap-3 mb-8">
+    <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>1</div>
+    <div className={`flex-1 h-px ${step >= 2 ? 'bg-blue-600' : 'bg-zinc-700'}`} />
+    <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>2</div>
+</div>
+```
 
-#### 2b. File Type Restriction Check
-For each `<input type="file">` found:
-- Check for `accept` attribute (e.g., `accept="image/*"`, `accept=".pdf,.doc"`)
-- If `accept` present → `info` "File type restricted to: {types}"
-- If NO `accept` attribute → `medium` "File upload accepts all file types" — deduct 10
+3. **Step 1**: Show only the "Project Details" card (Name + URL). Change submit button to "Next" (blue):
+```tsx
+{step === 1 && (
+    <>
+        {/* Project Details card — unchanged content */}
+        <div className="flex justify-end gap-4 mt-6">
+            <Button type="button" variant="outline" asChild>
+                <Link href="/dashboard">Cancel</Link>
+            </Button>
+            <Button type="button" onClick={() => {
+                if (!name.trim()) { toast.error('Project name is required'); return; }
+                if (!url.trim() || !isValidUrl(url)) { toast.error('Please enter a valid URL'); return; }
+                setStep(2);
+            }} className="bg-blue-600 hover:bg-blue-500 text-white">
+                Next
+            </Button>
+        </div>
+    </>
+)}
+```
 
-```typescript
-const acceptMatch = inputTag.match(/accept=["']([^"']+)["']/i);
-if (!acceptMatch) {
-    // No accept attribute — unrestricted file type
-    score -= 10;
-    findings.push({
-        id: `upload-no-type-restrict-${idx}`,
-        severity: 'medium',
-        title: 'File upload accepts all file types',
-        description: 'A file input element has no "accept" attribute, allowing users to upload any file type including executables.',
-        recommendation: 'Add an accept attribute to restrict uploads to expected types (e.g., accept="image/*" or accept=".pdf,.doc,.docx").',
-    });
+4. **Step 2**: Show GitHub + Backend cards. Change buttons to "Back" + "Create Project":
+```tsx
+{step === 2 && (
+    <>
+        {/* GitHub card — unchanged */}
+        {/* Backend card — unchanged */}
+        <div className="flex justify-between gap-4 mt-6">
+            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            </Button>
+            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white">
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : 'Create Project'}
+            </Button>
+        </div>
+    </>
+)}
+```
+
+5. Replace inline error div with `toast.error()` calls (using sonner).
+
+---
+
+## Change 4: Scan Loading Progress Bar + Tips
+
+### [MODIFY] `dashboard/src/app/dashboard/scans/[id]/loading.tsx`
+
+**Current**: Static skeleton UI with `animate-pulse`.
+
+**Replace entire component** with an animated progress bar + rotating security tips:
+
+```tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Shield, Lock, Eye, Server, Globe, Code } from 'lucide-react';
+
+const SECURITY_TIPS = [
+    { icon: Shield, text: 'Checking security headers and CSP policies...' },
+    { icon: Lock, text: 'Scanning for SQL injection and XSS vulnerabilities...' },
+    { icon: Eye, text: 'Detecting exposed API keys and secrets...' },
+    { icon: Server, text: 'Analyzing backend configuration and access controls...' },
+    { icon: Globe, text: 'Testing CORS, CSRF, and cookie security...' },
+    { icon: Code, text: 'Inspecting SSL/TLS certificates and DNS records...' },
+    { icon: Shield, text: 'Checking for DDoS protection and rate limiting...' },
+    { icon: Lock, text: 'Scanning file upload forms for restrictions...' },
+    { icon: Eye, text: 'Detecting monitoring and audit logging...' },
+    { icon: Server, text: 'Testing mobile API rate limiting...' },
+];
+
+export default function ScanDetailLoading() {
+    const [progress, setProgress] = useState(0);
+    const [tipIndex, setTipIndex] = useState(0);
+
+    useEffect(() => {
+        // Progress: 0→85 over ~35s (fast start, slow end)
+        const interval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 85) return prev;
+                const increment = prev < 30 ? 3 : prev < 60 ? 1.5 : 0.5;
+                return Math.min(prev + increment, 85);
+            });
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        // Rotate tips every 4s
+        const interval = setInterval(() => {
+            setTipIndex(prev => (prev + 1) % SECURITY_TIPS.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const tip = SECURITY_TIPS[tipIndex];
+    const TipIcon = tip.icon;
+
+    return (
+        <div className="p-4 md:p-8 max-w-2xl mx-auto">
+            <div className="flex flex-col items-center text-center py-20">
+                {/* Animated shield icon */}
+                <div className="relative mb-8">
+                    <div className="h-20 w-20 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                        <Shield className="h-10 w-10 text-blue-400 animate-pulse" />
+                    </div>
+                </div>
+
+                <h2 className="text-xl font-heading font-medium text-white mb-2">
+                    Running Security Audit
+                </h2>
+                <p className="text-zinc-500 text-sm mb-8">
+                    30 scanners analyzing your site in parallel
+                </p>
+
+                {/* Progress bar */}
+                <div className="w-full max-w-md mb-8">
+                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                    <p className="text-zinc-600 text-xs mt-2">{Math.round(progress)}% complete</p>
+                </div>
+
+                {/* Rotating tip */}
+                <div className="flex items-center gap-3 text-zinc-400 text-sm h-6 transition-opacity duration-300">
+                    <TipIcon className="h-4 w-4 text-zinc-500 shrink-0" />
+                    <span>{tip.text}</span>
+                </div>
+            </div>
+        </div>
+    );
 }
 ```
 
-#### 2c. Upload Security Headers
-Check response headers for upload-relevant security:
-- `X-Content-Type-Options: nosniff` → prevents MIME-type confusion attacks on uploaded files
-  - Present → `info` "Content-Type-Options properly set"
-  - Missing → `medium` "Missing X-Content-Type-Options" — deduct 8
-- CSP `form-action` directive → restricts where forms can submit to
-  - Present → `info` "CSP restricts form actions"
-  - Missing (when upload forms exist) → `low` "No CSP form-action restriction" — deduct 3
-- Check if file upload forms submit over HTTPS
-  - HTTP action URL → `high` "File upload over insecure HTTP" — deduct 15
-
-#### 2d. Upload Endpoint Probing
-Check common upload endpoint paths with HEAD/OPTIONS requests:
-```typescript
-const UPLOAD_PATHS = ['/upload', '/api/upload', '/api/files', '/files/upload', '/media/upload', '/api/media'];
-```
-For each, send an OPTIONS request and check:
-- If endpoint exists (200/204) but returns no `Content-Length` limit headers → `low` "Upload endpoint lacks size limit indicators"
-- If endpoint returns `413` quickly → `info` "Server enforces upload size limits"
-- Skip paths that return 404
-
-**Scoring:**
-- Start at 100
-- Unrestricted file types: -10 per input (cap at -20)
-- Missing nosniff: -8
-- HTTP upload: -15
-- No CSP form-action (when uploads exist): -3
-- Clamp to [0, 100]
-
 ---
 
-## Scanner 3: Audit Logging & Monitoring Scanner
+## Change 5: Feature Comparison Table for Pricing
 
-### [NEW] `supabase/functions/audit-scanner/index.ts`
+### [MODIFY] `dashboard/src/app/dashboard/credits/page.tsx`
 
-**Purpose:** Check for external indicators that the application has security monitoring, error logging, and audit trail capabilities. This scanner cannot definitively prove logging exists, but it detects strong signals of its presence or absence.
+**Current**: 4-column card grid with feature bullet lists per plan.
 
-**Checks (5 analysis areas):**
+**Changes**: Replace the card grid (lines 216-326) with a comparison table. Keep the header, billing toggle, and current plan banner exactly as they are.
 
-#### 3a. Security Reporting Headers
-Check response headers for monitoring/reporting infrastructure:
-```typescript
-const REPORTING_HEADERS = [
-    { header: 'nel', name: 'Network Error Logging (NEL)', weight: 'high' },
-    { header: 'report-to', name: 'Report-To', weight: 'high' },
-    { header: 'reporting-endpoints', name: 'Reporting-Endpoints', weight: 'high' },
-];
-```
-- Check CSP for `report-uri` or `report-to` directive
-- Check for `Expect-CT` with `report-uri`
-- If ANY reporting headers found → `info` "Security event reporting configured: {headers}"
-- If NONE found → `medium` "No security event reporting headers detected" — deduct 10
+Add expanded features data for the comparison table:
 
-#### 3b. security.txt Check
-Fetch `/.well-known/security.txt`:
-- If exists with valid content (has `Contact:` field) → `info` "security.txt properly configured"
-- If missing → `medium` "No security.txt file" — deduct 5
-- If exists but malformed (no Contact) → `low` "security.txt exists but incomplete"
-
-#### 3c. Monitoring Infrastructure Detection
-Scan the HTML body for indicators of monitoring/logging services:
-```typescript
-const MONITORING_SIGNATURES = [
-    // Error monitoring
-    { pattern: /sentry[._-]?io|@sentry|dsn.*sentry/i, name: 'Sentry', category: 'error_monitoring' },
-    { pattern: /bugsnag/i, name: 'Bugsnag', category: 'error_monitoring' },
-    { pattern: /rollbar/i, name: 'Rollbar', category: 'error_monitoring' },
-    { pattern: /logrocket/i, name: 'LogRocket', category: 'session_replay' },
-    { pattern: /datadoghq|dd-rum/i, name: 'Datadog', category: 'observability' },
-    { pattern: /newrelic|nr-rum/i, name: 'New Relic', category: 'observability' },
-    { pattern: /segment\.com|analytics\.js/i, name: 'Segment', category: 'analytics' },
-    { pattern: /mixpanel/i, name: 'Mixpanel', category: 'analytics' },
-    { pattern: /amplitude/i, name: 'Amplitude', category: 'analytics' },
-    { pattern: /posthog/i, name: 'PostHog', category: 'product_analytics' },
-    { pattern: /opentelemetry|otel/i, name: 'OpenTelemetry', category: 'observability' },
-    { pattern: /grafana/i, name: 'Grafana', category: 'observability' },
-];
-```
-- If error monitoring found (Sentry/Bugsnag/Rollbar) → `info` "Error monitoring detected: {name}"
-- If observability platform found → `info` "Observability platform detected: {name}"
-- If NO monitoring at all → `high` "No error monitoring or observability detected" — deduct 15
-  - Description: "No indicators of error monitoring, logging, or observability infrastructure were found. Applications without monitoring cannot detect security incidents, debug production issues, or provide audit trails for legal compliance."
-  - Recommendation: "Implement error monitoring (Sentry, Bugsnag) and observability (Datadog, New Relic). For audit compliance, ensure critical actions (login, password change, data access, admin operations) are logged to a tamper-evident store."
-
-#### 3d. Error Disclosure Check
-Fetch a non-existent path (e.g., `/__checkvibe_probe_404__`) and inspect the error page:
-- If response contains stack trace patterns (`at .+\(`, `Traceback`, `Exception`, `.java:`, `.py:`, `node_modules`) → `high` "Error pages leak stack traces" — deduct 15
-- If response contains framework identifiers (`Django`, `Rails`, `Express`, `Next.js error`) with version → `medium` "Error page reveals framework" — deduct 5
-- If custom 404 page → `info` "Custom error pages configured"
-
-#### 3e. Health/Status Endpoint Check
-Check common monitoring endpoints:
-```typescript
-const HEALTH_PATHS = ['/health', '/api/health', '/healthz', '/status', '/_health', '/api/status'];
-```
-- If any returns 200 with JSON body → `info` "Health check endpoint available at {path}" (indicates operational monitoring)
-- Not finding one is not penalized (many apps just don't expose this)
-
-**Scoring:**
-- Start at 100
-- No reporting headers: -10
-- No security.txt: -5
-- No monitoring infrastructure: -15
-- Stack trace leak: -15
-- Framework disclosure on error: -5
-- Clamp to [0, 100]
-
----
-
-## Scanner 4: Mobile API Rate Limiting Scanner
-
-### [NEW] `supabase/functions/mobile-scanner/index.ts`
-
-**Purpose:** Check if mobile API endpoints are properly rate-limited. Founders often protect web routes but forget mobile APIs, leaving them vulnerable to abuse.
-
-**Checks (5 analysis areas):**
-
-#### 4a. Mobile User-Agent Rate Limiting Comparison
-Send identical requests with desktop vs. mobile User-Agent and compare rate limit headers:
-
-```typescript
-const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36';
-const MOBILE_UAS = [
-    { name: 'iOS Safari', ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1' },
-    { name: 'Android Chrome', ua: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36' },
-    { name: 'React Native', ua: 'ReactNative/0.72' },
-    { name: 'Expo', ua: 'Expo/50' },
+```tsx
+const comparisonFeatures = [
+    { name: 'Projects', starter: '1', pro: '3', enterprise: '10', max: 'Unlimited' },
+    { name: 'Scans per month', starter: '5', pro: '20', enterprise: '75', max: 'Custom' },
+    { name: 'Full scan suite (30 scanners)', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'PDF export', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'AI fix suggestions', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'API access', starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Priority support', starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Dedicated support', starter: false, pro: false, enterprise: true, max: true },
+    { name: 'SLA guarantee', starter: false, pro: false, enterprise: false, max: true },
+    { name: 'Account manager', starter: false, pro: false, enterprise: false, max: true },
 ];
 ```
 
-- Send one request with desktop UA, record rate limit headers
-- Send one request with each mobile UA, record rate limit headers
-- If desktop has rate limiting but mobile doesn't → `high` "Mobile requests lack rate limiting" — deduct 20
-- If both have rate limiting → `info` "Consistent rate limiting across platforms"
-- If neither has rate limiting → `medium` "No rate limiting on any platform" — deduct 10
+Replace the grid with a responsive table:
 
-#### 4b. API Endpoint Discovery
-Check for common API paths and test with mobile UA:
-```typescript
-const API_PATHS = [
-    '/api', '/api/v1', '/api/v2', '/graphql',
-    '/api/auth/login', '/api/auth/register', '/api/auth/reset-password',
-    '/api/user', '/api/users', '/api/profile',
-];
+```tsx
+{/* Desktop: Full comparison table */}
+<div className="hidden md:block overflow-x-auto">
+    <table className="w-full border-collapse">
+        <thead>
+            <tr className="border-b border-white/[0.06]">
+                <th className="text-left py-4 px-4 text-sm font-medium text-zinc-500 w-1/3">Features</th>
+                {pricingPlans.map(plan => (
+                    <th key={plan.id} className="text-center py-4 px-4">
+                        <div className="text-white font-medium">{plan.name}</div>
+                        <div className="text-2xl font-heading font-bold text-white mt-1">
+                            {plan.isContact ? 'Custom' : formatPrice(billing === 'annual' ? plan.priceAnnualPerMonth! : plan.priceMonthly!, currency)}
+                        </div>
+                        {!plan.isContact && <div className="text-xs text-zinc-600">/mo</div>}
+                        {plan.badge && <Badge className="bg-white text-zinc-900 border-0 mt-2 text-xs">{plan.badge}</Badge>}
+                    </th>
+                ))}
+            </tr>
+        </thead>
+        <tbody>
+            {comparisonFeatures.map((feature, i) => (
+                <tr key={feature.name} className={`border-b border-white/[0.04] ${i % 2 === 0 ? 'bg-white/[0.01]' : ''}`}>
+                    <td className="py-3 px-4 text-sm text-zinc-400">{feature.name}</td>
+                    {['starter', 'pro', 'enterprise', 'max'].map(planId => {
+                        const val = (feature as any)[planId];
+                        return (
+                            <td key={planId} className="text-center py-3 px-4">
+                                {typeof val === 'boolean' ? (
+                                    val ? <CheckCircle className="h-4 w-4 text-emerald-400 mx-auto" /> : <span className="text-zinc-700">—</span>
+                                ) : (
+                                    <span className="text-sm text-white font-medium">{val}</span>
+                                )}
+                            </td>
+                        );
+                    })}
+                </tr>
+            ))}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td className="py-4 px-4" />
+                {pricingPlans.map(plan => {
+                    const isCurrent = currentPlan === plan.id;
+                    return (
+                        <td key={plan.id} className="text-center py-4 px-4">
+                            {/* Same button logic as current — Subscribe / Current Plan / Contact Us */}
+                        </td>
+                    );
+                })}
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{/* Mobile: Keep existing card layout */}
+<div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-5">
+    {/* Existing card markup — unchanged */}
+</div>
 ```
-For each path that returns non-404:
-- Check for rate limit headers with mobile UA
-- Check for CORS headers (mobile apps often need specific CORS)
-- If API endpoint found WITHOUT rate limiting → `medium` "API endpoint {path} lacks rate limiting with mobile UA" — deduct 5 per endpoint (cap at -15)
 
-#### 4c. GraphQL Endpoint Check
-If `/graphql` endpoint is found:
-- Send an introspection query and check:
-  - If introspection is enabled → `medium` "GraphQL introspection enabled in production" — deduct 5
-  - Check for rate limit headers on GraphQL endpoint
-  - If no rate limiting → `high` "GraphQL endpoint lacks rate limiting" — deduct 10
-  - If rate limited → `info` "GraphQL endpoint has rate limiting"
-
-```typescript
-const introspectionQuery = JSON.stringify({
-    query: '{ __schema { types { name } } }'
-});
-const gqlRes = await fetchWithTimeout(`${baseUrl}/graphql`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'User-Agent': MOBILE_UAS[0].ua },
-    body: introspectionQuery,
-});
-```
-
-#### 4d. Authentication Endpoint Brute-Force Protection
-Test login/auth endpoints for rate limiting under mobile UA:
-- Send 3 rapid POST requests to `/api/auth/login` (or similar) with mobile UA
-- Check if rate limiting kicks in or headers appear
-- If found and no rate limiting → `critical` "Authentication endpoint not rate-limited for mobile clients" — deduct 20
-- If not found → skip (don't penalize for not having this path)
-
-#### 4e. API Versioning Check
-Check if API endpoints have proper versioning:
-- Look for `/api/v1`, `/api/v2` patterns in HTML links and scripts
-- Check for `API-Version`, `Accept-Version` headers in responses
-- If versioning found → `info` "API versioning detected"
-- If no versioning and API endpoints exist → `low` "No API versioning detected" — deduct 3
-
-**Scoring:**
-- Start at 100
-- Mobile lacks rate limiting (desktop has it): -20
-- Auth endpoint not rate-limited for mobile: -20
-- API endpoints without rate limiting: -5 per endpoint (cap at -15)
-- GraphQL introspection enabled: -5
-- GraphQL without rate limiting: -10
-- No rate limiting on any platform: -10
-- No API versioning: -3
-- Clamp to [0, 100]
+**Key**: Desktop gets comparison table, mobile keeps cards (too narrow for table).
 
 ---
 
-## Wiring: Scan Route
-
-### [MODIFY] `dashboard/src/app/api/scan/route.ts`
-
-**1. Add to `VALID_SCAN_TYPES` (line 7):**
-Add `'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'` to the array.
-
-**2. Add scanner calls (after scanner 26, before `await Promise.all`):**
-
-```typescript
-// 27. DDoS Protection Scanner (always runs)
-scannerPromises.push(
-    fetchWithTimeout(`${supabaseUrl}/functions/v1/ddos-scanner`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-            'x-scanner-key': scannerSecretKey,
-        },
-        body: JSON.stringify({ targetUrl }),
-    })
-        .then(res => res.json())
-        .then(data => { results.ddos_protection = data; })
-        .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
-);
-
-// 28. File Upload Security Scanner (always runs)
-scannerPromises.push(
-    fetchWithTimeout(`${supabaseUrl}/functions/v1/upload-scanner`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-            'x-scanner-key': scannerSecretKey,
-        },
-        body: JSON.stringify({ targetUrl }),
-    })
-        .then(res => res.json())
-        .then(data => { results.file_upload = data; })
-        .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
-);
-
-// 29. Audit Logging & Monitoring Scanner (always runs)
-scannerPromises.push(
-    fetchWithTimeout(`${supabaseUrl}/functions/v1/audit-scanner`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-            'x-scanner-key': scannerSecretKey,
-        },
-        body: JSON.stringify({ targetUrl }),
-    })
-        .then(res => res.json())
-        .then(data => { results.audit_logging = data; })
-        .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
-);
-
-// 30. Mobile API Rate Limiting Scanner (always runs)
-scannerPromises.push(
-    fetchWithTimeout(`${supabaseUrl}/functions/v1/mobile-scanner`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-            'x-scanner-key': scannerSecretKey,
-        },
-        body: JSON.stringify({ targetUrl }),
-    })
-        .then(res => res.json())
-        .then(data => { results.mobile_api = data; })
-        .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
-);
-```
-
-**3. Add to `SCANNER_WEIGHTS` (line 732):**
-```typescript
-ddos_protection: 0.04,   // DDoS/WAF protection
-file_upload: 0.03,       // File upload security
-audit_logging: 0.02,     // Monitoring & audit readiness
-mobile_api: 0.03,        // Mobile API rate limiting
-```
-
----
-
-## Wiring: Frontend
+## Change 6: Inline AI Fix Per Finding
 
 ### [MODIFY] `dashboard/src/components/dashboard/scanner-accordion.tsx`
 
-**1. Add to `scannerIcons` map (line 66):**
-```typescript
-ddos_protection: ShieldCheck,   // or use Shield icon
-file_upload: Upload,            // import Upload from lucide-react
-audit_logging: FileText,        // import FileText from lucide-react
-mobile_api: Smartphone,         // import Smartphone from lucide-react
+**Current**: AI fix prompt is a single modal (in `ai-fix-prompt.tsx`) that generates one big markdown prompt for all findings.
+
+**Changes**: Add a small "AI Fix" button per finding row that expands an inline fix section.
+
+In the findings loop inside `ScannerAccordion`, after each finding's recommendation block, add:
+
+```tsx
+{finding.recommendation && (
+    <button
+        onClick={() => setExpandedFix(expandedFix === finding.id ? null : finding.id)}
+        className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+    >
+        <Sparkles className="h-3 w-3" />
+        {expandedFix === finding.id ? 'Hide AI fix' : 'AI fix suggestion'}
+    </button>
+)}
+{expandedFix === finding.id && (
+    <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 text-xs text-zinc-300 font-mono whitespace-pre-wrap">
+        <p className="text-blue-400 font-sans font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
+        <pre className="text-zinc-400 text-[11px] leading-relaxed">
+{`Fix the following issue in my ${url} project:
+
+Issue: ${finding.title}
+Severity: ${finding.severity}
+Details: ${finding.description}
+${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}
+${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}
+
+Please provide the exact code changes needed.`}
+        </pre>
+        <button onClick={() => { navigator.clipboard.writeText(/*prompt text*/); toast.success('Copied!'); }}
+            className="mt-2 text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1">
+            <Copy className="h-3 w-3" /> Copy
+        </button>
+    </div>
+)}
 ```
 
-Add imports for `Upload`, `FileText`, `Smartphone` from `lucide-react`.
+Add state: `const [expandedFix, setExpandedFix] = useState<string | null>(null);`
 
-**2. Add to `scannerNames` map (line 96):**
-```typescript
-ddos_protection: 'DDoS Protection',
-file_upload: 'File Upload Security',
-audit_logging: 'Audit Logging & Monitoring',
-mobile_api: 'Mobile API Rate Limiting',
-```
+Add imports: `Sparkles`, `Copy` from lucide-react; `toast` from sonner.
 
-**3. Add to `SCANNER_ORDER` array (line 478):**
-Insert in appropriate positions:
-- `ddos_protection` after `security` (infrastructure-level check)
-- `file_upload` after `auth` (application-level check)
-- `audit_logging` after `file_upload`
-- `mobile_api` after `audit_logging`
+**Keep the existing modal AI fix button** — it still generates the full combined prompt. The inline fix is per-finding.
 
 ---
 
-## Wiring: Plain English
+## Change 7: Settings Tabs
 
-### [MODIFY] `dashboard/src/lib/plain-english.ts`
+### [MODIFY] `dashboard/src/app/dashboard/settings/page.tsx`
 
-Add entries for key findings from the new scanners:
+**Current**: Server component with stacked Profile + Security cards.
 
-```typescript
-'no waf or cdn protection': {
-    summary: 'Your site has no shield against attacks.',
-    whyItMatters: 'Without a WAF or CDN, your server is directly exposed to DDoS attacks and automated exploitation attempts.',
-},
-'no rate limiting detected': {
-    summary: 'Anyone can flood your server with requests.',
-    whyItMatters: 'Without rate limiting, a single attacker can overwhelm your server, cause downtime, or brute-force user accounts.',
-},
-'file upload accepts all file types': {
-    summary: 'Users can upload anything, including malware.',
-    whyItMatters: 'Unrestricted file uploads let attackers upload executable files, web shells, or oversized files that crash your server.',
-},
-'no error monitoring or observability': {
-    summary: 'You\'re flying blind in production.',
-    whyItMatters: 'Without monitoring, you won\'t know when something breaks, when you\'re being attacked, or what happened when a customer reports an issue.',
-},
-'no security event reporting': {
-    summary: 'Security incidents go undetected.',
-    whyItMatters: 'Without reporting headers, your browser can\'t tell you when your security policies are violated. You need this data for incident response.',
-},
-'mobile requests lack rate limiting': {
-    summary: 'Your mobile API is wide open to abuse.',
-    whyItMatters: 'Attackers target mobile APIs specifically because developers often forget to rate-limit them. This allows credential stuffing, data scraping, and DDoS.',
-},
-'authentication endpoint not rate-limited': {
-    summary: 'Attackers can try unlimited passwords.',
-    whyItMatters: 'Without rate limiting on login, an attacker can try millions of password combinations. This is the #1 way accounts get hacked.',
-},
-'error pages leak stack traces': {
-    summary: 'Your error pages reveal your code internals.',
-    whyItMatters: 'Stack traces tell attackers exactly what framework, libraries, and file paths you use — making targeted attacks much easier.',
-},
-'graphql introspection enabled': {
-    summary: 'Anyone can see your entire API schema.',
-    whyItMatters: 'GraphQL introspection reveals every query, mutation, and type in your API — giving attackers a complete map of your attack surface.',
-},
+**Changes**: Convert to a client-side tabbed layout. The page must remain a server component for auth, so create a new client component for the tabs.
+
+### [NEW] `dashboard/src/components/dashboard/settings-tabs.tsx`
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { User, Shield, CreditCard } from 'lucide-react';
+import Link from 'next/link';
+import { ManageSubscriptionButton } from '@/app/dashboard/settings/manage-subscription-button';
+
+interface SettingsTabsProps {
+    email: string;
+    userId: string;
+    createdAt: string;
+    plan: string;
+}
+
+const tabs = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+];
+
+export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsProps) {
+    const [activeTab, setActiveTab] = useState('profile');
+
+    return (
+        <>
+            {/* Tab bar */}
+            <div className="flex gap-1 mb-6 border-b border-white/[0.06] pb-0">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                            activeTab === tab.id
+                                ? 'text-white border-white'
+                                : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                        }`}
+                    >
+                        <tab.icon className="h-4 w-4" />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab content */}
+            {activeTab === 'profile' && (
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    {/* Existing Profile card content — move here */}
+                </Card>
+            )}
+            {activeTab === 'security' && (
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    {/* Existing Security card content — move here */}
+                </Card>
+            )}
+            {activeTab === 'billing' && (
+                <Card className="bg-white/[0.02] border-white/[0.06]">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5 text-zinc-400" />
+                            <div>
+                                <CardTitle className="text-white">Billing</CardTitle>
+                                <CardDescription className="text-zinc-500">Manage your subscription</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium text-white">Current plan: <span className="capitalize">{plan}</span></p>
+                                <p className="text-sm text-zinc-500">{plan === 'none' ? 'No active subscription' : 'Manage your plan and payment method'}</p>
+                            </div>
+                            {plan !== 'none' ? (
+                                <ManageSubscriptionButton />
+                            ) : (
+                                <Button variant="outline" size="sm" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04]">
+                                    <Link href="/dashboard/credits">View Plans</Link>
+                                </Button>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </>
+    );
+}
+```
+
+### [MODIFY] `dashboard/src/app/dashboard/settings/page.tsx`
+
+Replace the stacked cards with:
+```tsx
+import { SettingsTabs } from '@/components/dashboard/settings-tabs';
+
+// In return:
+<SettingsTabs
+    email={user?.email || ''}
+    userId={user?.id || ''}
+    createdAt={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+    plan={plan}
+/>
 ```
 
 ---
 
-## Deployment
+## Change 8: Soft Plan Limit Upgrade Nudge
 
-### Deploy New Edge Functions
+### [MODIFY] `dashboard/src/app/dashboard/projects/new/page.tsx`
+
+**Current** (lines 126-139): Red error box with "Subscribe to a plan →" or "Upgrade for more projects →" links.
+
+**Replace** the error handling for `PLAN_REQUIRED` and `PROJECT_LIMIT_REACHED` with a styled upgrade card:
+
+```tsx
+{errorCode === 'PLAN_REQUIRED' && (
+    <div className="mb-6 p-5 rounded-xl border border-blue-500/20 bg-blue-500/5">
+        <h3 className="text-white font-medium mb-1">Choose a plan to create projects</h3>
+        <p className="text-zinc-400 text-sm mb-3">
+            Start with Starter for 1 project and 5 scans/month, or go Pro for 3 projects and 20 scans.
+        </p>
+        <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Link href="/dashboard/credits">View Plans</Link>
+        </Button>
+    </div>
+)}
+{errorCode === 'PROJECT_LIMIT_REACHED' && (
+    <div className="mb-6 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
+        <h3 className="text-white font-medium mb-1">Project limit reached</h3>
+        <p className="text-zinc-400 text-sm mb-3">
+            Upgrade to get more projects — Pro gives you 3, Enterprise gives you 10.
+        </p>
+        <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white">
+            <Link href="/dashboard/credits">Upgrade Plan</Link>
+        </Button>
+    </div>
+)}
+```
+
+Apply same pattern in `dashboard/src/app/dashboard/scans/new/page.tsx` for `SCAN_LIMIT_REACHED` and `DOMAIN_LIMIT_REACHED`.
+
+---
+
+## Change 9: Timeline History View
+
+### [MODIFY] `dashboard/src/app/dashboard/projects/[id]/history/page.tsx`
+
+**Current**: Uses `<ScansTable>` component for a table view.
+
+**Replace** with a vertical timeline:
+
+```tsx
+{scans.map((scan: any, index: number) => {
+    const issueCount = /* count issues from scan.results */;
+    const score = scan.overall_score;
+    const rating = getVibeRating(issueCount);
+    const date = new Date(scan.created_at);
+    const isFirst = index === 0;
+
+    return (
+        <div key={scan.id} className="relative flex gap-4 pb-8 last:pb-0">
+            {/* Timeline line */}
+            {index < scans.length - 1 && (
+                <div className="absolute left-[17px] top-10 bottom-0 w-px bg-white/[0.06]" />
+            )}
+            {/* Timeline dot */}
+            <div className={`relative z-10 mt-1 h-[35px] w-[35px] rounded-full flex items-center justify-center shrink-0 border ${
+                isFirst ? 'bg-blue-500/15 border-blue-500/30' : 'bg-white/[0.03] border-white/[0.06]'
+            }`}>
+                <span className={`text-xs font-bold ${isFirst ? 'text-blue-400' : 'text-zinc-500'}`}>
+                    {score ?? '—'}
+                </span>
+            </div>
+            {/* Content */}
+            <Link
+                href={`/dashboard/projects/${params.id}/history/${scan.id}`}
+                className="flex-1 group"
+            >
+                <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                            <Badge className={`${rating.bg} ${rating.color} text-xs`}>{rating.label}</Badge>
+                            {isFirst && <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs">Latest</Badge>}
+                        </div>
+                        <span className="text-xs text-zinc-600">{date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="text-sm text-zinc-400">
+                        {issueCount} issue{issueCount !== 1 ? 's' : ''} found
+                    </p>
+                </div>
+            </Link>
+        </div>
+    );
+})}
+```
+
+Import `Badge`, `getVibeRating` helper (extract from `audit-report.tsx` or duplicate the small function), `Link`.
+
+The page will need a `'use client'` wrapper component or an inline server→client boundary for the timeline rendering. Create a simple `<ScanTimeline>` client component if needed.
+
+---
+
+## Change 10: Score-First Hero Enhancement (Gradient Ring Animation)
+
+### [MODIFY] `dashboard/src/components/dashboard/audit-report.tsx`
+
+**Current** (around line 164-172): The score display is a large number inside a circular div with `border-white/[0.06]`.
+
+**Enhance** with an SVG gradient ring that animates on load:
+
+Replace the score circle div with:
+
+```tsx
+<div className="relative h-32 w-32 md:h-36 md:w-36 shrink-0">
+    {/* Animated SVG ring */}
+    <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="4" className="text-white/[0.06]" />
+        <circle
+            cx="60" cy="60" r="54" fill="none" strokeWidth="4"
+            strokeLinecap="round"
+            stroke="url(#scoreGradient)"
+            strokeDasharray={`${(score / 100) * 339.292} 339.292`}
+            className="transition-all duration-1000 ease-out"
+            style={{ strokeDashoffset: 0 }}
+        />
+        <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+        </defs>
+    </svg>
+    {/* Score number (centered) */}
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`text-4xl md:text-5xl font-heading font-bold ${getIssueCountColor(issueCount)}`}>
+            {issueCount}
+        </span>
+        <span className="text-[10px] text-zinc-500 mt-0.5">
+            +{passingCheckCount} passing
+        </span>
+    </div>
+</div>
+```
+
+The `score` value should be a computed weighted average from `results` (already exists as `overall_score` on the scan record). If not available in AuditReport props, compute it from `results` using scanner weights.
+
+---
+
+## Replace Inline Alerts with Sonner Toasts
+
+### Files to update (search & replace pattern):
+
+All files that use inline `{error && <div className="...text-red-500...">` or `{success && <div className="...text-green-500...">}` patterns:
+
+1. **`projects/new/page.tsx`** — Replace generic error alert with `toast.error(error)` (keep upgrade nudges from Change 8 as cards, not toasts)
+2. **`projects/[id]/settings/page.tsx`** — Replace success/error inline boxes with `toast.success('Settings saved')` / `toast.error()`
+3. **`scans/new/page.tsx`** — Same pattern (keep upgrade nudges as cards)
+4. **`api-keys/page.tsx`** — Replace inline status messages
+5. **`credits/page.tsx`** — Replace error div with `toast.error()`
+
+Each file: `import { toast } from 'sonner'`, remove the state variable for error/success display, call `toast.error()` or `toast.success()` in the catch/success handlers.
+
+---
+
+## Verification
+
+### Build Check
 ```bash
-for scanner in ddos-scanner upload-scanner audit-scanner mobile-scanner; do
-    supabase functions deploy $scanner --no-verify-jwt
-done
+cd dashboard && npm install && npm run build
 ```
 
-### Set Environment Variables
-Each new scanner uses the same shared env vars (SCANNER_SECRET_KEY, ALLOWED_ORIGIN) — no new secrets needed.
+### Manual Smoke Tests
+1. **Sidebar collapse**: Click toggle → sidebar shrinks to icons → click again → expands. Reload page → preference persisted.
+2. **New project form**: Step 1 shows name/URL only → "Next" validates → Step 2 shows GitHub/Backend → "Back" returns to Step 1 → "Create" submits.
+3. **Scan loading**: Progress bar animates 0→85% → tips rotate every 4s → results load and replace.
+4. **Pricing table**: Desktop shows comparison table with checkmarks → Mobile shows card layout.
+5. **Inline AI fix**: Click "AI fix suggestion" on a finding → inline code block expands → copy works.
+6. **Settings tabs**: 3 tabs render → clicking switches content → Billing tab shows plan + manage button.
+7. **Plan limits**: Create project when at limit → styled upgrade card appears (not red error box).
+8. **Timeline**: History page shows vertical timeline with scores → click entry navigates to scan detail.
+9. **Score ring**: Audit report shows animated gradient ring around issue count.
+10. **Toasts**: Actions show bottom-center stacked toasts instead of inline colored boxes.
 
-### Build Verification
-```bash
-cd dashboard && npm run build
-```
+### Files Modified (10)
+- `dashboard/package.json` — add sonner dependency
+- `dashboard/src/app/layout.tsx` — add Toaster component
+- `dashboard/src/app/dashboard/layout.tsx` — collapsible sidebar
+- `dashboard/src/app/dashboard/projects/new/page.tsx` — two-step form + upgrade nudges
+- `dashboard/src/app/dashboard/scans/[id]/loading.tsx` — progress bar + tips
+- `dashboard/src/app/dashboard/credits/page.tsx` — comparison table
+- `dashboard/src/app/dashboard/settings/page.tsx` — use SettingsTabs component
+- `dashboard/src/app/dashboard/projects/[id]/history/page.tsx` — timeline view
+- `dashboard/src/components/dashboard/audit-report.tsx` — gradient score ring
+- `dashboard/src/components/dashboard/scanner-accordion.tsx` — inline AI fix per finding
 
----
+### Files Created (1)
+- `dashboard/src/components/dashboard/settings-tabs.tsx` — tabbed settings component
 
-## Summary Table
-
-| Scanner | ID | Edge Function Dir | Weight | Always-Run |
-|---------|----|--------------------|--------|------------|
-| DDoS Protection | `ddos_protection` | `ddos-scanner/` | 0.04 | Yes |
-| File Upload Security | `file_upload` | `upload-scanner/` | 0.03 | Yes |
-| Audit Logging & Monitoring | `audit_logging` | `audit-scanner/` | 0.02 | Yes |
-| Mobile API Rate Limiting | `mobile_api` | `mobile-scanner/` | 0.03 | Yes |
-
-### Files Modified
-- `dashboard/src/app/api/scan/route.ts` — add 4 scanner calls + weights + valid types
-- `dashboard/src/components/dashboard/scanner-accordion.tsx` — add icons, names, order
-- `dashboard/src/lib/plain-english.ts` — add explanations for new findings
-
-### Files Created
-- `supabase/functions/ddos-scanner/index.ts`
-- `supabase/functions/upload-scanner/index.ts`
-- `supabase/functions/audit-scanner/index.ts`
-- `supabase/functions/mobile-scanner/index.ts`
+### Files Updated for Sonner (~5)
+- `dashboard/src/app/dashboard/projects/[id]/settings/page.tsx`
+- `dashboard/src/app/dashboard/scans/new/page.tsx`
+- `dashboard/src/app/dashboard/api-keys/page.tsx`
+- `dashboard/src/app/dashboard/credits/page.tsx`

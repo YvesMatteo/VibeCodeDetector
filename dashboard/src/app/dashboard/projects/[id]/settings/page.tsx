@@ -21,6 +21,7 @@ import {
     Save,
     Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ProjectSettingsPage() {
     const params = useParams();
@@ -35,8 +36,6 @@ export default function ProjectSettingsPage() {
     const [supabasePAT, setSupabasePAT] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
@@ -64,8 +63,6 @@ export default function ProjectSettingsPage() {
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
         setSaving(true);
-        setError(null);
-        setSuccess(false);
 
         try {
             const res = await fetch(`/api/projects/${projectId}`, {
@@ -86,10 +83,9 @@ export default function ProjectSettingsPage() {
                 throw new Error(data.error || 'Failed to save');
             }
 
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
+            toast.success('Settings saved');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
+            toast.error(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setSaving(false);
         }
@@ -135,12 +131,6 @@ export default function ProjectSettingsPage() {
                         <CardTitle className="text-white">Configuration</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {error && (
-                            <div className="mb-4 p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">{error}</div>
-                        )}
-                        {success && (
-                            <div className="mb-4 p-3 text-sm text-green-500 bg-green-500/10 border border-green-500/20 rounded-lg">Settings saved.</div>
-                        )}
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-zinc-300">Project Name</Label>

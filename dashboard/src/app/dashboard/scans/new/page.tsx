@@ -39,6 +39,7 @@ import {
     Cloud,
     TrainFront,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function NewScanPage() {
     const searchParams = useSearchParams();
@@ -72,12 +73,12 @@ export default function NewScanPage() {
         setErrorCode(null);
 
         if (!url) {
-            setError('Please enter a URL');
+            toast.error('Please enter a URL');
             return;
         }
 
         if (!isValidUrl(url)) {
-            setError('Please enter a valid URL');
+            toast.error('Please enter a valid URL');
             return;
         }
 
@@ -114,7 +115,11 @@ export default function NewScanPage() {
                 router.push('/dashboard/scans/demo');
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
+            const msg = err instanceof Error ? err.message : 'An error occurred';
+            if (!errorCode || !['PLAN_REQUIRED', 'SCAN_LIMIT_REACHED', 'DOMAIN_LIMIT_REACHED'].includes(errorCode)) {
+                toast.error(msg);
+            }
+            setError(msg);
             setLoading(false);
         }
     }
@@ -149,24 +154,37 @@ export default function NewScanPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {error && (
-                            <div className="mb-4 p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                <p>{error}</p>
-                                {errorCode === 'PLAN_REQUIRED' && (
-                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
-                                        Subscribe to a plan &rarr;
-                                    </Link>
-                                )}
-                                {errorCode === 'SCAN_LIMIT_REACHED' && (
-                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
-                                        Upgrade your plan &rarr;
-                                    </Link>
-                                )}
-                                {errorCode === 'DOMAIN_LIMIT_REACHED' && (
-                                    <Link href="/dashboard/credits" className="text-blue-400 hover:underline mt-1 inline-block">
-                                        Upgrade for more domains &rarr;
-                                    </Link>
-                                )}
+                        {errorCode === 'PLAN_REQUIRED' && (
+                            <div className="mb-4 p-5 rounded-xl border border-blue-500/20 bg-blue-500/5">
+                                <h3 className="text-white font-medium mb-1">Choose a plan to run scans</h3>
+                                <p className="text-zinc-400 text-sm mb-3">
+                                    Start with Starter for 5 scans/month, or go Pro for 20 scans and API access.
+                                </p>
+                                <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                                    <Link href="/dashboard/credits">View Plans</Link>
+                                </Button>
+                            </div>
+                        )}
+                        {errorCode === 'SCAN_LIMIT_REACHED' && (
+                            <div className="mb-4 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
+                                <h3 className="text-white font-medium mb-1">Scan limit reached</h3>
+                                <p className="text-zinc-400 text-sm mb-3">
+                                    Upgrade to get more scans — Pro gives you 20/month, Enterprise gives you 75.
+                                </p>
+                                <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
+                                    <Link href="/dashboard/credits">Upgrade Plan</Link>
+                                </Button>
+                            </div>
+                        )}
+                        {errorCode === 'DOMAIN_LIMIT_REACHED' && (
+                            <div className="mb-4 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
+                                <h3 className="text-white font-medium mb-1">Domain limit reached</h3>
+                                <p className="text-zinc-400 text-sm mb-3">
+                                    Upgrade to scan more domains — Pro gives you 3 projects, Enterprise gives you 10.
+                                </p>
+                                <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
+                                    <Link href="/dashboard/credits">Upgrade Plan</Link>
+                                </Button>
                             </div>
                         )}
                         <div className="space-y-2">

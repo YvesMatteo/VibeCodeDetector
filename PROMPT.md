@@ -1,31 +1,58 @@
 # Goal
 
-Add 4 new security scanners to CheckVibe's scanner suite that check for:
-
-1. **DDoS Protection Scanner** — Checks whether WAF, CDN, rate limiting, and DDoS mitigation are in place
-2. **File Upload Security Scanner** — Checks if file upload forms enforce size limits, type validation, and content-type restrictions
-3. **Audit Logging Scanner** — Checks if the application shows indicators of security monitoring, error logging, and audit readiness (for legal/forensic traceability)
-4. **Mobile API Rate Limiting Scanner** — Checks if mobile-specific API endpoints have rate limiting (many founders forget mobile APIs while protecting web routes)
+Incrementally improve the CheckVibe dashboard UI/UX based on user quiz preferences — subtle, focused changes that make the app more understandable, flowy, and user-friendly. **Do NOT overhaul the existing design** — layer improvements on top of the current dark aesthetic.
 
 ## Context
 
-- **26 edge function scanners** already exist in `supabase/functions/`
-- Each scanner follows the same Deno pattern: validate auth → validate URL → probe target → generate findings → return `{ scannerType, score, findings, scannedAt, url }`
-- Shared utilities in `supabase/functions/_shared/security.ts` provide `validateTargetUrl`, `validateScannerAuth`, `getCorsHeaders`
-- The scan route at `dashboard/src/app/api/scan/route.ts` orchestrates all scanners in parallel with 45s timeout
-- Frontend displays results via `<ScannerAccordion>` component using `scannerIcons` and `scannerNames` maps
-- Finding type: `{ id, severity, title, description, recommendation, evidence? }`
-- The `VALID_SCAN_TYPES` array and `SCANNER_WEIGHTS` map must be updated for each new scanner
+- **Stack**: Next.js 16 + Supabase + Stripe + Tailwind + shadcn/ui + Lucide icons
+- **Dashboard dir**: `dashboard/` with its own `.env.local`
+- **Current UI**: Dark theme, 56px fixed sidebar, card-based layouts, skeleton scan loading, inline error alerts
+- **30 security scanners** wired and working — don't touch scanner logic
+- **Existing pages**: Landing (waitlist), dashboard (project grid), project CRUD, scan results, API keys, credits/billing, settings
+
+## Key Files
+
+- **Sidebar/Layout**: `dashboard/src/app/dashboard/layout.tsx`
+- **Project Dashboard**: `dashboard/src/app/dashboard/page.tsx`
+- **Project Card**: `dashboard/src/components/dashboard/project-card.tsx`
+- **New Project**: `dashboard/src/app/dashboard/projects/new/page.tsx`
+- **Scan Results**: `dashboard/src/app/dashboard/scans/[id]/page.tsx`
+- **AuditReport**: `dashboard/src/components/dashboard/audit-report.tsx`
+- **Scan Loading**: `dashboard/src/app/dashboard/scans/[id]/loading.tsx`
+- **AI Fix Prompt**: `dashboard/src/components/dashboard/ai-fix-prompt.tsx`
+- **Credits/Billing**: `dashboard/src/app/dashboard/credits/page.tsx`
+- **API Keys**: `dashboard/src/app/dashboard/api-keys/page.tsx`
+- **Settings**: `dashboard/src/app/dashboard/settings/page.tsx`
+- **Scan History**: `dashboard/src/app/dashboard/projects/[id]/history/page.tsx`
+- **ScansTable**: `dashboard/src/components/dashboard/scans-table.tsx`
 
 ## Requirements
 
-- Each scanner must be a standalone Deno edge function in its own directory under `supabase/functions/`
-- Each scanner must use the shared `validateScannerAuth`, `validateTargetUrl`, and `getCorsHeaders` from `_shared/security.ts`
-- Each scanner must return the standard `{ scannerType, score, findings, scannedAt, url }` format
-- The scan route must wire each new scanner into the parallel execution and weight map
-- The `ScannerAccordion` component must have icons and display names for each new scanner
-- The `VALID_SCAN_TYPES` array must include the new scan type IDs
-- All scanners must be "always-run" (no conditional gating on GitHub repo, backend type, etc.)
-- Plain-english explanations should be added for key findings
-- All scanners must be non-destructive — they only probe and inspect, never modify or upload anything
-- If a scanner concept cannot produce meaningful, reliable results from external probing alone, skip it or limit its scope to what's reliably testable
+### Must-Do (Incremental UX Improvements)
+1. **Collapsible sidebar** — Add toggle to collapse/expand sidebar to icon-only mode, persist in localStorage
+2. **Two-step project form** — Split into Step 1 (Name + URL) → Step 2 (GitHub + Backend), same page with step indicator
+3. **Sonner toasts** — Install `sonner`, replace all inline green/red alert boxes with stacked bottom-center toasts
+4. **Scan loading progress bar** — Replace skeleton with animated progress bar + rotating security tips
+5. **Comparison table pricing** — Convert credits page from card grid to feature comparison table with checkmarks
+6. **Inline AI fixes** — Move AI fix from modal to inline expandable per finding in ScannerAccordion
+7. **Settings tabs** — Convert single scroll to tabbed layout (Profile | Security | Billing)
+8. **Soft plan limit blocks** — Replace error-only limit messages with upgrade nudge showing what they'd get
+9. **Timeline history** — Replace scan history table with vertical timeline view showing score at each point
+10. **Score-first hero enhancement** — Animate the existing score display with a gradient ring/gauge animation
+
+### Nice-to-Have (If Time Permits)
+- Guided onboarding wizard (3-step for first-time users)
+- Kanban toggle for project view (Healthy / Needs Attention / Critical columns)
+- Bottom tab bar for mobile navigation
+- Interactive API key tutorial
+- Subtle gradient accents on cards and buttons
+
+### Hard Constraints
+- **Dark-only** theme — no light mode
+- **No keyboard shortcuts**
+- **Keep waitlist/passcode gate as-is**
+- **Keep error states minimal** (short text + action button)
+- **Don't break** scanners, Stripe billing, API keys, auth
+- **Don't change** the landing page or waitlist page
+- **Preserve mobile responsiveness**
+- **Subtle changes only** — user explicitly said "don't change the UI too much"

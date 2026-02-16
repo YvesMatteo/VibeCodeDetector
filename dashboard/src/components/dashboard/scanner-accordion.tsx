@@ -42,11 +42,14 @@ import {
     CircleSlash,
     Flag,
     X,
+    Sparkles,
+    Copy,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getPlainEnglish } from '@/lib/plain-english';
 import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
+import { toast } from 'sonner';
 
 function getIssueCountColor(count: number) {
     if (count === 0) return 'text-green-400';
@@ -311,6 +314,7 @@ function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: Dismissal
 
 function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void }) {
     const [showDismiss, setShowDismiss] = useState(false);
+    const [showAiFix, setShowAiFix] = useState(false);
     const styles = getSeverityStyles(finding.severity);
     const SeverityIcon = styles.icon;
     const canDismiss = !!onDismiss && !!scannerKey && finding.severity?.toLowerCase() !== 'info';
@@ -378,6 +382,32 @@ function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; 
                         <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
                             {finding.evidence}
                         </pre>
+                    )}
+                    {finding.severity?.toLowerCase() !== 'info' && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setShowAiFix(!showAiFix); }}
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                            <Sparkles className="h-3 w-3" />
+                            {showAiFix ? 'Hide AI fix' : 'AI fix suggestion'}
+                        </button>
+                    )}
+                    {showAiFix && (
+                        <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                            <p className="text-blue-400 font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
+                            <pre className="text-zinc-400 text-[11px] leading-relaxed whitespace-pre-wrap font-mono">{`Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`}</pre>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const text = `Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`;
+                                    navigator.clipboard.writeText(text);
+                                    toast.success('Copied to clipboard');
+                                }}
+                                className="mt-2 text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+                            >
+                                <Copy className="h-3 w-3" /> Copy
+                            </button>
+                        </div>
                     )}
                     {showDismiss && scannerKey && onDismiss && (
                         <DismissDropdown

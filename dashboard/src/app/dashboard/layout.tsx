@@ -28,6 +28,8 @@ import {
     ChevronDown,
     Menu,
     Key,
+    PanelLeftOpen,
+    PanelLeftClose,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -44,31 +46,43 @@ function SidebarContent({
     initials,
     handleLogout,
     onNavClick,
+    collapsed = false,
+    onToggleCollapse,
 }: {
     pathname: string;
     userEmail: string | null;
     initials: string;
     handleLogout: () => void;
     onNavClick?: () => void;
+    collapsed?: boolean;
+    onToggleCollapse?: () => void;
 }) {
     return (
         <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex h-14 items-center px-5 border-b border-white/[0.06]">
+            <div className={`flex h-14 items-center border-b border-white/[0.06] ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
                 <Link href="/" className="flex items-center space-x-2.5">
                     <Image src="/logo.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain rounded" />
-                    <span className="font-heading text-[15px] font-semibold tracking-tight text-white">CheckVibe</span>
+                    {!collapsed && <span className="font-heading text-[15px] font-semibold tracking-tight text-white">CheckVibe</span>}
                 </Link>
             </div>
 
             {/* New Project Button */}
             <div className="p-3">
-                <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors">
-                    <Link href="/dashboard/projects/new" onClick={onNavClick}>
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        New Project
-                    </Link>
-                </Button>
+                {collapsed ? (
+                    <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors px-0">
+                        <Link href="/dashboard/projects/new" onClick={onNavClick} title="New Project">
+                            <Plus className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                ) : (
+                    <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors">
+                        <Link href="/dashboard/projects/new" onClick={onNavClick}>
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            New Project
+                        </Link>
+                    </Button>
+                )}
             </div>
 
             {/* Navigation */}
@@ -83,17 +97,32 @@ function SidebarContent({
                             key={item.name}
                             href={item.href}
                             onClick={onNavClick}
-                            className={`group relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors ${isActive
+                            title={collapsed ? item.name : undefined}
+                            className={`group relative flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-md text-[13px] transition-colors ${isActive
                                 ? 'text-white bg-white/[0.06]'
                                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
                                 }`}
                         >
-                            <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
-                            {item.name}
+                            <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+                            {!collapsed && item.name}
                         </Link>
                     );
                 })}
             </nav>
+
+            {/* Collapse toggle (desktop only) */}
+            {onToggleCollapse && (
+                <div className="px-3 pb-1">
+                    <button
+                        onClick={onToggleCollapse}
+                        className={`w-full p-2 rounded-md text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors flex items-center ${collapsed ? 'justify-center' : 'justify-start gap-2.5 px-3'}`}
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                        {!collapsed && <span className="text-[13px]">Collapse</span>}
+                    </button>
+                </div>
+            )}
 
             <Separator className="bg-white/[0.06]" />
 
@@ -101,16 +130,20 @@ function SidebarContent({
             <div className="p-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-start gap-2.5 px-3 h-10 hover:bg-white/[0.04]">
-                            <Avatar className="h-7 w-7">
+                        <Button variant="ghost" className={`w-full ${collapsed ? 'justify-center px-0' : 'justify-start gap-2.5 px-3'} h-10 hover:bg-white/[0.04]`}>
+                            <Avatar className="h-7 w-7 shrink-0">
                                 <AvatarFallback className="bg-zinc-800 text-zinc-400 text-[11px] font-medium">
                                     {initials}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="flex-1 text-left text-[13px] text-zinc-400 truncate">
-                                {userEmail || 'Loading...'}
-                            </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />
+                            {!collapsed && (
+                                <>
+                                    <span className="flex-1 text-left text-[13px] text-zinc-400 truncate">
+                                        {userEmail || 'Loading...'}
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />
+                                </>
+                            )}
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56 bg-zinc-900 border-white/[0.08]">
@@ -142,12 +175,21 @@ export default function DashboardLayout({
     const supabase = createClient();
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) setUserEmail(user.email || null);
         });
+        const saved = localStorage.getItem('sidebar-collapsed');
+        if (saved === 'true') setCollapsed(true);
     }, []);
+
+    function toggleCollapse() {
+        const next = !collapsed;
+        setCollapsed(next);
+        localStorage.setItem('sidebar-collapsed', String(next));
+    }
 
     const initials = userEmail
         ? userEmail.substring(0, 2).toUpperCase()
@@ -198,17 +240,19 @@ export default function DashboardLayout({
             </Sheet>
 
             {/* Desktop Sidebar */}
-            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-56 bg-background border-r border-white/[0.06]">
+            <aside className={`hidden md:block fixed inset-y-0 left-0 z-50 bg-background border-r border-white/[0.06] transition-all duration-200 ${collapsed ? 'w-14' : 'w-56'}`}>
                 <SidebarContent
                     pathname={pathname}
                     userEmail={userEmail}
                     initials={initials}
                     handleLogout={handleLogout}
+                    collapsed={collapsed}
+                    onToggleCollapse={toggleCollapse}
                 />
             </aside>
 
             {/* Main Content */}
-            <main className="md:pl-56 pt-12 md:pt-0 relative min-h-screen">
+            <main className={`pt-12 md:pt-0 relative min-h-screen transition-all duration-200 ${collapsed ? 'md:pl-14' : 'md:pl-56'}`}>
                 <div className="animate-fade-in-up">
                     {children}
                 </div>

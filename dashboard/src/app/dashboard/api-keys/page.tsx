@@ -30,6 +30,7 @@ import {
     ChevronUp,
     Cpu,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ApiKey {
     id: string;
@@ -130,7 +131,7 @@ export default function ApiKeysPage() {
                 resetCreateForm();
                 fetchKeys();
             } else {
-                alert(data.error || 'Failed to create key');
+                toast.error(data.error || 'Failed to create key');
             }
         } catch (err) {
             console.error('Failed to create key:', err);
@@ -157,7 +158,7 @@ export default function ApiKeysPage() {
                 setRevokeTarget(null);
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to revoke key');
+                toast.error(data.error || 'Failed to revoke key');
             }
         } catch (err) {
             console.error('Failed to revoke key:', err);
@@ -177,7 +178,7 @@ export default function ApiKeysPage() {
                 setDeleteTarget(null);
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to delete key');
+                toast.error(data.error || 'Failed to delete key');
             }
         } catch (err) {
             console.error('Failed to delete key:', err);
@@ -189,6 +190,7 @@ export default function ApiKeysPage() {
     function copyToClipboard(text: string) {
         navigator.clipboard.writeText(text);
         setCopied(true);
+        toast.success('Copied to clipboard');
         setTimeout(() => setCopied(false), 2000);
     }
 

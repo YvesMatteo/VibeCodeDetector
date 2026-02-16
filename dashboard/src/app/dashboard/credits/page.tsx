@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Zap, Crown, Mail } from 'lucide-react';
+import { CheckCircle, Zap, Crown, Mail, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
+import { toast } from 'sonner';
 
 const pricingPlans = [
     {
@@ -55,6 +56,19 @@ const pricingPlans = [
         highlighted: false,
         isContact: true,
     },
+];
+
+const comparisonFeatures = [
+    { name: 'Projects', starter: '1', pro: '3', enterprise: '10', max: 'Unlimited' },
+    { name: 'Scans per month', starter: '5', pro: '20', enterprise: '75', max: 'Custom' },
+    { name: 'Full scan suite (30 scanners)', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'PDF export', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'AI fix suggestions', starter: true, pro: true, enterprise: true, max: true },
+    { name: 'API access', starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Priority support', starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Dedicated support', starter: false, pro: false, enterprise: true, max: true },
+    { name: 'SLA guarantee', starter: false, pro: false, enterprise: false, max: true },
+    { name: 'Account manager', starter: false, pro: false, enterprise: false, max: true },
 ];
 
 export default function CreditsPage() {
@@ -112,6 +126,7 @@ export default function CreditsPage() {
             if (url) window.location.href = url;
         } catch (err) {
             console.error('Subscribe error:', err);
+            toast.error('Something went wrong. Please try again.');
             setError('Something went wrong. Please try again.');
         } finally {
             setLoading(null);
@@ -128,6 +143,7 @@ export default function CreditsPage() {
             });
 
             if (res.status === 404) {
+                toast.error('No active subscription found. Choose a plan below to get started.');
                 setError('No active subscription found. Choose a plan below to get started.');
                 return;
             }
@@ -138,6 +154,7 @@ export default function CreditsPage() {
             if (url) window.location.href = url;
         } catch (err) {
             console.error('Portal error:', err);
+            toast.error('Something went wrong. Please try again.');
             setError('Something went wrong. Please try again.');
         } finally {
             setPortalLoading(false);
@@ -186,8 +203,6 @@ export default function CreditsPage() {
                 </div>
             </div>
 
-            {error && <div className="bg-red-500/8 border border-red-500/15 rounded-lg p-3 text-red-400 text-sm mb-8">{error}</div>}
-
             {/* Current plan banner */}
             {currentPlan !== 'none' && (
                 <div className="mb-8 p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -213,7 +228,144 @@ export default function CreditsPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* Desktop comparison table */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-white/[0.08]">
+                <table className="w-full border-collapse">
+                    <thead>
+                        <tr className="border-b border-white/[0.04]">
+                            <th className="text-left p-5 text-sm font-medium text-zinc-500 w-[240px]">Features</th>
+                            {pricingPlans.map((plan) => {
+                                const isCurrent = currentPlan === plan.id;
+                                return (
+                                    <th key={plan.id} className="p-5 text-center min-w-[180px]">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg font-medium text-white">{plan.name}</span>
+                                                {plan.highlighted && (
+                                                    <Badge className="bg-white text-zinc-900 border-0 px-2 py-0.5 text-[10px] font-medium">
+                                                        {plan.badge}
+                                                    </Badge>
+                                                )}
+                                                {isCurrent && (
+                                                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 px-2 py-0.5 text-[10px]">
+                                                        Current
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div>
+                                                {plan.isContact ? (
+                                                    <span className="text-2xl font-heading font-bold text-white">Custom</span>
+                                                ) : billing === 'annual' ? (
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-2xl font-heading font-bold text-white">
+                                                                {formatPrice(plan.priceAnnualPerMonth!, currency)}
+                                                            </span>
+                                                            <span className="text-zinc-500 text-xs">/mo</span>
+                                                        </div>
+                                                        <span className="text-zinc-600 text-xs line-through">{formatPrice(plan.priceMonthly!, currency)}/mo</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-2xl font-heading font-bold text-white">{formatPrice(plan.priceMonthly!, currency)}</span>
+                                                        <span className="text-zinc-500 text-xs">/mo</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </th>
+                                );
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {comparisonFeatures.map((feature, idx) => (
+                            <tr
+                                key={feature.name}
+                                className={`border-b border-white/[0.04] ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
+                            >
+                                <td className="p-4 pl-5 text-sm text-zinc-400">{feature.name}</td>
+                                {(['starter', 'pro', 'enterprise', 'max'] as const).map((planKey) => {
+                                    const value = feature[planKey];
+                                    return (
+                                        <td key={planKey} className="p-4 text-center">
+                                            {typeof value === 'boolean' ? (
+                                                value ? (
+                                                    <CheckCircle className="h-4 w-4 text-emerald-400 mx-auto" />
+                                                ) : (
+                                                    <Minus className="h-4 w-4 text-zinc-700 mx-auto" />
+                                                )
+                                            ) : (
+                                                <span className="text-sm text-zinc-300">{value}</span>
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr className="border-t border-white/[0.06]">
+                            <td className="p-5" />
+                            {pricingPlans.map((plan) => {
+                                const isCurrent = currentPlan === plan.id;
+                                return (
+                                    <td key={plan.id} className="p-5 text-center">
+                                        {plan.isContact ? (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
+                                                variant="outline"
+                                                asChild
+                                            >
+                                                <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan">
+                                                    <Mail className="mr-2 h-4 w-4" />
+                                                    Contact Us
+                                                </a>
+                                            </Button>
+                                        ) : isCurrent ? (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-transparent border-white/[0.06] text-zinc-600"
+                                                variant="outline"
+                                                disabled
+                                            >
+                                                Current Plan
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                size="lg"
+                                                className={`w-full ${plan.highlighted
+                                                    ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
+                                                    : 'bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white'
+                                                    }`}
+                                                variant={plan.highlighted ? 'default' : 'outline'}
+                                                onClick={() => handleSubscribe(plan.id)}
+                                                disabled={loading !== null}
+                                            >
+                                                {loading === plan.id ? (
+                                                    <span className="flex items-center gap-2">
+                                                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                        Processing...
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-2">
+                                                        Subscribe
+                                                        <Zap className="h-4 w-4" />
+                                                    </span>
+                                                )}
+                                            </Button>
+                                        )}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            {/* Mobile card layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:hidden">
                 {pricingPlans.map((plan) => {
                     const isCurrent = currentPlan === plan.id;
 
