@@ -7,12 +7,12 @@ import {
     ExternalLink,
     Settings,
     History,
-    Download,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
 import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
+import { ExportButton } from '@/components/dashboard/export-button';
 import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
 
@@ -153,12 +153,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                     {/* Action bar for latest audit */}
                     <div className="flex flex-col sm:flex-row gap-3 mb-6">
                         <AIFixPrompt url={p.url} findings={auditData!.allFindings} techStack={auditData!.techStack} />
-                        <Button variant="outline" asChild className="bg-white/5 border-white/10">
-                            <a href={`/api/scan/${latestScan.id}/export`} download>
-                                <Download className="mr-2 h-4 w-4" />
-                                Export .md
-                            </a>
-                        </Button>
+                        <ExportButton scanId={latestScan.id} />
                     </div>
 
                     {missingScanners.length > 0 && (

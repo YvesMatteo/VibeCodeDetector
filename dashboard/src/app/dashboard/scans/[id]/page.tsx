@@ -7,11 +7,11 @@ import {
     ArrowLeft,
     ExternalLink,
     Clock,
-    Download,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport } from '@/components/dashboard/audit-report';
 import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
+import { ExportButton } from '@/components/dashboard/export-button';
 
 export default async function ScanDetailsPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -76,12 +76,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                         <AIFixPrompt url={scan.url} findings={auditData.allFindings} techStack={auditData.techStack} />
-                        <Button variant="outline" asChild className="bg-white/5 border-white/10 flex-1 sm:flex-none">
-                            <a href={`/api/scan/${params.id}/export`} download>
-                                <Download className="mr-2 h-4 w-4" />
-                                Export .md
-                            </a>
-                        </Button>
+                        <ExportButton scanId={params.id} className="flex-1 sm:flex-none" />
                     </div>
                 </div>
             </div>
