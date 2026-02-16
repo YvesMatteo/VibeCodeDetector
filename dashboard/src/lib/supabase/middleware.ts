@@ -45,10 +45,12 @@ export async function updateSession(request: NextRequest) {
 
     // Signed waitlist bypass cookie: cv-access=1:<hmac-hex>
     // Prevents forgery — only the server can issue valid bypass cookies.
+    // Cookie values may be URL-encoded by Next.js (e.g. : → %3A), so decode first.
     const cvAccessRaw = request.cookies.get('cv-access')?.value;
     let hasBypass = false;
     if (cvAccessRaw) {
-        const [value, signature] = cvAccessRaw.split(':');
+        const decoded = decodeURIComponent(cvAccessRaw);
+        const [value, signature] = decoded.split(':');
         if (value === '1' && signature) {
             const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
             const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
