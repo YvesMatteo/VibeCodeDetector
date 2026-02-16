@@ -668,8 +668,8 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="relative pt-12 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] overflow-hidden">
         {/* Gradient orbs */}
-        <div className="orb orb-blue w-64 h-64 top-0 left-1/4" aria-hidden="true" />
-        <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" aria-hidden="true" />
+        <div className="absolute w-64 h-64 top-0 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        <div className="absolute w-48 h-48 bottom-0 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
