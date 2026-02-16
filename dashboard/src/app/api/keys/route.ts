@@ -10,6 +10,7 @@ import {
   type Scope,
 } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
+import { checkCsrf } from '@/lib/csrf';
 
 const MAX_KEYS_PER_USER = 10;
 const DEFAULT_EXPIRY_DAYS = 90;
@@ -20,6 +21,10 @@ const DEFAULT_EXPIRY_DAYS = 90;
 
 export async function POST(req: NextRequest) {
   try {
+    // CSRF protection (skipped for API key auth)
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const { context, error: authError } = await resolveAuth(req);
     if (authError || !context) return authError!;
 

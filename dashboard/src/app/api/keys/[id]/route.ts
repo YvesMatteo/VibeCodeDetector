@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
+import { checkCsrf } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // DELETE /api/keys/[id] — Revoke or permanently delete an API key
@@ -13,6 +14,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // CSRF protection (skipped for API key auth)
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
     const { context, error: authError } = await resolveAuth(req);
     if (authError || !context) return authError!;
@@ -88,6 +93,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // CSRF protection (skipped for API key auth)
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
     const { context, error: authError } = await resolveAuth(req);
     if (authError || !context) return authError!;

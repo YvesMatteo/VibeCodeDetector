@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
+import { checkCsrf } from '@/lib/csrf';
 
 export async function GET() {
     try {
@@ -64,6 +66,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
+        // CSRF protection
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -86,41 +92,19 @@ export async function POST(req: NextRequest) {
         if (!name || typeof name !== 'string' || !name.trim()) {
             return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
         }
-        if (!url || typeof url !== 'string') {
-            return NextResponse.json({ error: 'URL is required' }, { status: 400 });
-        }
 
-        // URL validation + SSRF
-        const targetUrl = url.startsWith('http') ? url : `https://${url}`;
-        let parsedUrl: URL;
-        try {
-            parsedUrl = new URL(targetUrl);
-        } catch {
-            return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+        // URL validation + SSRF protection (shared utility)
+        const urlValidation = validateTargetUrl(url);
+        if (!urlValidation.valid) {
+            return NextResponse.json({ error: urlValidation.error }, { status: 400 });
         }
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return NextResponse.json({ error: 'Only http/https URLs are allowed' }, { status: 400 });
-        }
-        const privatePatterns = [
-            /^localhost$/i, /^127\.\d+\.\d+\.\d+$/, /^10\.\d+\.\d+\.\d+$/,
-            /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, /^192\.168\.\d+\.\d+$/,
-            /^169\.254\.\d+\.\d+$/, /^0\.\d+\.\d+\.\d+$/,
-            /^\[?::1\]?$/, /^\[?fe80:/i, /^\[?fc00:/i, /^\[?fd[0-9a-f]{2}:/i,
-        ];
-        if (privatePatterns.some(p => p.test(parsedUrl.hostname))) {
-            return NextResponse.json({ error: 'Internal URLs are not allowed' }, { status: 400 });
-        }
+        const targetUrl = urlValidation.parsed.href;
 
-        // SSRF validation for backendUrl (same private IP check)
+        // SSRF validation for backendUrl
         if (backendUrl && typeof backendUrl === 'string' && backendUrl.trim()) {
-            const backendTarget = backendUrl.startsWith('http') ? backendUrl : `https://${backendUrl}`;
-            try {
-                const parsedBackend = new URL(backendTarget);
-                if (privatePatterns.some(p => p.test(parsedBackend.hostname))) {
-                    return NextResponse.json({ error: 'Backend URL cannot target internal networks' }, { status: 400 });
-                }
-            } catch {
-                return NextResponse.json({ error: 'Invalid backend URL format' }, { status: 400 });
+            const backendValidation = validateTargetUrl(backendUrl);
+            if (!backendValidation.valid) {
+                return NextResponse.json({ error: `Backend URL: ${backendValidation.error}` }, { status: 400 });
             }
         }
 

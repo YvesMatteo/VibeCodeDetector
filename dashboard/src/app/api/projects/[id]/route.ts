@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { validateTargetUrl } from '@/lib/url-validation';
+import { checkCsrf } from '@/lib/csrf';
 
 export async function GET(
     _req: NextRequest,
@@ -36,6 +38,10 @@ export async function PATCH(
     props: { params: Promise<{ id: string }> }
 ) {
     try {
+        // CSRF protection
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const params = await props.params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -60,16 +66,11 @@ export async function PATCH(
 
         if (body.name !== undefined) updates.name = body.name.trim();
         if (body.url !== undefined) {
-            const targetUrl = body.url.startsWith('http') ? body.url : `https://${body.url}`;
-            try {
-                const parsed = new URL(targetUrl);
-                if (!['http:', 'https:'].includes(parsed.protocol)) {
-                    return NextResponse.json({ error: 'Only http/https URLs are allowed' }, { status: 400 });
-                }
-                updates.url = targetUrl;
-            } catch {
-                return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+            const urlValidation = validateTargetUrl(body.url);
+            if (!urlValidation.valid) {
+                return NextResponse.json({ error: urlValidation.error }, { status: 400 });
             }
+            updates.url = urlValidation.parsed.href;
         }
         if (body.githubRepo !== undefined) updates.github_repo = body.githubRepo?.trim() || null;
         if (body.backendType !== undefined) updates.backend_type = body.backendType;
@@ -100,10 +101,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    _req: NextRequest,
+    req: NextRequest,
     props: { params: Promise<{ id: string }> }
 ) {
     try {
+        // CSRF protection
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const params = await props.params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
