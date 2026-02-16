@@ -113,47 +113,41 @@ const EUROPE_TZ_NON_EUR: Record<string, string> = {
 export function detectCurrency(): CurrencyCode {
   if (typeof window === 'undefined') return 'USD';
 
-  // Strategy 1: Extract country from navigator.language (e.g., "en-GB", "fr-CH")
-  const languages = navigator.languages ?? [navigator.language];
-  for (const lang of languages) {
-    const parts = lang.split('-');
-    if (parts.length >= 2) {
-      const country = parts[parts.length - 1].toUpperCase();
-      // Only use if it looks like a country code (2 uppercase letters)
-      if (country.length === 2 && /^[A-Z]{2}$/.test(country)) {
-        const currency = countryToCurrency(country);
-        if (currency !== 'USD') return currency;
-        // If it resolved to USD from a country code, it's a non-listed country → USD
-        if (CHF_COUNTRIES.has(country) || GBP_COUNTRIES.has(country) ||
-            AUD_COUNTRIES.has(country) || CAD_COUNTRIES.has(country) ||
-            EUR_COUNTRIES.has(country)) {
-          return currency;
-        }
-        // Country code found but not in our lists → continue to timezone check
-      }
-    }
-  }
-
-  // Strategy 2: Use timezone
+  // Strategy 1: Use timezone (most reliable for physical location)
+  // Language codes like "en-GB" only indicate the language variant, not location —
+  // a Swiss user with English iOS will have "en-GB" but timezone "Europe/Zurich".
+  let tzCurrency: CurrencyCode | null = null;
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     // Check direct timezone mapping
     if (TIMEZONE_COUNTRY[tz]) {
-      return countryToCurrency(TIMEZONE_COUNTRY[tz]);
-    }
-
-    // Check Australia/* pattern
-    if (tz.startsWith('Australia/')) return 'AUD';
-
-    // Check Europe/* pattern — if not CH/LI/GB, it's EUR
-    if (tz.startsWith('Europe/')) {
+      tzCurrency = countryToCurrency(TIMEZONE_COUNTRY[tz]);
+    } else if (tz.startsWith('Australia/')) {
+      tzCurrency = 'AUD';
+    } else if (tz.startsWith('Europe/')) {
+      // Check Europe/* pattern — if not CH/LI/GB, it's EUR
       const nonEur = EUROPE_TZ_NON_EUR[tz];
-      if (nonEur) return countryToCurrency(nonEur);
-      return 'EUR';
+      tzCurrency = nonEur ? countryToCurrency(nonEur) : 'EUR';
     }
   } catch {
     // Intl not available, fall through
+  }
+
+  if (tzCurrency) return tzCurrency;
+
+  // Strategy 2: Extract country from navigator.language as fallback
+  // Only used when timezone didn't resolve (rare)
+  const languages = navigator.languages ?? [navigator.language];
+  for (const lang of languages) {
+    const parts = lang.split('-');
+    if (parts.length >= 2) {
+      const country = parts[parts.length - 1].toUpperCase();
+      if (country.length === 2 && /^[A-Z]{2}$/.test(country)) {
+        const currency = countryToCurrency(country);
+        if (currency !== 'USD') return currency;
+      }
+    }
   }
 
   return 'USD';

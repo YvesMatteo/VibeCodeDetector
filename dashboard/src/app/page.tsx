@@ -81,7 +81,7 @@ const pricingTiers = [
   {
     name: 'Starter',
     priceMonthly: 19,
-    priceAnnualPerMonth: 15.20,
+    priceAnnualPerMonth: 13.30,
     description: 'For solo makers',
     features: ['1 domain', '5 scans/month', 'Full scan suite', 'Scan history'],
     cta: 'Get Started',
@@ -90,7 +90,7 @@ const pricingTiers = [
   {
     name: 'Pro',
     priceMonthly: 39,
-    priceAnnualPerMonth: 31.20,
+    priceAnnualPerMonth: 27.30,
     description: 'For growing projects',
     features: ['3 domains', '20 scans/month', 'Full scan suite', 'Priority support'],
     cta: 'Get Started',
@@ -99,21 +99,11 @@ const pricingTiers = [
   {
     name: 'Enterprise',
     priceMonthly: 89,
-    priceAnnualPerMonth: 71.20,
+    priceAnnualPerMonth: 62.30,
     description: 'For teams & agencies',
     features: ['10 domains', '75 scans/month', 'Full scan suite', 'Dedicated support'],
     cta: 'Get Started',
     highlighted: false,
-  },
-  {
-    name: 'Max',
-    priceMonthly: null,
-    priceAnnualPerMonth: null,
-    description: 'For large organizations',
-    features: ['Unlimited domains', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
-    cta: 'Contact Us',
-    highlighted: false,
-    isContact: true,
   },
 ];
 
@@ -151,6 +141,25 @@ export default function HomePage() {
 
   const orb2X = useSpring(useTransform(mouseX, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
   const orb2Y = useSpring(useTransform(mouseY, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
+
+  // Card tilt — follows cursor position over the terminal card
+  const cardRotateX = useMotionValue(0);
+  const cardRotateY = useMotionValue(0);
+  const smoothCardRotateX = useSpring(cardRotateX, { stiffness: 200, damping: 25 });
+  const smoothCardRotateY = useSpring(cardRotateY, { stiffness: 200, damping: 25 });
+
+  function handleCardMouseMove(e: MouseEvent<HTMLDivElement>) {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - left) / width - 0.5;
+    const y = (e.clientY - top) / height - 0.5;
+    cardRotateX.set(-y * 12);
+    cardRotateY.set(x * 12);
+  }
+
+  function handleCardMouseLeave() {
+    cardRotateX.set(0);
+    cardRotateY.set(0);
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-hidden" onMouseMove={handleMouseMove}>
@@ -322,11 +331,17 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
             animate={{ opacity: 1, scale: 1, rotateX: 0 }}
             transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
-            className="relative mt-6 sm:mt-16 w-full max-w-4xl perspective-midrange group"
+            className="relative mt-6 sm:mt-16 w-full max-w-4xl group"
+            style={{ perspective: 800 }}
             aria-hidden="true"
           >
             {/* Main Terminal Window */}
-            <div className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col transform transition-transform duration-700 hover:rotate-x-2">
+            <motion.div
+              style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
+              onMouseMove={handleCardMouseMove}
+              onMouseLeave={handleCardMouseLeave}
+              className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col"
+            >
 
               {/* Header */}
               <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 justify-between">
@@ -339,7 +354,7 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-3 sm:p-6 font-mono text-[10px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10] [&>div]:overflow-hidden">
+              <div className="relative p-3 sm:p-6 font-mono text-[10px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
 
                 {/* Grid Background */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
@@ -367,9 +382,9 @@ export default function HomePage() {
                 <motion.div
                   animate={{ top: ["0%", "100%", "0%"] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute left-0 right-0 h-[2px] bg-blue-500/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20"
+                  className="absolute left-0 right-0 h-[2px] bg-blue-500/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
                 >
-                  <div className="absolute right-0 -top-3 sm:-top-3 bg-blue-500 text-xs sm:text-sm text-white px-2 sm:px-2.5 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-blue-500/30">SCANNING</div>
+                  <div className="absolute right-2 sm:right-4 -top-3 bg-blue-500 text-[10px] sm:text-xs text-white px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-blue-500/30 whitespace-nowrap">SCANNING</div>
                 </motion.div>
 
                 {/* Scan overlay gradient */}
@@ -384,12 +399,12 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
-                  className="absolute top-[30px] sm:top-[80px] right-2 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
+                  className="absolute top-[30px] sm:top-[80px] right-3 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-1 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-3 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
                 >
-                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0" />
-                  <div>
-                    <div className="text-xs sm:text-sm font-bold whitespace-nowrap">Critical Issue</div>
-                    <div className="text-[10px] sm:text-xs opacity-80 whitespace-nowrap">Exposed Stripe Key</div>
+                  <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-red-500 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[10px] sm:text-sm font-bold truncate">Critical Issue</div>
+                    <div className="text-[9px] sm:text-xs opacity-80 truncate">Exposed Stripe Key</div>
                   </div>
                 </motion.div>
 
@@ -397,17 +412,17 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
-                  className="absolute top-[90px] sm:top-[220px] md:top-[320px] right-2 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-xl z-30"
+                  className="absolute top-[90px] sm:top-[220px] md:top-[320px] right-3 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-3 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
                 >
-                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
-                  <div>
-                    <div className="text-xs sm:text-sm font-bold whitespace-nowrap">XSS Warning</div>
-                    <div className="text-[10px] sm:text-xs opacity-80 whitespace-nowrap">Reflected Input</div>
+                  <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[10px] sm:text-sm font-bold truncate">XSS Warning</div>
+                    <div className="text-[9px] sm:text-xs opacity-80 truncate">Reflected Input</div>
                   </div>
                 </motion.div>
 
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -546,13 +561,13 @@ export default function HomePage() {
                     ? 'bg-green-100 text-green-700'
                     : 'bg-green-500/10 text-green-400'
                 }`}>
-                  -20%
+                  -30%
                 </span>
               </button>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 pt-4 max-w-sm sm:max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pt-4 max-w-sm sm:max-w-5xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -644,6 +659,11 @@ export default function HomePage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+
+          {/* Enterprise CTA */}
+          <div className="mt-8 text-center text-sm text-zinc-500">
+            Need more? <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom enterprise plans.
           </div>
         </div>
       </section>

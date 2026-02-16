@@ -26,7 +26,7 @@ const pricingPlans = [
         id: 'starter',
         name: 'Starter',
         priceMonthly: 19,
-        priceAnnualPerMonth: 15.20,
+        priceAnnualPerMonth: 13.30,
         description: 'For solo makers',
         domains: 1,
         scans: 5,
@@ -37,7 +37,7 @@ const pricingPlans = [
         id: 'pro',
         name: 'Pro',
         priceMonthly: 39,
-        priceAnnualPerMonth: 31.20,
+        priceAnnualPerMonth: 27.30,
         description: 'For growing projects',
         domains: 3,
         scans: 20,
@@ -49,7 +49,7 @@ const pricingPlans = [
         id: 'enterprise',
         name: 'Enterprise',
         priceMonthly: 89,
-        priceAnnualPerMonth: 71.20,
+        priceAnnualPerMonth: 62.30,
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
@@ -210,7 +210,7 @@ export default function CreditsPage() {
                                 ? 'bg-emerald-100 text-emerald-700'
                                 : 'bg-emerald-500/10 text-emerald-400'
                         }`}>
-                            -20%
+                            -30%
                         </span>
                     </button>
                 </div>

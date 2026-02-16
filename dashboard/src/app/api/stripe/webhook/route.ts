@@ -16,13 +16,16 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const PLANS_BY_PRICE_ID: Record<string, { plan: string; domains: number; scans: number }> = {
     // Starter
     'price_1Sz2CgLRbxIsl4HLE7jp6ecZ': { plan: 'starter', domains: 1, scans: 5 },  // monthly
-    'price_1Sz2CiLRbxIsl4HLDkUzXZXs': { plan: 'starter', domains: 1, scans: 5 },  // annual
+    'price_1T1G35LRbxIsl4HLq1Geq4Ov': { plan: 'starter', domains: 1, scans: 5 },  // annual (30% off)
+    'price_1Sz2CiLRbxIsl4HLDkUzXZXs': { plan: 'starter', domains: 1, scans: 5 },  // annual (legacy 20%)
     // Pro
     'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 3, scans: 20 },      // monthly
-    'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 20 },      // annual
+    'price_1T1G36LRbxIsl4HLcxaSjnej': { plan: 'pro', domains: 3, scans: 20 },      // annual (30% off)
+    'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 20 },      // annual (legacy 20%)
     // Enterprise
     'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'enterprise', domains: 10, scans: 75 }, // monthly
-    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'enterprise', domains: 10, scans: 75 }, // annual
+    'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'enterprise', domains: 10, scans: 75 }, // annual (30% off)
+    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'enterprise', domains: 10, scans: 75 }, // annual (legacy 20%)
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

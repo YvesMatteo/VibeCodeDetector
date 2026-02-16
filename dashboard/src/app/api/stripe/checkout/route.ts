@@ -12,9 +12,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 const PLANS: Record<string, { productId: string; amountMonthly: number; amountAnnual: number; domains: number; scans: number; name: string }> = {
-    starter: { productId: 'prod_Tww4QtoLP4LGh4', amountMonthly: 1900, amountAnnual: 18240, domains: 1, scans: 5, name: 'Starter' },
-    pro: { productId: 'prod_Tww4j1OR1ONDTJ', amountMonthly: 3900, amountAnnual: 37440, domains: 3, scans: 20, name: 'Pro' },
-    enterprise: { productId: 'prod_Tww4oXvwj9PmsN', amountMonthly: 8900, amountAnnual: 85440, domains: 10, scans: 75, name: 'Enterprise' },
+    starter: { productId: 'prod_Tww4QtoLP4LGh4', amountMonthly: 1900, amountAnnual: 15960, domains: 1, scans: 5, name: 'Starter' },
+    pro: { productId: 'prod_Tww4j1OR1ONDTJ', amountMonthly: 3900, amountAnnual: 32760, domains: 3, scans: 20, name: 'Pro' },
+    enterprise: { productId: 'prod_Tww4oXvwj9PmsN', amountMonthly: 8900, amountAnnual: 74760, domains: 10, scans: 75, name: 'Enterprise' },
 };
 
 export async function POST(req: Request) {
