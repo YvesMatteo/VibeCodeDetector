@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -470,6 +470,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.supabase_backend = data; })
                     .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.supabase_backend = { skipped: true, reason: 'Backend type is not Supabase', missingConfig: 'backendType' };
         }
 
         // 13b. Firebase Backend Scanner (Edge Function) — runs when firebase is selected
@@ -488,6 +490,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.firebase_backend = data; })
                     .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.firebase_backend = { skipped: true, reason: 'Backend type is not Firebase', missingConfig: 'backendType' };
         }
 
         // 13c. Convex Backend Scanner (Edge Function) — runs when convex is selected
@@ -509,6 +513,8 @@ export async function POST(req: NextRequest) {
                     .then(data => { results.convex_backend = data; })
                     .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
             );
+        } else {
+            results.convex_backend = { skipped: true, reason: 'Backend type is not Convex', missingConfig: 'backendType' };
         }
 
         // 14. Dependency Vulnerability Scanner (Edge Function) — only if repo URL provided
@@ -719,23 +725,7 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
         );
 
-        // 26. Vibe Match Scanner (AI detection, always runs)
-        scannerPromises.push(
-            fetchWithTimeout(`${supabaseUrl}/functions/v1/vibe-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.vibe_match = data; })
-                .catch(err => { results.vibe_match = { error: err.message, score: 0 }; })
-        );
-
-        // 27. DDoS Protection Scanner (always runs)
+        // 26. DDoS Protection Scanner (always runs)
         scannerPromises.push(
             fetchWithTimeout(`${supabaseUrl}/functions/v1/ddos-scanner`, {
                 method: 'POST',
@@ -829,7 +819,6 @@ export async function POST(req: NextRequest) {
             cloudflare_hosting: 0.02, // Cloudflare Pages checks
             railway_hosting: 0.02, // Railway platform checks
             scorecard: 0.02,      // OpenSSF supply chain score
-            vibe_match: 0.02,     // AI generation detection
             legal: 0.01,          // Legal compliance
             ddos_protection: 0.04, // DDoS/WAF protection
             file_upload: 0.03,    // File upload security
@@ -879,6 +868,21 @@ export async function POST(req: NextRequest) {
             console.error('Failed to save scan:', insertError);
         }
 
+        // Update project favicon (fire-and-forget)
+        if (resolvedProjectId) {
+            (async () => {
+                try {
+                    const faviconUrl = await fetchFaviconUrl(targetUrl);
+                    if (faviconUrl) {
+                        const svc = getServiceClient();
+                        await svc.from('projects' as any).update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId);
+                    }
+                } catch {
+                    // Non-critical, ignore
+                }
+            })();
+        }
+
         // Audit log (fire-and-forget)
         logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 200 });
 
@@ -894,5 +898,38 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Scan error:', error);
         return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });
+    }
+}
+
+/**
+ * Fetch the favicon URL from a website by parsing its HTML for <link rel="icon"> tags.
+ * Returns an absolute URL or null if not found.
+ */
+async function fetchFaviconUrl(siteUrl: string): Promise<string | null> {
+    try {
+        const res = await fetch(siteUrl, {
+            headers: { 'User-Agent': 'CheckVibe/1.0' },
+            redirect: 'follow',
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) return null;
+
+        const html = await res.text();
+        // Match <link rel="icon" href="..."> or <link rel="shortcut icon" href="...">
+        const match = html.match(/<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i)
+            || html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:shortcut )?icon["']/i);
+
+        if (!match?.[1]) return null;
+
+        const href = match[1];
+        // Resolve relative URLs
+        if (href.startsWith('http')) return href;
+        if (href.startsWith('//')) return `https:${href}`;
+
+        const base = new URL(siteUrl);
+        if (href.startsWith('/')) return `${base.origin}${href}`;
+        return `${base.origin}/${href}`;
+    } catch {
+        return null;
     }
 }

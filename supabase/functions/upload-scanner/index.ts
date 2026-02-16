@@ -159,10 +159,47 @@ Deno.serve(async (req: Request) => {
             }
         }
 
-        // Detect JS upload patterns
+        // Detect JS upload patterns in HTML (inline scripts)
         let jsUploadIndicators = 0;
         for (const pattern of UPLOAD_JS_PATTERNS) {
             if (pattern.test(html)) jsUploadIndicators++;
+        }
+
+        // Also check linked JS bundles for upload patterns (catches SPA / React apps)
+        if (jsUploadIndicators < 2 && fileInputMatches.length === 0) {
+            const scriptSrcRegex = /<script[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+            const scriptUrls: string[] = [];
+            let scriptMatch: RegExpExecArray | null;
+            while ((scriptMatch = scriptSrcRegex.exec(html)) !== null && scriptUrls.length < 5) {
+                let src = scriptMatch[1];
+                if (src.startsWith("//")) src = "https:" + src;
+                else if (src.startsWith("/")) src = baseUrl + src;
+                else if (!src.startsWith("http")) src = baseUrl + "/" + src;
+                scriptUrls.push(src);
+            }
+
+            const jsChunks = await Promise.all(
+                scriptUrls.map(async (url) => {
+                    try {
+                        const res = await fetchWithTimeout(url, {}, 5000);
+                        // Only read first 200KB to avoid memory issues
+                        const text = await res.text();
+                        return text.substring(0, 200_000);
+                    } catch {
+                        return "";
+                    }
+                }),
+            );
+            const bundleText = jsChunks.join("\n");
+
+            for (const lib of UPLOAD_LIB_PATTERNS) {
+                if (!detectedLibs.includes(lib.name) && lib.pattern.test(bundleText)) {
+                    detectedLibs.push(lib.name);
+                }
+            }
+            for (const pattern of UPLOAD_JS_PATTERNS) {
+                if (pattern.test(bundleText)) jsUploadIndicators++;
+            }
         }
 
         const hasUploadFunctionality =

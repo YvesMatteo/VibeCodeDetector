@@ -18,13 +18,14 @@ interface ProjectCardProps {
     id: string;
     name: string;
     url: string;
+    faviconUrl?: string | null;
     latestScore?: number | null;
     issueCount?: number;
     severity?: { critical: number; high: number; medium: number; low: number };
     lastAuditDate?: string | null;
 }
 
-export function ProjectCard({ id, name, url, issueCount = 0, severity, lastAuditDate }: ProjectCardProps) {
+export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severity, lastAuditDate }: ProjectCardProps) {
     const hostname = (() => {
         try { return new URL(url).hostname; } catch { return url; }
     })();
@@ -40,7 +41,7 @@ export function ProjectCard({ id, name, url, issueCount = 0, severity, lastAudit
                 <div className="flex items-center gap-3 mb-5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                        src={faviconUrl || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
                         alt=""
                         className="h-8 w-8 rounded-md object-contain shrink-0"
                     />

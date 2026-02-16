@@ -130,6 +130,7 @@ export default async function DashboardPage() {
                             id={project.id}
                             name={project.name}
                             url={project.url}
+                            faviconUrl={project.favicon_url}
                             latestScore={project.latestScore}
                             issueCount={project.issueCount}
                             severity={project.severity}

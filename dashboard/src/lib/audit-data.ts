@@ -12,7 +12,7 @@ export const CURRENT_SCANNER_KEYS = [
     'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect',
     'scorecard', 'github_security', 'supabase_mgmt',
     'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting',
-    'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
+    'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
 ] as const;
 
 const SCANNER_DISPLAY_NAMES: Record<string, string> = {
@@ -23,7 +23,7 @@ const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     dependencies: 'Dependencies', ssl_tls: 'SSL/TLS', dns_email: 'DNS', xss: 'XSS',
     open_redirect: 'Redirects', vercel_hosting: 'Vercel', netlify_hosting: 'Netlify',
     cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
-    vibe_match: 'AI Detection', ddos_protection: 'DDoS Protection', file_upload: 'File Upload',
+    ddos_protection: 'DDoS Protection', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
 };
 
@@ -52,6 +52,9 @@ export interface AuditReportData {
     scannerResults: Record<string, ScanResultItem>;
 }
 
+/** Scanner keys that should be completely hidden from reports (deprecated scanners) */
+const HIDDEN_SCANNER_KEYS = new Set(['vibe_match', 'ai_detection']);
+
 /** Pre-process scan results into the shape needed by AuditReport */
 export function processAuditData(results: Record<string, ScanResultItem>): AuditReportData {
     const techStack = (results as any).tech_stack;
@@ -60,7 +63,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     ) || [];
 
     const scannerResults = Object.fromEntries(
-        Object.entries(results).filter(([key]) => key !== 'tech_stack')
+        Object.entries(results).filter(([key]) => key !== 'tech_stack' && !HIDDEN_SCANNER_KEYS.has(key))
     ) as Record<string, ScanResultItem>;
 
     const visibleScannerCount = Object.entries(scannerResults).filter(([key, result]: [string, any]) => {
@@ -75,7 +78,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     const totalFindings = { critical: 0, high: 0, medium: 0, low: 0 };
     const allFindings: any[] = [];
 
-    Object.values(results).forEach((result: any) => {
+    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]: [string, any]) => {
         if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
             allFindings.push(...result.findings);
@@ -93,7 +96,7 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     const issueCount = totalFindings.critical + totalFindings.high + totalFindings.medium + totalFindings.low;
 
     let passingCheckCount = 0;
-    Object.values(results).forEach((result: any) => {
+    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]: [string, any]) => {
         if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
             result.findings.forEach((f: any) => {

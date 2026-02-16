@@ -97,7 +97,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                     <div className="flex items-start gap-3">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                            src={p.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
                             alt=""
                             className="h-10 w-10 rounded-lg object-contain mt-0.5 shrink-0"
                         />

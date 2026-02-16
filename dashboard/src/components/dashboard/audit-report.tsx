@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Layers, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
 import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import type { ScanDiff } from '@/lib/scan-diff';
@@ -58,7 +58,7 @@ const SCANNER_NAMES: Record<string, string> = {
     dependencies: 'Dependencies', ssl_tls: 'SSL/TLS', dns_email: 'DNS', xss: 'XSS',
     open_redirect: 'Redirects', vercel_hosting: 'Vercel', netlify_hosting: 'Netlify',
     cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
-    vibe_match: 'AI Detection', ddos_protection: 'DDoS', file_upload: 'File Upload',
+    ddos_protection: 'DDoS', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
 };
 
@@ -120,7 +120,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                         {adjusted.total === 1 ? 'issue' : 'issues'} found
                     </span>
                     <span className="text-[12px] text-zinc-600 mt-0.5">
-                        {visibleScannerCount} scanners{passingCheckCount > 0 ? ` · ${passingCheckCount} passing` : ''}
+                        {visibleScannerCount} scanners{passingCheckCount > 0 ? ` · ${passingCheckCount} checks passed` : ''}
                     </span>
                 </div>
 
@@ -295,45 +295,27 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                 </Card>
             )}
 
-            {/* Detected Stack */}
-            {techStack && (techStack.technologies?.length > 0 || techStackCveFindings.length > 0) && (
-                <div className="mb-8">
-                    <div className="flex items-center gap-2.5 mb-4">
-                        <Layers className="h-4 w-4 text-zinc-500" />
-                        <h3 className="text-sm font-medium text-zinc-300">Detected Stack</h3>
-                    </div>
-                    {techStack.technologies?.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            {techStack.technologies.map((tech: any, i: number) => (
-                                <span key={i} className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.06] text-zinc-300">
-                                    {tech.name}{tech.version ? ` ${tech.version}` : ''}
-                                    {tech.category && <span className="text-zinc-600 text-xs">({tech.category})</span>}
-                                </span>
-                            ))}
+            {/* Tech Stack CVE findings only (detected stack tags removed to reduce clutter) */}
+            {techStackCveFindings.length > 0 && (
+                <div className="mb-8 space-y-2">
+                    <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Known Vulnerabilities</h4>
+                    {techStackCveFindings.map((finding: any, i: number) => (
+                        <div key={i} className="p-3 rounded-lg border bg-red-500/5 border-red-500/15">
+                            <div className="flex items-center gap-2 mb-1">
+                                <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                                <span className="font-medium text-[13px] text-zinc-200">{finding.title}</span>
+                                <Badge variant="outline" className="text-[10px] capitalize bg-red-500/10 text-red-400 border-0">
+                                    {finding.severity}
+                                </Badge>
+                            </div>
+                            <p className="text-[13px] text-zinc-500 pl-5.5">{finding.description}</p>
+                            {finding.recommendation && (
+                                <p className="text-[13px] mt-1 text-zinc-500 pl-5.5">
+                                    <span className="text-zinc-400">Fix:</span> {finding.recommendation}
+                                </p>
+                            )}
                         </div>
-                    )}
-                    {techStackCveFindings.length > 0 && (
-                        <div className="space-y-2 mt-4 pt-4 border-t border-white/[0.06]">
-                            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Known Vulnerabilities</h4>
-                            {techStackCveFindings.map((finding: any, i: number) => (
-                                <div key={i} className="p-3 rounded-lg border bg-red-500/5 border-red-500/15">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
-                                        <span className="font-medium text-[13px] text-zinc-200">{finding.title}</span>
-                                        <Badge variant="outline" className="text-[10px] capitalize bg-red-500/10 text-red-400 border-0">
-                                            {finding.severity}
-                                        </Badge>
-                                    </div>
-                                    <p className="text-[13px] text-zinc-500 pl-5.5">{finding.description}</p>
-                                    {finding.recommendation && (
-                                        <p className="text-[13px] mt-1 text-zinc-500 pl-5.5">
-                                            <span className="text-zinc-400">Fix:</span> {finding.recommendation}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    ))}
                 </div>
             )}
 
