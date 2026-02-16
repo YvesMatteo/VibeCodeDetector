@@ -10,7 +10,8 @@ import {
     Download,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
-import { AuditReport, processAuditData } from '@/components/dashboard/audit-report';
+import { AuditReport } from '@/components/dashboard/audit-report';
+import { processAuditData } from '@/lib/audit-data';
 
 export default async function ProjectAuditDetailPage(props: { params: Promise<{ id: string; scanId: string }> }) {
     const params = await props.params;
