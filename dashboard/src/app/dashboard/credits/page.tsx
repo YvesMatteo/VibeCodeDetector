@@ -11,6 +11,18 @@ import { toast } from 'sonner';
 
 const pricingPlans = [
     {
+        id: 'free',
+        name: 'Free',
+        priceMonthly: 0,
+        priceAnnualPerMonth: 0,
+        description: 'Try it out',
+        domains: 1,
+        scans: 3,
+        features: ['1 project', '3 scans/month', 'Issue overview', 'Blurred finding details'],
+        highlighted: false,
+        isFree: true,
+    },
+    {
         id: 'starter',
         name: 'Starter',
         priceMonthly: 19,
@@ -59,16 +71,17 @@ const pricingPlans = [
 ];
 
 const comparisonFeatures = [
-    { name: 'Projects', starter: '1', pro: '3', enterprise: '10', max: 'Unlimited' },
-    { name: 'Scans per month', starter: '5', pro: '20', enterprise: '75', max: 'Custom' },
-    { name: 'Full scan suite (30 scanners)', starter: true, pro: true, enterprise: true, max: true },
-    { name: 'PDF export', starter: true, pro: true, enterprise: true, max: true },
-    { name: 'AI fix suggestions', starter: true, pro: true, enterprise: true, max: true },
-    { name: 'API access', starter: false, pro: true, enterprise: true, max: true },
-    { name: 'Priority support', starter: false, pro: true, enterprise: true, max: true },
-    { name: 'Dedicated support', starter: false, pro: false, enterprise: true, max: true },
-    { name: 'SLA guarantee', starter: false, pro: false, enterprise: false, max: true },
-    { name: 'Account manager', starter: false, pro: false, enterprise: false, max: true },
+    { name: 'Projects', free: '1', starter: '1', pro: '3', enterprise: '10', max: 'Unlimited' },
+    { name: 'Scans per month', free: '3', starter: '5', pro: '20', enterprise: '75', max: 'Custom' },
+    { name: 'Full finding details', free: false, starter: true, pro: true, enterprise: true, max: true },
+    { name: 'Full scan suite (30 scanners)', free: true, starter: true, pro: true, enterprise: true, max: true },
+    { name: 'PDF export', free: false, starter: true, pro: true, enterprise: true, max: true },
+    { name: 'AI fix suggestions', free: false, starter: true, pro: true, enterprise: true, max: true },
+    { name: 'API access', free: false, starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Priority support', free: false, starter: false, pro: true, enterprise: true, max: true },
+    { name: 'Dedicated support', free: false, starter: false, pro: false, enterprise: true, max: true },
+    { name: 'SLA guarantee', free: false, starter: false, pro: false, enterprise: false, max: true },
+    { name: 'Account manager', free: false, starter: false, pro: false, enterprise: false, max: true },
 ];
 
 export default function CreditsPage() {
@@ -204,27 +217,29 @@ export default function CreditsPage() {
             </div>
 
             {/* Current plan banner */}
-            {currentPlan !== 'none' && (
+            {scansLimit > 0 && (
                 <div className="mb-8 p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Crown className="h-5 w-5 text-zinc-400" />
                         <div>
                             <p className="text-white font-medium">
-                                Current plan: <span className="capitalize">{currentPlan}</span>
+                                Current plan: <span className="capitalize">{currentPlan === 'none' ? 'Free' : currentPlan}</span>
                             </p>
                             <p className="text-sm text-zinc-500">
                                 {scansUsed}/{scansLimit} scans used &middot; {domainsUsed}/{domainsLimit} projects
                             </p>
                         </div>
                     </div>
-                    <Button
-                        variant="outline"
-                        className="bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
-                        onClick={handleManageSubscription}
-                        disabled={portalLoading}
-                    >
-                        {portalLoading ? 'Loading...' : 'Manage Subscription'}
-                    </Button>
+                    {currentPlan !== 'none' && (
+                        <Button
+                            variant="outline"
+                            className="bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
+                            onClick={handleManageSubscription}
+                            disabled={portalLoading}
+                        >
+                            {portalLoading ? 'Loading...' : 'Manage Subscription'}
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -235,7 +250,7 @@ export default function CreditsPage() {
                         <tr className="border-b border-white/[0.04]">
                             <th className="text-left p-5 text-sm font-medium text-zinc-500 w-[240px]">Features</th>
                             {pricingPlans.map((plan) => {
-                                const isCurrent = currentPlan === plan.id;
+                                const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
                                 return (
                                     <th key={plan.id} className="p-5 text-center min-w-[180px]">
                                         <div className="flex flex-col items-center gap-2">
@@ -253,7 +268,9 @@ export default function CreditsPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                {plan.isContact ? (
+                                                {'isFree' in plan && plan.isFree ? (
+                                                    <span className="text-2xl font-heading font-bold text-white">Free</span>
+                                                ) : plan.isContact ? (
                                                     <span className="text-2xl font-heading font-bold text-white">Custom</span>
                                                 ) : billing === 'annual' ? (
                                                     <div className="flex flex-col items-center">
@@ -285,7 +302,7 @@ export default function CreditsPage() {
                                 className={`border-b border-white/[0.04] ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
                             >
                                 <td className="p-4 pl-5 text-sm text-zinc-400">{feature.name}</td>
-                                {(['starter', 'pro', 'enterprise', 'max'] as const).map((planKey) => {
+                                {(['free', 'starter', 'pro', 'enterprise', 'max'] as const).map((planKey) => {
                                     const value = feature[planKey];
                                     return (
                                         <td key={planKey} className="p-4 text-center">
@@ -308,10 +325,19 @@ export default function CreditsPage() {
                         <tr className="border-t border-white/[0.06]">
                             <td className="p-5" />
                             {pricingPlans.map((plan) => {
-                                const isCurrent = currentPlan === plan.id;
+                                const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
                                 return (
                                     <td key={plan.id} className="p-5 text-center">
-                                        {plan.isContact ? (
+                                        {'isFree' in plan && plan.isFree ? (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-transparent border-white/[0.06] text-zinc-600"
+                                                variant="outline"
+                                                disabled
+                                            >
+                                                {isCurrent ? 'Current Plan' : 'Free'}
+                                            </Button>
+                                        ) : plan.isContact ? (
                                             <Button
                                                 size="lg"
                                                 className="w-full bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
@@ -367,7 +393,7 @@ export default function CreditsPage() {
             {/* Mobile card layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:hidden">
                 {pricingPlans.map((plan) => {
-                    const isCurrent = currentPlan === plan.id;
+                    const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
 
                     return (
                         <Card
@@ -395,7 +421,9 @@ export default function CreditsPage() {
                                 <CardTitle className="text-lg font-medium text-white">{plan.name}</CardTitle>
                                 <CardDescription className="text-zinc-500">{plan.description}</CardDescription>
                                 <div className="mt-6">
-                                    {plan.isContact ? (
+                                    {'isFree' in plan && plan.isFree ? (
+                                        <span className="text-3xl font-heading font-bold text-white">Free</span>
+                                    ) : plan.isContact ? (
                                         <span className="text-3xl font-heading font-bold text-white">Custom</span>
                                     ) : billing === 'annual' ? (
                                         <div className="flex flex-col items-center">
@@ -426,7 +454,16 @@ export default function CreditsPage() {
                                     ))}
                                 </ul>
 
-                                {plan.isContact ? (
+                                {'isFree' in plan && plan.isFree ? (
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-transparent border-white/[0.06] text-zinc-600"
+                                        variant="outline"
+                                        disabled
+                                    >
+                                        {isCurrent ? 'Current Plan' : 'Free'}
+                                    </Button>
+                                ) : plan.isContact ? (
                                     <Button
                                         size="lg"
                                         className="w-full bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"

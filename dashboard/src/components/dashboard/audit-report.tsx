@@ -140,9 +140,10 @@ interface AuditReportProps {
     dismissals?: Dismissal[];
     onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void;
     onRestore?: (dismissalId: string) => void;
+    userPlan?: string;
 }
 
-export function AuditReport({ data, diff, previousScanDate, dismissedFingerprints, dismissals, onDismiss, onRestore }: AuditReportProps) {
+export function AuditReport({ data, diff, previousScanDate, dismissedFingerprints, dismissals, onDismiss, onRestore, userPlan }: AuditReportProps) {
     const { totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
     const [showDismissed, setShowDismissed] = useState(false);
 
@@ -365,6 +366,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                 results={scannerResults}
                 dismissedFingerprints={dismissed}
                 onDismiss={onDismiss}
+                userPlan={userPlan}
             />
         </>
     );

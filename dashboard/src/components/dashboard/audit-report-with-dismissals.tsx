@@ -12,9 +12,10 @@ interface Props {
     projectId: string;
     scanId: string;
     initialDismissals: Dismissal[];
+    userPlan?: string;
 }
 
-export function AuditReportWithDismissals({ data, diff, previousScanDate, projectId, scanId, initialDismissals }: Props) {
+export function AuditReportWithDismissals({ data, diff, previousScanDate, projectId, scanId, initialDismissals, userPlan }: Props) {
     const [dismissals, setDismissals] = useState<Dismissal[]>(initialDismissals);
 
     const dismissedFingerprints = new Set(dismissals.map(d => d.fingerprint));
@@ -66,6 +67,7 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
             dismissals={dismissals}
             onDismiss={handleDismiss}
             onRestore={handleRestore}
+            userPlan={userPlan}
         />
     );
 }

@@ -91,7 +91,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Usage bars */}
-            {plan !== 'none' && (
+            {planScansLimit > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
                         <Activity className="h-4 w-4 text-zinc-400 shrink-0" />

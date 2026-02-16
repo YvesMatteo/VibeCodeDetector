@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
-            const hasNoPlan = usageResult[0].plan === 'none' || usageResult[0].plan_scans_limit === 0;
+            const hasNoPlan = usageResult[0].plan_scans_limit === 0;
             logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
             return NextResponse.json({
                 error: hasNoPlan

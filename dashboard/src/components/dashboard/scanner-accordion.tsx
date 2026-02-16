@@ -45,8 +45,10 @@ import {
     Sparkles,
     Copy,
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { getPlainEnglish } from '@/lib/plain-english';
 import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 import { toast } from 'sonner';
@@ -150,6 +152,7 @@ interface ScannerAccordionProps {
     dismissedFingerprints?: Set<string>;
     onDismiss?: DismissCallback;
     onRestore?: (dismissalId: string) => void;
+    userPlan?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -312,12 +315,13 @@ function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: Dismissal
     );
 }
 
-function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void }) {
+function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { finding: any; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void; userPlan?: string }) {
     const [showDismiss, setShowDismiss] = useState(false);
     const [showAiFix, setShowAiFix] = useState(false);
     const styles = getSeverityStyles(finding.severity);
     const SeverityIcon = styles.icon;
     const canDismiss = !!onDismiss && !!scannerKey && finding.severity?.toLowerCase() !== 'info';
+    const isFreePlan = userPlan === 'none';
 
     return (
         <div
@@ -327,12 +331,13 @@ function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; 
             <div className="flex items-start gap-3">
                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
                 <div className="flex-1">
+                    {/* Title + severity badge — always visible */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h4 className="font-medium">{finding.title}</h4>
                         <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
                             {finding.severity}
                         </Badge>
-                        {canDismiss && !showDismiss && (
+                        {!isFreePlan && canDismiss && !showDismiss && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowDismiss(true); }}
                                 className="ml-auto opacity-0 group-hover/finding:opacity-100 text-zinc-500 hover:text-zinc-300 transition-all p-1 rounded hover:bg-white/5"
@@ -342,82 +347,111 @@ function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; 
                             </button>
                         )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                        {finding.description}
-                    </p>
 
-                    {(() => {
-                        const plainEnglish = getPlainEnglish(finding.title, finding.description);
-                        if (plainEnglish) {
-                            return (
-                                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                                    <div className="flex items-center gap-2 mb-1 text-blue-400">
-                                        <Info className="h-4 w-4" />
-                                        <span className="text-xs font-medium tracking-wide">What this means</span>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-200">{plainEnglish.summary}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{plainEnglish.whyItMatters}</p>
+                    {isFreePlan ? (
+                        /* Blurred details for free users */
+                        <div className="relative mt-1">
+                            <div className="max-h-[4.5rem] overflow-hidden">
+                                <div className="blur-[6px] select-none pointer-events-none">
+                                    <p className="text-sm text-muted-foreground">{finding.description}</p>
+                                    {finding.recommendation && (
+                                        <p className="text-sm mt-2 text-muted-foreground">
+                                            <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
+                                        </p>
+                                    )}
                                 </div>
-                            );
-                        }
-                        return null;
-                    })()}
-                    {finding.recommendation && (
-                        <p className="text-sm mt-2 text-muted-foreground">
-                            <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
-                        </p>
-                    )}
-                    {finding.reportUrl && (
-                        <a
-                            href={finding.reportUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
-                        >
-                            <ExternalLink className="h-3 w-3" />
-                            View Full Report
-                        </a>
-                    )}
-                    {finding.evidence && (
-                        <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
-                            {finding.evidence}
-                        </pre>
-                    )}
-                    {finding.severity?.toLowerCase() !== 'info' && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setShowAiFix(!showAiFix); }}
-                            className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                            <Sparkles className="h-3 w-3" />
-                            {showAiFix ? 'Hide AI fix' : 'AI fix suggestion'}
-                        </button>
-                    )}
-                    {showAiFix && (
-                        <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                            <p className="text-blue-400 font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
-                            <pre className="text-zinc-400 text-[11px] leading-relaxed whitespace-pre-wrap font-mono">{`Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`}</pre>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const text = `Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`;
-                                    navigator.clipboard.writeText(text);
-                                    toast.success('Copied to clipboard');
-                                }}
-                                className="mt-2 text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
-                            >
-                                <Copy className="h-3 w-3" /> Copy
-                            </button>
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-transparent flex flex-col items-center justify-center gap-2">
+                                <div className="flex items-center gap-2 text-zinc-400">
+                                    <Lock className="h-4 w-4" />
+                                    <span className="text-sm font-medium">Upgrade to see details</span>
+                                </div>
+                                <Button size="sm" asChild className="bg-indigo-600 hover:bg-indigo-500 text-white border-0 text-xs px-4">
+                                    <Link href="/dashboard/credits">View Plans</Link>
+                                </Button>
+                            </div>
                         </div>
-                    )}
-                    {showDismiss && scannerKey && onDismiss && (
-                        <DismissDropdown
-                            onClose={() => setShowDismiss(false)}
-                            onConfirm={(reason, scope, note) => {
-                                const fp = buildFingerprint(scannerKey, finding);
-                                onDismiss(fp, scannerKey, finding, reason, scope, note);
-                                setShowDismiss(false);
-                            }}
-                        />
+                    ) : (
+                        /* Full details for paid users */
+                        <>
+                            <p className="text-sm text-muted-foreground">
+                                {finding.description}
+                            </p>
+
+                            {(() => {
+                                const plainEnglish = getPlainEnglish(finding.title, finding.description);
+                                if (plainEnglish) {
+                                    return (
+                                        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                                            <div className="flex items-center gap-2 mb-1 text-blue-400">
+                                                <Info className="h-4 w-4" />
+                                                <span className="text-xs font-medium tracking-wide">What this means</span>
+                                            </div>
+                                            <p className="text-sm font-medium text-slate-200">{plainEnglish.summary}</p>
+                                            <p className="text-xs text-slate-400 mt-1">{plainEnglish.whyItMatters}</p>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+                            {finding.recommendation && (
+                                <p className="text-sm mt-2 text-muted-foreground">
+                                    <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
+                                </p>
+                            )}
+                            {finding.reportUrl && (
+                                <a
+                                    href={finding.reportUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
+                                >
+                                    <ExternalLink className="h-3 w-3" />
+                                    View Full Report
+                                </a>
+                            )}
+                            {finding.evidence && (
+                                <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
+                                    {finding.evidence}
+                                </pre>
+                            )}
+                            {finding.severity?.toLowerCase() !== 'info' && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setShowAiFix(!showAiFix); }}
+                                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                    <Sparkles className="h-3 w-3" />
+                                    {showAiFix ? 'Hide AI fix' : 'AI fix suggestion'}
+                                </button>
+                            )}
+                            {showAiFix && (
+                                <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                                    <p className="text-blue-400 font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
+                                    <pre className="text-zinc-400 text-[11px] leading-relaxed whitespace-pre-wrap font-mono">{`Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`}</pre>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const text = `Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`;
+                                            navigator.clipboard.writeText(text);
+                                            toast.success('Copied to clipboard');
+                                        }}
+                                        className="mt-2 text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+                                    >
+                                        <Copy className="h-3 w-3" /> Copy
+                                    </button>
+                                </div>
+                            )}
+                            {showDismiss && scannerKey && onDismiss && (
+                                <DismissDropdown
+                                    onClose={() => setShowDismiss(false)}
+                                    onConfirm={(reason, scope, note) => {
+                                        const fp = buildFingerprint(scannerKey, finding);
+                                        onDismiss(fp, scannerKey, finding, reason, scope, note);
+                                        setShowDismiss(false);
+                                    }}
+                                />
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -499,7 +533,7 @@ function PassingChecksSection({ findings }: { findings: any[] }) {
     );
 }
 
-function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss }: { scannerKey: string; result: any; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback }) {
+function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, userPlan }: { scannerKey: string; result: any; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback; userPlan?: string }) {
     const allFindings: any[] = result.findings || [];
 
     // Filter out dismissed findings
@@ -537,7 +571,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss }: 
                             </div>
                             <div className="space-y-4">
                                 {catFindings.map((finding: any, i: number) => (
-                                    <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
+                                    <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                                 ))}
                             </div>
                         </div>
@@ -566,7 +600,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss }: 
                     return <SummaryWithDetails key={summary.id || i} summary={summary} details={related} />;
                 })}
                 {plain.length > 0 && plain.map((finding: any, i: number) => (
-                    <FindingCard key={`plain-${i}`} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
+                    <FindingCard key={`plain-${i}`} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                 ))}
                 <PassingChecksSection findings={passingChecks} />
             </div>
@@ -576,7 +610,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss }: 
     return (
         <div className="space-y-4">
             {actionable.map((finding: any, index: number) => (
-                <FindingCard key={index} finding={finding} index={index} scannerKey={scannerKey} onDismiss={onDismiss} />
+                <FindingCard key={index} finding={finding} index={index} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
             ))}
             <PassingChecksSection findings={passingChecks} />
         </div>
@@ -675,7 +709,7 @@ function countActiveIssues(scannerKey: string, findings: any[], dismissed?: Set<
     }).length;
 }
 
-export function ScannerAccordion({ results, dismissedFingerprints, onDismiss }: ScannerAccordionProps) {
+export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, userPlan }: ScannerAccordionProps) {
     // All scanners start collapsed
     const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
@@ -849,7 +883,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss }: 
                                         </div>
                                     )}
 
-                                    <FindingsList scannerKey={key} result={result} dismissedFingerprints={dismissedFingerprints} onDismiss={onDismiss} />
+                                    <FindingsList scannerKey={key} result={result} dismissedFingerprints={dismissedFingerprints} onDismiss={onDismiss} userPlan={userPlan} />
                                 </div>
                             </div>
                         </div>

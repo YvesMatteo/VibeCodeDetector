@@ -69,6 +69,16 @@ const features = [
 
 const pricingTiers = [
   {
+    name: 'Free',
+    priceMonthly: 0,
+    priceAnnualPerMonth: 0,
+    description: 'Try it out',
+    features: ['1 project', '3 scans/month', 'Issue overview', 'Blurred details'],
+    cta: 'Get Started Free',
+    highlighted: false,
+    isFree: true,
+  },
+  {
     name: 'Starter',
     priceMonthly: 19,
     priceAnnualPerMonth: 15.20,
@@ -279,7 +289,7 @@ export default function HomePage() {
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
               <div className="h-px w-10 bg-white/10"></div>
-              <span>Plans from {formatPrice(19, currency)}/month</span>
+              <span>Free plan available</span>
               <div className="h-px w-10 bg-white/10"></div>
             </div>
           </motion.div>
@@ -542,7 +552,7 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-4 max-w-sm sm:max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 pt-4 max-w-sm sm:max-w-7xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -567,7 +577,9 @@ export default function HomePage() {
                     <h3 className="text-lg font-medium text-white">{tier.name}</h3>
                     <p className="text-sm text-zinc-400 mt-1">{tier.description}</p>
                     <div className="mt-4">
-                      {tier.priceMonthly === null ? (
+                      {'isFree' in tier && tier.isFree ? (
+                        <span className="text-4xl font-bold text-white tracking-tight">Free</span>
+                      ) : tier.priceMonthly === null ? (
                         <span className="text-4xl font-bold text-white tracking-tight">Custom</span>
                       ) : billing === 'annual' ? (
                         <div className="flex flex-col">
@@ -597,7 +609,15 @@ export default function HomePage() {
                       ))}
                     </ul>
 
-                    {'isContact' in tier && tier.isContact ? (
+                    {'isFree' in tier && tier.isFree ? (
+                      <Button
+                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                        variant="outline"
+                        asChild
+                      >
+                        <Link href="/signup">{tier.cta}</Link>
+                      </Button>
+                    ) : 'isContact' in tier && tier.isContact ? (
                       <Button
                         className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
                         variant="outline"

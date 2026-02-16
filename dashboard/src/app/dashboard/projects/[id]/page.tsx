@@ -25,6 +25,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
         redirect('/login');
     }
 
+    const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
+    const userPlan = (profile as any)?.plan || 'none';
+
     const { data: project, error: projectError } = await supabase
         .from('projects' as any)
         .select('*')
@@ -162,6 +165,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                         projectId={params.id}
                         scanId={latestScan.id}
                         initialDismissals={activeDismissals}
+                        userPlan={userPlan}
                     />
                 </>
             )}
