@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
@@ -41,7 +42,22 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     const pathname = request.nextUrl.pathname;
-    const hasBypass = request.cookies.get('cv-access')?.value === '1';
+
+    // Signed waitlist bypass cookie: cv-access=1:<hmac-hex>
+    // Prevents forgery — only the server can issue valid bypass cookies.
+    const cvAccessRaw = request.cookies.get('cv-access')?.value;
+    let hasBypass = false;
+    if (cvAccessRaw) {
+        const [value, signature] = cvAccessRaw.split(':');
+        if (value === '1' && signature) {
+            const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+            const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
+            // Constant-time comparison to prevent timing attacks
+            const sigBuf = Buffer.from(signature, 'hex');
+            const expBuf = Buffer.from(expected, 'hex');
+            hasBypass = sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf);
+        }
+    }
 
     // Waitlist gate: redirect public pages to /waitlist unless bypassed or authenticated
     const isWaitlistPage = pathname === '/waitlist';
