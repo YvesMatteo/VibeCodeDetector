@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, Activity, FolderKanban } from 'lucide-react';
+import { Plus, FolderKanban } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectCard } from '@/components/dashboard/project-card';
 
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
     const projectList = (projects || []) as any[];
 
-    // For each project, get the latest scan
+    // For each project, get the latest scan with severity breakdown
     const projectsWithScans = await Promise.all(
         projectList.map(async (project: any) => {
             const { data: latestScan } = await supabase
@@ -46,13 +46,20 @@ export default async function DashboardPage() {
                 .limit(1)
                 .single();
 
+            const severity = { critical: 0, high: 0, medium: 0, low: 0 };
             let issueCount = 0;
             if (latestScan?.results) {
                 const results = latestScan.results as Record<string, any>;
                 Object.values(results).forEach((r: any) => {
                     if (r.findings && Array.isArray(r.findings)) {
                         r.findings.forEach((f: any) => {
-                            if (f.severity?.toLowerCase() !== 'info') issueCount++;
+                            const sev = f.severity?.toLowerCase();
+                            if (sev === 'info') return;
+                            issueCount++;
+                            if (sev === 'critical') severity.critical++;
+                            else if (sev === 'high') severity.high++;
+                            else if (sev === 'medium') severity.medium++;
+                            else severity.low++;
                         });
                     }
                 });
@@ -63,24 +70,32 @@ export default async function DashboardPage() {
                 latestScore: latestScan?.overall_score ?? null,
                 lastAuditDate: latestScan?.completed_at ?? null,
                 issueCount,
+                severity,
             };
         })
     );
 
-    const scansPct = planScansLimit > 0 ? Math.min((planScansUsed / planScansLimit) * 100, 100) : 0;
-    const projectsPct = projectLimit > 0 ? Math.min((projectList.length / projectLimit) * 100, 100) : 0;
-
     return (
         <div className="p-4 md:p-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                         Projects
                     </h1>
-                    <p className="text-zinc-400 mt-1">
-                        Manage and audit your projects
-                    </p>
+                    {planScansLimit > 0 && (
+                        <div className="flex items-center gap-4 mt-2">
+                            <span className="text-[13px] text-zinc-500">
+                                <span className="text-zinc-300 font-medium tabular-nums">{planScansUsed}</span>
+                                <span className="text-zinc-600">/{planScansLimit}</span> scans
+                            </span>
+                            <span className="text-zinc-700">·</span>
+                            <span className="text-[13px] text-zinc-500">
+                                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
+                                <span className="text-zinc-600">/{projectLimit}</span> projects
+                            </span>
+                        </div>
+                    )}
                 </div>
                 <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium">
                     <Link href="/dashboard/projects/new">
@@ -90,53 +105,25 @@ export default async function DashboardPage() {
                 </Button>
             </div>
 
-            {/* Usage bars */}
-            {planScansLimit > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-                        <Activity className="h-4 w-4 text-zinc-400 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                            <div className="flex justify-between text-xs mb-1">
-                                <span className="text-zinc-500">Scans</span>
-                                <span className="text-zinc-300">{planScansUsed}/{planScansLimit}</span>
-                            </div>
-                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
-                                <div className="bg-white/40 h-1.5 rounded-full transition-all" style={{ width: `${scansPct}%` }} />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-                        <FolderKanban className="h-4 w-4 text-zinc-400 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                            <div className="flex justify-between text-xs mb-1">
-                                <span className="text-zinc-500">Projects</span>
-                                <span className="text-zinc-300">{projectList.length}/{projectLimit}</span>
-                            </div>
-                            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
-                                <div className="bg-emerald-500/60 h-1.5 rounded-full transition-all" style={{ width: `${projectsPct}%` }} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Project Grid */}
             {projectsWithScans.length === 0 ? (
                 <div className="text-center py-20">
-                    <FolderKanban className="h-12 w-12 text-zinc-700 mx-auto mb-4" />
-                    <h2 className="text-lg font-medium text-white mb-2">No projects yet</h2>
-                    <p className="text-zinc-500 text-sm mb-6 max-w-md mx-auto">
-                        Create your first project to start running security audits on your sites.
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+                        <FolderKanban className="h-5 w-5 text-zinc-600" />
+                    </div>
+                    <h2 className="text-base font-medium text-white mb-1.5">No projects yet</h2>
+                    <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">
+                        Create your first project to start running security audits.
                     </p>
                     <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium">
                         <Link href="/dashboard/projects/new">
                             <Plus className="mr-2 h-4 w-4" />
-                            Create Your First Project
+                            Create Project
                         </Link>
                     </Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {projectsWithScans.map((project: any) => (
                         <ProjectCard
                             key={project.id}
@@ -145,6 +132,7 @@ export default async function DashboardPage() {
                             url={project.url}
                             latestScore={project.latestScore}
                             issueCount={project.issueCount}
+                            severity={project.severity}
                             lastAuditDate={project.lastAuditDate}
                         />
                     ))}

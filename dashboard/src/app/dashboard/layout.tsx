@@ -19,7 +19,6 @@ import {
     Plus,
     Menu,
     Key,
-    Search,
     BookOpen,
     ExternalLink,
     Mail,
@@ -167,21 +166,17 @@ function SidebarContent({
 
             <div className="h-px bg-white/[0.06] mx-4" />
 
-            {/* Bottom: Logout + Search */}
-            <div className="px-3 py-3 space-y-1">
+            {/* Bottom: Logout */}
+            <div className="px-3 py-3">
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                    className="w-full flex items-center px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
                 >
                     <div className="flex items-center gap-2.5">
                         <LogOut className="h-[15px] w-[15px] text-zinc-600" />
                         Log out
                     </div>
                 </button>
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-zinc-600">
-                    <Search className="h-[15px] w-[15px]" />
-                    <span>Search...</span>
-                </div>
             </div>
         </div>
     );

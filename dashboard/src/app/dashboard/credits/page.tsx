@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Zap, Crown, Mail, Minus } from 'lucide-react';
+import { CheckCircle, Crown, Mail, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { toast } from 'sonner';
@@ -42,8 +42,7 @@ const pricingPlans = [
         domains: 3,
         scans: 20,
         features: ['3 projects', '20 scans/month', 'Full scan suite', 'Priority support'],
-        highlighted: true,
-        badge: 'Most Popular',
+        highlighted: false,
     },
     {
         id: 'max',
@@ -361,10 +360,7 @@ export default function CreditsPage() {
                                                         Processing...
                                                     </span>
                                                 ) : (
-                                                    <span className="flex items-center gap-2">
-                                                        Subscribe
-                                                        <Zap className="h-4 w-4" />
-                                                    </span>
+                                                    Subscribe
                                                 )}
                                             </Button>
                                         )}
