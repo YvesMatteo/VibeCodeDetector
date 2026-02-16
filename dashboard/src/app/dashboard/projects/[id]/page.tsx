@@ -17,6 +17,7 @@ import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
+  try {
     const params = await props.params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -171,4 +172,16 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             )}
         </div>
     );
+  } catch (err: any) {
+    return (
+        <div className="p-8 max-w-2xl mx-auto">
+            <h2 className="text-xl font-bold text-red-400 mb-4">Debug: Server Component Error</h2>
+            <pre className="p-4 bg-black/50 border border-red-500/20 rounded-lg text-sm text-red-300 whitespace-pre-wrap overflow-auto">
+                {err?.message || 'Unknown error'}
+                {'\n\n'}
+                {err?.stack || 'No stack trace'}
+            </pre>
+        </div>
+    );
+  }
 }
