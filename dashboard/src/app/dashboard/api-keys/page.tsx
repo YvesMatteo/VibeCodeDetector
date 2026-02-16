@@ -15,21 +15,18 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
-    Key,
     Plus,
     Copy,
     Check,
     Trash2,
     Clock,
-    Shield,
     Globe,
     AlertTriangle,
-    BookOpen,
     Terminal,
     ChevronDown,
     ChevronUp,
-    Cpu,
 } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 
 interface ApiKey {
@@ -232,8 +229,8 @@ export default function ApiKeysPage() {
         <div className="p-4 md:p-8 max-w-4xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white mb-2">API Keys</h1>
-                    <p className="text-zinc-400 text-sm sm:text-base">
+                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">API Keys</h1>
+                    <p className="text-zinc-500 text-sm mt-1">
                         Manage API keys for programmatic access to CheckVibe
                     </p>
                 </div>
@@ -247,15 +244,12 @@ export default function ApiKeysPage() {
             </div>
 
             {/* Getting Started */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="cursor-pointer" onClick={() => setDocsOpen(!docsOpen)}>
+            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="cursor-pointer py-4" onClick={() => setDocsOpen(!docsOpen)}>
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <BookOpen className="h-5 w-5 text-blue-400" />
-                            <div>
-                                <CardTitle className="text-white">Getting Started</CardTitle>
-                                <CardDescription className="text-zinc-400">Authentication and API usage</CardDescription>
-                            </div>
+                        <div>
+                            <CardTitle className="text-white text-sm font-medium">Getting Started</CardTitle>
+                            <CardDescription className="text-zinc-500 text-xs">Authentication and API usage</CardDescription>
                         </div>
                         {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
                     </div>
@@ -300,14 +294,14 @@ export default function ApiKeysPage() {
             </Card>
 
             {/* MCP Server Config */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="cursor-pointer" onClick={() => setMcpOpen(!mcpOpen)}>
+            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="cursor-pointer py-4" onClick={() => setMcpOpen(!mcpOpen)}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Cpu className="h-5 w-5 text-zinc-400" />
+                            <Image src="/claude-code.png" alt="Claude Code" width={28} height={14} className="rounded-[3px]" />
                             <div>
-                                <CardTitle className="text-white">Use with Claude Code (MCP)</CardTitle>
-                                <CardDescription className="text-zinc-400">Let coding agents run security scans</CardDescription>
+                                <CardTitle className="text-white text-sm font-medium">Use with Claude Code (MCP)</CardTitle>
+                                <CardDescription className="text-zinc-500 text-xs">Let coding agents run security scans</CardDescription>
                             </div>
                         </div>
                         {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
@@ -342,14 +336,11 @@ export default function ApiKeysPage() {
             </Card>
 
             {/* Active Keys */}
-            <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader>
-                    <div className="flex items-center gap-3">
-                        <Key className="h-5 w-5 text-blue-400" />
-                        <div>
-                            <CardTitle className="text-white">Active Keys ({activeKeys.length})</CardTitle>
-                            <CardDescription className="text-zinc-400">Keys that can authenticate API requests</CardDescription>
-                        </div>
+            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="py-4">
+                    <div>
+                        <CardTitle className="text-white text-sm font-medium">Active Keys ({activeKeys.length})</CardTitle>
+                        <CardDescription className="text-zinc-500 text-xs">Keys that can authenticate API requests</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -357,7 +348,6 @@ export default function ApiKeysPage() {
                         <div className="text-zinc-500 text-sm py-4">Loading...</div>
                     ) : activeKeys.length === 0 ? (
                         <div className="text-center py-8">
-                            <Key className="h-8 w-8 text-zinc-600 mx-auto mb-3" />
                             <p className="text-zinc-500 text-sm">No active API keys</p>
                             <p className="text-zinc-600 text-xs mt-1">Create a key to get started with the API</p>
                         </div>
@@ -380,14 +370,11 @@ export default function ApiKeysPage() {
 
             {/* Inactive Keys */}
             {inactiveKeys.length > 0 && (
-                <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <Shield className="h-5 w-5 text-zinc-500" />
-                            <div>
-                                <CardTitle className="text-zinc-400">Inactive Keys ({inactiveKeys.length})</CardTitle>
-                                <CardDescription className="text-zinc-500">Revoked or expired keys</CardDescription>
-                            </div>
+                <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                    <CardHeader className="py-4">
+                        <div>
+                            <CardTitle className="text-zinc-400 text-sm font-medium">Inactive Keys ({inactiveKeys.length})</CardTitle>
+                            <CardDescription className="text-zinc-500 text-xs">Revoked or expired keys</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -409,12 +396,12 @@ export default function ApiKeysPage() {
 
             {/* Security Notice */}
             <Card className="bg-white/[0.02] border-white/[0.06]">
-                <CardContent className="pt-6">
+                <CardContent className="py-4 px-5">
                     <div className="flex gap-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                        <div className="text-sm text-zinc-400">
-                            <p className="font-medium text-zinc-300 mb-1">Security Best Practices</p>
-                            <ul className="space-y-1 text-zinc-500">
+                        <AlertTriangle className="h-4 w-4 text-amber-400/80 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-medium text-zinc-300 mb-1.5">Security Best Practices</p>
+                            <ul className="space-y-1 text-xs text-zinc-500">
                                 <li>Use the minimum scopes needed for your integration</li>
                                 <li>Restrict keys to specific domains when possible</li>
                                 <li>Rotate keys regularly (default expiry: 90 days)</li>

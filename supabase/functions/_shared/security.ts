@@ -67,12 +67,75 @@ export function validateScannerAuth(req: Request): boolean {
   return result === 0;
 }
 
+// ---------------------------------------------------------------------------
+// SPA Catch-All Detection
+// ---------------------------------------------------------------------------
+// Many modern sites (Next.js, Framer, React Router) return 200 for ANY path,
+// serving the same HTML shell. This causes massive false positives when
+// scanners probe paths like /backup.sql, /wp-json/wp/v2/, /login etc.
+// This utility detects catch-all behavior by comparing a random probe against
+// the homepage response.
+
+export interface SpaCheckResult {
+  isCatchAll: boolean;
+  /** Fingerprint (trimmed hash) of the catch-all page, if detected */
+  pageFingerprint?: string;
+}
+
+/**
+ * Detect if a site serves a catch-all response (SPA).
+ * Compares the homepage body length against a random nonsense path.
+ * If both return 200 with the same length (within 5%), it's a catch-all.
+ */
+export async function detectSpaCatchAll(
+  targetUrl: string,
+  homepageLength: number,
+  fetchFn: (url: string, opts?: RequestInit) => Promise<Response>,
+): Promise<SpaCheckResult> {
+  try {
+    const randomSlug = `_cv_probe_${Math.random().toString(36).slice(2, 10)}`;
+    const probeUrl = new URL(`/${randomSlug}`, targetUrl).href;
+    const res = await fetchFn(probeUrl, { method: 'GET' });
+    if (res.status !== 200) return { isCatchAll: false };
+    const probeBody = await res.text();
+    const probeLen = probeBody.length;
+    // If both are within 5% of each other and Content-Type is HTML, it's catch-all
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('text/html')) return { isCatchAll: false };
+    const diff = Math.abs(probeLen - homepageLength);
+    const maxLen = Math.max(probeLen, homepageLength, 1);
+    if (diff / maxLen < 0.05) {
+      return { isCatchAll: true, pageFingerprint: String(probeLen) };
+    }
+    return { isCatchAll: false };
+  } catch {
+    return { isCatchAll: false };
+  }
+}
+
+/**
+ * Quick check: does this specific probe path return the catch-all page?
+ * Use after detecting SPA to validate individual probe results.
+ */
+export function looksLikeCatchAllResponse(
+  contentType: string | null,
+  bodyLength: number,
+  catchAllLength: number,
+): boolean {
+  if (!contentType?.includes('text/html')) return false;
+  const diff = Math.abs(bodyLength - catchAllLength);
+  const maxLen = Math.max(bodyLength, catchAllLength, 1);
+  return diff / maxLen < 0.05;
+}
+
 export function getCorsHeaders(req: Request): Record<string, string> {
-  const allowedOrigins = [
-    Deno.env.get('ALLOWED_ORIGIN') || 'https://checkvibe.online',
-  ];
+  // Support comma-separated list via ALLOWED_ORIGINS env, fall back to production domain
+  const originsEnv = Deno.env.get('ALLOWED_ORIGINS') || Deno.env.get('ALLOWED_ORIGIN') || '';
+  const allowedOrigins = originsEnv
+    ? originsEnv.split(',').map(o => o.trim()).filter(Boolean)
+    : ['https://checkvibe.dev'];
+
   const origin = req.headers.get('Origin') || '';
-  // Only set CORS header if origin matches
   const allowOrigin = allowedOrigins.includes(origin) ? origin : '';
 
   return {

@@ -193,7 +193,11 @@ export function requireDomain(context: AuthenticatedContext, domain: string): Ne
     return null;
   }
 
-  if (!context.keyAllowedDomains.includes(domain)) {
+  // Normalize: lowercase + strip trailing dot to prevent bypass via case or FQDN
+  const normalizedDomain = domain.toLowerCase().replace(/\.$/, '');
+  const normalizedAllowed = context.keyAllowedDomains.map(d => d.toLowerCase().replace(/\.$/, ''));
+
+  if (!normalizedAllowed.includes(normalizedDomain)) {
     return NextResponse.json(
       { error: `API key not authorized for domain: ${domain}` },
       { status: 403 }

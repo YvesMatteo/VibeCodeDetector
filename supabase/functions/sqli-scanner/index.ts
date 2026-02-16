@@ -593,15 +593,21 @@ async function testInjectionPoint(
                 recommendation: `Use parameterized queries. UNION-based SQLi allows full database data extraction.`,
                 evidence: truncateEvidence(result.body.match(/number of columns|SELECTs have different|UNION.*?select.*?different/i)?.[0] || `UNION with ${i + 1} column(s) triggered error`),
             });
-        } else if (!hasSqlError && normalResult && Math.abs(result.length - normalResult.length) > 100) {
+        } else if (!hasSqlError && normalResult && Math.abs(result.length - normalResult.length) > 500) {
             // Response changed significantly with UNION — possible data leak
-            if (!errorFound && !findings.some(f => f.id.includes('union'))) {
+            // Threshold is 500 bytes to avoid false positives from URL param reflection
+            // in HTML meta tags, canonical URLs, etc. (typically ~100-200 bytes)
+            // Also verify the extra content doesn't look like reflected HTML
+            const payloadLen = unionPayloads[i].length;
+            const sizeDelta = Math.abs(result.length - normalResult.length);
+            const isLikelyReflection = sizeDelta < payloadLen * 3;
+            if (!errorFound && !isLikelyReflection && !findings.some(f => f.id.includes('union'))) {
                 unionDetected = true;
                 findings.push({
                     id: `sqli-union-data-${idx}-${point.name}`,
                     severity: 'high',
                     title: `Possible UNION SQL Injection in ${label}`,
-                    description: `UNION SELECT NULL with ${i + 1} column(s) into ${label} at ${point.action} changed the response by ${Math.abs(result.length - (normalResult?.length || 0))} bytes. This may indicate data from additional tables is being returned.`,
+                    description: `UNION SELECT NULL with ${i + 1} column(s) into ${label} at ${point.action} changed the response by ${sizeDelta} bytes. This may indicate data from additional tables is being returned.`,
                     recommendation: `Use parameterized queries. Investigate whether UNION payloads affect query results.`,
                     evidence: `Normal: ${normalResult?.length || '?'}b, UNION(${i + 1} cols): ${result.length}b`,
                 });

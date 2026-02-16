@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function GET() {
     try {
@@ -69,6 +70,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Rate limit: 10 project creations per minute per user
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+            ?? req.headers.get('x-real-ip')
+            ?? '0.0.0.0';
+        const rl = await checkRateLimit(`project-create:${user.id}`, 10, 60);
+        if (!rl.allowed) {
+            return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+        }
+
         const body = await req.json();
         const { name, url, githubRepo, backendType, backendUrl, supabasePAT } = body;
 
@@ -99,6 +109,19 @@ export async function POST(req: NextRequest) {
         ];
         if (privatePatterns.some(p => p.test(parsedUrl.hostname))) {
             return NextResponse.json({ error: 'Internal URLs are not allowed' }, { status: 400 });
+        }
+
+        // SSRF validation for backendUrl (same private IP check)
+        if (backendUrl && typeof backendUrl === 'string' && backendUrl.trim()) {
+            const backendTarget = backendUrl.startsWith('http') ? backendUrl : `https://${backendUrl}`;
+            try {
+                const parsedBackend = new URL(backendTarget);
+                if (privatePatterns.some(p => p.test(parsedBackend.hostname))) {
+                    return NextResponse.json({ error: 'Backend URL cannot target internal networks' }, { status: 400 });
+                }
+            } catch {
+                return NextResponse.json({ error: 'Invalid backend URL format' }, { status: 400 });
+            }
         }
 
         // Check project limit

@@ -34,8 +34,8 @@ const mainNav = [
 ];
 
 const resourceLinks = [
-    { name: 'Docs', href: 'https://docs.checkvibe.dev', icon: BookOpen, external: true },
-    { name: 'Changelog', href: 'https://checkvibe.dev/changelog', icon: Shield, external: true },
+    { name: 'Docs', href: '/dashboard/docs', icon: BookOpen, external: false },
+    { name: 'Changelog', href: '/dashboard/changelog', icon: Shield, external: false },
 ];
 
 const connectLinks = [
@@ -130,22 +130,44 @@ function SidebarContent({
                     <p className="px-3 mb-1.5 text-[10px] font-medium tracking-wider text-zinc-600 uppercase">
                         Resources
                     </p>
-                    {resourceLinks.map((item) => (
-                        <a
-                            key={item.name}
-                            href={item.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={onNavClick}
-                            className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
-                                {item.name}
-                            </div>
-                            <ExternalLink className="h-3 w-3 text-zinc-700 group-hover:text-zinc-500" />
-                        </a>
-                    ))}
+                    {resourceLinks.map((item) => {
+                        const isActive = pathname.startsWith(item.href);
+                        if (item.external) {
+                            return (
+                                <a
+                                    key={item.name}
+                                    href={item.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={onNavClick}
+                                    className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
+                                        {item.name}
+                                    </div>
+                                    <ExternalLink className="h-3 w-3 text-zinc-700 group-hover:text-zinc-500" />
+                                </a>
+                            );
+                        }
+                        return (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                onClick={onNavClick}
+                                className={`group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
+                                    isActive
+                                        ? 'text-white bg-white/[0.06]'
+                                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+                                    {item.name}
+                                </div>
+                            </Link>
+                        );
+                    })}
                 </div>
 
                 {/* Connect Section */}

@@ -499,11 +499,32 @@ function detectFromHtml(
 async function probeCommonPaths(
     baseUrl: string,
     techs: Map<string, Technology>,
+    homepageLength: number,
 ): Promise<void> {
-    const probes: { path: string; tech: string; category: string }[] = [
-        { path: '/wp-login.php', tech: 'WordPress', category: 'CMS' },
-        { path: '/wp-json/wp/v2/', tech: 'WordPress', category: 'CMS' },
-        { path: '/administrator/', tech: 'Joomla', category: 'CMS' },
+    // Each probe has a content validator to prevent SPA catch-all false positives.
+    // We use GET (not HEAD) and verify the response body confirms the technology.
+    const probes: { path: string; tech: string; category: string; validate: (body: string, ct: string) => boolean }[] = [
+        {
+            path: '/wp-login.php',
+            tech: 'WordPress',
+            category: 'CMS',
+            // Real WP login pages contain "wp-login" form or "wordpress" references
+            validate: (body, ct) => ct.includes('text/html') && /wp-login|wordpress/i.test(body),
+        },
+        {
+            path: '/wp-json/wp/v2/',
+            tech: 'WordPress',
+            category: 'CMS',
+            // Real WP REST API returns application/json with "namespace":"wp/v2"
+            validate: (body, ct) => ct.includes('json') && /namespace.*wp\/v2|wp\/v2.*namespace/i.test(body),
+        },
+        {
+            path: '/administrator/',
+            tech: 'Joomla',
+            category: 'CMS',
+            // Real Joomla admin pages contain "joomla" references
+            validate: (body, ct) => ct.includes('text/html') && /joomla|com_login/i.test(body),
+        },
     ];
 
     const origin = new URL(baseUrl).origin;
@@ -514,11 +535,18 @@ async function probeCommonPaths(
             const timeout = setTimeout(() => controller.abort(), 5000);
             try {
                 const resp = await fetch(`${origin}${probe.path}`, {
-                    method: 'HEAD',
+                    method: 'GET',
                     redirect: 'follow',
                     signal: controller.signal,
+                    headers: { 'User-Agent': 'CheckVibe-Scanner/2.0' },
                 });
-                if (resp.status === 200 || resp.status === 302 || resp.status === 301) {
+                if (resp.status !== 200 && resp.status !== 302 && resp.status !== 301) return;
+                const body = await resp.text();
+                const ct = resp.headers.get('content-type') || '';
+                // Skip if response is the same size as homepage (SPA catch-all)
+                if (Math.abs(body.length - homepageLength) / Math.max(homepageLength, 1) < 0.05) return;
+                // Validate content actually matches the technology
+                if (probe.validate(body, ct)) {
                     addTech(techs, probe.tech, null, probe.category, `${probe.path} returned ${resp.status}`);
                 }
             } finally {
@@ -1007,8 +1035,8 @@ Deno.serve(async (req: Request) => {
         detectFromCookies(response.headers, techs);
         detectFromHtml(html, techs);
 
-        // Path probing (max 3 lightweight HEAD requests)
-        await probeCommonPaths(targetUrl, techs);
+        // Path probing (max 3 requests with content validation)
+        await probeCommonPaths(targetUrl, techs, html.length);
 
         // Try to extract versions from first-party JS files
         await extractVersionsFromScripts(targetUrl, html, techs);

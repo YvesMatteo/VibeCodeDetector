@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { validateTargetUrl, validateScannerAuth, getCorsHeaders } from "../_shared/security.ts";
+import { validateTargetUrl, validateScannerAuth, getCorsHeaders, detectSpaCatchAll, looksLikeCatchAllResponse } from "../_shared/security.ts";
 
 /**
  * Vercel Hosting Scanner
@@ -363,6 +363,7 @@ async function checkGitExposure(
 async function checkBackupFiles(
     targetUrl: string,
     findings: Finding[],
+    catchAllPageLength: number,
 ): Promise<number> {
     const backupPaths = [
         '/backup.sql', '/backup.sql.gz', '/dump.sql',
@@ -371,17 +372,33 @@ async function checkBackupFiles(
         '/wp-config.php.bak', '/config.php.bak',
         '/.htpasswd', '/.htaccess',
     ];
+
+    // Expected content types for real backup files (NOT text/html)
+    const binaryTypes = /octet-stream|sql|zip|gzip|compressed|x-httpd-php/i;
+
     const found: string[] = [];
 
     for (const path of backupPaths) {
         try {
             const probeUrl = new URL(path, targetUrl).href;
-            const res = await fetchWithTimeout(probeUrl, { method: 'HEAD' }, 4000);
-            if (res.status === 200) {
-                const cl = parseInt(res.headers.get('content-length') || '0', 10);
-                if (cl > 100) {
-                    found.push(`${path} (${cl} bytes)`);
-                }
+            const res = await fetchWithTimeout(probeUrl, { method: 'GET' }, 4000);
+            if (res.status !== 200) continue;
+
+            const ct = res.headers.get('content-type') || '';
+            const body = await res.text();
+            const cl = body.length;
+
+            // Skip if it's the SPA catch-all page (same HTML served for all paths)
+            if (catchAllPageLength > 0 && looksLikeCatchAllResponse(ct, cl, catchAllPageLength)) {
+                continue;
+            }
+
+            // Skip if Content-Type is text/html — a real backup.sql won't be HTML
+            if (ct.includes('text/html')) continue;
+
+            // Only flag if content type matches expected backup types OR body looks like SQL/config
+            if (cl > 100 && (binaryTypes.test(ct) || /^(--|CREATE |INSERT |DROP |ALTER |PK\x03)/m.test(body.substring(0, 500)))) {
+                found.push(`${path} (${cl} bytes)`);
             }
         } catch { /* skip */ }
     }
@@ -501,13 +518,17 @@ Deno.serve(async (req: Request) => {
             recommendation: 'Review Vercel security best practices.',
         });
 
+        // Detect SPA catch-all routing to avoid false positives
+        const spaCheck = await detectSpaCatchAll(targetUrl, html.length, fetchWithTimeout);
+        const catchAllLen = spaCheck.isCatchAll ? html.length : 0;
+
         const [smDeduction, dataDeduction, envDeduction, apiDeduction, gitDeduction, backupDeduction, configDeduction] = await Promise.all([
             (checksRun++, checkSourceMaps(targetUrl, html, findings)),
             (checksRun++, checkNextDataLeaks(targetUrl, html, findings)),
             (checksRun++, checkEnvExposed(targetUrl, findings)),
             (checksRun++, checkApiStackTraces(targetUrl, findings)),
             (checksRun++, checkGitExposure(targetUrl, findings)),
-            (checksRun++, checkBackupFiles(targetUrl, findings)),
+            (checksRun++, checkBackupFiles(targetUrl, findings, catchAllLen)),
             (checksRun++, checkPlatformConfig(targetUrl, findings)),
         ]);
 

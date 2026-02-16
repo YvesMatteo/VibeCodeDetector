@@ -64,6 +64,17 @@ export function registerTools(server: McpServer, client: CheckVibeClient) {
       supabase_url: z.string().optional().describe('Supabase project URL for backend scanning'),
     },
     async ({ url, github_repo, supabase_url }) => {
+      // Validate URL format before sending to API
+      const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+      try {
+        const parsed = new URL(targetUrl);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          return { content: [{ type: 'text' as const, text: 'Error: Only http and https URLs are allowed.' }] };
+        }
+      } catch {
+        return { content: [{ type: 'text' as const, text: 'Error: Invalid URL format.' }] };
+      }
+
       const result = await client.runScan(url, github_repo, supabase_url);
 
       const summary = summarizeFindings(result.results);
@@ -105,6 +116,10 @@ export function registerTools(server: McpServer, client: CheckVibeClient) {
       scan_id: z.string().describe('The scan ID to retrieve results for'),
     },
     async ({ scan_id }) => {
+      // Validate scan_id format (UUID)
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(scan_id)) {
+        return { content: [{ type: 'text' as const, text: 'Error: Invalid scan ID format. Expected a UUID.' }] };
+      }
       const scan = await client.getScan(scan_id);
 
       const lines: string[] = [
@@ -149,7 +164,8 @@ export function registerTools(server: McpServer, client: CheckVibeClient) {
       status: z.string().optional().describe('Filter by status (e.g., "completed")'),
     },
     async ({ limit, status }) => {
-      const result = await client.listScans(limit ?? 10, status);
+      const clampedLimit = Math.min(Math.max(limit ?? 10, 1), 100);
+      const result = await client.listScans(clampedLimit, status);
 
       if (result.scans.length === 0) {
         return {
