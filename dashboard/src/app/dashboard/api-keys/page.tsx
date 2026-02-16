@@ -26,6 +26,10 @@ import {
     ChevronDown,
     ChevronUp,
     Info,
+    Activity,
+    ArrowRight,
+    ArrowLeft,
+    CircleDot,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -226,7 +230,7 @@ export default function ApiKeysPage() {
     const inactiveKeys = keys.filter(k => k.revoked_at || (k.expires_at && new Date(k.expires_at) < new Date()));
 
     return (
-        <div className="p-4 md:p-8 max-w-4xl">
+        <div className="p-4 md:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">API Keys</h1>
@@ -242,6 +246,10 @@ export default function ApiKeysPage() {
                     Create Key
                 </Button>
             </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
+            {/* Left column — keys */}
+            <div className="min-w-0">
 
             {/* Getting Started */}
             <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
@@ -411,6 +419,13 @@ export default function ApiKeysPage() {
                     </div>
                 </CardContent>
             </Card>
+            </div>
+
+            {/* Right column — activity feed */}
+            <div className="hidden xl:block">
+                <ActivityFeed />
+            </div>
+            </div>
 
             {/* ── Create Key Dialog ────────────────────────────── */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -710,6 +725,127 @@ function KeyRow({
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+// ── Activity Feed Component ───────────────────────────────────────
+
+interface ActivityLog {
+    endpoint: string;
+    method: string;
+    ip_address: string;
+    status_code: number;
+    created_at: string;
+    key_id: string;
+    key_name: string;
+    key_prefix: string;
+}
+
+function ActivityFeed() {
+    const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/keys/activity?limit=30')
+            .then(res => res.json())
+            .then(data => setLogs(data.logs || []))
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    function timeAgo(date: string) {
+        const diff = Date.now() - new Date(date).getTime();
+        const seconds = Math.floor(diff / 1000);
+        if (seconds < 60) return 'just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+        return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    const methodColors: Record<string, string> = {
+        GET: 'text-blue-400',
+        POST: 'text-emerald-400',
+        DELETE: 'text-red-400',
+        PATCH: 'text-amber-400',
+        PUT: 'text-orange-400',
+    };
+
+    function statusColor(code: number) {
+        if (code >= 200 && code < 300) return 'text-emerald-400';
+        if (code >= 400 && code < 500) return 'text-amber-400';
+        return 'text-red-400';
+    }
+
+    return (
+        <div className="sticky top-8">
+            <Card className="bg-white/[0.02] border-white/[0.06]">
+                <CardHeader className="py-4">
+                    <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-zinc-400" />
+                        <CardTitle className="text-white text-sm font-medium">Activity Log</CardTitle>
+                    </div>
+                    <CardDescription className="text-zinc-500 text-xs">Recent API requests</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                    {loading ? (
+                        <div className="space-y-3">
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="h-10 bg-white/[0.02] rounded animate-pulse" />
+                            ))}
+                        </div>
+                    ) : logs.length === 0 ? (
+                        <div className="text-center py-8">
+                            <CircleDot className="h-6 w-6 text-zinc-700 mx-auto mb-2" />
+                            <p className="text-zinc-500 text-xs">No API activity yet</p>
+                            <p className="text-zinc-600 text-[11px] mt-0.5">Requests will appear here</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1 -mr-1">
+                            {logs.map((log, i) => (
+                                <div
+                                    key={i}
+                                    className="group flex items-start gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                                >
+                                    <div className="shrink-0 mt-1">
+                                        {log.method === 'GET' ? (
+                                            <ArrowLeft className="h-3 w-3 text-blue-400/60" />
+                                        ) : (
+                                            <ArrowRight className="h-3 w-3 text-emerald-400/60" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`text-[11px] font-mono font-medium ${methodColors[log.method] || 'text-zinc-400'}`}>
+                                                {log.method}
+                                            </span>
+                                            <span className="text-[11px] text-zinc-400 font-mono truncate">
+                                                {log.endpoint}
+                                            </span>
+                                            <span className={`text-[10px] font-mono ml-auto shrink-0 ${statusColor(log.status_code)}`}>
+                                                {log.status_code}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[10px] text-zinc-600 truncate">
+                                                {log.key_name}
+                                            </span>
+                                            <span className="text-[10px] text-zinc-700">&middot;</span>
+                                            <span className="text-[10px] text-zinc-600 shrink-0">
+                                                {timeAgo(log.created_at)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

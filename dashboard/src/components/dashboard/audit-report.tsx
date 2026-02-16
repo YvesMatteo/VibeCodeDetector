@@ -120,7 +120,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                         {adjusted.total === 1 ? 'issue' : 'issues'} found
                     </span>
                     <span className="text-[12px] text-zinc-600 mt-0.5">
-                        {visibleScannerCount} scanners{passingCheckCount > 0 ? ` · ${passingCheckCount} checks passed` : ''}
+                        {visibleScannerCount} scanners
                     </span>
                 </div>
 
