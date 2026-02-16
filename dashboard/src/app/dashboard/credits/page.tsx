@@ -360,7 +360,7 @@ export default function CreditsPage() {
                                                         Processing...
                                                     </span>
                                                 ) : (
-                                                    Subscribe
+                                                    'Subscribe'
                                                 )}
                                             </Button>
                                         )}
