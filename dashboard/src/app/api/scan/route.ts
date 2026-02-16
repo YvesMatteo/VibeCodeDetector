@@ -627,6 +627,8 @@ export async function POST(req: NextRequest) {
             );
         } else if (backendType === 'supabase' || userSupabaseUrl) {
             results.supabase_mgmt = { skipped: true, reason: 'Supabase PAT not provided', missingConfig: 'supabasePAT' };
+        } else {
+            results.supabase_mgmt = { skipped: true, reason: 'Backend type is not Supabase', missingConfig: 'backendType' };
         }
 
         // 22. Vercel Hosting Scanner (always runs, auto-detects)

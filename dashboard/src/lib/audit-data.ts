@@ -27,11 +27,27 @@ const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
 };
 
-/** Returns human-readable names of scanners missing from old results */
+/**
+ * Scanners that only run when specific project config is provided.
+ * These should NOT trigger the "outdated scan" banner when missing,
+ * because they're intentionally skipped when their config isn't set.
+ */
+const CONDITIONAL_SCANNER_KEYS = new Set([
+    'firebase_backend',  // requires backendType === 'firebase'
+    'convex_backend',    // requires backendType === 'convex'
+    'supabase_mgmt',     // requires supabasePAT + supabaseUrl
+    'github_secrets',    // requires githubRepo
+    'github_security',   // requires githubRepo
+    'dependencies',      // requires githubRepo
+    'scorecard',         // requires githubRepo
+]);
+
+/** Returns human-readable names of scanners missing from old results.
+ *  Excludes conditional scanners (they're skipped by design, not outdated). */
 export function getMissingScannerNames(results: Record<string, unknown>): string[] {
     const resultKeys = new Set(Object.keys(results));
     return CURRENT_SCANNER_KEYS
-        .filter(key => !resultKeys.has(key))
+        .filter(key => !resultKeys.has(key) && !CONDITIONAL_SCANNER_KEYS.has(key))
         .map(key => SCANNER_DISPLAY_NAMES[key] || key);
 }
 
