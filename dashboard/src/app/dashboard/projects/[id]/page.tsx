@@ -10,9 +10,11 @@ import {
     Download,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
-import { AuditReport, processAuditData } from '@/components/dashboard/audit-report';
+import { processAuditData } from '@/components/dashboard/audit-report';
+import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { computeScanDiff } from '@/lib/scan-diff';
+import type { Dismissal } from '@/lib/dismissals';
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -47,6 +49,21 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
 
     const latestScan = recentScans?.[0] ?? null;
     const previousScan = recentScans?.[1] ?? null;
+
+    // Fetch dismissed findings for this project
+    const { data: dismissalsRaw } = await supabase
+        .from('dismissed_findings' as any)
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', params.id)
+        .order('created_at', { ascending: false });
+
+    const dismissals = (dismissalsRaw || []) as Dismissal[];
+
+    // For scan-scoped dismissals, filter to only the current scan
+    const activeDismissals = dismissals.filter(d =>
+        d.scope === 'project' || d.scan_id === latestScan?.id
+    );
 
     const hostname = (() => {
         try { return new URL(p.url).hostname; } catch { return p.url; }
@@ -138,7 +155,14 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                         </Button>
                     </div>
 
-                    <AuditReport data={auditData!} diff={scanDiff} previousScanDate={previousScanDate} />
+                    <AuditReportWithDismissals
+                        data={auditData!}
+                        diff={scanDiff}
+                        previousScanDate={previousScanDate}
+                        projectId={params.id}
+                        scanId={latestScan.id}
+                        initialDismissals={activeDismissals}
+                    />
                 </>
             )}
         </div>

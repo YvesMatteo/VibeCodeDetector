@@ -40,10 +40,13 @@ import {
     FileText,
     Smartphone,
     CircleSlash,
+    Flag,
+    X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getPlainEnglish } from '@/lib/plain-english';
+import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 
 function getIssueCountColor(count: number) {
     if (count === 0) return 'text-green-400';
@@ -135,8 +138,15 @@ const scannerNames: Record<string, string> = {
     mobile_api: 'Mobile API Rate Limiting',
 };
 
+interface DismissCallback {
+    (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string): void;
+}
+
 interface ScannerAccordionProps {
     results: Record<string, any>;
+    dismissedFingerprints?: Set<string>;
+    onDismiss?: DismissCallback;
+    onRestore?: (dismissalId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -239,14 +249,76 @@ function SeveritySummary({ findings }: { findings: any[] }) {
     );
 }
 
-function FindingCard({ finding, index }: { finding: any; index: number }) {
+function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: DismissalReason, scope: DismissalScope, note?: string) => void; onClose: () => void }) {
+    const [reason, setReason] = useState<DismissalReason>('false_positive');
+    const [scope, setScope] = useState<DismissalScope>('project');
+    const [note, setNote] = useState('');
+
+    return (
+        <div className="mt-3 p-3 bg-slate-800/80 border border-white/10 rounded-lg space-y-3" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-zinc-300">Dismiss finding</span>
+                <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <X className="h-3.5 w-3.5" />
+                </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+                {DISMISSAL_REASONS.map(r => (
+                    <button
+                        key={r.value}
+                        onClick={() => setReason(r.value)}
+                        className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${reason === r.value
+                            ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                            : 'bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20'
+                        }`}
+                    >
+                        {r.label}
+                    </button>
+                ))}
+            </div>
+            <input
+                type="text"
+                placeholder="Add a note (optional)"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                className="w-full text-xs px-3 py-1.5 bg-black/30 border border-white/10 rounded-md text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/40"
+            />
+            <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setScope('project')}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${scope === 'project' ? 'text-indigo-300 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                        All scans
+                    </button>
+                    <button
+                        onClick={() => setScope('scan')}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${scope === 'scan' ? 'text-indigo-300 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                        This scan only
+                    </button>
+                </div>
+                <button
+                    onClick={() => onConfirm(reason, scope, note || undefined)}
+                    className="text-xs font-medium px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-300 rounded-md transition-colors"
+                >
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function FindingCard({ finding, index, scannerKey, onDismiss }: { finding: any; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void }) {
+    const [showDismiss, setShowDismiss] = useState(false);
     const styles = getSeverityStyles(finding.severity);
     const SeverityIcon = styles.icon;
+    const canDismiss = !!onDismiss && !!scannerKey && finding.severity?.toLowerCase() !== 'info';
 
     return (
         <div
             key={index}
-            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:bg-opacity-20`}
+            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:bg-opacity-20 group/finding relative`}
         >
             <div className="flex items-start gap-3">
                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
@@ -256,6 +328,15 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
                         <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
                             {finding.severity}
                         </Badge>
+                        {canDismiss && !showDismiss && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowDismiss(true); }}
+                                className="ml-auto opacity-0 group-hover/finding:opacity-100 text-zinc-500 hover:text-zinc-300 transition-all p-1 rounded hover:bg-white/5"
+                                title="Dismiss this finding"
+                            >
+                                <Flag className="h-3.5 w-3.5" />
+                            </button>
+                        )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                         {finding.description}
@@ -297,6 +378,16 @@ function FindingCard({ finding, index }: { finding: any; index: number }) {
                         <pre className="mt-2 p-3 bg-black/30 rounded-lg text-xs overflow-x-auto border border-white/5">
                             {finding.evidence}
                         </pre>
+                    )}
+                    {showDismiss && scannerKey && onDismiss && (
+                        <DismissDropdown
+                            onClose={() => setShowDismiss(false)}
+                            onConfirm={(reason, scope, note) => {
+                                const fp = buildFingerprint(scannerKey, finding);
+                                onDismiss(fp, scannerKey, finding, reason, scope, note);
+                                setShowDismiss(false);
+                            }}
+                        />
                     )}
                 </div>
             </div>
@@ -378,9 +469,16 @@ function PassingChecksSection({ findings }: { findings: any[] }) {
     );
 }
 
-function FindingsList({ scannerKey, result }: { scannerKey: string; result: any }) {
+function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss }: { scannerKey: string; result: any; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback }) {
     const allFindings: any[] = result.findings || [];
-    const actionable = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+
+    // Filter out dismissed findings
+    const isActive = (f: any) => {
+        if (!dismissedFingerprints || dismissedFingerprints.size === 0) return true;
+        return !dismissedFingerprints.has(buildFingerprint(scannerKey, f));
+    };
+
+    const actionable = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info' && isActive(f));
     const passingChecks = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
 
     // For api_keys scanner, group findings by category
@@ -409,7 +507,7 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
                             </div>
                             <div className="space-y-4">
                                 {catFindings.map((finding: any, i: number) => (
-                                    <FindingCard key={i} finding={finding} index={i} />
+                                    <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
                                 ))}
                             </div>
                         </div>
@@ -418,7 +516,7 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
                 {uncategorized.length > 0 && (
                     <div className="space-y-4">
                         {uncategorized.map((finding: any, i: number) => (
-                            <FindingCard key={i} finding={finding} index={i} />
+                            <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
                         ))}
                     </div>
                 )}
@@ -438,7 +536,7 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
                     return <SummaryWithDetails key={summary.id || i} summary={summary} details={related} />;
                 })}
                 {plain.length > 0 && plain.map((finding: any, i: number) => (
-                    <FindingCard key={`plain-${i}`} finding={finding} index={i} />
+                    <FindingCard key={`plain-${i}`} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
                 ))}
                 <PassingChecksSection findings={passingChecks} />
             </div>
@@ -448,7 +546,7 @@ function FindingsList({ scannerKey, result }: { scannerKey: string; result: any 
     return (
         <div className="space-y-4">
             {actionable.map((finding: any, index: number) => (
-                <FindingCard key={index} finding={finding} index={index} />
+                <FindingCard key={index} finding={finding} index={index} scannerKey={scannerKey} onDismiss={onDismiss} />
             ))}
             <PassingChecksSection findings={passingChecks} />
         </div>
@@ -538,7 +636,16 @@ function sortedEntries(results: Record<string, any>): [string, any][] {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function ScannerAccordion({ results }: ScannerAccordionProps) {
+/** Count active (non-dismissed) issues for a scanner */
+function countActiveIssues(scannerKey: string, findings: any[], dismissed?: Set<string>): number {
+    return findings.filter((f: any) => {
+        if (f.severity?.toLowerCase() === 'info') return false;
+        if (dismissed && dismissed.size > 0 && dismissed.has(buildFingerprint(scannerKey, f))) return false;
+        return true;
+    }).length;
+}
+
+export function ScannerAccordion({ results, dismissedFingerprints, onDismiss }: ScannerAccordionProps) {
     // All scanners start collapsed
     const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
@@ -667,18 +774,18 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                             {scannerNames[key as keyof typeof scannerNames] || key}
                                         </h3>
                                         <span className="text-xs text-zinc-500">
-                                            {(() => { const c = result.findings.filter((f: any) => f.severity?.toLowerCase() !== 'info').length; return `${c} ${c === 1 ? 'issue' : 'issues'}`; })()}
+                                            {(() => { const c = countActiveIssues(key, result.findings || [], dismissedFingerprints); return `${c} ${c === 1 ? 'issue' : 'issues'}`; })()}
                                         </span>
                                     </div>
                                     <div className="mt-1.5">
-                                        <SeveritySummary findings={result.findings} />
+                                        <SeveritySummary findings={(result.findings || []).filter((f: any) => !dismissedFingerprints?.has(buildFingerprint(key, f)))} />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
                                 {(() => {
-                                    const issues = result.findings?.filter((f: any) => f.severity?.toLowerCase() !== 'info').length ?? 0;
+                                    const issues = countActiveIssues(key, result.findings || [], dismissedFingerprints);
                                     return (
                                         <span className={`text-lg font-semibold tabular-nums ${getIssueCountColor(issues)}`}>
                                             {issues}
@@ -712,7 +819,7 @@ export function ScannerAccordion({ results }: ScannerAccordionProps) {
                                         </div>
                                     )}
 
-                                    <FindingsList scannerKey={key} result={result} />
+                                    <FindingsList scannerKey={key} result={result} dismissedFingerprints={dismissedFingerprints} onDismiss={onDismiss} />
                                 </div>
                             </div>
                         </div>
