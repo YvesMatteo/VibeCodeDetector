@@ -845,7 +845,7 @@ export async function POST(req: NextRequest) {
                     const faviconUrl = await fetchFaviconUrl(targetUrl);
                     if (faviconUrl) {
                         const svc = getServiceClient();
-                        await svc.from('projects' as any).update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId);
+                        await (svc.from('projects' as any) as any).update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId);
                     }
                 } catch {
                     // Non-critical, ignore

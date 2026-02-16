@@ -27,3 +27,12 @@ npm-debug.log*
 
 # Supabase temp files
 supabase/.temp/
+
+# Large binary files
+*.zip
+*.dmg
+*.mov
+*.mp4
+*.app/
+hf_*.jpeg
+hf_*.png

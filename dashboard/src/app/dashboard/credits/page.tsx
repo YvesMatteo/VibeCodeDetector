@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Crown, Mail, Minus } from 'lucide-react';
+import { CheckCircle, Crown, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { toast } from 'sonner';
@@ -205,29 +205,26 @@ export default function CreditsPage() {
                     <button
                         ref={monthlyRef}
                         onClick={() => setBilling('monthly')}
-                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
-                            billing === 'monthly'
-                                ? 'text-zinc-900'
-                                : 'text-zinc-500 hover:text-white'
-                        }`}
+                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${billing === 'monthly'
+                            ? 'text-zinc-900'
+                            : 'text-zinc-500 hover:text-white'
+                            }`}
                     >
                         Monthly
                     </button>
                     <button
                         ref={annualRef}
                         onClick={() => setBilling('annual')}
-                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 flex items-center gap-1.5 sm:gap-2 ${
-                            billing === 'annual'
-                                ? 'text-zinc-900'
-                                : 'text-zinc-500 hover:text-white'
-                        }`}
+                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 flex items-center gap-1.5 sm:gap-2 ${billing === 'annual'
+                            ? 'text-zinc-900'
+                            : 'text-zinc-500 hover:text-white'
+                            }`}
                     >
                         Annual
-                        <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${
-                            billing === 'annual'
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-emerald-500/10 text-emerald-400'
-                        }`}>
+                        <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${billing === 'annual'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-emerald-500/10 text-emerald-400'
+                            }`}>
                             -30%
                         </span>
                     </button>
@@ -276,7 +273,7 @@ export default function CreditsPage() {
                                                 <span className="text-lg font-medium text-white">{plan.name}</span>
                                                 {plan.highlighted && (
                                                     <Badge className="bg-white text-zinc-900 border-0 px-2 py-0.5 text-[10px] font-medium">
-                                                        {plan.badge}
+                                                        Popular
                                                     </Badge>
                                                 )}
                                                 {isCurrent && (
@@ -288,8 +285,6 @@ export default function CreditsPage() {
                                             <div>
                                                 {'isFree' in plan && plan.isFree ? (
                                                     <span className="text-2xl font-heading font-bold text-white">Free</span>
-                                                ) : plan.isContact ? (
-                                                    <span className="text-2xl font-heading font-bold text-white">Custom</span>
                                                 ) : billing === 'annual' ? (
                                                     <div className="flex flex-col items-center">
                                                         <div className="flex items-baseline gap-1">
@@ -355,18 +350,6 @@ export default function CreditsPage() {
                                             >
                                                 {isCurrent ? 'Current Plan' : 'Free'}
                                             </Button>
-                                        ) : plan.isContact ? (
-                                            <Button
-                                                size="lg"
-                                                className="w-full bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
-                                                variant="outline"
-                                                asChild
-                                            >
-                                                <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan">
-                                                    <Mail className="mr-2 h-4 w-4" />
-                                                    Contact Us
-                                                </a>
-                                            </Button>
                                         ) : isCurrent ? (
                                             <Button
                                                 size="lg"
@@ -421,7 +404,7 @@ export default function CreditsPage() {
                             {plan.highlighted && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
                                     <Badge className="bg-white text-zinc-900 border-0 px-3 py-1 text-xs font-medium">
-                                        {plan.badge}
+                                        Popular
                                     </Badge>
                                 </div>
                             )}
@@ -438,8 +421,6 @@ export default function CreditsPage() {
                                 <div className="mt-6">
                                     {'isFree' in plan && plan.isFree ? (
                                         <span className="text-3xl font-heading font-bold text-white">Free</span>
-                                    ) : plan.isContact ? (
-                                        <span className="text-3xl font-heading font-bold text-white">Custom</span>
                                     ) : billing === 'annual' ? (
                                         <div className="flex flex-col items-center">
                                             <div className="flex items-baseline gap-1">
@@ -477,18 +458,6 @@ export default function CreditsPage() {
                                         disabled
                                     >
                                         {isCurrent ? 'Current Plan' : 'Free'}
-                                    </Button>
-                                ) : plan.isContact ? (
-                                    <Button
-                                        size="lg"
-                                        className="w-full bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white"
-                                        variant="outline"
-                                        asChild
-                                    >
-                                        <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan">
-                                            <Mail className="mr-2 h-4 w-4" />
-                                            Contact Us
-                                        </a>
                                     </Button>
                                 ) : isCurrent ? (
                                     <Button
