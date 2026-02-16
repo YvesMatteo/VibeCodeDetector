@@ -641,8 +641,38 @@ function isNonApplicableMgmt(key: string, result: any): boolean {
     return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
 }
 
+// Detect scanners that returned "not detected" results — treat as skipped
+const NOT_DETECTED_PATTERNS = /no .* (instance|functionality) detected|not found in HTML/i;
+
+function isNotDetectedResult(key: string, result: any): boolean {
+    if (result.error || result.skipped) return false;
+    const findings = result.findings || [];
+    // Must have 0 actionable issues
+    const actionable = findings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+    if (actionable.length > 0) return false;
+    // Check if any finding title matches "not detected" patterns
+    return findings.some((f: any) => NOT_DETECTED_PATTERNS.test(f.title || ''));
+}
+
+function getNotDetectedHint(key: string, result: any): string {
+    const findings = result.findings || [];
+    const match = findings.find((f: any) => NOT_DETECTED_PATTERNS.test(f.title || ''));
+    if (match?.title) return match.title + '.';
+    const names: Record<string, string> = {
+        supabase_backend: 'No Supabase instance detected on this site.',
+        firebase_backend: 'No Firebase instance detected on this site.',
+        convex_backend: 'No Convex instance detected on this site.',
+    };
+    return names[key] || 'Not applicable for this site.';
+}
+
 function shouldHide(key: string, result: any): boolean {
     return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result);
+}
+
+/** Check if a scanner should be shown in the skipped section at the bottom */
+function isEffectivelySkipped(key: string, result: any): boolean {
+    return result.skipped || isNotDetectedResult(key, result);
 }
 
 
@@ -687,7 +717,12 @@ const SCANNER_ORDER: string[] = [
 
 function sortedEntries(results: Record<string, any>): [string, any][] {
     const entries = Object.entries(results);
-    return entries.sort(([a], [b]) => {
+    return entries.sort(([a, ra], [b, rb]) => {
+        // Push skipped / not-detected scanners to the bottom
+        const aSkip = isEffectivelySkipped(a, ra) ? 1 : 0;
+        const bSkip = isEffectivelySkipped(b, rb) ? 1 : 0;
+        if (aSkip !== bSkip) return aSkip - bSkip;
+
         const ia = SCANNER_ORDER.indexOf(a);
         const ib = SCANNER_ORDER.indexOf(b);
         const oa = ia === -1 ? SCANNER_ORDER.length : ia;
@@ -730,7 +765,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
         const all = new Set<string>();
         Object.keys(results).forEach(key => {
             const result = results[key];
-            if (!result.error && !result.skipped && (result.findings?.length > 0 || result.technologies?.length > 0)) {
+            if (!result.error && !isEffectivelySkipped(key, result) && (result.findings?.length > 0 || result.technologies?.length > 0)) {
                 all.add(key);
             }
         });
@@ -743,7 +778,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
 
     const allExpanded = Object.keys(results).every(key => {
         const result = results[key];
-        if (result.error || result.skipped || (!result.findings?.length && !result.technologies?.length)) return true;
+        if (result.error || isEffectivelySkipped(key, result) || (!result.findings?.length && !result.technologies?.length)) return true;
         return openSections.has(key);
     });
 
@@ -810,6 +845,33 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                             <span className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-full px-2 py-0.5">
                                                 <CircleSlash className="h-3 w-3" />
                                                 Skipped
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-zinc-600 mt-1">{hint}</p>
+                                    </div>
+                                </div>
+                                <span className="text-lg font-semibold tabular-nums text-zinc-700">—</span>
+                            </div>
+                        </Card>
+                    );
+                }
+
+                // "Not detected" scanners — render like skipped
+                if (isNotDetectedResult(key, result)) {
+                    const hint = getNotDetectedHint(key, result);
+                    return (
+                        <Card key={key} className="mb-4 bg-slate-900/30 border-zinc-800/50 animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                            <div className="px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Icon className="h-5 w-5 text-zinc-600 shrink-0" />
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <h3 className="font-semibold text-zinc-500">
+                                                {scannerNames[key as keyof typeof scannerNames] || key}
+                                            </h3>
+                                            <span className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-full px-2 py-0.5">
+                                                <CircleSlash className="h-3 w-3" />
+                                                Not Detected
                                             </span>
                                         </div>
                                         <p className="text-xs text-zinc-600 mt-1">{hint}</p>
