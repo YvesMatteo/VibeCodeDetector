@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport } from '@/components/dashboard/audit-report';
-import { processAuditData } from '@/lib/audit-data';
+import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
 
 export default async function ProjectAuditDetailPage(props: { params: Promise<{ id: string; scanId: string }> }) {
     const params = await props.params;
@@ -47,6 +47,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
     }
 
     const auditData = processAuditData(scan.results as Record<string, any>);
+    const missingScanners = getMissingScannerNames(scan.results as Record<string, unknown>);
 
     return (
         <div className="p-4 md:p-8">
@@ -95,6 +96,17 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
                     </div>
                 </div>
             </div>
+
+            {missingScanners.length > 0 && (
+                <div className="mb-6 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                    <p className="text-sm font-medium text-amber-400">Outdated scan results</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                        {missingScanners.length} new scanner{missingScanners.length > 1 ? 's' : ''} added since this audit:{' '}
+                        <span className="text-zinc-300">{missingScanners.join(', ')}</span>.
+                        Run a new audit from the project page to get full coverage.
+                    </p>
+                </div>
+            )}
 
             <AuditReport data={auditData} />
         </div>

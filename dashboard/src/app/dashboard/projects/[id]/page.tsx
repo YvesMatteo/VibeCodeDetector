@@ -10,7 +10,7 @@ import {
     Download,
 } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
-import { processAuditData } from '@/lib/audit-data';
+import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
 import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { computeScanDiff } from '@/lib/scan-diff';
@@ -73,6 +73,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     })();
 
     const auditData = latestScan ? processAuditData(latestScan.results as Record<string, any>) : null;
+    const missingScanners = latestScan
+        ? getMissingScannerNames(latestScan.results as Record<string, unknown>)
+        : [];
     const scanDiff = (latestScan && previousScan)
         ? computeScanDiff(latestScan.results as Record<string, any>, previousScan.results as Record<string, any>)
         : null;
@@ -157,6 +160,22 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                             </a>
                         </Button>
                     </div>
+
+                    {missingScanners.length > 0 && (
+                        <div className="mb-6 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-amber-400">Outdated scan results</p>
+                                <p className="text-xs text-zinc-400 mt-0.5">
+                                    {missingScanners.length} new scanner{missingScanners.length > 1 ? 's' : ''} added since this audit:{' '}
+                                    <span className="text-zinc-300">{missingScanners.join(', ')}</span>.
+                                    Re-run the audit to get full coverage.
+                                </p>
+                            </div>
+                            <div className="shrink-0">
+                                <RunAuditButton projectId={params.id} size="sm" />
+                            </div>
+                        </div>
+                    )}
 
                     <AuditReportWithDismissals
                         data={auditData!}

@@ -1,5 +1,40 @@
 /** Shared audit data types and processing — importable from both server and client components */
 
+/**
+ * All scanner result keys expected in the current version (v7, 30 scanners).
+ * Even conditional scanners appear in results (as `skipped: true`).
+ * Used to detect stale scan results from older versions.
+ */
+export const CURRENT_SCANNER_KEYS = [
+    'security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack',
+    'github_secrets', 'cors', 'csrf', 'cookies', 'auth',
+    'supabase_backend', 'firebase_backend', 'convex_backend',
+    'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect',
+    'scorecard', 'github_security', 'supabase_mgmt',
+    'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting',
+    'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
+] as const;
+
+const SCANNER_DISPLAY_NAMES: Record<string, string> = {
+    security: 'Security Headers', api_keys: 'API Keys', legal: 'Legal', threat_intelligence: 'Threat Intel',
+    sqli: 'SQL Injection', github_secrets: 'GitHub Secrets', tech_stack: 'Tech Stack', cors: 'CORS',
+    csrf: 'CSRF', cookies: 'Cookies', auth: 'Auth', supabase_backend: 'Supabase', firebase_backend: 'Firebase',
+    scorecard: 'Scorecard', github_security: 'GitHub Security', supabase_mgmt: 'Supabase Mgmt',
+    dependencies: 'Dependencies', ssl_tls: 'SSL/TLS', dns_email: 'DNS', xss: 'XSS',
+    open_redirect: 'Redirects', vercel_hosting: 'Vercel', netlify_hosting: 'Netlify',
+    cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
+    vibe_match: 'AI Detection', ddos_protection: 'DDoS Protection', file_upload: 'File Upload',
+    audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
+};
+
+/** Returns human-readable names of scanners missing from old results */
+export function getMissingScannerNames(results: Record<string, unknown>): string[] {
+    const resultKeys = new Set(Object.keys(results));
+    return CURRENT_SCANNER_KEYS
+        .filter(key => !resultKeys.has(key))
+        .map(key => SCANNER_DISPLAY_NAMES[key] || key);
+}
+
 export interface ScanResultItem {
     score: number;
     findings: { severity: string; title: string; description: string;[key: string]: any }[];
