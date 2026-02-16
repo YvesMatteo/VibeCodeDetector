@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Layers, Flag, RotateCcw, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Layers, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
 import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import type { ScanDiff } from '@/lib/scan-diff';
@@ -50,6 +50,18 @@ const REASON_LABELS: Record<string, string> = {
     will_fix_later: 'Will fix later',
 };
 
+const SCANNER_NAMES: Record<string, string> = {
+    security: 'Security Headers', api_keys: 'API Keys', legal: 'Legal', threat_intelligence: 'Threat Intel',
+    sqli: 'SQL Injection', github_secrets: 'GitHub Secrets', tech_stack: 'Tech Stack', cors: 'CORS',
+    csrf: 'CSRF', cookies: 'Cookies', auth: 'Auth', supabase_backend: 'Supabase', firebase_backend: 'Firebase',
+    scorecard: 'Scorecard', github_security: 'GitHub Security', supabase_mgmt: 'Supabase Mgmt',
+    dependencies: 'Dependencies', ssl_tls: 'SSL/TLS', dns_email: 'DNS', xss: 'XSS',
+    open_redirect: 'Redirects', vercel_hosting: 'Vercel', netlify_hosting: 'Netlify',
+    cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
+    vibe_match: 'AI Detection', ddos_protection: 'DDoS', file_upload: 'File Upload',
+    audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
+};
+
 const SEVERITY_COLORS: Record<string, string> = {
     critical: 'text-red-400 bg-red-500/10 border-red-500/20',
     high: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
@@ -71,6 +83,8 @@ interface AuditReportProps {
 export function AuditReport({ data, diff, previousScanDate, dismissedFingerprints, dismissals, onDismiss, onRestore, userPlan }: AuditReportProps) {
     const { totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
     const [showDismissed, setShowDismissed] = useState(false);
+    const [showResolved, setShowResolved] = useState(false);
+    const [showNew, setShowNew] = useState(false);
 
     const dismissed = dismissedFingerprints ?? new Set<string>();
     const dismissalCount = dismissed.size;
@@ -143,17 +157,25 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                         {diff && (hasResolvedIssues || hasNewIssues) && (
                             <>
                                 {hasResolvedIssues && (
-                                    <div className="flex items-center gap-1.5 text-xs">
+                                    <button
+                                        onClick={() => setShowResolved(v => !v)}
+                                        className="inline-flex items-center gap-1.5 text-xs hover:opacity-80 transition-opacity"
+                                    >
                                         <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-400" />
                                         <span className="font-medium text-emerald-400">{diff.resolvedIssues.length} resolved</span>
                                         <span className="text-zinc-600">since last scan</span>
-                                    </div>
+                                        <ChevronRight className={`h-3 w-3 text-zinc-600 transition-transform duration-200 ${showResolved ? 'rotate-90' : ''}`} />
+                                    </button>
                                 )}
                                 {hasNewIssues && (
-                                    <div className="flex items-center gap-1.5 text-xs">
+                                    <button
+                                        onClick={() => setShowNew(v => !v)}
+                                        className="inline-flex items-center gap-1.5 text-xs hover:opacity-80 transition-opacity"
+                                    >
                                         <ArrowUpCircle className="h-3.5 w-3.5 text-red-400" />
                                         <span className="font-medium text-red-400">{diff.newIssues.length} new</span>
-                                    </div>
+                                        <ChevronRight className={`h-3 w-3 text-zinc-600 transition-transform duration-200 ${showNew ? 'rotate-90' : ''}`} />
+                                    </button>
                                 )}
                             </>
                         )}
@@ -169,6 +191,56 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                     </div>
                 </div>
             </div>
+
+            {/* Resolved Issues Detail */}
+            {showResolved && diff && diff.resolvedIssues.length > 0 && (
+                <div className="mb-6 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.03] overflow-hidden">
+                    <button
+                        onClick={() => setShowResolved(false)}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-emerald-500/[0.03] transition-colors"
+                    >
+                        <ArrowDownCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <span className="text-sm font-medium text-emerald-400">{diff.resolvedIssues.length} resolved since last scan</span>
+                        <ChevronDown className="h-3.5 w-3.5 text-emerald-400/50 ml-auto" />
+                    </button>
+                    <div className="px-4 pb-3 space-y-1.5">
+                        {diff.resolvedIssues.map((item, i) => (
+                            <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02]">
+                                <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[item.finding.severity?.toLowerCase()] || 'text-zinc-400 bg-zinc-500/10'}`}>
+                                    {item.finding.severity}
+                                </Badge>
+                                <span className="text-[13px] text-zinc-300 truncate flex-1">{item.finding.title || item.finding.id}</span>
+                                <span className="text-[11px] text-zinc-600 shrink-0">{SCANNER_NAMES[item.scannerKey] || item.scannerKey}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* New Issues Detail */}
+            {showNew && diff && diff.newIssues.length > 0 && (
+                <div className="mb-6 rounded-xl border border-red-500/10 bg-red-500/[0.03] overflow-hidden">
+                    <button
+                        onClick={() => setShowNew(false)}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-red-500/[0.03] transition-colors"
+                    >
+                        <ArrowUpCircle className="h-4 w-4 text-red-400 shrink-0" />
+                        <span className="text-sm font-medium text-red-400">{diff.newIssues.length} new issues</span>
+                        <ChevronDown className="h-3.5 w-3.5 text-red-400/50 ml-auto" />
+                    </button>
+                    <div className="px-4 pb-3 space-y-1.5">
+                        {diff.newIssues.map((item, i) => (
+                            <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02]">
+                                <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[item.finding.severity?.toLowerCase()] || 'text-zinc-400 bg-zinc-500/10'}`}>
+                                    {item.finding.severity}
+                                </Badge>
+                                <span className="text-[13px] text-zinc-300 truncate flex-1">{item.finding.title || item.finding.id}</span>
+                                <span className="text-[11px] text-zinc-600 shrink-0">{SCANNER_NAMES[item.scannerKey] || item.scannerKey}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Dismissed Findings Section */}
             {hasDismissals && showDismissed && dismissals && (
