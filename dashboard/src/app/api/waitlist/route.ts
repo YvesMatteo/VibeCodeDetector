@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
+import crypto, { createHmac } from 'crypto';
 import { getServiceClient } from '@/lib/api-keys';
 
 // ---------------------------------------------------------------------------
@@ -93,9 +93,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid access code' }, { status: 401 });
       }
 
-      // Set httpOnly bypass cookie (30 days)
+      // Set signed httpOnly bypass cookie (30 days)
+      const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      const signature = createHmac('sha256', secret).update('cv-access=1').digest('hex');
       const res = NextResponse.json({ ok: true });
-      res.cookies.set('cv-access', '1', {
+      res.cookies.set('cv-access', `1:${signature}`, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
