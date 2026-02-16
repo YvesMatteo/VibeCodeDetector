@@ -1,28 +1,35 @@
-# Implementation Plan — Changelog & Docs Pages
+# Implementation Plan — Security Hardening
 
 ## Status
 - [x] Planning
-- [x] In Progress
-- [x] Verification
-- [x] Complete
+- [ ] In Progress
+- [ ] Verification
+- [ ] Complete
 
 ## Task List
 
-### Phase 1: Create Pages
-- [x] Create `/dashboard/changelog/page.tsx` — version history with timeline UI (7 releases)
-- [x] Create `/dashboard/docs/page.tsx` — collapsible API reference (9 sections)
+### Phase 1: Critical Fixes
+- [ ] Fix PATCH /api/keys/[id] — add privilege escalation checks from POST route
+- [ ] Fix fetchFaviconUrl — add SSRF validation before fetching favicon href URLs
 
-### Phase 2: Update Navigation
-- [x] Update sidebar `resourceLinks` in `layout.tsx` to internal routes
-- [x] Render internal links with `<Link>` instead of `<a>` with active state highlighting
-- [x] Remove external link icons for internal routes
+### Phase 2: CSRF & Cookie Security
+- [ ] Create shared CSRF utility at dashboard/src/lib/csrf.ts
+- [ ] Add CSRF checks to POST/PATCH/DELETE in keys routes
+- [ ] Add CSRF checks to POST/PATCH/DELETE in projects routes
+- [ ] Sign cv-access cookie with HMAC in supabase/middleware.ts
 
-### Phase 3: Verification
-- [x] Build passes (`next build`) — both pages registered as static routes
+### Phase 3: Consolidation
+- [ ] Create shared URL validation utility at dashboard/src/lib/url-validation.ts
+- [ ] Refactor scan/route.ts to use shared SSRF utility
+- [ ] Refactor projects/route.ts to use shared SSRF utility
+- [ ] Refactor projects/[id]/route.ts to use shared SSRF utility
 
-## Files Created (2)
-- `dashboard/src/app/dashboard/changelog/page.tsx`
-- `dashboard/src/app/dashboard/docs/page.tsx`
+### Phase 4: Verification
+- [ ] Build passes with all changes
+- [ ] Test API key PATCH privilege escalation is blocked
+- [ ] Test favicon SSRF protection
+- [ ] Test CSRF protection on all routes
 
-## Files Modified (1)
-- `dashboard/src/app/dashboard/layout.tsx` — sidebar links updated
+## Notes & Findings
+- 2026-02-16: Security audit completed. 4 critical, 7 high severity issues found.
+- 2026-02-16: Starting Phase 1 — critical fixes.

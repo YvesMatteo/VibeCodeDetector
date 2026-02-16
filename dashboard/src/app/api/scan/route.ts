@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
+import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
+import { checkCsrf } from '@/lib/csrf';
 
 const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
@@ -74,21 +76,8 @@ export async function POST(req: NextRequest) {
         // ==========================================
         // CSRF / ORIGIN CHECK (skip for API key auth)
         // ==========================================
-        const isApiKeyAuth = req.headers.get('authorization')?.startsWith('Bearer cvd_live_');
-
-        if (!isApiKeyAuth) {
-            const origin = req.headers.get('origin');
-            const host = req.headers.get('host') || '';
-            if (!origin) {
-                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-            }
-            const originHost = new URL(origin).host;
-            const isSameHost = originHost === host;
-            const isLocalhost = originHost.startsWith('localhost');
-            if (!isSameHost && !isLocalhost) {
-                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-            }
-        }
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
 
         // ==========================================
         // UNIFIED AUTH (session OR API key) + RATE LIMITING
@@ -150,35 +139,14 @@ export async function POST(req: NextRequest) {
         const userSupabaseUrl = backendType === 'supabase' ? backendUrl : body.supabaseUrl;
 
         // ==========================================
-        // URL VALIDATION
+        // URL VALIDATION + SSRF PROTECTION
         // ==========================================
-        if (!url || typeof url !== 'string') {
-            return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+        const urlValidation = validateTargetUrl(url);
+        if (!urlValidation.valid) {
+            return NextResponse.json({ error: urlValidation.error }, { status: 400 });
         }
-        if (url.length > 2048) {
-            return NextResponse.json({ error: 'URL exceeds maximum length' }, { status: 400 });
-        }
-        const targetUrl = url.startsWith('http') ? url : `https://${url}`;
-        let parsedUrl: URL;
-        try {
-            parsedUrl = new URL(targetUrl);
-        } catch {
-            return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
-        }
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return NextResponse.json({ error: 'Only http/https URLs are allowed' }, { status: 400 });
-        }
-        // SSRF protection
-        const privatePatterns = [
-            /^localhost$/i, /^127\.\d+\.\d+\.\d+$/, /^10\.\d+\.\d+\.\d+$/,
-            /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, /^192\.168\.\d+\.\d+$/,
-            /^169\.254\.\d+\.\d+$/, /^0\.\d+\.\d+\.\d+$/,
-            /^\[?::1\]?$/, /^\[?fe80:/i, /^\[?fc00:/i, /^\[?fd[0-9a-f]{2}:/i,
-            /^\d+$/, /^0x/i,
-        ];
-        if (privatePatterns.some(p => p.test(parsedUrl.hostname))) {
-            return NextResponse.json({ error: 'Internal URLs are not allowed' }, { status: 400 });
-        }
+        const targetUrl = urlValidation.parsed.href;
+        const parsedUrl = urlValidation.parsed;
 
         // ==========================================
         // API KEY DOMAIN RESTRICTION CHECK
@@ -904,6 +872,7 @@ export async function POST(req: NextRequest) {
 /**
  * Fetch the favicon URL from a website by parsing its HTML for <link rel="icon"> tags.
  * Returns an absolute URL or null if not found.
+ * Includes SSRF protection on the resolved favicon href to prevent internal network probing.
  */
 async function fetchFaviconUrl(siteUrl: string): Promise<string | null> {
     try {
@@ -922,13 +891,27 @@ async function fetchFaviconUrl(siteUrl: string): Promise<string | null> {
         if (!match?.[1]) return null;
 
         const href = match[1];
-        // Resolve relative URLs
-        if (href.startsWith('http')) return href;
-        if (href.startsWith('//')) return `https:${href}`;
+        // Resolve relative URLs to absolute
+        let absoluteUrl: string;
+        if (href.startsWith('http')) {
+            absoluteUrl = href;
+        } else if (href.startsWith('//')) {
+            absoluteUrl = `https:${href}`;
+        } else {
+            const base = new URL(siteUrl);
+            absoluteUrl = href.startsWith('/') ? `${base.origin}${href}` : `${base.origin}/${href}`;
+        }
 
-        const base = new URL(siteUrl);
-        if (href.startsWith('/')) return `${base.origin}${href}`;
-        return `${base.origin}/${href}`;
+        // SSRF check: block favicon URLs pointing to internal/private networks
+        try {
+            const faviconParsed = new URL(absoluteUrl);
+            if (!['http:', 'https:'].includes(faviconParsed.protocol)) return null;
+            if (isPrivateHostname(faviconParsed.hostname)) return null;
+        } catch {
+            return null;
+        }
+
+        return absoluteUrl;
     } catch {
         return null;
     }

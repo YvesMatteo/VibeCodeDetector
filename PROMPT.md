@@ -1,20 +1,24 @@
-# Goal
+# Security Hardening Sprint
 
-Create internal Changelog and Docs pages for the CheckVibe dashboard, replacing external links with in-app routes.
-
-## Context
-
-- **Stack**: Next.js 16 + Supabase + Tailwind + shadcn/ui + Lucide icons
-- **Dashboard dir**: `dashboard/` with sidebar navigation in `layout.tsx`
-- **Sidebar links** for Docs and Changelog previously pointed to external URLs
+## Goal
+Fix all critical and high-severity security vulnerabilities identified in the CheckVibe.dev audit.
 
 ## Requirements
-- [x] Changelog page at `/dashboard/changelog` with version history timeline
-- [x] Docs page at `/dashboard/docs` with API reference, scanners, rate limits, MCP integration
-- [x] Update sidebar links from external URLs to internal routes with active state highlighting
-- [x] Match existing dark theme design language
+- [ ] Fix PATCH /api/keys/[id] privilege escalation (scopes/domains/IPs can be escalated)
+- [ ] Add SSRF protection to fetchFaviconUrl in scan route
+- [ ] Add CSRF protection to all mutating API routes (keys, projects)
+- [ ] Sign the cv-access waitlist cookie with HMAC
+- [ ] Consolidate SSRF validation to shared utility (remove duplication)
+
+## Constraints
+- No new external libraries
+- Must maintain backward compatibility with existing API key format
+- Session auth behavior unchanged
+- All changes in dashboard/ directory
 
 ## Success Criteria
-- [x] Both pages render without errors
-- [x] Sidebar links navigate to internal pages with active highlighting
-- [x] Build passes successfully
+- [ ] API keys cannot escalate their own privileges via PATCH
+- [ ] Favicon fetch blocks private/internal URLs
+- [ ] All mutating API endpoints validate CSRF for session auth
+- [ ] Waitlist cookie cannot be forged
+- [ ] SSRF patterns defined in exactly one place

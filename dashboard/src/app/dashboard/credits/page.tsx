@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,29 @@ export default function CreditsPage() {
     const [scansLimit, setScansLimit] = useState(0);
     const [domainsUsed, setDomainsUsed] = useState(0);
     const [domainsLimit, setDomainsLimit] = useState(0);
+
+    // Sliding pill refs
+    const toggleRef = useRef<HTMLDivElement>(null);
+    const monthlyRef = useRef<HTMLButtonElement>(null);
+    const annualRef = useRef<HTMLButtonElement>(null);
+    const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
+
+    const updatePill = useCallback(() => {
+        const activeRef = billing === 'monthly' ? monthlyRef : annualRef;
+        const container = toggleRef.current;
+        if (activeRef.current && container) {
+            const containerRect = container.getBoundingClientRect();
+            const activeRect = activeRef.current.getBoundingClientRect();
+            setPillStyle({
+                left: activeRect.left - containerRect.left,
+                width: activeRect.width,
+            });
+        }
+    }, [billing]);
+
+    useEffect(() => {
+        updatePill();
+    }, [updatePill]);
 
     useEffect(() => {
         setCurrency(detectCurrency());
@@ -170,27 +193,37 @@ export default function CreditsPage() {
                 </p>
 
                 {/* Billing Toggle */}
-                <div className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.02] p-1">
+                <div
+                    ref={toggleRef}
+                    className="relative inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.02] p-1"
+                >
+                    {/* Sliding pill */}
+                    <div
+                        className="absolute top-1 rounded-full bg-white transition-all duration-300 ease-out"
+                        style={{ left: pillStyle.left, width: pillStyle.width, height: 'calc(100% - 8px)' }}
+                    />
                     <button
+                        ref={monthlyRef}
                         onClick={() => setBilling('monthly')}
-                        className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
                             billing === 'monthly'
-                                ? 'bg-white text-zinc-900'
+                                ? 'text-zinc-900'
                                 : 'text-zinc-500 hover:text-white'
                         }`}
                     >
                         Monthly
                     </button>
                     <button
+                        ref={annualRef}
                         onClick={() => setBilling('annual')}
-                        className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 ${
+                        className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 flex items-center gap-1.5 sm:gap-2 ${
                             billing === 'annual'
-                                ? 'bg-white text-zinc-900'
+                                ? 'text-zinc-900'
                                 : 'text-zinc-500 hover:text-white'
                         }`}
                     >
                         Annual
-                        <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${
+                        <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${
                             billing === 'annual'
                                 ? 'bg-emerald-100 text-emerald-700'
                                 : 'bg-emerald-500/10 text-emerald-400'

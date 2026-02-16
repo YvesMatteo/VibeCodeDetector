@@ -133,6 +133,62 @@ export async function PATCH(
       updates.allowed_ips = body.allowed_ips;
     }
 
+    // ── Privilege escalation prevention ──────────────────────────────────
+    // When updating via API key auth, the updated fields cannot exceed
+    // the parent key's permissions.
+    if (context.keyId) {
+      // Scopes: updated scopes must be a subset of parent key's scopes
+      if (updates.scopes) {
+        const parentScopes = context.scopes ?? [];
+        const escalatedScopes = (updates.scopes as string[]).filter(s => !parentScopes.includes(s as any));
+        if (escalatedScopes.length > 0) {
+          return NextResponse.json(
+            { error: `Cannot grant scopes not present on parent key: ${escalatedScopes.join(', ')}` },
+            { status: 403 }
+          );
+        }
+      }
+
+      // Domains: if parent key has domain restrictions, updated domains must be a subset
+      if (context.keyAllowedDomains && context.keyAllowedDomains.length > 0) {
+        if (updates.allowed_domains !== undefined) {
+          if (!updates.allowed_domains || !Array.isArray(updates.allowed_domains) || updates.allowed_domains.length === 0) {
+            return NextResponse.json(
+              { error: 'Parent key has domain restrictions. Updated key must specify allowed_domains as a subset.' },
+              { status: 403 }
+            );
+          }
+          const parentDomainsLower = context.keyAllowedDomains.map((d: string) => d.toLowerCase());
+          const invalidDomains = (updates.allowed_domains as string[]).filter((d: string) => !parentDomainsLower.includes(d.toLowerCase()));
+          if (invalidDomains.length > 0) {
+            return NextResponse.json(
+              { error: `Updated domains must be a subset of parent key's domains. Invalid: ${invalidDomains.join(', ')}` },
+              { status: 403 }
+            );
+          }
+        }
+      }
+
+      // IPs: if parent key has IP restrictions, updated IPs must be a subset
+      if (context.keyAllowedIps && context.keyAllowedIps.length > 0) {
+        if (updates.allowed_ips !== undefined) {
+          if (!updates.allowed_ips || !Array.isArray(updates.allowed_ips) || updates.allowed_ips.length === 0) {
+            return NextResponse.json(
+              { error: 'Parent key has IP restrictions. Updated key must specify allowed_ips as a subset.' },
+              { status: 403 }
+            );
+          }
+          const invalidIps = (updates.allowed_ips as string[]).filter((ip: string) => !context.keyAllowedIps!.includes(ip));
+          if (invalidIps.length > 0) {
+            return NextResponse.json(
+              { error: `Updated IPs must be a subset of parent key's IPs. Invalid: ${invalidIps.join(', ')}` },
+              { status: 403 }
+            );
+          }
+        }
+      }
+    }
+
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
