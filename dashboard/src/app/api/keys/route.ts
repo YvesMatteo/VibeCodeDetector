@@ -63,6 +63,56 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── Privilege escalation prevention ──────────────────────────────────
+    // When creating a key via API key auth (not session), the new key
+    // cannot have broader permissions than the parent key.
+    if (context.keyId) {
+      // Scopes: new key must be a subset of parent key's scopes
+      const parentScopes = context.scopes ?? [];
+      const escalatedScopes = (scopes as string[]).filter(s => !parentScopes.includes(s as Scope));
+      if (escalatedScopes.length > 0) {
+        return NextResponse.json(
+          { error: `Cannot grant scopes not present on parent key: ${escalatedScopes.join(', ')}` },
+          { status: 403 }
+        );
+      }
+
+      // Domains: if parent key has domain restrictions, child must too (subset)
+      if (context.keyAllowedDomains && context.keyAllowedDomains.length > 0) {
+        if (!allowed_domains || !Array.isArray(allowed_domains) || allowed_domains.length === 0) {
+          return NextResponse.json(
+            { error: 'Parent key has domain restrictions. New key must specify allowed_domains as a subset.' },
+            { status: 403 }
+          );
+        }
+        const parentDomainsLower = context.keyAllowedDomains.map((d: string) => d.toLowerCase());
+        const invalidDomains = allowed_domains.filter((d: string) => !parentDomainsLower.includes(d.toLowerCase()));
+        if (invalidDomains.length > 0) {
+          return NextResponse.json(
+            { error: `New key domains must be a subset of parent key's domains. Invalid: ${invalidDomains.join(', ')}` },
+            { status: 403 }
+          );
+        }
+      }
+
+      // IPs: if parent key has IP restrictions, child must too (subset)
+      if (context.keyAllowedIps && context.keyAllowedIps.length > 0) {
+        if (!allowed_ips || !Array.isArray(allowed_ips) || allowed_ips.length === 0) {
+          return NextResponse.json(
+            { error: 'Parent key has IP restrictions. New key must specify allowed_ips as a subset.' },
+            { status: 403 }
+          );
+        }
+        const invalidIps = allowed_ips.filter((ip: string) => !context.keyAllowedIps!.includes(ip));
+        if (invalidIps.length > 0) {
+          return NextResponse.json(
+            { error: `New key IPs must be a subset of parent key's IPs. Invalid: ${invalidIps.join(', ')}` },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     // Validate expiry (1–365 days)
     const expiryDays = Math.floor(Number(expires_in_days));
     if (!Number.isFinite(expiryDays) || expiryDays < 1 || expiryDays > 365) {
