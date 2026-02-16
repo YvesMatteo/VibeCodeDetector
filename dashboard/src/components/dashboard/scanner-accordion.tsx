@@ -349,10 +349,11 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                         {!isFreePlan && canDismiss && !showDismiss && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowDismiss(true); }}
-                                className="ml-auto opacity-0 group-hover/finding:opacity-100 text-zinc-500 hover:text-zinc-300 transition-all p-1 rounded hover:bg-white/5"
+                                className="ml-auto opacity-0 group-hover/finding:opacity-100 inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-all px-2 py-1 rounded hover:bg-white/5"
                                 title="Dismiss this finding"
                             >
                                 <Flag className="h-3.5 w-3.5" />
+                                Not an issue
                             </button>
                         )}
                     </div>
