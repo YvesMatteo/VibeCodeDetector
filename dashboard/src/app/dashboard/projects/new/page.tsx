@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CustomSelect } from '@/components/ui/custom-select';
 import {
     ArrowLeft,
     Loader2,
@@ -17,6 +18,13 @@ import {
     ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const BACKEND_OPTIONS = [
+    { value: 'none', label: 'None (auto-detect)' },
+    { value: 'supabase', label: 'Supabase' },
+    { value: 'firebase', label: 'Firebase' },
+    { value: 'convex', label: 'Convex' },
+];
 
 export default function NewProjectPage() {
     const [name, setName] = useState('');
@@ -260,16 +268,11 @@ export default function NewProjectPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    <select
+                                    <CustomSelect
                                         value={backendType}
-                                        onChange={(e) => { setBackendType(e.target.value as any); setBackendUrl(''); setSupabasePAT(''); }}
-                                        className="w-full h-10 rounded-md border bg-white/[0.03] border-white/[0.08] text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                    >
-                                        <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
-                                        <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
-                                        <option value="firebase" className="bg-zinc-900 text-white">Firebase</option>
-                                        <option value="convex" className="bg-zinc-900 text-white">Convex</option>
-                                    </select>
+                                        onChange={(v) => { setBackendType(v as any); setBackendUrl(''); setSupabasePAT(''); }}
+                                        options={BACKEND_OPTIONS}
+                                    />
                                     {backendType === 'supabase' && (
                                         <>
                                             <div className="space-y-2">

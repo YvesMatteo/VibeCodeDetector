@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CustomSelect } from '@/components/ui/custom-select';
 import {
     ArrowLeft,
     Loader2,
@@ -40,6 +41,13 @@ import {
     TrainFront,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const BACKEND_OPTIONS = [
+    { value: 'none', label: 'None (auto-detect)' },
+    { value: 'supabase', label: 'Supabase' },
+    { value: 'firebase', label: 'Firebase' },
+    { value: 'convex', label: 'Convex' },
+];
 
 export default function NewScanPage() {
     const searchParams = useSearchParams();
@@ -259,17 +267,12 @@ export default function NewScanPage() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="backendType" className="text-zinc-300">Provider</Label>
-                                <select
+                                <CustomSelect
                                     id="backendType"
                                     value={backendType}
-                                    onChange={(e) => { setBackendType(e.target.value as 'none' | 'supabase' | 'firebase' | 'convex'); setBackendUrl(''); setSupabasePAT(''); }}
-                                    className="w-full h-10 rounded-md border bg-white/[0.03] border-white/[0.08] text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                >
-                                    <option value="none" className="bg-zinc-900 text-white">None (auto-detect)</option>
-                                    <option value="supabase" className="bg-zinc-900 text-white">Supabase</option>
-                                    <option value="firebase" className="bg-zinc-900 text-white">Firebase</option>
-                                    <option value="convex" className="bg-zinc-900 text-white">Convex</option>
-                                </select>
+                                    onChange={(v) => { setBackendType(v as 'none' | 'supabase' | 'firebase' | 'convex'); setBackendUrl(''); setSupabasePAT(''); }}
+                                    options={BACKEND_OPTIONS}
+                                />
                             </div>
                             {backendType === 'supabase' && (
                                 <>

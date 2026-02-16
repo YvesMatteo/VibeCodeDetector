@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CustomSelect } from '@/components/ui/custom-select';
 import {
     Dialog,
     DialogContent,
@@ -22,6 +23,13 @@ import {
     Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const BACKEND_OPTIONS = [
+    { value: 'none', label: 'None (auto-detect)' },
+    { value: 'supabase', label: 'Supabase' },
+    { value: 'firebase', label: 'Firebase' },
+    { value: 'convex', label: 'Convex' },
+];
 
 export default function ProjectSettingsPage() {
     const params = useParams();
@@ -165,16 +173,11 @@ export default function ProjectSettingsPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-zinc-300">Backend Provider</Label>
-                                <select
+                                <CustomSelect
                                     value={backendType}
-                                    onChange={(e) => { setBackendType(e.target.value as any); setBackendUrl(''); setSupabasePAT(''); }}
-                                    className="w-full h-10 rounded-md border bg-white/[0.03] border-white/[0.08] text-white px-3 text-sm"
-                                >
-                                    <option value="none" className="bg-zinc-900">None (auto-detect)</option>
-                                    <option value="supabase" className="bg-zinc-900">Supabase</option>
-                                    <option value="firebase" className="bg-zinc-900">Firebase</option>
-                                    <option value="convex" className="bg-zinc-900">Convex</option>
-                                </select>
+                                    onChange={(v) => { setBackendType(v as any); setBackendUrl(''); setSupabasePAT(''); }}
+                                    options={BACKEND_OPTIONS}
+                                />
                             </div>
                             {backendType !== 'none' && (
                                 <div className="space-y-2">
