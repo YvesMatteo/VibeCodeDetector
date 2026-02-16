@@ -512,7 +512,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
+      <section id="pricing" className="relative pt-16 sm:pt-24 pb-0 px-4 sm:px-6 lg:px-8 bg-[#0E0E10]">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay" aria-hidden="true"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
@@ -666,7 +666,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative pt-4 sm:pt-8 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] overflow-hidden">
+      <section className="relative pt-12 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] overflow-hidden">
         {/* Gradient orbs */}
         <div className="orb orb-blue w-64 h-64 top-0 left-1/4" aria-hidden="true" />
         <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" aria-hidden="true" />
