@@ -96,8 +96,14 @@ export default function ProjectSettingsPage() {
         try {
             const res = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
             if (res.ok) {
+                toast.success('Project deleted');
                 router.push('/dashboard');
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete project');
             }
+        } catch {
+            toast.error('Failed to delete project');
         } finally {
             setDeleting(false);
         }
@@ -216,7 +222,7 @@ export default function ProjectSettingsPage() {
                 <CardHeader>
                     <CardTitle className="text-red-400">Danger Zone</CardTitle>
                     <CardDescription className="text-zinc-400">
-                        Deleting a project is permanent. Audit history will be preserved but unlinked.
+                        Deleting a project permanently removes it along with all its scan history and dismissed findings.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -236,7 +242,7 @@ export default function ProjectSettingsPage() {
                         <DialogTitle>Delete Project</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <span className="font-medium text-white">{name}</span>?
-                            Existing audit reports will be preserved but unlinked from this project.
+                            This will permanently delete the project, all scan history, and dismissed findings. This cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

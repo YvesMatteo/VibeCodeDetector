@@ -59,8 +59,16 @@ function SidebarContent({
 }) {
     return (
         <div className="flex h-full flex-col">
+            {/* Logo */}
+            <div className="px-4 pt-4 pb-2">
+                <Link href="/" className="flex items-center gap-2.5 group">
+                    <Image src="/logo.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain rounded" />
+                    <span className="font-heading text-sm font-semibold tracking-tight text-zinc-300 group-hover:text-white transition-colors">CheckVibe</span>
+                </Link>
+            </div>
+
             {/* User Profile */}
-            <div className="px-4 pt-5 pb-4">
+            <div className="px-4 pt-3 pb-4">
                 <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 ring-1 ring-white/[0.08]">
                         <AvatarFallback className="bg-white/[0.06] text-zinc-300 text-xs font-medium">

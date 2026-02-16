@@ -306,9 +306,10 @@ function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: Dismissal
                 </div>
                 <button
                     onClick={() => onConfirm(reason, scope, note || undefined)}
-                    className="text-xs font-medium px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-300 rounded-md transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 text-zinc-400 hover:text-white rounded-md transition-colors hover:bg-white/5"
                 >
-                    Dismiss
+                    <Flag className="h-3 w-3" />
+                    Not an issue
                 </button>
             </div>
         </div>

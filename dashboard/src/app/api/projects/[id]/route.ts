@@ -111,6 +111,33 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Verify ownership first
+        const { data: project } = await supabase
+            .from('projects' as any)
+            .select('id')
+            .eq('id', params.id)
+            .eq('user_id', user.id)
+            .single();
+
+        if (!project) {
+            return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+        }
+
+        // Hard delete all scans linked to this project (owned by user)
+        const { error: scansError } = await supabase
+            .from('scans')
+            .delete()
+            .eq('project_id', params.id)
+            .eq('user_id', user.id);
+
+        if (scansError) {
+            console.error('Delete project scans error:', scansError);
+            return NextResponse.json({ error: 'Failed to delete project scans' }, { status: 500 });
+        }
+
+        // dismissed_findings cascade-deletes via FK, no need to delete manually
+
+        // Delete the project itself
         const { error } = await supabase
             .from('projects' as any)
             .delete()

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/sheet';
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
+import { createClient } from '@/lib/supabase/client';
 
 const features = [
   {
@@ -118,9 +119,13 @@ export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const [currency, setCurrency] = useState<CurrencyCode>('USD');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setCurrency(detectCurrency());
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) setIsLoggedIn(true);
+    });
   }, []);
 
   // Parallax Logic
@@ -179,10 +184,10 @@ export default function HomePage() {
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-            <Link href="/login" className="hover:text-white transition-colors">Login</Link>
+            {!isLoggedIn && <Link href="/login" className="hover:text-white transition-colors">Login</Link>}
           </div>
           <Button asChild size="sm" className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
-            <Link href="/signup">Get Started</Link>
+            <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'My Projects' : 'Get Started'}</Link>
           </Button>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -200,10 +205,10 @@ export default function HomePage() {
           <div className="flex flex-col gap-1 p-6 pt-12">
             <a href="#features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
             <a href="#pricing" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Pricing</a>
-            <Link href="/login" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Login</Link>
+            {!isLoggedIn && <Link href="/login" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Login</Link>}
             <div className="mt-4">
               <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 rounded-full font-medium">
-                <Link href="/signup">Get Started</Link>
+                <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'My Projects' : 'Get Started'}</Link>
               </Button>
             </div>
           </div>
@@ -292,8 +297,8 @@ export default function HomePage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
           >
             <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
-              <Link href="/signup">
-                Start Scanning
+              <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
+                {isLoggedIn ? 'My Projects' : 'Start Scanning'}
               </Link>
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
@@ -689,8 +694,8 @@ export default function HomePage() {
               26 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
-              <Link href="/signup">
-                Start Scanning
+              <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
+                {isLoggedIn ? 'My Projects' : 'Start Scanning'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
