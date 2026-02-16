@@ -79,8 +79,8 @@ export default function ApiKeysPage() {
     const [deleteTarget, setDeleteTarget] = useState<ApiKey | null>(null);
 
     // Docs collapsed state
-    const [docsOpen, setDocsOpen] = useState(true);
-    const [mcpOpen, setMcpOpen] = useState(true);
+    const [docsOpen, setDocsOpen] = useState(false);
+    const [mcpOpen, setMcpOpen] = useState(false);
 
     const fetchKeys = useCallback(async () => {
         try {
