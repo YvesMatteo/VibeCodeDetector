@@ -5,20 +5,11 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Shield,
-  Key,
-  Scale,
   CheckCircle,
   ArrowRight,
   AlertTriangle,
   Mail,
   Menu,
-  Database,
-  Code,
-  Lock,
-  GitBranch,
-  Search,
-  Server,
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
 import { useMotionValue, useTransform, useSpring } from "framer-motion";
@@ -35,35 +26,35 @@ import { createClient } from '@/lib/supabase/client';
 
 const features = [
   {
-    icon: Code,
+    label: '01',
     title: 'Injection & Code Vulnerabilities',
     description: 'SQL injection, XSS, open redirects, and CSRF detection across your live site.',
-    color: 'text-rose-400',
-    glow: 'group-hover:shadow-rose-500/20',
+    accent: 'from-rose-500 to-orange-500',
+    accentBorder: 'group-hover:border-rose-500/20',
     includes: ['SQLi', 'XSS', 'Open Redirect', 'CSRF'],
   },
   {
-    icon: Search,
+    label: '02',
     title: 'Secrets & Key Detection',
     description: 'API keys, credentials, and secrets found in client-side code and git history.',
-    color: 'text-amber-400',
-    glow: 'group-hover:shadow-amber-500/20',
+    accent: 'from-amber-500 to-yellow-500',
+    accentBorder: 'group-hover:border-amber-500/20',
     includes: ['API Keys', 'GitHub Deep Scan', 'GitHub Security Alerts'],
   },
   {
-    icon: Shield,
+    label: '03',
     title: 'Infrastructure Security',
     description: 'SSL/TLS, security headers, CORS, cookies, and DNS/email configuration auditing.',
-    color: 'text-emerald-400',
-    glow: 'group-hover:shadow-emerald-500/20',
+    accent: 'from-emerald-500 to-teal-500',
+    accentBorder: 'group-hover:border-emerald-500/20',
     includes: ['SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'Vercel', 'Netlify', 'Cloudflare', 'Railway'],
   },
   {
-    icon: Server,
+    label: '04',
     title: 'Backend Security',
     description: 'Supabase + Firebase misconfigs, auth flow analysis, and dependency CVEs.',
-    color: 'text-purple-400',
-    glow: 'group-hover:shadow-purple-500/20',
+    accent: 'from-violet-500 to-purple-500',
+    accentBorder: 'group-hover:border-violet-500/20',
     includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth', 'Dependencies', 'OpenSSF Scorecard'],
   },
 ];
@@ -482,7 +473,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 stagger-children">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 stagger-children">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -491,22 +482,23 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="group relative h-full bg-zinc-900/40 border border-white/5 rounded-xl hover:border-white/10 transition-colors overflow-hidden">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color.replace('text-', 'from-')}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className={`group relative h-full rounded-xl border border-white/[0.06] ${feature.accentBorder} bg-white/[0.02] hover:bg-white/[0.035] transition-all duration-300 overflow-hidden`}>
+                  {/* Accent top bar */}
+                  <div className={`h-[2px] bg-gradient-to-r ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-                  <div className="relative p-6 flex flex-col h-full">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className={`p-2 rounded-lg bg-white/5 ${feature.color} ring-1 ring-white/10 group-hover:ring-white/20 transition-all`}>
-                        <feature.icon className="h-5 w-5" />
-                      </div>
-                      <h3 className="text-lg font-medium text-white tracking-tight">{feature.title}</h3>
+                  <div className="relative p-5 sm:p-6 flex flex-col h-full">
+                    <div className="flex items-start gap-4 mb-3">
+                      <span className={`text-[11px] font-mono font-bold tracking-widest bg-gradient-to-r ${feature.accent} bg-clip-text text-transparent shrink-0 pt-1`}>
+                        {feature.label}
+                      </span>
+                      <h3 className="text-[15px] sm:text-base font-semibold text-white tracking-tight leading-tight">{feature.title}</h3>
                     </div>
-                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                    <p className="text-[13px] text-zinc-500 leading-relaxed mb-4 pl-10">
                       {feature.description}
                     </p>
-                    <div className="flex flex-wrap gap-2 mt-auto">
+                    <div className="flex flex-wrap gap-1.5 mt-auto pl-10">
                       {feature.includes.map((item) => (
-                        <span key={item} className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">
+                        <span key={item} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 font-medium">
                           {item}
                         </span>
                       ))}
@@ -715,6 +707,7 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-zinc-400">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
               <a href="mailto:hello@checkvibe.dev" className="hover:text-white transition-colors">Contact</a>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm text-center">
