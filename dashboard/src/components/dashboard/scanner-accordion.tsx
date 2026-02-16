@@ -229,8 +229,16 @@ function SeveritySummary({ findings }: { findings: any[] }) {
         else counts.low++;
     });
 
+    const total = counts.critical + counts.high + counts.medium + counts.low;
+
     return (
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {total === 0 && (
+                <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                    <CheckCircle className="h-3 w-3" />
+                    No issues found
+                </span>
+            )}
             {counts.critical > 0 && (
                 <span className="flex items-center gap-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-2 py-0.5">
                     {counts.critical} critical
