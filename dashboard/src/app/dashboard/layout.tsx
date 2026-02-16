@@ -28,10 +28,10 @@ import {
 import { useEffect, useState } from 'react';
 
 const mainNav = [
-    { name: 'Projects', href: '/dashboard', icon: FolderKanban, shortcut: '1' },
-    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key, shortcut: '2' },
-    { name: 'Credits', href: '/dashboard/credits', icon: CreditCard, shortcut: '3' },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings, shortcut: '4' },
+    { name: 'Projects', href: '/dashboard', icon: FolderKanban },
+    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
+    { name: 'Credits', href: '/dashboard/credits', icon: CreditCard },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const resourceLinks = [
@@ -113,9 +113,6 @@ function SidebarContent({
                                     <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
                                     {item.name}
                                 </div>
-                                <span className={`text-[11px] font-mono ${isActive ? 'text-zinc-500' : 'text-zinc-700'}`}>
-                                    {item.shortcut}
-                                </span>
                             </Link>
                         );
                     })}
@@ -180,12 +177,10 @@ function SidebarContent({
                         <LogOut className="h-[15px] w-[15px] text-zinc-600" />
                         Log out
                     </div>
-                    <span className="text-[11px] font-mono text-zinc-700">L</span>
                 </button>
                 <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-zinc-600">
                     <Search className="h-[15px] w-[15px]" />
                     <span>Search...</span>
-                    <span className="ml-auto text-[11px] font-mono text-zinc-700">S</span>
                 </div>
             </div>
         </div>

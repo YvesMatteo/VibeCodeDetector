@@ -15,18 +15,9 @@ export { processAuditData } from '@/lib/audit-data';
 
 function getIssueCountColor(count: number) {
     if (count === 0) return 'text-emerald-400';
-    if (count <= 3) return 'text-amber-400';
-    if (count <= 7) return 'text-orange-400';
-    return 'text-red-400';
-}
-
-function getVibeRating(issues: number): { label: string; color: string; bg: string } {
-    if (issues === 0) return { label: 'Clean', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
-    if (issues <= 3) return { label: 'Good', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' };
-    if (issues <= 7) return { label: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
-    if (issues <= 15) return { label: 'Needs Work', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
-    if (issues <= 25) return { label: 'At Risk', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
-    return { label: 'Critical', color: 'text-red-500', bg: 'bg-red-500/15 border-red-500/30' };
+    if (count <= 5) return 'text-white';
+    if (count <= 15) return 'text-white';
+    return 'text-white';
 }
 
 /** Compute adjusted counts by subtracting dismissed fingerprints */
@@ -93,108 +84,95 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
     const hasResolvedIssues = diff && diff.resolvedIssues.length > 0;
     const hasNewIssues = diff && diff.newIssues.length > 0;
 
+    // Severity bar proportions
+    const barTotal = adjusted.total || 1;
+    const severities = [
+        { key: 'critical', count: adjusted.critical, color: 'bg-red-500', label: 'Critical' },
+        { key: 'high', count: adjusted.high, color: 'bg-orange-500', label: 'High' },
+        { key: 'medium', count: adjusted.medium, color: 'bg-amber-500', label: 'Medium' },
+        { key: 'low', count: adjusted.low, color: 'bg-blue-500', label: 'Low' },
+    ];
+
     return (
         <>
             {/* Findings Overview */}
-            <Card className="bg-slate-900/50 border-slate-700/20 mb-8">
-                <CardContent className="py-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                        <div className="relative w-28 h-28 sm:w-[130px] sm:h-[130px] shrink-0">
-                            <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120">
-                                <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="5" className="text-white/[0.06]" />
-                                <circle
-                                    cx="60" cy="60" r="52" fill="none" strokeWidth="5"
-                                    strokeLinecap="round"
-                                    stroke="url(#scoreGradient)"
-                                    strokeDasharray={`${Math.max(0, (1 - adjusted.total / 50)) * 326.73} 326.73`}
-                                    className="transition-all duration-1000 ease-out"
+            <div className="mb-8 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 items-start">
+                {/* Issue Count */}
+                <div className="flex flex-col items-center sm:items-start justify-center sm:pr-8 sm:border-r sm:border-white/[0.06]">
+                    <span className={`text-5xl sm:text-6xl font-bold tracking-tight tabular-nums ${getIssueCountColor(adjusted.total)}`}>
+                        {adjusted.total}
+                    </span>
+                    <span className="text-[13px] text-zinc-500 mt-1">
+                        {adjusted.total === 1 ? 'issue' : 'issues'} found
+                    </span>
+                    <span className="text-[12px] text-zinc-600 mt-0.5">
+                        {visibleScannerCount} scanners{passingCheckCount > 0 ? ` · ${passingCheckCount} passing` : ''}
+                    </span>
+                </div>
+
+                {/* Severity Breakdown */}
+                <div className="flex flex-col gap-4">
+                    {/* Severity bar */}
+                    {adjusted.total > 0 && (
+                        <div className="flex h-2 rounded-full overflow-hidden bg-white/[0.04]">
+                            {severities.map(s => s.count > 0 && (
+                                <div
+                                    key={s.key}
+                                    className={`${s.color} transition-all duration-500`}
+                                    style={{ width: `${(s.count / barTotal) * 100}%` }}
                                 />
-                                <defs>
-                                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#3b82f6" />
-                                        <stop offset="100%" stopColor="#06b6d4" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className={`text-4xl sm:text-5xl font-bold ${getIssueCountColor(adjusted.total)}`}>{adjusted.total}</span>
-                                <span className="text-[10px] text-zinc-500 mt-0.5">{adjusted.total === 1 ? 'issue' : 'issues'}</span>
-                                {passingCheckCount > 0 && (
-                                    <span className="text-[10px] text-emerald-500/70">+{passingCheckCount} passing</span>
-                                )}
-                            </div>
+                            ))}
                         </div>
-                        <div className="flex-1 flex flex-col items-center sm:items-start gap-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                {(() => {
-                                    const vibe = getVibeRating(adjusted.total);
-                                    return (
-                                        <div className={`px-2.5 py-1 rounded-md border ${vibe.bg}`}>
-                                            <span className={`text-xs font-medium ${vibe.color}`}>{vibe.label}</span>
-                                        </div>
-                                    );
-                                })()}
-                                <span className="text-sm text-zinc-400">
-                                    across {visibleScannerCount} scanners
-                                </span>
-                                {hasDismissals && (
-                                    <button
-                                        onClick={() => setShowDismissed(v => !v)}
-                                        className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 bg-white/5 border border-white/10 hover:border-white/20 rounded-full px-2.5 py-1 transition-colors"
-                                    >
-                                        <Flag className="h-3 w-3" />
-                                        {dismissalCount} dismissed
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 sm:gap-5">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
-                                    <span className="text-sm font-medium text-white">{adjusted.critical}</span>
-                                    <span className="text-sm text-zinc-500">Critical</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-sm bg-orange-500" />
-                                    <span className="text-sm font-medium text-white">{adjusted.high}</span>
-                                    <span className="text-sm text-zinc-500">High</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
-                                    <span className="text-sm font-medium text-white">{adjusted.medium}</span>
-                                    <span className="text-sm text-zinc-500">Medium</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
-                                    <span className="text-sm font-medium text-white">{adjusted.low}</span>
-                                    <span className="text-sm text-zinc-500">Low</span>
+                    )}
+
+                    {/* Severity counts */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {severities.map(s => (
+                            <div key={s.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                                <div className={`w-2 h-2 rounded-full ${s.color} shrink-0`} />
+                                <div className="flex items-baseline gap-1.5 min-w-0">
+                                    <span className="text-sm font-semibold text-white tabular-nums">{s.count}</span>
+                                    <span className="text-xs text-zinc-500">{s.label}</span>
                                 </div>
                             </div>
-                            {/* Diff from previous scan */}
-                            {diff && (hasResolvedIssues || hasNewIssues) && (
-                                <div className="flex flex-wrap items-center gap-4 pt-1">
-                                    {hasResolvedIssues && (
-                                        <div className="flex items-center gap-1.5">
-                                            <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-400" />
-                                            <span className="text-sm font-medium text-emerald-400">{diff.resolvedIssues.length} resolved</span>
-                                            <span className="text-xs text-zinc-500">since last scan</span>
-                                        </div>
-                                    )}
-                                    {hasNewIssues && (
-                                        <div className="flex items-center gap-1.5">
-                                            <ArrowUpCircle className="h-3.5 w-3.5 text-red-400" />
-                                            <span className="text-sm font-medium text-red-400">{diff.newIssues.length} new</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        ))}
                     </div>
-                </CardContent>
-            </Card>
+
+                    {/* Diff + Dismissals */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {diff && (hasResolvedIssues || hasNewIssues) && (
+                            <>
+                                {hasResolvedIssues && (
+                                    <div className="flex items-center gap-1.5 text-xs">
+                                        <ArrowDownCircle className="h-3.5 w-3.5 text-emerald-400" />
+                                        <span className="font-medium text-emerald-400">{diff.resolvedIssues.length} resolved</span>
+                                        <span className="text-zinc-600">since last scan</span>
+                                    </div>
+                                )}
+                                {hasNewIssues && (
+                                    <div className="flex items-center gap-1.5 text-xs">
+                                        <ArrowUpCircle className="h-3.5 w-3.5 text-red-400" />
+                                        <span className="font-medium text-red-400">{diff.newIssues.length} new</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                        {hasDismissals && (
+                            <button
+                                onClick={() => setShowDismissed(v => !v)}
+                                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                            >
+                                <Flag className="h-3 w-3" />
+                                {dismissalCount} dismissed
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {/* Dismissed Findings Section */}
             {hasDismissals && showDismissed && dismissals && (
-                <Card className="bg-slate-900/30 border-zinc-800/50 mb-8">
+                <Card className="bg-white/[0.02] border-white/[0.06] mb-8">
                     <button
                         onClick={() => setShowDismissed(false)}
                         className="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer"
@@ -208,21 +186,20 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                     <CardContent className="pt-0 pb-4">
                         <div className="space-y-2">
                             {dismissals.map(d => {
-                                // Extract scanner + severity from fingerprint
                                 const parts = d.fingerprint.split('::');
                                 const scanner = parts[0] || '';
                                 const severity = parts[2] || '';
                                 const findingId = parts[1] || '';
 
                                 return (
-                                    <div key={d.id} className="flex items-center justify-between gap-3 px-3 py-2.5 bg-slate-900/50 border border-white/5 rounded-lg">
+                                    <div key={d.id} className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white/[0.02] border border-white/[0.04] rounded-lg">
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
                                             <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[severity] || 'text-zinc-400 bg-zinc-500/10'}`}>
                                                 {severity || '?'}
                                             </Badge>
                                             <span className="text-sm text-zinc-300 truncate">{findingId}</span>
                                             <span className="text-xs text-zinc-600 shrink-0">{scanner}</span>
-                                            <span className="text-xs text-zinc-600 shrink-0 bg-zinc-800/50 rounded px-1.5 py-0.5">
+                                            <span className="text-xs text-zinc-600 shrink-0 bg-white/[0.04] rounded px-1.5 py-0.5">
                                                 {REASON_LABELS[d.reason] || d.reason}
                                             </span>
                                             {d.note && (
@@ -232,7 +209,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                                         {onRestore && (
                                             <button
                                                 onClick={() => onRestore(d.id)}
-                                                className="text-xs font-medium text-zinc-500 hover:text-indigo-400 transition-colors flex items-center gap-1 shrink-0 px-2 py-1 rounded hover:bg-white/5"
+                                                className="text-xs font-medium text-zinc-500 hover:text-white transition-colors flex items-center gap-1 shrink-0 px-2 py-1 rounded hover:bg-white/5"
                                             >
                                                 <RotateCcw className="h-3 w-3" />
                                                 Restore
@@ -248,51 +225,44 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
 
             {/* Detected Stack */}
             {techStack && (techStack.technologies?.length > 0 || techStackCveFindings.length > 0) && (
-                <Card className="mb-8 bg-slate-900/50 border-slate-700/20">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <Layers className="h-5 w-5 text-indigo-400" />
-                            <div>
-                                <CardTitle className="text-white">Detected Stack</CardTitle>
-                                <CardDescription className="text-zinc-400">Technologies and frameworks detected on this site</CardDescription>
-                            </div>
+                <div className="mb-8">
+                    <div className="flex items-center gap-2.5 mb-4">
+                        <Layers className="h-4 w-4 text-zinc-500" />
+                        <h3 className="text-sm font-medium text-zinc-300">Detected Stack</h3>
+                    </div>
+                    {techStack.technologies?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {techStack.technologies.map((tech: any, i: number) => (
+                                <span key={i} className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.06] text-zinc-300">
+                                    {tech.name}{tech.version ? ` ${tech.version}` : ''}
+                                    {tech.category && <span className="text-zinc-600 text-xs">({tech.category})</span>}
+                                </span>
+                            ))}
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        {techStack.technologies?.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {techStack.technologies.map((tech: any, i: number) => (
-                                    <Badge key={i} variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 text-sm px-3 py-1">
-                                        {tech.name}{tech.version ? ` ${tech.version}` : ''}
-                                        {tech.category && <span className="ml-1.5 text-zinc-500 text-xs">({tech.category})</span>}
-                                    </Badge>
-                                ))}
-                            </div>
-                        )}
-                        {techStackCveFindings.length > 0 && (
-                            <div className="space-y-3 mt-4 pt-4 border-t border-white/5">
-                                <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Known Vulnerabilities (CVEs)</h4>
-                                {techStackCveFindings.map((finding: any, i: number) => (
-                                    <div key={i} className="p-3 rounded-lg border bg-red-500/10 border-red-500/30">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <AlertTriangle className="h-4 w-4 text-red-400" />
-                                            <span className="font-medium text-sm">{finding.title}</span>
-                                            <Badge variant="outline" className="text-xs capitalize bg-red-500/10 text-red-400 border-0">
-                                                {finding.severity}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">{finding.description}</p>
-                                        {finding.recommendation && (
-                                            <p className="text-sm mt-1 text-muted-foreground">
-                                                <span className="font-medium text-blue-400">Fix:</span> {finding.recommendation}
-                                            </p>
-                                        )}
+                    )}
+                    {techStackCveFindings.length > 0 && (
+                        <div className="space-y-2 mt-4 pt-4 border-t border-white/[0.06]">
+                            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Known Vulnerabilities</h4>
+                            {techStackCveFindings.map((finding: any, i: number) => (
+                                <div key={i} className="p-3 rounded-lg border bg-red-500/5 border-red-500/15">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                                        <span className="font-medium text-[13px] text-zinc-200">{finding.title}</span>
+                                        <Badge variant="outline" className="text-[10px] capitalize bg-red-500/10 text-red-400 border-0">
+                                            {finding.severity}
+                                        </Badge>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                    <p className="text-[13px] text-zinc-500 pl-5.5">{finding.description}</p>
+                                    {finding.recommendation && (
+                                        <p className="text-[13px] mt-1 text-zinc-500 pl-5.5">
+                                            <span className="text-zinc-400">Fix:</span> {finding.recommendation}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Detailed Results by Scanner */}
