@@ -5,15 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Sheet,
     SheetContent,
@@ -25,141 +17,176 @@ import {
     Settings,
     LogOut,
     Plus,
-    ChevronDown,
     Menu,
     Key,
-    PanelLeftOpen,
-    PanelLeftClose,
+    Search,
+    BookOpen,
+    ExternalLink,
+    Mail,
+    Shield,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-const navigation = [
-    { name: 'Projects', href: '/dashboard', icon: FolderKanban },
-    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
-    { name: 'Credits', href: '/dashboard/credits', icon: CreditCard },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+const mainNav = [
+    { name: 'Projects', href: '/dashboard', icon: FolderKanban, shortcut: '1' },
+    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key, shortcut: '2' },
+    { name: 'Credits', href: '/dashboard/credits', icon: CreditCard, shortcut: '3' },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings, shortcut: '4' },
+];
+
+const resourceLinks = [
+    { name: 'Docs', href: 'https://docs.checkvibe.dev', icon: BookOpen, external: true },
+    { name: 'Changelog', href: 'https://checkvibe.dev/changelog', icon: Shield, external: true },
+];
+
+const connectLinks = [
+    { name: 'Support', href: 'mailto:hello@checkvibe.dev', icon: Mail, external: true },
 ];
 
 function SidebarContent({
     pathname,
     userEmail,
+    userPlan,
     initials,
     handleLogout,
     onNavClick,
-    collapsed = false,
-    onToggleCollapse,
 }: {
     pathname: string;
     userEmail: string | null;
+    userPlan: string;
     initials: string;
     handleLogout: () => void;
     onNavClick?: () => void;
-    collapsed?: boolean;
-    onToggleCollapse?: () => void;
 }) {
     return (
         <div className="flex h-full flex-col">
-            {/* Logo */}
-            <div className={`flex h-14 items-center border-b border-white/[0.06] ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
-                <Link href="/" className="flex items-center space-x-2.5">
-                    <Image src="/logo.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain rounded" />
-                    {!collapsed && <span className="font-heading text-[15px] font-semibold tracking-tight text-white">CheckVibe</span>}
-                </Link>
+            {/* User Profile */}
+            <div className="px-4 pt-5 pb-4">
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 ring-1 ring-white/[0.08]">
+                        <AvatarFallback className="bg-white/[0.06] text-zinc-300 text-xs font-medium">
+                            {initials}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium text-white truncate">
+                            {userEmail?.split('@')[0] || 'User'}
+                        </p>
+                        <p className="text-[11px] text-zinc-500 capitalize">
+                            {userPlan === 'none' ? 'Free Plan' : `${userPlan} Plan`}
+                        </p>
+                    </div>
+                </div>
             </div>
+
+            <div className="h-px bg-white/[0.06] mx-4" />
 
             {/* New Project Button */}
-            <div className="p-3">
-                {collapsed ? (
-                    <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors px-0">
-                        <Link href="/dashboard/projects/new" onClick={onNavClick} title="New Project">
-                            <Plus className="h-4 w-4" />
-                        </Link>
-                    </Button>
-                ) : (
-                    <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-sm font-medium transition-colors">
-                        <Link href="/dashboard/projects/new" onClick={onNavClick}>
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
-                            New Project
-                        </Link>
-                    </Button>
-                )}
+            <div className="px-3 pt-3 pb-1">
+                <Button asChild className="w-full h-9 bg-white text-zinc-900 hover:bg-zinc-200 border-0 text-[13px] font-medium transition-colors rounded-lg">
+                    <Link href="/dashboard/projects/new" onClick={onNavClick}>
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        New Project
+                    </Link>
+                </Button>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 px-3 space-y-0.5">
-                {navigation.map((item) => {
-                    const isActive = pathname === item.href ||
-                        (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
-                        (item.href === '/dashboard' && pathname.startsWith('/dashboard/projects'));
+            {/* Main Navigation */}
+            <nav className="flex-1 px-3 pt-3 space-y-6 overflow-y-auto">
+                <div>
+                    {mainNav.map((item) => {
+                        const isActive = pathname === item.href ||
+                            (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||
+                            (item.href === '/dashboard' && pathname.startsWith('/dashboard/projects'));
 
-                    return (
-                        <Link
+                        return (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                onClick={onNavClick}
+                                className={`group relative flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${isActive
+                                    ? 'text-white bg-white/[0.06]'
+                                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+                                    {item.name}
+                                </div>
+                                <span className={`text-[11px] font-mono ${isActive ? 'text-zinc-500' : 'text-zinc-700'}`}>
+                                    {item.shortcut}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Resources Section */}
+                <div>
+                    <p className="px-3 mb-1.5 text-[10px] font-medium tracking-wider text-zinc-600 uppercase">
+                        Resources
+                    </p>
+                    {resourceLinks.map((item) => (
+                        <a
                             key={item.name}
                             href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             onClick={onNavClick}
-                            title={collapsed ? item.name : undefined}
-                            className={`group relative flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-md text-[13px] transition-colors ${isActive
-                                ? 'text-white bg-white/[0.06]'
-                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
-                                }`}
+                            className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
                         >
-                            <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
-                            {!collapsed && item.name}
-                        </Link>
-                    );
-                })}
+                            <div className="flex items-center gap-2.5">
+                                <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
+                                {item.name}
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-zinc-700 group-hover:text-zinc-500" />
+                        </a>
+                    ))}
+                </div>
+
+                {/* Connect Section */}
+                <div>
+                    <p className="px-3 mb-1.5 text-[10px] font-medium tracking-wider text-zinc-600 uppercase">
+                        Connect
+                    </p>
+                    {connectLinks.map((item) => (
+                        <a
+                            key={item.name}
+                            href={item.href}
+                            target={item.href.startsWith('mailto') ? undefined : '_blank'}
+                            rel="noopener noreferrer"
+                            onClick={onNavClick}
+                            className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
+                                {item.name}
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-zinc-700 group-hover:text-zinc-500" />
+                        </a>
+                    ))}
+                </div>
             </nav>
 
-            {/* Collapse toggle (desktop only) */}
-            {onToggleCollapse && (
-                <div className="px-3 pb-1">
-                    <button
-                        onClick={onToggleCollapse}
-                        className={`w-full p-2 rounded-md text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors flex items-center ${collapsed ? 'justify-center' : 'justify-start gap-2.5 px-3'}`}
-                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                    >
-                        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-                        {!collapsed && <span className="text-[13px]">Collapse</span>}
-                    </button>
+            <div className="h-px bg-white/[0.06] mx-4" />
+
+            {/* Bottom: Logout + Search */}
+            <div className="px-3 py-3 space-y-1">
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <LogOut className="h-[15px] w-[15px] text-zinc-600" />
+                        Log out
+                    </div>
+                    <span className="text-[11px] font-mono text-zinc-700">L</span>
+                </button>
+                <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-zinc-600">
+                    <Search className="h-[15px] w-[15px]" />
+                    <span>Search...</span>
+                    <span className="ml-auto text-[11px] font-mono text-zinc-700">S</span>
                 </div>
-            )}
-
-            <Separator className="bg-white/[0.06]" />
-
-            {/* User Menu */}
-            <div className="p-3">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className={`w-full ${collapsed ? 'justify-center px-0' : 'justify-start gap-2.5 px-3'} h-10 hover:bg-white/[0.04]`}>
-                            <Avatar className="h-7 w-7 shrink-0">
-                                <AvatarFallback className="bg-zinc-800 text-zinc-400 text-[11px] font-medium">
-                                    {initials}
-                                </AvatarFallback>
-                            </Avatar>
-                            {!collapsed && (
-                                <>
-                                    <span className="flex-1 text-left text-[13px] text-zinc-400 truncate">
-                                        {userEmail || 'Loading...'}
-                                    </span>
-                                    <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />
-                                </>
-                            )}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56 bg-zinc-900 border-white/[0.08]">
-                        <DropdownMenuItem asChild className="text-zinc-300 hover:bg-white/[0.04] focus:bg-white/[0.04]">
-                            <Link href="/dashboard/settings">
-                                <Settings className="mr-2 h-4 w-4" />
-                                Settings
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/[0.06]" />
-                        <DropdownMenuItem onClick={handleLogout} className="text-red-400 hover:bg-red-500/8 focus:bg-red-500/8">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Log out
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
             </div>
         </div>
     );
@@ -174,22 +201,24 @@ export default function DashboardLayout({
     const router = useRouter();
     const supabase = createClient();
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [userPlan, setUserPlan] = useState<string>('none');
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(false);
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) setUserEmail(user.email || null);
-        });
-        const saved = localStorage.getItem('sidebar-collapsed');
-        if (saved === 'true') setCollapsed(true);
+        async function loadUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUserEmail(user.email || null);
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('plan')
+                    .eq('id', user.id)
+                    .single();
+                if (profile) setUserPlan(profile.plan || 'none');
+            }
+        }
+        loadUser();
     }, []);
-
-    function toggleCollapse() {
-        const next = !collapsed;
-        setCollapsed(next);
-        localStorage.setItem('sidebar-collapsed', String(next));
-    }
 
     const initials = userEmail
         ? userEmail.substring(0, 2).toUpperCase()
@@ -204,11 +233,11 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background">
             {/* Mobile Header */}
-            <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-background border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
+            <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileOpen(true)}
-                        className="p-2 -ml-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        className="p-2 -ml-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
                     >
                         <Menu className="h-5 w-5" />
                     </button>
@@ -217,21 +246,22 @@ export default function DashboardLayout({
                         <span className="font-heading text-sm font-semibold tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
-                <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs">
+                <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs rounded-lg">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-1 h-3.5 w-3.5" />
-                        New Project
+                        New
                     </Link>
                 </Button>
             </header>
 
             {/* Mobile Drawer */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="w-60 p-0 bg-background border-white/[0.06]" showCloseButton={false}>
+                <SheetContent side="left" className="w-64 p-0 bg-background border-white/[0.06]" showCloseButton={false}>
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     <SidebarContent
                         pathname={pathname}
                         userEmail={userEmail}
+                        userPlan={userPlan}
                         initials={initials}
                         handleLogout={handleLogout}
                         onNavClick={() => setMobileOpen(false)}
@@ -240,19 +270,18 @@ export default function DashboardLayout({
             </Sheet>
 
             {/* Desktop Sidebar */}
-            <aside className={`hidden md:block fixed inset-y-0 left-0 z-50 bg-background border-r border-white/[0.06] transition-all duration-200 ${collapsed ? 'w-14' : 'w-56'}`}>
+            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-[220px] bg-background border-r border-white/[0.06]">
                 <SidebarContent
                     pathname={pathname}
                     userEmail={userEmail}
+                    userPlan={userPlan}
                     initials={initials}
                     handleLogout={handleLogout}
-                    collapsed={collapsed}
-                    onToggleCollapse={toggleCollapse}
                 />
             </aside>
 
             {/* Main Content */}
-            <main className={`pt-12 md:pt-0 relative min-h-screen transition-all duration-200 ${collapsed ? 'md:pl-14' : 'md:pl-56'}`}>
+            <main className="md:pl-[220px] pt-12 md:pt-0 relative min-h-screen">
                 <div className="animate-fade-in-up">
                     {children}
                 </div>

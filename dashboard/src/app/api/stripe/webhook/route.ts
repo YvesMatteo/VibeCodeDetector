@@ -22,10 +22,12 @@ const PLANS_BY_PRICE_ID: Record<string, { plan: string; domains: number; scans: 
     'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 3, scans: 20 },      // monthly
     'price_1T1G36LRbxIsl4HLcxaSjnej': { plan: 'pro', domains: 3, scans: 20 },      // annual (30% off)
     'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 20 },      // annual (legacy 20%)
-    // Enterprise
-    'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'enterprise', domains: 10, scans: 75 }, // monthly
-    'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'enterprise', domains: 10, scans: 75 }, // annual (30% off)
-    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'enterprise', domains: 10, scans: 75 }, // annual (legacy 20%)
+    // Max (formerly Enterprise)
+    'price_1T1G99LRbxIsl4HLzT5TNktI': { plan: 'max', domains: 10, scans: 75 },       // monthly $79
+    'price_1T1G99LRbxIsl4HLfsEV74xC': { plan: 'max', domains: 10, scans: 75 },       // annual (30% off)
+    'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'max', domains: 10, scans: 75 },       // legacy monthly $89
+    'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'max', domains: 10, scans: 75 },       // legacy annual
+    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'max', domains: 10, scans: 75 },       // legacy annual
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -140,7 +140,7 @@ export default function NewProjectPage() {
                 <div className="mb-6 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
                     <h3 className="text-white font-medium mb-1">Project limit reached</h3>
                     <p className="text-zinc-400 text-sm mb-3">
-                        Upgrade to get more projects — Pro gives you 3, Enterprise gives you 10.
+                        Upgrade to get more projects — Pro gives you 3, Max gives you 10.
                     </p>
                     <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
                         <Link href="/dashboard/credits">Upgrade Plan</Link>

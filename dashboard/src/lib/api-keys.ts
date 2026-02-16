@@ -101,7 +101,7 @@ export const RATE_LIMITS = {
   none:       { perKey: 5,   perUser: 10,  perIp: 20 },
   starter:    { perKey: 10,  perUser: 20,  perIp: 20 },
   pro:        { perKey: 30,  perUser: 60,  perIp: 20 },
-  enterprise: { perKey: 100, perUser: 200, perIp: 20 },
+  max:        { perKey: 100, perUser: 200, perIp: 20 },
 } as const;
 
 export type PlanName = keyof typeof RATE_LIMITS;

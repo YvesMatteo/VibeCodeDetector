@@ -46,42 +46,28 @@ const pricingPlans = [
         badge: 'Most Popular',
     },
     {
-        id: 'enterprise',
-        name: 'Enterprise',
-        priceMonthly: 89,
-        priceAnnualPerMonth: 62.30,
+        id: 'max',
+        name: 'Max',
+        priceMonthly: 79,
+        priceAnnualPerMonth: 55.30,
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
         features: ['10 projects', '75 scans/month', 'Full scan suite', 'Dedicated support'],
         highlighted: false,
     },
-    {
-        id: 'max',
-        name: 'Max',
-        priceMonthly: null,
-        priceAnnualPerMonth: null,
-        description: 'For large organizations',
-        domains: null,
-        scans: null,
-        features: ['Unlimited projects', 'Custom scan volume', 'SLA guarantee', 'Account manager'],
-        highlighted: false,
-        isContact: true,
-    },
 ];
 
 const comparisonFeatures = [
-    { name: 'Projects', free: '1', starter: '1', pro: '3', enterprise: '10', max: 'Unlimited' },
-    { name: 'Scans per month', free: '3', starter: '5', pro: '20', enterprise: '75', max: 'Custom' },
-    { name: 'Full finding details', free: false, starter: true, pro: true, enterprise: true, max: true },
-    { name: 'Full scan suite (30 scanners)', free: true, starter: true, pro: true, enterprise: true, max: true },
-    { name: 'PDF export', free: false, starter: true, pro: true, enterprise: true, max: true },
-    { name: 'AI fix suggestions', free: false, starter: true, pro: true, enterprise: true, max: true },
-    { name: 'API access', free: false, starter: false, pro: true, enterprise: true, max: true },
-    { name: 'Priority support', free: false, starter: false, pro: true, enterprise: true, max: true },
-    { name: 'Dedicated support', free: false, starter: false, pro: false, enterprise: true, max: true },
-    { name: 'SLA guarantee', free: false, starter: false, pro: false, enterprise: false, max: true },
-    { name: 'Account manager', free: false, starter: false, pro: false, enterprise: false, max: true },
+    { name: 'Projects', free: '1', starter: '1', pro: '3', max: '10' },
+    { name: 'Scans per month', free: '3', starter: '5', pro: '20', max: '75' },
+    { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
+    { name: 'Full scan suite (30 scanners)', free: true, starter: true, pro: true, max: true },
+    { name: 'PDF export', free: false, starter: true, pro: true, max: true },
+    { name: 'AI fix suggestions', free: false, starter: true, pro: true, max: true },
+    { name: 'API access', free: false, starter: false, pro: true, max: true },
+    { name: 'Priority support', free: false, starter: false, pro: true, max: true },
+    { name: 'Dedicated support', free: false, starter: false, pro: false, max: true },
 ];
 
 export default function CreditsPage() {
@@ -302,7 +288,7 @@ export default function CreditsPage() {
                                 className={`border-b border-white/[0.04] ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
                             >
                                 <td className="p-4 pl-5 text-sm text-zinc-400">{feature.name}</td>
-                                {(['free', 'starter', 'pro', 'enterprise', 'max'] as const).map((planKey) => {
+                                {(['free', 'starter', 'pro', 'max'] as const).map((planKey) => {
                                     const value = feature[planKey];
                                     return (
                                         <td key={planKey} className="p-4 text-center">

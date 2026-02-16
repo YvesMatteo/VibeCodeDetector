@@ -97,9 +97,9 @@ const pricingTiers = [
     highlighted: true,
   },
   {
-    name: 'Enterprise',
-    priceMonthly: 89,
-    priceAnnualPerMonth: 62.30,
+    name: 'Max',
+    priceMonthly: 79,
+    priceAnnualPerMonth: 55.30,
     description: 'For teams & agencies',
     features: ['10 domains', '75 scans/month', 'Full scan suite', 'Dedicated support'],
     cta: 'Get Started',
@@ -661,9 +661,9 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Enterprise CTA */}
+          {/* Custom CTA */}
           <div className="mt-8 text-center text-sm text-zinc-500">
-            Need more? <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom enterprise plans.
+            Need more? <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Custom Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom plans.
           </div>
         </div>
       </section>
