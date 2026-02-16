@@ -187,7 +187,7 @@ export default function HomePage() {
             {!isLoggedIn && <Link href="/login" className="hover:text-white transition-colors">Login</Link>}
           </div>
           <Button asChild size="sm" className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
-            <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'My Projects' : 'Get Started'}</Link>
+            <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'Dashboard' : 'Get Started'}</Link>
           </Button>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -208,7 +208,7 @@ export default function HomePage() {
             {!isLoggedIn && <Link href="/login" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Login</Link>}
             <div className="mt-4">
               <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 rounded-full font-medium">
-                <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'My Projects' : 'Get Started'}</Link>
+                <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'Dashboard' : 'Get Started'}</Link>
               </Button>
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function HomePage() {
           >
             <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'My Projects' : 'Start Scanning'}
+                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
               </Link>
             </Button>
             <div className="flex items-center gap-4 text-sm text-zinc-500">
@@ -674,7 +674,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] border-t border-white/5 overflow-hidden">
+      <section className="relative pt-4 sm:pt-8 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[#0E0E10] overflow-hidden">
         {/* Gradient orbs */}
         <div className="orb orb-blue w-64 h-64 top-0 left-1/4" aria-hidden="true" />
         <div className="orb orb-blue w-48 h-48 bottom-0 right-1/4" aria-hidden="true" />
@@ -695,7 +695,7 @@ export default function HomePage() {
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'My Projects' : 'Start Scanning'}
+                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
