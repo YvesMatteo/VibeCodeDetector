@@ -23,13 +23,13 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
   description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and 17 more checks.",
-  metadataBase: new URL("https://checkvibe.online"),
+  metadataBase: new URL("https://checkvibe.dev"),
   openGraph: {
     title: "CheckVibe - AI Website Scanner",
     description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
     type: "website",
     siteName: "CheckVibe",
-    url: "https://checkvibe.online",
+    url: "https://checkvibe.dev",
     images: [
       {
         url: "/opengraph-image",

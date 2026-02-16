@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/dashboard/', '/api/'],
     },
-    sitemap: 'https://checkvibe.online/sitemap.xml',
+    sitemap: 'https://checkvibe.dev/sitemap.xml',
   };
 }
