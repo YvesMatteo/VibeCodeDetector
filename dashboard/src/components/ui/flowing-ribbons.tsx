@@ -70,8 +70,10 @@ const RIBBONS: RibbonDef[] = [
   },
 ];
 
-const CURVE_SAMPLES = 80;
-const STRIPS = 20;
+const CURVE_SAMPLES_DESKTOP = 80;
+const CURVE_SAMPLES_MOBILE = 40;
+const STRIPS_DESKTOP = 20;
+const STRIPS_MOBILE = 10;
 
 function cubicBez(a: number, b: number, c: number, d: number, t: number) {
   const mt = 1 - t;
@@ -126,13 +128,20 @@ function drawSilkRibbon(
   time: number,
   w: number,
   h: number,
+  isMobile: boolean,
 ) {
-  const center = samplePath(ribbon.points, time, w, h, ribbon.speed, CURVE_SAMPLES);
-  const maxWidth = ribbon.widthFactor * h;
+  const samples = isMobile ? CURVE_SAMPLES_MOBILE : CURVE_SAMPLES_DESKTOP;
+  const strips = isMobile ? STRIPS_MOBILE : STRIPS_DESKTOP;
+  // On mobile: narrower ribbons, lower opacity so text stays readable
+  const widthScale = isMobile ? 0.55 : 1.0;
+  const alphaScale = isMobile ? 0.45 : 1.0;
+
+  const center = samplePath(ribbon.points, time, w, h, ribbon.speed, samples);
+  const maxWidth = ribbon.widthFactor * h * widthScale;
 
   const data = center.map((p, i) => {
     const prev = center[Math.max(i - 1, 0)];
-    const next = center[Math.min(i + 1, CURVE_SAMPLES)];
+    const next = center[Math.min(i + 1, samples)];
     const dx = next.x - prev.x;
     const dy = next.y - prev.y;
     const len = Math.hypot(dx, dy) || 1;
@@ -140,25 +149,25 @@ function drawSilkRibbon(
     const nx = -dy / len;
     const ny = dx / len;
 
-    const u = i / CURVE_SAMPLES;
+    const u = i / samples;
     const twist = Math.sin(u * Math.PI * ribbon.twistFreq + time * 0.6 + ribbon.twistPhase);
     const ribbonW = maxWidth * (0.85 + 0.15 * Math.abs(twist));
 
     return { x: p.x, y: p.y, nx, ny, w: ribbonW };
   });
 
-  for (let s = 0; s < STRIPS; s++) {
-    const frac0 = s / STRIPS;
-    const frac1 = (s + 1) / STRIPS;
+  for (let s = 0; s < strips; s++) {
+    const frac0 = s / strips;
+    const frac1 = (s + 1) / strips;
 
     const d = Math.max(Math.abs(frac0 * 2 - 1), Math.abs(frac1 * 2 - 1));
 
-    const alpha = ribbon.peakAlpha * Math.exp(-d * d * 3.5);
+    const alpha = ribbon.peakAlpha * alphaScale * Math.exp(-d * d * 3.5);
     if (alpha < 0.002) continue;
 
     ctx.beginPath();
 
-    for (let i = 0; i <= CURVE_SAMPLES; i++) {
+    for (let i = 0; i <= samples; i++) {
       const pt = data[i];
       const offset = (frac0 - 0.5) * pt.w;
       const x = pt.x + pt.nx * offset;
@@ -167,7 +176,7 @@ function drawSilkRibbon(
       else ctx.lineTo(x, y);
     }
 
-    for (let i = CURVE_SAMPLES; i >= 0; i--) {
+    for (let i = samples; i >= 0; i--) {
       const pt = data[i];
       const offset = (frac1 - 0.5) * pt.w;
       const x = pt.x + pt.nx * offset;
@@ -207,11 +216,12 @@ export function FlowingRibbons({ className }: { className?: string }) {
       const rect = canvas!.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
+      const mobile = w < 640;
 
       ctx!.clearRect(0, 0, w, h);
 
       for (const ribbon of RIBBONS) {
-        drawSilkRibbon(ctx!, ribbon, time, w, h);
+        drawSilkRibbon(ctx!, ribbon, time, w, h, mobile);
       }
     }
 

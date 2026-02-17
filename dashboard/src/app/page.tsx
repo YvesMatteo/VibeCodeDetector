@@ -189,11 +189,13 @@ export default function HomePage() {
 
       <main>
         {/* Hero Section - Cluely 1:1 Replica */}
-        <section className="relative pt-24 sm:pt-40 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 sm:min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
+        <section className="relative pt-24 sm:pt-40 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
           {/* Flowing Ribbon Background */}
           <div className="absolute inset-0 bg-[#0E0E10] overflow-hidden" aria-hidden="true">
             <FlowingRibbons className="absolute inset-0 w-full h-full" />
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+            {/* Center vignette keeps text readable on mobile */}
+            <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent" />
           </div>
 
           <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-5 sm:gap-8">
@@ -310,7 +312,7 @@ export default function HomePage() {
                 style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
-                className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col"
+                className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[220px] min-[400px]:h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col"
               >
 
                 {/* Header */}
@@ -638,15 +640,15 @@ export default function HomePage() {
               className="mt-12 sm:mt-16 max-w-5xl mx-auto"
             >
               <h3 className="text-lg sm:text-xl font-medium text-white text-center mb-6">Compare Plans</h3>
-              <div className="overflow-x-auto rounded-xl border border-white/5">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-white/5 -mx-4 sm:mx-0">
+                <table className="w-full text-xs sm:text-sm min-w-[480px]">
                   <thead>
                     <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="text-left py-3 px-4 text-zinc-400 font-medium w-[40%]">Feature</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Free</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Starter</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium text-blue-400">Pro</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Max</th>
+                      <th className="text-left py-3 px-3 sm:px-4 text-zinc-400 font-medium w-[40%]">Feature</th>
+                      <th className="text-center py-3 px-2 sm:px-4 text-zinc-400 font-medium">Free</th>
+                      <th className="text-center py-3 px-2 sm:px-4 text-zinc-400 font-medium">Starter</th>
+                      <th className="text-center py-3 px-2 sm:px-4 text-zinc-400 font-medium text-blue-400">Pro</th>
+                      <th className="text-center py-3 px-2 sm:px-4 text-zinc-400 font-medium">Max</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -663,9 +665,9 @@ export default function HomePage() {
                       { feature: 'Dedicated support', values: [false, false, false, true] },
                     ].map((row) => (
                       <tr key={row.feature} className="hover:bg-white/[0.01] transition-colors">
-                        <td className="py-2.5 px-4 text-zinc-300">{row.feature}</td>
+                        <td className="py-2.5 px-3 sm:px-4 text-zinc-300">{row.feature}</td>
                         {row.values.map((val, i) => (
-                          <td key={i} className="text-center py-2.5 px-4">
+                          <td key={i} className="text-center py-2.5 px-2 sm:px-4">
                             {typeof val === 'boolean' ? (
                               val ? (
                                 <CheckCircle className="h-4 w-4 text-emerald-400 mx-auto" />
@@ -723,7 +725,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
+      <footer className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5 safe-bottom">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
             <div className="flex items-center gap-2">
