@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkCsrf } from '@/lib/csrf';
 
-export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const params = await props.params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

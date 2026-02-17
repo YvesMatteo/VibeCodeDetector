@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   async headers() {
     return [
       {
@@ -16,7 +13,22 @@ const nextConfig: NextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https://www.google.com https://*.supabase.co",
+              "font-src 'self'",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+              "frame-src https://js.stripe.com https://checkout.stripe.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self' https://checkout.stripe.com",
+            ].join('; '),
           },
         ],
       },

@@ -24,13 +24,8 @@ export default function Error({
             <div className="space-y-2">
                 <h2 className="text-2xl font-bold tracking-tight">Something went wrong!</h2>
                 <p className="text-muted-foreground max-w-[500px]">
-                    {error.message || 'An unexpected error occurred while loading this page.'}
+                    An unexpected error occurred while loading this page.
                 </p>
-                {error.digest && (
-                    <p className="text-xs text-muted-foreground font-mono bg-muted p-1 rounded">
-                        Error Digest: {error.digest}
-                    </p>
-                )}
             </div>
             <div className="flex gap-2 mt-4">
                 <Button variant="outline" onClick={() => window.location.href = '/'}>

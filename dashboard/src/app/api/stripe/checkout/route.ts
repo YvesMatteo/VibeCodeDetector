@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 import { validateCurrency } from '@/lib/currency';
+import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing STRIPE_SECRET_KEY environment variable');
@@ -17,8 +19,11 @@ const PLANS: Record<string, { productId: string; amountMonthly: number; amountAn
     max: { productId: 'prod_Tww4oXvwj9PmsN', amountMonthly: 7900, amountAnnual: 66360, domains: 10, scans: 75, name: 'Max' },
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const supabase = await createClient();
         const {
             data: { user },
@@ -26,6 +31,12 @@ export async function POST(req: Request) {
 
         if (!user) {
             return new NextResponse('Unauthorized', { status: 401 });
+        }
+
+        // Rate limit: 5 checkout creations per minute per user
+        const rl = await checkRateLimit(`checkout:${user.id}`, 5);
+        if (!rl.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         const { plan, billing = 'monthly', currency: rawCurrency = 'usd' } = await req.json();

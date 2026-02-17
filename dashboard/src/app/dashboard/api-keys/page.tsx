@@ -633,7 +633,7 @@ function KeyRow({
                     </div>
                     <code className="text-xs text-zinc-500 font-mono">{apiKey.key_prefix}...••••</code>
 
-                    <div className="flex items-center gap-3 mt-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
                         <button
                             onClick={() => setShowInfo(v => !v)}
                             className={`inline-flex items-center gap-1.5 text-xs transition-colors ${showInfo ? 'text-blue-400' : 'text-zinc-500 hover:text-zinc-300'}`}
@@ -641,7 +641,7 @@ function KeyRow({
                             <Info className="h-3.5 w-3.5" />
                             {showInfo ? 'Hide details' : 'View details'}
                         </button>
-                        <div className="flex gap-4 text-[11px] text-zinc-600">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
                             <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 Created {formatDate(apiKey.created_at)}

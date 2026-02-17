@@ -87,7 +87,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             <div className="mb-8">
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                    className="inline-flex items-center min-h-[44px] text-muted-foreground hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Projects

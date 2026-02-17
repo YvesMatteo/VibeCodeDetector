@@ -94,7 +94,11 @@ export async function POST(req: NextRequest) {
       }
 
       // Set signed httpOnly bypass cookie (30 days)
-      const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      const secret = process.env.COOKIE_SIGNING_SECRET || '';
+      if (!secret) {
+        console.error('COOKIE_SIGNING_SECRET is not configured');
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
       const signature = createHmac('sha256', secret).update('cv-access=1').digest('hex');
       const res = NextResponse.json({ ok: true });
       res.cookies.set('cv-access', `1:${signature}`, {
@@ -111,7 +115,7 @@ export async function POST(req: NextRequest) {
     if (body.action === 'signup') {
       const parsed = signupSchema.safeParse(body);
       if (!parsed.success) {
-        const firstError = parsed.error.errors[0]?.message ?? 'Invalid request';
+        const firstError = parsed.error.issues[0]?.message ?? 'Invalid request';
         return NextResponse.json({ error: firstError }, { status: 400 });
       }
 

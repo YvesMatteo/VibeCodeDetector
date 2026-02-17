@@ -20,6 +20,11 @@ const outfit = Outfit({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
   description: "Scan your website with 30 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",

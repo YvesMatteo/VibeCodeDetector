@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkCsrf } from '@/lib/csrf';
 import type { DismissalReason, DismissalScope } from '@/lib/dismissals';
 
 const VALID_REASONS: DismissalReason[] = ['false_positive', 'accepted_risk', 'not_applicable', 'will_fix_later'];
@@ -7,6 +8,9 @@ const VALID_SCOPES: DismissalScope[] = ['project', 'scan'];
 
 export async function POST(req: NextRequest) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {

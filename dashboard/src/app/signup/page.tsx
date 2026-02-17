@@ -56,7 +56,8 @@ export default function SignupPage() {
         });
 
         if (error) {
-            setError(error.message);
+            // Normalize error messages to prevent account enumeration
+            setError('Could not create account. Please check your details and try again.');
             setLoading(false);
         } else {
             window.location.href = '/dashboard';

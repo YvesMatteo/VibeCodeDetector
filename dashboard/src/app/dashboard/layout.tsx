@@ -111,7 +111,7 @@ function SidebarContent({
                                 key={item.name}
                                 href={item.href}
                                 onClick={onNavClick}
-                                className={`group relative flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${isActive
+                                className={`group relative flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${isActive
                                     ? 'text-white bg-white/[0.06]'
                                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
                                     }`}
@@ -140,7 +140,7 @@ function SidebarContent({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={onNavClick}
-                                    className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                                    className="group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
                                 >
                                     <div className="flex items-center gap-2.5">
                                         <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
@@ -155,7 +155,7 @@ function SidebarContent({
                                 key={item.name}
                                 href={item.href}
                                 onClick={onNavClick}
-                                className={`group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
+                                className={`group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${
                                     isActive
                                         ? 'text-white bg-white/[0.06]'
                                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
@@ -182,7 +182,7 @@ function SidebarContent({
                             target={item.href.startsWith('mailto') ? undefined : '_blank'}
                             rel="noopener noreferrer"
                             onClick={onNavClick}
-                            className="group flex items-center justify-between px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                            className="group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
                         >
                             <div className="flex items-center gap-2.5">
                                 <item.icon className="h-[15px] w-[15px] text-zinc-600 group-hover:text-zinc-400" />
@@ -200,7 +200,7 @@ function SidebarContent({
             <div className="px-3 py-3">
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center px-3 py-2 rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
+                    className="w-full flex items-center px-3 py-2 min-h-[44px] rounded-lg text-[13px] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-150"
                 >
                     <div className="flex items-center gap-2.5">
                         <LogOut className="h-[15px] w-[15px] text-zinc-600" />
@@ -302,7 +302,7 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="md:pl-[220px] pt-12 md:pt-0 relative min-h-screen">
+            <main className="md:pl-[220px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
                 <div className="animate-fade-in-up">
                     {children}
                 </div>

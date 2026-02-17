@@ -92,6 +92,9 @@ export async function POST(req: NextRequest) {
         if (!name || typeof name !== 'string' || !name.trim()) {
             return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
         }
+        if (name.trim().length > 100) {
+            return NextResponse.json({ error: 'Project name must be 100 characters or less' }, { status: 400 });
+        }
 
         // URL validation + SSRF protection (shared utility)
         const urlValidation = validateTargetUrl(url);
@@ -135,7 +138,7 @@ export async function POST(req: NextRequest) {
                 name: name.trim(),
                 url: targetUrl,
                 github_repo: githubRepo?.trim() || null,
-                backend_type: backendType || 'none',
+                backend_type: ['supabase', 'firebase', 'convex', 'none'].includes(backendType) ? backendType : 'none',
                 backend_url: backendUrl?.trim() || null,
                 supabase_pat: supabasePAT?.trim() || null,
             })

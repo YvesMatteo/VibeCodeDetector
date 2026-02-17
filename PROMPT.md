@@ -1,24 +1,25 @@
-# Security Hardening Sprint
+# Full Codebase Improvement Sprint
 
 ## Goal
-Fix all critical and high-severity security vulnerabilities identified in the CheckVibe.dev audit.
+Implement all 37 improvement recommendations from the 5-team codebase audit across UI/UX, Backend, Scanners, Growth, and DX.
 
 ## Requirements
-- [ ] Fix PATCH /api/keys/[id] privilege escalation (scopes/domains/IPs can be escalated)
-- [ ] Add SSRF protection to fetchFaviconUrl in scan route
-- [ ] Add CSRF protection to all mutating API routes (keys, projects)
-- [ ] Sign the cv-access waitlist cookie with HMAC
-- [ ] Consolidate SSRF validation to shared utility (remove duplication)
+- Fix all critical/high priority issues first
+- Maintain backward compatibility
+- Don't break existing functionality
+- Build passes after each phase
 
 ## Constraints
-- No new external libraries
-- Must maintain backward compatibility with existing API key format
-- Session auth behavior unchanged
-- All changes in dashboard/ directory
+- Use existing Tailwind/shadcn theme
+- No major dependency additions without clear justification
+- Supabase typed client workaround: `.from('table' as any)`
+- Edge functions deployed with `--no-verify-jwt`
 
 ## Success Criteria
-- [ ] API keys cannot escalate their own privileges via PATCH
-- [ ] Favicon fetch blocks private/internal URLs
-- [ ] All mutating API endpoints validate CSRF for session auth
-- [ ] Waitlist cookie cannot be forged
-- [ ] SSRF patterns defined in exactly one place
+- Build passes with `ignoreBuildErrors: false`
+- All critical backend bugs fixed (score inflation, timeouts)
+- Project settings page exists and works
+- Scanner accuracy improved (legal, CSP, CSRF, SQLi)
+- Shareable public scan reports
+- Usage quota display on dashboard
+- Onboarding flow for new users

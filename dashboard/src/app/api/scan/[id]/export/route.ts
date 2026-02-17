@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateScanMarkdown } from '@/lib/export-markdown';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function GET(
   req: NextRequest,
@@ -19,6 +20,12 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit: 10 exports per minute per user
+    const rl = await checkRateLimit(`export:${user.id}`, 10);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const { data: scan, error } = await supabase
@@ -55,7 +62,7 @@ export async function GET(
 
     if (format === 'pdf') {
       const pdfBytes = await markdownToPdf(markdown, domain, date);
-      return new NextResponse(pdfBytes, {
+      return new NextResponse(pdfBytes as unknown as BodyInit, {
         status: 200,
         headers: {
           'Content-Type': 'application/pdf',

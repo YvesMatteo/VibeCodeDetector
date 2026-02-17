@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveAuth, requireScope, logApiKeyUsage } from '@/lib/api-auth';
 import { getServiceClient } from '@/lib/api-keys';
+import { checkCsrf } from '@/lib/csrf';
 
 export async function GET(
     req: NextRequest,
@@ -59,6 +60,9 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const { id } = await params;
 
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {

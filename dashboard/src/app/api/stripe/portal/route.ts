@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
+import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing STRIPE_SECRET_KEY environment variable');
@@ -10,8 +12,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2026-01-28.clover',
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const supabase = await createClient();
         const {
             data: { user },
@@ -19,6 +24,12 @@ export async function POST(req: Request) {
 
         if (!user) {
             return new NextResponse('Unauthorized', { status: 401 });
+        }
+
+        // Rate limit: 5 portal sessions per minute per user
+        const rl = await checkRateLimit(`portal:${user.id}`, 5);
+        if (!rl.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         const { data: profile } = await supabase

@@ -20,7 +20,12 @@ export function checkCsrf(req: NextRequest): NextResponse | null {
 
   try {
     const originHost = new URL(origin).host;
-    if (originHost === host || originHost.startsWith('localhost')) {
+    // Allow same-origin requests
+    if (originHost === host) {
+      return null;
+    }
+    // Allow localhost only in development
+    if (process.env.NODE_ENV === 'development' && (originHost === 'localhost' || /^localhost:\d+$/.test(originHost))) {
       return null;
     }
   } catch {

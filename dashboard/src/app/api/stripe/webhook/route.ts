@@ -60,22 +60,14 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    // Atomic idempotency check: INSERT and skip if already exists
-    const { data: inserted, error: idempotencyError } = await supabase
+    // Idempotency check: see if event was already fully processed
+    const { data: existing } = await supabase
         .from('processed_webhook_events')
-        .upsert(
-            { event_id: event.id, event_type: event.type },
-            { onConflict: 'event_id', ignoreDuplicates: true }
-        )
-        .select();
+        .select('event_id')
+        .eq('event_id', event.id)
+        .maybeSingle();
 
-    if (idempotencyError) {
-        console.error('Idempotency check failed:', idempotencyError);
-        return new NextResponse('Idempotency check failed', { status: 500 });
-    }
-
-    // If no rows were returned, the event was already processed
-    if (!inserted || inserted.length === 0) {
+    if (existing) {
         console.log(`Event ${event.id} already processed, skipping`);
         return new NextResponse(null, { status: 200 });
     }
@@ -101,14 +93,17 @@ export async function POST(req: Request) {
             console.warn('Could not fetch line items for price verification:', err);
         }
 
-        // Fall back to metadata only if price lookup fails
+        // Fall back to metadata only if price lookup fails, but validate against known plans
         if (!planInfo) {
             const plan = session.metadata?.plan;
-            const planDomains = parseInt(session.metadata?.plan_domains || '0', 10);
-            const planScansLimit = parseInt(session.metadata?.plan_scans_limit || '0', 10);
-            if (plan) {
-                planInfo = { plan, domains: planDomains, scans: planScansLimit };
-                console.warn(`Fell back to metadata for plan derivation: ${plan}`);
+            const VALID_PLANS: Record<string, { domains: number; scans: number }> = {
+                starter: { domains: 1, scans: 5 },
+                pro: { domains: 3, scans: 20 },
+                max: { domains: 10, scans: 75 },
+            };
+            if (plan && VALID_PLANS[plan]) {
+                planInfo = { plan, domains: VALID_PLANS[plan].domains, scans: VALID_PLANS[plan].scans };
+                console.warn(`Fell back to metadata for plan derivation: ${plan} (validated against known plans)`);
             }
         }
 
@@ -118,7 +113,7 @@ export async function POST(req: Request) {
             if (session.subscription) {
                 try {
                     const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-                    periodStart = new Date(sub.current_period_start * 1000).toISOString();
+                    periodStart = new Date((sub as any).current_period_start * 1000).toISOString();
                 } catch (e) {
                     console.warn('Could not fetch subscription period, using current time:', e);
                 }
@@ -268,14 +263,21 @@ export async function POST(req: Request) {
             }
         }
 
-        // Fall back to metadata only if price lookup fails
+        // Fall back to metadata only if price lookup fails, validate against known plans
         if (!planInfo && metadata?.plan) {
-            planInfo = {
-                plan: metadata.plan,
-                domains: parseInt(metadata.plan_domains || '0', 10),
-                scans: parseInt(metadata.plan_scans_limit || '0', 10),
+            const VALID_PLANS: Record<string, { domains: number; scans: number }> = {
+                starter: { domains: 1, scans: 5 },
+                pro: { domains: 3, scans: 20 },
+                max: { domains: 10, scans: 75 },
             };
-            console.warn(`Fell back to metadata for subscription.updated plan: ${metadata.plan}`);
+            if (VALID_PLANS[metadata.plan]) {
+                planInfo = {
+                    plan: metadata.plan,
+                    domains: VALID_PLANS[metadata.plan].domains,
+                    scans: VALID_PLANS[metadata.plan].scans,
+                };
+                console.warn(`Fell back to metadata for subscription.updated plan: ${metadata.plan} (validated)`);
+            }
         }
 
         // Handle non-active subscription states
@@ -327,6 +329,20 @@ export async function POST(req: Request) {
         }
     } else {
         console.warn(`Unhandled webhook event type: ${event.type}`);
+    }
+
+    // Mark event as processed AFTER business logic succeeds
+    // This ensures failed activations get retried by Stripe
+    const { error: markError } = await supabase
+        .from('processed_webhook_events')
+        .upsert(
+            { event_id: event.id, event_type: event.type },
+            { onConflict: 'event_id', ignoreDuplicates: true }
+        );
+
+    if (markError) {
+        console.error('Failed to mark event as processed:', markError);
+        // Still return 200 since business logic succeeded
     }
 
     return new NextResponse(null, { status: 200 });
