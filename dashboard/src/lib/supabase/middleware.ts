@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
         try {
             const decoded = decodeURIComponent(cvAccessRaw);
             const [value, signature] = decoded.split(':');
-            const secret = process.env.COOKIE_SIGNING_SECRET || '';
+            const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
             if (value === '1' && signature && secret) {
                 const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
                 // Constant-time comparison to prevent timing attacks
