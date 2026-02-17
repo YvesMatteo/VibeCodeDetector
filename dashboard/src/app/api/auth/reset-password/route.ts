@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     try {
         const resend = getResend();
         await resend.emails.send({
-            from: 'CheckVibe <noreply@checkvibe.dev>',
+            from: 'CheckVibe <support@checkvibe.dev>',
             to: email,
             subject: template.subject,
             html: template.html,
