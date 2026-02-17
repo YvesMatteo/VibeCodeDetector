@@ -12,7 +12,7 @@ import {
   Menu,
 } from 'lucide-react';
 import * as motion from "framer-motion/client";
-import { useMotionValue, useTransform, useSpring } from "framer-motion";
+import { useMotionValue, useSpring } from "framer-motion";
 
 import { CountUp } from '@/components/ui/count-up';
 import {
@@ -119,25 +119,6 @@ export default function HomePage() {
     });
   }, []);
 
-  // Parallax Logic
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent<HTMLDivElement>) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    const x = (clientX - left) / width - 0.5;
-    const y = (clientY - top) / height - 0.5;
-
-    mouseX.set(x);
-    mouseY.set(y);
-  }
-
-  const orb1X = useSpring(useTransform(mouseX, [-0.5, 0.5], [-30, 30]), { stiffness: 150, damping: 30 });
-  const orb1Y = useSpring(useTransform(mouseY, [-0.5, 0.5], [-30, 30]), { stiffness: 150, damping: 30 });
-
-  const orb2X = useSpring(useTransform(mouseX, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
-  const orb2Y = useSpring(useTransform(mouseY, [-0.5, 0.5], [30, -30]), { stiffness: 150, damping: 30 });
-
   // Card tilt — follows cursor position over the terminal card
   const cardRotateX = useMotionValue(0);
   const cardRotateY = useMotionValue(0);
@@ -158,7 +139,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden" onMouseMove={handleMouseMove}>
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Navigation */}
       {/* Navigation - Cluely Style Pill */}
       <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none px-4">
@@ -208,16 +189,24 @@ export default function HomePage() {
       <main>
         {/* Hero Section - Cluely 1:1 Replica */}
         <section className="relative pt-24 sm:pt-40 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 sm:min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
-          {/* Animated Background */}
-          <div className="absolute inset-0 bg-[#0E0E10]" aria-hidden="true">
-            <motion.div
-              style={{ x: orb1X, y: orb1Y }}
-              className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#497EE9]/20 blur-[120px] rounded-full"
+          {/* Animated Liquid Gradient Background */}
+          <div className="absolute inset-0 bg-[#0E0E10] overflow-hidden" aria-hidden="true">
+            {/* Blob 1: large blue, top-left drift */}
+            <div
+              className="liquid-blob bg-[#497EE9]/25 w-[60%] h-[60%] top-[-15%] left-[-10%]"
+              style={{ animation: 'liquid-morph-1 15s ease-in-out infinite' }}
             />
-            <motion.div
-              style={{ x: orb2X, y: orb2Y }}
-              className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#749CFF]/10 blur-[120px] rounded-full"
+            {/* Blob 2: purple/indigo, bottom-right drift */}
+            <div
+              className="liquid-blob bg-[#7C3AED]/20 w-[50%] h-[50%] bottom-[-10%] right-[-10%]"
+              style={{ animation: 'liquid-morph-2 18s ease-in-out infinite' }}
             />
+            {/* Blob 3: light blue, center drift */}
+            <div
+              className="liquid-blob bg-[#749CFF]/15 w-[45%] h-[45%] top-[20%] left-[30%]"
+              style={{ animation: 'liquid-morph-3 20s ease-in-out infinite' }}
+            />
+            {/* Noise overlay */}
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
           </div>
 

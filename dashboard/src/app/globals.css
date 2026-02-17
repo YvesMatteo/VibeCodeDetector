@@ -404,6 +404,69 @@
   background: #09090B;
 }
 
+/* ============================================
+   LIQUID GRADIENT BACKGROUND
+   ============================================ */
+@keyframes liquid-morph-1 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+    border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%;
+  }
+  25% {
+    transform: translate(5%, 15%) scale(1.05) rotate(3deg);
+    border-radius: 50% 50% 40% 60% / 40% 60% 40% 60%;
+  }
+  50% {
+    transform: translate(-5%, 5%) scale(0.95) rotate(-2deg);
+    border-radius: 60% 40% 50% 50% / 50% 50% 60% 40%;
+  }
+  75% {
+    transform: translate(3%, -5%) scale(1.02) rotate(1deg);
+    border-radius: 40% 60% 70% 30% / 60% 40% 30% 70%;
+  }
+}
+
+@keyframes liquid-morph-2 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+    border-radius: 60% 40% 30% 70% / 40% 60% 40% 60%;
+  }
+  25% {
+    transform: translate(-8%, -10%) scale(1.08) rotate(-4deg);
+    border-radius: 40% 60% 60% 40% / 60% 40% 70% 30%;
+  }
+  50% {
+    transform: translate(6%, -3%) scale(0.92) rotate(3deg);
+    border-radius: 50% 50% 40% 60% / 30% 70% 50% 50%;
+  }
+  75% {
+    transform: translate(-3%, 8%) scale(1.04) rotate(-1deg);
+    border-radius: 70% 30% 50% 50% / 50% 50% 40% 60%;
+  }
+}
+
+@keyframes liquid-morph-3 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+  }
+  33% {
+    transform: translate(10%, -8%) scale(1.06) rotate(5deg);
+    border-radius: 60% 40% 40% 60% / 40% 60% 60% 40%;
+  }
+  66% {
+    transform: translate(-6%, 10%) scale(0.94) rotate(-3deg);
+    border-radius: 40% 60% 60% 40% / 60% 40% 40% 60%;
+  }
+}
+
+.liquid-blob {
+  position: absolute;
+  filter: blur(100px);
+  will-change: transform, border-radius;
+  mix-blend-mode: normal;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
 
