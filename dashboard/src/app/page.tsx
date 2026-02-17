@@ -107,8 +107,8 @@ const stats = [
   { value: '<30s', label: 'Average Scan Time' },
 ];
 
-const SLIDE_IDS = ['slide-hero', 'slide-demo', 'slide-features', 'slide-pricing', 'slide-cta'];
-const SLIDE_LABELS = ['Hero', 'Demo', 'Features', 'Pricing', 'Get Started'];
+const SLIDE_IDS = ['slide-hero', 'slide-features', 'slide-pricing', 'slide-cta'];
+const SLIDE_LABELS = ['Hero', 'Features', 'Pricing', 'Get Started'];
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -205,24 +205,28 @@ export default function HomePage() {
       {/* Slide navigation dots */}
       <SlideIndicator slideIds={SLIDE_IDS} labels={SLIDE_LABELS} />
 
-      {/* ======================== SLIDE 1: HERO ======================== */}
+      {/* ======================== SLIDE 1: HERO + DEMO ======================== */}
       <section
         id="slide-hero"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
+        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
-        {/* Semi-transparent overlay so text is readable over ribbons */}
         <div className="absolute inset-0 bg-[#0E0E10]/60 pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent pointer-events-none" aria-hidden="true" />
 
-        <motion.div {...fadeInView} className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-5 sm:gap-8">
+        <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
+          >
             <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
             <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Now Live</span>
-          </div>
+          </motion.div>
 
           {/* H1 Typography */}
-          <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[56px] md:text-[80px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-2 w-full">
+          <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-1 w-full">
             <span className="block overflow-hidden">
               <motion.span
                 initial={{ y: 100 }}
@@ -240,39 +244,27 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
                 className="block"
               >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span>
-              </motion.span>
-            </span>
-            <span className="block overflow-hidden">
-              <motion.span
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
-                className="block"
-              >
-                Websites
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
               </motion.span>
             </span>
           </h1>
 
           {/* Subtext */}
-          <div className="overflow-hidden">
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
-            >
-              CheckVibe scans your live website for exposed API keys, SQL injection, XSS, and 30 more security checks.
-            </motion.p>
-          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
+          >
+            30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
+          </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
             <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
@@ -285,38 +277,36 @@ export default function HomePage() {
               <div className="h-px w-10 bg-white/10" />
             </div>
           </motion.div>
-        </motion.div>
-      </section>
 
-      {/* ======================== SLIDE 2: DEMO ======================== */}
-      <section
-        id="slide-demo"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="absolute inset-0 bg-[#0E0E10]/70 pointer-events-none" aria-hidden="true" />
-
-        <motion.div {...fadeInView} className="max-w-5xl mx-auto w-full relative z-10 flex flex-col items-center gap-8 sm:gap-12">
           {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 sm:gap-8 w-full max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 sm:gap-8 w-full max-w-4xl mt-2"
+          >
             {stats.map((stat, i) => (
               <div key={i} className="flex flex-col items-center justify-center text-center min-w-0">
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 flex items-baseline">
-                  {stat.value.includes('<') && <span className="mr-0.5 text-lg sm:text-2xl text-zinc-400">&lt;</span>}
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5 flex items-baseline">
+                  {stat.value.includes('<') && <span className="mr-0.5 text-base sm:text-xl text-zinc-400">&lt;</span>}
                   <CountUp
                     to={parseInt(stat.value.replace(/\D/g, ''))}
                     className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50"
                   />
-                  {stat.value.includes('+') && <span className="ml-0.5 text-lg sm:text-2xl text-zinc-400">+</span>}
-                  {stat.value.includes('s') && <span className="ml-0.5 text-lg sm:text-2xl text-zinc-400">s</span>}
+                  {stat.value.includes('+') && <span className="ml-0.5 text-base sm:text-xl text-zinc-400">+</span>}
+                  {stat.value.includes('s') && <span className="ml-0.5 text-base sm:text-xl text-zinc-400">s</span>}
                 </div>
-                <div className="text-[11px] sm:text-sm text-zinc-500 font-medium uppercase tracking-wide sm:tracking-wider">{stat.label}</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500 font-medium uppercase tracking-wide sm:tracking-wider">{stat.label}</div>
               </div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Terminal card */}
-          <div
-            className="relative w-full max-w-4xl group"
+          {/* Terminal card — compact */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+            className="relative w-full max-w-4xl group mt-2"
             style={{ perspective: 800 }}
             aria-hidden="true"
           >
@@ -324,40 +314,32 @@ export default function HomePage() {
               style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
-              className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[220px] min-[400px]:h-[280px] sm:h-[350px] md:h-[450px] w-full flex flex-col"
+              className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
             >
               {/* Header */}
-              <div className="h-10 border-b border-white/5 bg-white/5 flex items-center px-4 justify-between">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/20" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/20" />
+              <div className="h-8 sm:h-10 border-b border-white/5 bg-white/5 flex items-center px-3 sm:px-4 justify-between">
+                <div className="flex gap-1.5 sm:gap-2">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500/20" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500/20" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500/20" />
                 </div>
-                <div className="text-xs text-zinc-500 font-mono">analysis_result.json</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500 font-mono">analysis_result.json</div>
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-3 sm:p-6 font-mono text-[10px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
-                {/* Grid Background */}
+              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
-                {/* Code Lines */}
-                <div className="space-y-1 relative z-10 opacity-80 whitespace-nowrap">
+                <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 whitespace-nowrap">
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">&quot;sk_live_EXAMPLE_KEY...&quot;</span>;</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">&quot;Authorization&quot;</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">07</span> </div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">08</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">&quot;/api/charge&quot;</span>, {'{'}</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span>     <span className="text-cyan-200">method</span>: <span className="text-green-300">&quot;POST&quot;</span>,</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">10</span>     <span className="text-cyan-200">headers</span></div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">11</span>   {'}'});</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">12</span> {'}'}</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">13</span> </div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">14</span> <span className="text-zinc-400">{'// CORS: Missing Access-Control headers'}</span></div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">15</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">07</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">&quot;/api/charge&quot;</span>, {'{'} <span className="text-cyan-200">method</span>: <span className="text-green-300">&quot;POST&quot;</span>, <span className="text-cyan-200">headers</span> {'}'});</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">08</span> {'}'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
                 </div>
 
                 {/* Scanning Beam */}
@@ -366,14 +348,13 @@ export default function HomePage() {
                   transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                   className="absolute left-0 right-0 h-[2px] bg-blue-500/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
                 >
-                  <div className="absolute right-2 sm:right-4 -top-3 bg-blue-500 text-[10px] sm:text-xs text-white px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-blue-500/30 whitespace-nowrap">SCANNING</div>
+                  <div className="absolute right-2 sm:right-4 -top-3 bg-blue-500 text-[9px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-blue-500/30 whitespace-nowrap">SCANNING</div>
                 </motion.div>
 
-                {/* Scan overlay gradient */}
                 <motion.div
                   animate={{ top: ['-10%', '90%', '-10%'] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                  className="absolute left-0 right-0 h-20 bg-gradient-to-b from-blue-500/10 to-transparent z-10 pointer-events-none"
+                  className="absolute left-0 right-0 h-16 bg-gradient-to-b from-blue-500/10 to-transparent z-10 pointer-events-none"
                 />
 
                 {/* Detection Markers */}
@@ -381,12 +362,11 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
-                  className="absolute top-[30px] sm:top-[80px] right-3 sm:right-10 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-1 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-3 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
+                  className="absolute top-[20px] sm:top-[50px] right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
                 >
-                  <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-red-500 shrink-0" />
+                  <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-sm font-bold truncate">Critical Issue</div>
-                    <div className="text-[9px] sm:text-xs opacity-80 truncate">Exposed Stripe Key</div>
+                    <div className="text-[9px] sm:text-xs font-bold truncate">Exposed Stripe Key</div>
                   </div>
                 </motion.div>
 
@@ -394,18 +374,17 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
-                  className="absolute top-[90px] sm:top-[220px] md:top-[320px] right-3 sm:right-10 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1 sm:py-2 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-3 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
+                  className="absolute top-[55px] sm:top-[140px] md:top-[200px] right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
                 >
-                  <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
+                  <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-sm font-bold truncate">XSS Warning</div>
-                    <div className="text-[9px] sm:text-xs opacity-80 truncate">Reflected Input</div>
+                    <div className="text-[9px] sm:text-xs font-bold truncate">CORS Misconfigured</div>
                   </div>
                 </motion.div>
               </div>
             </motion.div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ======================== SLIDE 3: FEATURES ======================== */}
