@@ -35,20 +35,38 @@ export default function LoginPage() {
             if (error) {
                 setError(error.message);
             } else {
-                // Verify the server can see our auth cookies before navigating
+                // Diagnostic: check browser cookies and server-side auth
+                const hostname = window.location.hostname;
+                const browserCookieNames = document.cookie
+                    .split(';')
+                    .map(c => c.trim().split('=')[0])
+                    .filter(Boolean);
+                const sbCookies = browserCookieNames.filter(n => n.startsWith('sb-'));
+
+                let serverDebug = 'fetch failed';
                 try {
                     const debugRes = await fetch('/api/debug-auth');
                     const debug = await debugRes.json();
-                    if (!debug.user) {
-                        console.error('Auth debug: server cannot see session after login', debug);
-                        setError(`Login succeeded but session not detected by server. Cookies: ${debug.supabaseCookies?.length || 0} supabase cookies found. Error: ${debug.authError || 'none'}`);
-                        setLoading(false);
+                    serverDebug = `user=${debug.user?.email || 'null'}, serverCookies=${debug.supabaseCookies?.length || 0}, err=${debug.authError || 'none'}`;
+
+                    if (debug.user) {
+                        // Server sees the session, safe to navigate
+                        window.location.href = '/dashboard';
                         return;
                     }
                 } catch {
-                    // Debug check failed, try navigating anyway
+                    // Debug failed
                 }
-                window.location.href = '/dashboard';
+
+                // Show diagnostic instead of redirecting into a loop
+                setError(
+                    `Auth OK but session not reaching server.\n` +
+                    `Host: ${hostname}\n` +
+                    `Browser sb- cookies: [${sbCookies.join(', ')}]\n` +
+                    `All browser cookies: [${browserCookieNames.join(', ')}]\n` +
+                    `Server: ${serverDebug}`
+                );
+                setLoading(false);
                 return;
             }
         } catch (err) {
@@ -102,7 +120,7 @@ export default function LoginPage() {
 
                         <form onSubmit={handleLogin} className="space-y-5">
                             {error && (
-                                <div className="p-3 text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg">
+                                <div className="p-3 text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg whitespace-pre-wrap break-all">
                                     {error}
                                 </div>
                             )}
