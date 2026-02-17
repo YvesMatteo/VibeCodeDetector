@@ -22,8 +22,8 @@ interface RibbonDef {
 const RIBBONS: RibbonDef[] = [
   {
     color: '73, 126, 233', // #497EE9 — wide slow blue
-    widthFactor: 0.25,
-    peakAlpha: 0.55,
+    widthFactor: 0.20,
+    peakAlpha: 0.75,
     twistFreq: 2.2,
     twistPhase: 0,
     speed: 1.0,
@@ -38,8 +38,8 @@ const RIBBONS: RibbonDef[] = [
   },
   {
     color: '116, 156, 255', // #749CFF — medium light blue
-    widthFactor: 0.2,
-    peakAlpha: 0.48,
+    widthFactor: 0.16,
+    peakAlpha: 0.65,
     twistFreq: 2.8,
     twistPhase: 1.8,
     speed: 1.2,
@@ -54,8 +54,8 @@ const RIBBONS: RibbonDef[] = [
   },
   {
     color: '220, 225, 255', // white-blue tint
-    widthFactor: 0.18,
-    peakAlpha: 0.38,
+    widthFactor: 0.14,
+    peakAlpha: 0.55,
     twistFreq: 3.0,
     twistPhase: 3.5,
     speed: 0.9,
@@ -142,7 +142,7 @@ function drawSilkRibbon(
 
     const u = i / CURVE_SAMPLES;
     const twist = Math.sin(u * Math.PI * ribbon.twistFreq + time * 0.6 + ribbon.twistPhase);
-    const ribbonW = maxWidth * (0.25 + 0.75 * Math.abs(twist));
+    const ribbonW = maxWidth * (0.85 + 0.15 * Math.abs(twist));
 
     return { x: p.x, y: p.y, nx, ny, w: ribbonW };
   });
