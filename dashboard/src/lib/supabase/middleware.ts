@@ -1,6 +1,27 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+
+async function hmacSha256(secret: string, message: string): Promise<string> {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+    return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}
 
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
@@ -54,11 +75,8 @@ export async function updateSession(request: NextRequest) {
             const [value, signature] = decoded.split(':');
             const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
             if (value === '1' && signature && secret) {
-                const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
-                // Constant-time comparison to prevent timing attacks
-                const sigBuf = Buffer.from(signature, 'hex');
-                const expBuf = Buffer.from(expected, 'hex');
-                hasBypass = sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf);
+                const expected = await hmacSha256(secret, 'cv-access=1');
+                hasBypass = constantTimeEqual(signature, expected);
             }
         } catch {
             // If bypass check fails, continue without bypass
