@@ -8,11 +8,11 @@ const cspValue = [
   "default-src 'self'",
   isDev
     ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
-    : "script-src 'self' 'unsafe-inline'",
+    : "script-src 'self' 'unsafe-inline' https://checkvibe.dev https://www.checkvibe.dev https://*.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://generativelanguage.googleapis.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://generativelanguage.googleapis.com https://*.vercel-insights.com",
   "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
   "base-uri 'self'",
   "form-action 'self'",
