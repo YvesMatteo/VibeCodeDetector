@@ -23,6 +23,7 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
+import { FlowingRibbons } from '@/components/ui/flowing-ribbons';
 
 const features = [
   {
@@ -189,25 +190,10 @@ export default function HomePage() {
       <main>
         {/* Hero Section - Cluely 1:1 Replica */}
         <section className="relative pt-24 sm:pt-40 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 sm:min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
-          {/* Animated Liquid Gradient Background */}
+          {/* Flowing Ribbon Background */}
           <div className="absolute inset-0 bg-[#0E0E10] overflow-hidden" aria-hidden="true">
-            {/* Blob 1: large blue, top-left drift */}
-            <div
-              className="liquid-blob bg-[#497EE9]/25 w-[60%] h-[60%] top-[-15%] left-[-10%]"
-              style={{ animation: 'liquid-morph-1 15s ease-in-out infinite' }}
-            />
-            {/* Blob 2: purple/indigo, bottom-right drift */}
-            <div
-              className="liquid-blob bg-[#7C3AED]/20 w-[50%] h-[50%] bottom-[-10%] right-[-10%]"
-              style={{ animation: 'liquid-morph-2 18s ease-in-out infinite' }}
-            />
-            {/* Blob 3: light blue, center drift */}
-            <div
-              className="liquid-blob bg-[#749CFF]/15 w-[45%] h-[45%] top-[20%] left-[30%]"
-              style={{ animation: 'liquid-morph-3 20s ease-in-out infinite' }}
-            />
-            {/* Noise overlay */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
+            <FlowingRibbons className="absolute inset-0 w-full h-full" />
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
           </div>
 
           <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-5 sm:gap-8">
