@@ -22,7 +22,7 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
-import { FlowingRibbons } from '@/components/ui/flowing-ribbons';
+import { PulsingCircles } from '@/components/ui/pulsing-circles';
 import { SlideIndicator } from '@/components/ui/slide-indicator';
 
 const features = [
@@ -153,7 +153,7 @@ export default function HomePage() {
     <div className="h-[100dvh] overflow-y-auto snap-container bg-[#0E0E10]">
       {/* Persistent ribbon background — fixed behind all slides */}
       <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <FlowingRibbons className="absolute inset-0 w-full h-full" />
+        <PulsingCircles className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
