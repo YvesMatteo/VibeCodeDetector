@@ -59,8 +59,9 @@ export async function POST(req: NextRequest) {
         const interval: 'month' | 'year' = isAnnual ? 'year' : 'month';
         const unitAmount = isAnnual ? planConfig.amountAnnual : planConfig.amountMonthly;
 
+        const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').trim();
         const allowedOrigins = [
-            process.env.NEXT_PUBLIC_SITE_URL,
+            siteUrl,
             ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
         ].filter(Boolean) as string[];
         const requestOrigin = req.headers.get('origin');
@@ -107,9 +108,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ sessionId: session.id, url: session.url });
     } catch (err: unknown) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        const errStack = err instanceof Error ? err.stack : '';
-        console.error('Stripe Checkout Error:', errMsg, errStack);
-        return NextResponse.json({ error: 'Internal Error', debug: errMsg }, { status: 500 });
+        console.error('Stripe Checkout Error:', err);
+        return new NextResponse('Internal Error', { status: 500 });
     }
 }
