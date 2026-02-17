@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,22 +14,29 @@ export default function ResetPasswordPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const supabase = createClient();
 
     async function handleReset(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
         setLoading(true);
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/update-password`,
-        });
+        try {
+            const res = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
 
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        } else {
-            setSuccess(true);
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || 'Something went wrong. Please try again.');
+            } else {
+                setSuccess(true);
+            }
+        } catch {
+            setError('Something went wrong. Please try again.');
+        } finally {
             setLoading(false);
         }
     }

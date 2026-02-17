@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SignupPage() {
@@ -16,7 +15,7 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const [emailSent, setEmailSent] = useState(false);
     const supabase = createClient();
 
     async function handleGoogleSignup() {
@@ -63,18 +62,25 @@ export default function SignupPage() {
 
         setLoading(true);
 
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-        });
+        try {
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
 
-        if (error) {
-            // Normalize error messages to prevent account enumeration
-            setError('Could not create account. Please check your details and try again.');
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || 'Could not create account. Please try again.');
+                setLoading(false);
+            } else {
+                setEmailSent(true);
+                setLoading(false);
+            }
+        } catch {
+            setError('Could not create account. Please try again.');
             setLoading(false);
-        } else {
-            window.location.href = '/dashboard';
-            return;
         }
     }
 
@@ -95,6 +101,33 @@ export default function SignupPage() {
     };
 
     const strength = getPasswordStrength();
+
+    if (emailSent) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-6 bg-[#09090B]">
+                <div className="w-full max-w-sm text-center animate-fade-in-up">
+                    <div className="flex justify-center mb-6">
+                        <div className="h-16 w-16 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+                            <Mail className="h-7 w-7 text-white" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-white tracking-tight mb-2">Check your email</h2>
+                    <p className="text-zinc-500 text-sm leading-relaxed mb-1">
+                        We sent a confirmation link to
+                    </p>
+                    <p className="text-white font-medium text-sm mb-6">{email}</p>
+                    <p className="text-zinc-600 text-xs mb-8">
+                        Click the link in the email to activate your account. Check your spam folder if you don&apos;t see it.
+                    </p>
+                    <Link href="/login">
+                        <Button variant="outline" className="border-white/[0.08] bg-transparent hover:bg-white/5 text-white">
+                            Back to login
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex bg-[#09090B]">
