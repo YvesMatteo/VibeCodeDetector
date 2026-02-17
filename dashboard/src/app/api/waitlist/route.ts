@@ -93,22 +93,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid access code' }, { status: 401 });
       }
 
-      // Set signed httpOnly bypass cookie (30 days)
+      // Generate a short-lived bypass token (valid for 60 seconds)
+      // The client will redirect to GET /api/waitlist?token=<token> which sets
+      // the cookie via a navigation response (more reliable than Set-Cookie from fetch)
       const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (!secret) {
         console.error('No signing secret available (COOKIE_SIGNING_SECRET or SUPABASE_SERVICE_ROLE_KEY)');
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
       }
-      const signature = createHmac('sha256', secret).update('cv-access=1').digest('hex');
-      const res = NextResponse.json({ ok: true });
-      res.cookies.set('cv-access', `1:${signature}`, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-      return res;
+      const ts = Math.floor(Date.now() / 1000);
+      const token = createHmac('sha256', secret).update(`bypass:${ts}`).digest('hex') + ':' + ts;
+      return NextResponse.json({ ok: true, token });
     }
 
     // ---- Signup → save email ----

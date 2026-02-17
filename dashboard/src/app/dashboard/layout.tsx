@@ -62,8 +62,7 @@ function SidebarContent({
             {/* Logo */}
             <div className="px-4 pt-4 pb-2">
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <Image src="/logo.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain rounded" />
-                    <span className="font-heading text-sm font-semibold tracking-tight text-zinc-300 group-hover:text-white transition-colors">CheckVibe</span>
+                    <Image src="/logo-composite.png" alt="CheckVibe" width={110} height={20} className="w-auto h-5 object-contain" />
                 </Link>
             </div>
 
@@ -155,11 +154,10 @@ function SidebarContent({
                                 key={item.name}
                                 href={item.href}
                                 onClick={onNavClick}
-                                className={`group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${
-                                    isActive
+                                className={`group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${isActive
                                         ? 'text-white bg-white/[0.06]'
                                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center gap-2.5">
                                     <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
@@ -263,8 +261,7 @@ export default function DashboardLayout({
                         <Menu className="h-5 w-5" />
                     </button>
                     <Link href="/" className="flex items-center space-x-2">
-                        <Image src="/logo.png" alt="CheckVibe" width={20} height={20} className="h-5 w-5 object-contain rounded" />
-                        <span className="font-heading text-sm font-semibold tracking-tight">CheckVibe</span>
+                        <Image src="/logo-composite.png" alt="CheckVibe" width={110} height={20} className="w-auto h-5 object-contain" />
                     </Link>
                 </div>
                 <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs rounded-lg">
