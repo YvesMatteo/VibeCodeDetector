@@ -203,13 +203,14 @@ export async function POST(req: NextRequest) {
 
         if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
             const hasNoPlan = usageResult[0].plan_scans_limit === 0;
-            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
-            return NextResponse.json({
-                error: hasNoPlan
-                    ? 'A plan is required to run scans. Subscribe to get started.'
-                    : `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
-                code: hasNoPlan ? 'PLAN_REQUIRED' : 'SCAN_LIMIT_REACHED',
-            }, { status: 402 });
+            // Free users can scan — results are blurred, details gated behind subscription
+            if (!hasNoPlan) {
+                logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
+                return NextResponse.json({
+                    error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
+                    code: 'SCAN_LIMIT_REACHED',
+                }, { status: 402 });
+            }
         }
 
         // ==========================================

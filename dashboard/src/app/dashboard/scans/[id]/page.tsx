@@ -75,8 +75,8 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-                        <AIFixPrompt url={scan.url} findings={auditData.allFindings} techStack={auditData.techStack} />
-                        <ExportButton scanId={params.id} className="flex-1 sm:flex-none" />
+                        <AIFixPrompt url={scan.url} findings={auditData.allFindings} techStack={auditData.techStack} userPlan={userPlan} />
+                        <ExportButton scanId={params.id} className="flex-1 sm:flex-none" userPlan={userPlan} />
                     </div>
                 </div>
             </div>

@@ -10,7 +10,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Sparkles, Copy, Check } from 'lucide-react';
+import { Sparkles, Copy, Check, Lock } from 'lucide-react';
+import Link from 'next/link';
 
 interface Finding {
     title: string;
@@ -28,6 +29,7 @@ interface AIFixPromptProps {
     url: string;
     findings: Finding[];
     techStack?: TechStackResult;
+    userPlan?: string;
 }
 
 // Detect frameworks from tech stack scan results
@@ -136,9 +138,10 @@ function detectFramework(techStack?: TechStackResult): { name: string; instructi
     return null;
 }
 
-export function AIFixPrompt({ url, findings, techStack }: AIFixPromptProps) {
+export function AIFixPrompt({ url, findings, techStack, userPlan }: AIFixPromptProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const isFreePlan = userPlan === 'none';
 
     const generatePrompt = () => {
         const critical = findings.filter(f => f.severity?.toLowerCase() === 'critical');
@@ -198,6 +201,56 @@ export function AIFixPrompt({ url, findings, techStack }: AIFixPromptProps) {
             // Fallback for when clipboard API is unavailable
         }
     };
+
+    if (isFreePlan) {
+        return (
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                    <Button className="bg-white text-zinc-900 hover:bg-zinc-200 border-0">
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate AI Fix Prompt
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md bg-[#070D19] border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Lock className="h-5 w-5 text-indigo-400" />
+                            Unlock AI Fix Prompts
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                            Subscribe to generate a ready-to-use prompt for your AI coding assistant to automatically fix all security issues found in this scan.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="mt-4 p-4 rounded-lg bg-indigo-500/5 border border-indigo-500/20">
+                        <div className="space-y-3 text-sm text-zinc-300">
+                            <div className="flex items-start gap-2">
+                                <Sparkles className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
+                                <span>Get a detailed, copy-paste prompt with every finding</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <Sparkles className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
+                                <span>Framework-specific guidance for your tech stack</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <Sparkles className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
+                                <span>Give it to Cursor, Windsurf, or Claude to fix issues in minutes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-white/5 hover:text-white">
+                            Close
+                        </Button>
+                        <Button asChild className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                            <Link href="/dashboard/credits">Subscribe Now</Link>
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>

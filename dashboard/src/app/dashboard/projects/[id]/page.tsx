@@ -153,8 +153,8 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                 <>
                     {/* Action bar for latest audit */}
                     <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                        <AIFixPrompt url={p.url} findings={auditData!.allFindings} techStack={auditData!.techStack} />
-                        <ExportButton scanId={latestScan.id} />
+                        <AIFixPrompt url={p.url} findings={auditData!.allFindings} techStack={auditData!.techStack} userPlan={userPlan} />
+                        <ExportButton scanId={latestScan.id} userPlan={userPlan} />
                         <ShareButton scanId={latestScan.id} initialPublicId={latestScan.public_id} />
                     </div>
 

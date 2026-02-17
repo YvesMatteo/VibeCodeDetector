@@ -84,7 +84,7 @@ export default async function DashboardPage() {
                     <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                         Projects
                     </h1>
-                    {planScansLimit > 0 && (
+                    {planScansLimit > 0 ? (
                         <div className="flex items-center gap-4 mt-2">
                             <span className="text-[13px] text-zinc-500">
                                 <span className="text-zinc-300 font-medium tabular-nums">{planScansUsed}</span>
@@ -95,6 +95,21 @@ export default async function DashboardPage() {
                                 <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
                                 <span className="text-zinc-600">/{projectLimit}</span> projects
                             </span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3 mt-2">
+                            <span className="text-[13px] text-zinc-500">
+                                Free plan
+                            </span>
+                            <span className="text-zinc-700">·</span>
+                            <span className="text-[13px] text-zinc-500">
+                                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
+                                <span className="text-zinc-600">/1</span> project
+                            </span>
+                            <span className="text-zinc-700">·</span>
+                            <Link href="/dashboard/credits" className="text-[13px] text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
+                                Upgrade
+                            </Link>
                         </div>
                     )}
                 </div>

@@ -129,12 +129,19 @@ export async function POST(req: NextRequest) {
 
         const limit = (limitResult as any)?.[0] || limitResult;
         if (!limit?.allowed) {
-            return NextResponse.json({
-                error: limit?.project_limit === 0
-                    ? 'A plan is required to create projects. Subscribe to get started.'
-                    : `Project limit reached (${limit?.current_count}/${limit?.project_limit}). Upgrade your plan for more projects.`,
-                code: limit?.project_limit === 0 ? 'PLAN_REQUIRED' : 'PROJECT_LIMIT_REACHED',
-            }, { status: 402 });
+            // Free users get 1 project
+            const isFreeUser = limit?.project_limit === 0;
+            const freeProjectAllowance = 1;
+            if (isFreeUser && (limit?.current_count ?? 0) < freeProjectAllowance) {
+                // Allow — free user hasn't used their 1 free project yet
+            } else {
+                return NextResponse.json({
+                    error: isFreeUser
+                        ? `Free plan allows ${freeProjectAllowance} project. Subscribe to add more.`
+                        : `Project limit reached (${limit?.current_count}/${limit?.project_limit}). Upgrade your plan for more projects.`,
+                    code: isFreeUser ? 'FREE_PROJECT_LIMIT' : 'PROJECT_LIMIT_REACHED',
+                }, { status: 402 });
+            }
         }
 
         // Insert project

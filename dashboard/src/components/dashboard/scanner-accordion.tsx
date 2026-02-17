@@ -358,7 +358,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                     {isFreePlan ? (
                         /* Blurred details for free users */
                         <div className="relative mt-1">
-                            <div className="max-h-[4.5rem] overflow-hidden">
+                            <div className="max-h-[5.5rem] overflow-hidden">
                                 <div className="blur-[6px] select-none pointer-events-none">
                                     <p className="text-sm text-muted-foreground">{finding.description}</p>
                                     {finding.recommendation && (
@@ -368,12 +368,13 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                                     )}
                                 </div>
                             </div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-transparent flex flex-col items-center justify-center gap-2">
-                                <div className="flex items-center gap-2 text-zinc-400">
-                                    <Lock className="h-4 w-4" />
-                                    <span className="text-sm font-medium">Upgrade to see details</span>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-transparent flex flex-col items-center justify-center gap-2 px-4 text-center">
+                                <div className="flex items-center gap-2 text-zinc-300">
+                                    <Lock className="h-4 w-4 text-indigo-400" />
+                                    <span className="text-sm font-semibold">Subscribe to see what the issues are</span>
                                 </div>
-                                <Button size="sm" asChild className="bg-indigo-600 hover:bg-indigo-500 text-white border-0 text-xs px-4">
+                                <p className="text-xs text-zinc-500 max-w-xs">Get the details, recommendations, and AI fix prompts to resolve every finding.</p>
+                                <Button size="sm" asChild className="bg-indigo-600 hover:bg-indigo-500 text-white border-0 text-xs px-5 mt-1">
                                     <Link href="/dashboard/credits">View Plans</Link>
                                 </Button>
                             </div>
