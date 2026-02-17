@@ -2,99 +2,196 @@
 
 import { useEffect, useRef } from 'react';
 
-interface Ribbon {
-  color: string;
-  points: { baseX: number; baseY: number; freqX: number; freqY: number; phaseX: number; phaseY: number; ampX: number; ampY: number }[];
-  passes: { width: number; alpha: number }[];
+interface ControlPoint {
+  baseX: number; baseY: number;
+  freqX: number; freqY: number;
+  phaseX: number; phaseY: number;
+  ampX: number; ampY: number;
 }
 
-const RIBBONS: Ribbon[] = [
+interface RibbonDef {
+  color: string;
+  widthFactor: number;   // fraction of canvas height
+  peakAlpha: number;     // max opacity at ribbon center
+  twistFreq: number;     // how many twist cycles along ribbon
+  twistPhase: number;    // offset for twist animation
+  speed: number;         // animation speed multiplier
+  points: ControlPoint[];
+}
+
+const RIBBONS: RibbonDef[] = [
   {
-    color: '73, 126, 233', // #497EE9
+    color: '73, 126, 233', // #497EE9 — wide slow blue
+    widthFactor: 0.25,
+    peakAlpha: 0.32,
+    twistFreq: 2.2,
+    twistPhase: 0,
+    speed: 1.0,
     points: [
-      { baseX: -0.05, baseY: 0.3, freqX: 0.7, freqY: 0.5, phaseX: 0, phaseY: 0.5, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.2, baseY: 0.5, freqX: 0.5, freqY: 0.8, phaseX: 1.2, phaseY: 0.3, ampX: 0.1, ampY: 0.15 },
-      { baseX: 0.45, baseY: 0.25, freqX: 0.6, freqY: 0.4, phaseX: 2.5, phaseY: 1.1, ampX: 0.12, ampY: 0.1 },
-      { baseX: 0.7, baseY: 0.55, freqX: 0.4, freqY: 0.7, phaseX: 0.8, phaseY: 2.0, ampX: 0.1, ampY: 0.12 },
-      { baseX: 1.05, baseY: 0.35, freqX: 0.55, freqY: 0.6, phaseX: 1.5, phaseY: 0.7, ampX: 0.08, ampY: 0.1 },
-    ],
-    passes: [
-      { width: 28, alpha: 0.04 },
-      { width: 14, alpha: 0.08 },
-      { width: 5, alpha: 0.2 },
-      { width: 1.5, alpha: 0.6 },
+      { baseX: -0.1, baseY: 0.22, freqX: 0.4, freqY: 0.3, phaseX: 0, phaseY: 0.5, ampX: 0.05, ampY: 0.18 },
+      { baseX: 0.15, baseY: 0.55, freqX: 0.3, freqY: 0.5, phaseX: 1.2, phaseY: 0.3, ampX: 0.08, ampY: 0.22 },
+      { baseX: 0.38, baseY: 0.18, freqX: 0.5, freqY: 0.35, phaseX: 2.5, phaseY: 1.1, ampX: 0.1, ampY: 0.2 },
+      { baseX: 0.62, baseY: 0.62, freqX: 0.35, freqY: 0.45, phaseX: 0.8, phaseY: 2.0, ampX: 0.08, ampY: 0.22 },
+      { baseX: 0.85, baseY: 0.28, freqX: 0.45, freqY: 0.4, phaseX: 1.5, phaseY: 0.7, ampX: 0.06, ampY: 0.15 },
+      { baseX: 1.1, baseY: 0.48, freqX: 0.4, freqY: 0.35, phaseX: 2.0, phaseY: 1.5, ampX: 0.05, ampY: 0.12 },
     ],
   },
   {
-    color: '116, 156, 255', // #749CFF
+    color: '116, 156, 255', // #749CFF — medium light blue
+    widthFactor: 0.2,
+    peakAlpha: 0.28,
+    twistFreq: 2.8,
+    twistPhase: 1.8,
+    speed: 1.2,
     points: [
-      { baseX: -0.05, baseY: 0.65, freqX: 0.6, freqY: 0.7, phaseX: 1.0, phaseY: 0, ampX: 0.1, ampY: 0.1 },
-      { baseX: 0.25, baseY: 0.4, freqX: 0.8, freqY: 0.5, phaseX: 0.3, phaseY: 1.8, ampX: 0.12, ampY: 0.14 },
-      { baseX: 0.5, baseY: 0.7, freqX: 0.5, freqY: 0.9, phaseX: 2.0, phaseY: 0.5, ampX: 0.1, ampY: 0.12 },
-      { baseX: 0.75, baseY: 0.35, freqX: 0.7, freqY: 0.6, phaseX: 1.5, phaseY: 2.3, ampX: 0.12, ampY: 0.1 },
-      { baseX: 1.05, baseY: 0.6, freqX: 0.6, freqY: 0.5, phaseX: 0.5, phaseY: 1.0, ampX: 0.08, ampY: 0.12 },
-    ],
-    passes: [
-      { width: 22, alpha: 0.04 },
-      { width: 10, alpha: 0.08 },
-      { width: 4, alpha: 0.18 },
-      { width: 1.2, alpha: 0.5 },
+      { baseX: -0.1, baseY: 0.65, freqX: 0.5, freqY: 0.4, phaseX: 1.0, phaseY: 0, ampX: 0.06, ampY: 0.15 },
+      { baseX: 0.18, baseY: 0.35, freqX: 0.4, freqY: 0.6, phaseX: 0.3, phaseY: 1.8, ampX: 0.1, ampY: 0.2 },
+      { baseX: 0.42, baseY: 0.72, freqX: 0.55, freqY: 0.35, phaseX: 2.0, phaseY: 0.5, ampX: 0.08, ampY: 0.18 },
+      { baseX: 0.6, baseY: 0.3, freqX: 0.35, freqY: 0.55, phaseX: 1.5, phaseY: 2.3, ampX: 0.1, ampY: 0.22 },
+      { baseX: 0.8, baseY: 0.68, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 1.0, ampX: 0.06, ampY: 0.15 },
+      { baseX: 1.1, baseY: 0.4, freqX: 0.4, freqY: 0.5, phaseX: 1.8, phaseY: 0.8, ampX: 0.05, ampY: 0.12 },
     ],
   },
   {
-    color: '124, 58, 237', // #7C3AED
+    color: '124, 58, 237', // #7C3AED — purple
+    widthFactor: 0.18,
+    peakAlpha: 0.25,
+    twistFreq: 3.0,
+    twistPhase: 3.5,
+    speed: 0.9,
     points: [
-      { baseX: -0.05, baseY: 0.5, freqX: 0.5, freqY: 0.6, phaseX: 2.0, phaseY: 1.5, ampX: 0.1, ampY: 0.15 },
-      { baseX: 0.22, baseY: 0.75, freqX: 0.7, freqY: 0.4, phaseX: 0.8, phaseY: 0.2, ampX: 0.12, ampY: 0.1 },
-      { baseX: 0.48, baseY: 0.45, freqX: 0.6, freqY: 0.8, phaseX: 1.5, phaseY: 2.5, ampX: 0.1, ampY: 0.14 },
-      { baseX: 0.73, baseY: 0.7, freqX: 0.8, freqY: 0.5, phaseX: 2.8, phaseY: 0.8, ampX: 0.12, ampY: 0.12 },
-      { baseX: 1.05, baseY: 0.45, freqX: 0.5, freqY: 0.7, phaseX: 1.0, phaseY: 1.5, ampX: 0.08, ampY: 0.1 },
-    ],
-    passes: [
-      { width: 24, alpha: 0.03 },
-      { width: 12, alpha: 0.07 },
-      { width: 4.5, alpha: 0.16 },
-      { width: 1.3, alpha: 0.45 },
+      { baseX: -0.1, baseY: 0.48, freqX: 0.45, freqY: 0.5, phaseX: 2.0, phaseY: 1.5, ampX: 0.06, ampY: 0.2 },
+      { baseX: 0.2, baseY: 0.78, freqX: 0.55, freqY: 0.35, phaseX: 0.8, phaseY: 0.2, ampX: 0.1, ampY: 0.15 },
+      { baseX: 0.45, baseY: 0.38, freqX: 0.4, freqY: 0.6, phaseX: 1.5, phaseY: 2.5, ampX: 0.08, ampY: 0.2 },
+      { baseX: 0.68, baseY: 0.72, freqX: 0.5, freqY: 0.4, phaseX: 2.8, phaseY: 0.8, ampX: 0.1, ampY: 0.18 },
+      { baseX: 0.88, baseY: 0.35, freqX: 0.4, freqY: 0.55, phaseX: 1.0, phaseY: 1.5, ampX: 0.06, ampY: 0.15 },
+      { baseX: 1.1, baseY: 0.55, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 2.0, ampX: 0.05, ampY: 0.1 },
     ],
   },
 ];
 
-function getPoint(p: Ribbon['points'][number], t: number, w: number, h: number) {
-  return {
-    x: (p.baseX + Math.sin(t * p.freqX + p.phaseX) * p.ampX) * w,
-    y: (p.baseY + Math.sin(t * p.freqY + p.phaseY) * p.ampY) * h,
-  };
+// Number of samples along each ribbon curve
+const CURVE_SAMPLES = 80;
+// Number of strips across ribbon width (more = smoother gradient)
+const STRIPS = 20;
+
+/** Evaluate cubic bezier at parameter t */
+function cubicBez(a: number, b: number, c: number, d: number, t: number) {
+  const mt = 1 - t;
+  return mt * mt * mt * a + 3 * mt * mt * t * b + 3 * mt * t * t * c + t * t * t * d;
 }
 
-function drawRibbon(ctx: CanvasRenderingContext2D, ribbon: Ribbon, t: number, w: number, h: number) {
-  const pts = ribbon.points.map((p) => getPoint(p, t, w, h));
+/** Sample the full Catmull-Rom spline at `n` evenly-spaced parameter values */
+function samplePath(
+  points: ControlPoint[],
+  time: number,
+  w: number,
+  h: number,
+  speed: number,
+  n: number,
+): { x: number; y: number }[] {
+  const t = time * speed;
+  const pts = points.map((p) => ({
+    x: (p.baseX + Math.sin(t * p.freqX + p.phaseX) * p.ampX) * w,
+    y: (p.baseY + Math.sin(t * p.freqY + p.phaseY) * p.ampY) * h,
+  }));
 
-  for (const pass of ribbon.passes) {
+  const segs = pts.length - 1;
+  const result: { x: number; y: number }[] = [];
+
+  for (let i = 0; i <= n; i++) {
+    const u = i / n;
+    const g = u * segs;
+    const seg = Math.min(Math.floor(g), segs - 1);
+    const lt = g - seg;
+
+    const p0 = pts[Math.max(seg - 1, 0)];
+    const p1 = pts[seg];
+    const p2 = pts[seg + 1];
+    const p3 = pts[Math.min(seg + 2, pts.length - 1)];
+
+    // Catmull-Rom → cubic bezier control points
+    const b1x = p1.x + (p2.x - p0.x) / 6;
+    const b1y = p1.y + (p2.y - p0.y) / 6;
+    const b2x = p2.x - (p3.x - p1.x) / 6;
+    const b2y = p2.y - (p3.y - p1.y) / 6;
+
+    result.push({
+      x: cubicBez(p1.x, b1x, b2x, p2.x, lt),
+      y: cubicBez(p1.y, b1y, b2y, p2.y, lt),
+    });
+  }
+
+  return result;
+}
+
+/** Draw a single silk ribbon as a mesh of filled strips */
+function drawSilkRibbon(
+  ctx: CanvasRenderingContext2D,
+  ribbon: RibbonDef,
+  time: number,
+  w: number,
+  h: number,
+) {
+  const center = samplePath(ribbon.points, time, w, h, ribbon.speed, CURVE_SAMPLES);
+  const maxWidth = ribbon.widthFactor * h;
+
+  // Pre-compute normals and per-point width
+  const data = center.map((p, i) => {
+    const prev = center[Math.max(i - 1, 0)];
+    const next = center[Math.min(i + 1, CURVE_SAMPLES)];
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const len = Math.hypot(dx, dy) || 1;
+
+    // Normal = perpendicular to tangent
+    const nx = -dy / len;
+    const ny = dx / len;
+
+    // Width varies along ribbon — simulates 3D twist
+    const u = i / CURVE_SAMPLES;
+    const twist = Math.sin(u * Math.PI * ribbon.twistFreq + time * 0.6 + ribbon.twistPhase);
+    const ribbonW = maxWidth * (0.25 + 0.75 * Math.abs(twist));
+
+    return { x: p.x, y: p.y, nx, ny, w: ribbonW };
+  });
+
+  // Draw filled strips from edge to center with gaussian-like alpha falloff
+  for (let s = 0; s < STRIPS; s++) {
+    const frac0 = s / STRIPS;
+    const frac1 = (s + 1) / STRIPS;
+
+    // Distance from center: 0 at frac=0.5, 1 at edges
+    const d = Math.max(Math.abs(frac0 * 2 - 1), Math.abs(frac1 * 2 - 1));
+
+    // Gaussian-ish falloff: bright center, soft edges
+    const alpha = ribbon.peakAlpha * Math.exp(-d * d * 3.5);
+    if (alpha < 0.002) continue;
+
     ctx.beginPath();
-    ctx.strokeStyle = `rgba(${ribbon.color}, ${pass.alpha})`;
-    ctx.lineWidth = pass.width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
 
-    // Move to first point
-    ctx.moveTo(pts[0].x, pts[0].y);
-
-    // Catmull-Rom through all points → cubic bezier segments
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[Math.max(i - 1, 0)];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[Math.min(i + 2, pts.length - 1)];
-
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
-      const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
-      const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+    // Forward edge (top)
+    for (let i = 0; i <= CURVE_SAMPLES; i++) {
+      const pt = data[i];
+      const offset = (frac0 - 0.5) * pt.w;
+      const x = pt.x + pt.nx * offset;
+      const y = pt.y + pt.ny * offset;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
 
-    ctx.stroke();
+    // Backward edge (bottom)
+    for (let i = CURVE_SAMPLES; i >= 0; i--) {
+      const pt = data[i];
+      const offset = (frac1 - 0.5) * pt.w;
+      const x = pt.x + pt.nx * offset;
+      const y = pt.y + pt.ny * offset;
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${ribbon.color}, ${alpha})`;
+    ctx.fill();
   }
 }
 
@@ -128,7 +225,7 @@ export function FlowingRibbons({ className }: { className?: string }) {
       ctx!.clearRect(0, 0, w, h);
 
       for (const ribbon of RIBBONS) {
-        drawRibbon(ctx!, ribbon, time, w, h);
+        drawSilkRibbon(ctx!, ribbon, time, w, h);
       }
     }
 
@@ -141,7 +238,6 @@ export function FlowingRibbons({ className }: { className?: string }) {
     resize();
 
     if (prefersReducedMotion) {
-      // Draw single static frame
       draw();
     } else {
       loop();
