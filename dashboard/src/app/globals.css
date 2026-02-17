@@ -404,6 +404,31 @@
   background: #09090B;
 }
 
+/* Scroll-snap slideshow */
+.snap-container {
+  scroll-snap-type: y mandatory;
+}
+
+@media (max-width: 639px) {
+  .snap-container {
+    scroll-snap-type: y proximity;
+  }
+}
+
+.snap-slide {
+  scroll-snap-align: start;
+}
+
+/* Hide scrollbar on snap container for cleaner look */
+.snap-container::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
 
