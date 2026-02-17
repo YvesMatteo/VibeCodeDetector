@@ -24,7 +24,18 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            // Sign out first to clear any stale cookies from previous sessions
+            // Clear ALL stale supabase cookies on every possible domain
+            // This prevents conflicts between cookies set on different domains
+            document.cookie.split(';').forEach(c => {
+                const name = c.trim().split('=')[0];
+                if (name.startsWith('sb-')) {
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.checkvibe.dev`;
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=checkvibe.dev`;
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=www.checkvibe.dev`;
+                }
+            });
+
             await supabase.auth.signOut();
 
             const { error } = await supabase.auth.signInWithPassword({
@@ -33,27 +44,13 @@ export default function LoginPage() {
             });
 
             if (error) {
-                setError(error.message);
+                setError('Invalid login credentials');
             } else {
-                // Verify server sees the session before redirecting
-                try {
-                    const debugRes = await fetch('/api/debug-auth');
-                    const debug = await debugRes.json();
-
-                    if (debug.user) {
-                        window.location.href = '/dashboard';
-                        return;
-                    }
-                } catch {
-                    // Fallback: try redirect anyway
-                }
-
-                // Session may take a moment to propagate — try redirect
                 window.location.href = '/dashboard';
                 return;
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+        } catch {
+            setError('An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }

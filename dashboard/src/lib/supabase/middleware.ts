@@ -49,15 +49,20 @@ export async function updateSession(request: NextRequest) {
     const cvAccessRaw = request.cookies.get('cv-access')?.value;
     let hasBypass = false;
     if (cvAccessRaw) {
-        const decoded = decodeURIComponent(cvAccessRaw);
-        const [value, signature] = decoded.split(':');
-        if (value === '1' && signature) {
-            const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-            const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
-            // Constant-time comparison to prevent timing attacks
-            const sigBuf = Buffer.from(signature, 'hex');
-            const expBuf = Buffer.from(expected, 'hex');
-            hasBypass = sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf);
+        try {
+            const decoded = decodeURIComponent(cvAccessRaw);
+            const [value, signature] = decoded.split(':');
+            const secret = process.env.COOKIE_SIGNING_SECRET || '';
+            if (value === '1' && signature && secret) {
+                const expected = createHmac('sha256', secret).update('cv-access=1').digest('hex');
+                // Constant-time comparison to prevent timing attacks
+                const sigBuf = Buffer.from(signature, 'hex');
+                const expBuf = Buffer.from(expected, 'hex');
+                hasBypass = sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf);
+            }
+        } catch {
+            // If bypass check fails, continue without bypass
+            hasBypass = false;
         }
     }
 
