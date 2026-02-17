@@ -40,9 +40,9 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
 
     return (
         <Link href={`/dashboard/projects/${id}`} className="group block">
-            <div className="relative rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.03]">
+            <div className="relative rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.03]">
                 {/* Top: favicon + name + time */}
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-3">
                     {imgError ? (
                         <div className="h-8 w-8 rounded-md bg-white/[0.06] flex items-center justify-center shrink-0">
                             <Globe className="h-4 w-4 text-zinc-600" />
@@ -74,7 +74,7 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
                     <>
                         {/* Severity mini-bar */}
                         {issueCount > 0 && (
-                            <div className="flex h-1.5 rounded-full overflow-hidden bg-white/[0.04] mb-4">
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-white/[0.04] mb-2.5">
                                 {sev.critical > 0 && <div className="bg-red-500" style={{ width: `${(sev.critical / barTotal) * 100}%` }} />}
                                 {sev.high > 0 && <div className="bg-orange-500" style={{ width: `${(sev.high / barTotal) * 100}%` }} />}
                                 {sev.medium > 0 && <div className="bg-amber-500" style={{ width: `${(sev.medium / barTotal) * 100}%` }} />}
