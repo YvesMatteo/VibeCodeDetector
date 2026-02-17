@@ -107,7 +107,9 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ sessionId: session.id, url: session.url });
     } catch (err: unknown) {
-        console.error('Stripe Checkout Error:', err);
-        return new NextResponse('Internal Error', { status: 500 });
+        const errMsg = err instanceof Error ? err.message : String(err);
+        const errStack = err instanceof Error ? err.stack : '';
+        console.error('Stripe Checkout Error:', errMsg, errStack);
+        return NextResponse.json({ error: 'Internal Error', debug: errMsg }, { status: 500 });
     }
 }
