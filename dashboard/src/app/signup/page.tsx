@@ -59,7 +59,8 @@ export default function SignupPage() {
             setError(error.message);
             setLoading(false);
         } else {
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
+            return;
         }
     }
 

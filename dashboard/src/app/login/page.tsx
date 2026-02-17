@@ -32,8 +32,9 @@ export default function LoginPage() {
             if (error) {
                 setError(error.message);
             } else {
-                router.push('/dashboard');
-                router.refresh();
+                // Full page navigation to ensure auth cookies are sent with the request
+                window.location.href = '/dashboard';
+                return;
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
