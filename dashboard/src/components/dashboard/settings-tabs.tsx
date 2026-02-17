@@ -103,7 +103,7 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                                     <p className="text-sm text-zinc-500">Please contact support to delete your account</p>
                                 </div>
                                 <Button variant="destructive" size="sm" asChild>
-                                    <a href="mailto:hello@checkvibe.dev?subject=Account Deletion Request">Contact Support</a>
+                                    <a href="mailto:support@checkvibe.dev?subject=Account Deletion Request">Contact Support</a>
                                 </Button>
                             </div>
                         </div>

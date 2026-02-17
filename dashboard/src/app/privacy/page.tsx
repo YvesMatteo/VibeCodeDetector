@@ -270,8 +270,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:privacy@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                privacy@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>. We will respond within 30 days.
             </p>
           </section>
@@ -303,8 +303,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{' '}
-              <a href="mailto:privacy@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                privacy@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>.
             </p>
           </section>
@@ -338,14 +338,14 @@ export default function PrivacyPage() {
             <ul className="space-y-2 ml-2">
               <li>
                 <span className="font-medium text-white">Email:</span>{' '}
-                <a href="mailto:privacy@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  privacy@checkvibe.dev
+                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  support@checkvibe.dev
                 </a>
               </li>
               <li>
                 <span className="font-medium text-white">General inquiries:</span>{' '}
-                <a href="mailto:hello@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  hello@checkvibe.dev
+                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  support@checkvibe.dev
                 </a>
               </li>
               <li>

@@ -39,7 +39,7 @@ const resourceLinks = [
 ];
 
 const connectLinks = [
-    { name: 'Support', href: 'mailto:hello@checkvibe.dev', icon: Mail, external: true },
+    { name: 'Support', href: 'mailto:support@checkvibe.dev', icon: Mail, external: true },
 ];
 
 function SidebarContent({

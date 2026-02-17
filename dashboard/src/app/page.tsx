@@ -606,7 +606,7 @@ export default function HomePage() {
                           variant="outline"
                           asChild
                         >
-                          <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Max Plan">
+                          <a href="mailto:support@checkvibe.dev?subject=CheckVibe Max Plan">
                             <Mail className="mr-2 h-4 w-4" />
                             {tier.cta}
                           </a>
@@ -686,7 +686,7 @@ export default function HomePage() {
 
             {/* Custom CTA */}
             <div className="mt-8 text-center text-sm text-zinc-500">
-              Need more? <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Custom Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom plans.
+              Need more? <a href="mailto:support@checkvibe.dev?subject=CheckVibe Custom Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom plans.
             </div>
           </div>
         </section>
@@ -733,7 +733,7 @@ export default function HomePage() {
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
               <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
-              <a href="mailto:hello@checkvibe.dev" className="hover:text-white transition-colors">Contact</a>
+              <a href="mailto:support@checkvibe.dev" className="hover:text-white transition-colors">Contact</a>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm text-center">
               © {new Date().getFullYear()} CheckVibe

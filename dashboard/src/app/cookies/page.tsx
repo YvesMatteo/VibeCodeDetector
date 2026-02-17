@@ -172,10 +172,10 @@ export default function CookiePolicyPage() {
             <p>
               If you have questions about our use of cookies, contact us at{' '}
               <a
-                href="mailto:privacy@checkvibe.dev"
+                href="mailto:support@checkvibe.dev"
                 className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
               >
-                privacy@checkvibe.dev
+                support@checkvibe.dev
               </a>.
             </p>
           </section>

@@ -131,8 +131,8 @@ export default function TermsPage() {
               We offer a full refund within 14 days of your initial subscription purchase if you are
               not satisfied with the service. After this 14-day period, refunds are not provided for
               partial billing periods. To request a refund, contact us at{' '}
-              <a href="mailto:hello@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                hello@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>.
             </p>
 
@@ -141,8 +141,8 @@ export default function TermsPage() {
               If you are located in the European Union, you have the right to withdraw from your
               subscription within 14 days of purchase without giving any reason, in accordance with
               the EU Consumer Rights Directive. To exercise this right, notify us in writing at{' '}
-              <a href="mailto:hello@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                hello@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>. We will process your refund within 14 days of receiving your withdrawal notice.
               By using the service during the withdrawal period, you acknowledge that you may lose your
               right of withdrawal once the service has been fully performed.
@@ -170,8 +170,8 @@ export default function TermsPage() {
             <p>
               We respect the intellectual property rights of others. If you believe that any content on
               our platform infringes your copyright, please send a notice to{' '}
-              <a href="mailto:legal@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                legal@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>{' '}
               containing:
             </p>
@@ -255,8 +255,8 @@ export default function TermsPage() {
             <h3 className="text-lg font-medium text-white mt-3 mb-2">12.1 Informal Resolution</h3>
             <p>
               Before initiating any formal proceedings, you agree to first contact us at{' '}
-              <a href="mailto:legal@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                legal@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>{' '}
               and attempt to resolve the dispute informally for at least 30 days.
             </p>
@@ -282,8 +282,8 @@ export default function TermsPage() {
             <p>
               You may opt out of the arbitration and class action waiver provisions by sending written
               notice to{' '}
-              <a href="mailto:legal@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                legal@checkvibe.dev
+              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                support@checkvibe.dev
               </a>{' '}
               within 30 days of creating your account. If you opt out, disputes will be resolved in the
               courts of Zurich, Switzerland.
@@ -358,14 +358,14 @@ export default function TermsPage() {
             <ul className="space-y-2 ml-2">
               <li>
                 <span className="font-medium text-white">General:</span>{' '}
-                <a href="mailto:hello@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  hello@checkvibe.dev
+                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  support@checkvibe.dev
                 </a>
               </li>
               <li>
                 <span className="font-medium text-white">Legal:</span>{' '}
-                <a href="mailto:legal@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  legal@checkvibe.dev
+                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  support@checkvibe.dev
                 </a>
               </li>
               <li>
