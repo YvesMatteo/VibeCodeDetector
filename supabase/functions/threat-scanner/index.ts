@@ -195,7 +195,7 @@ Deno.serve(async (req: Request) => {
         }
 
         return new Response(JSON.stringify({
-            scannerType: 'threat-intelligence',
+            scannerType: 'threat_intelligence',
             score: Math.max(0, score),
             checksRun,
             findings,
@@ -208,7 +208,7 @@ Deno.serve(async (req: Request) => {
     } catch (error) {
         console.error('Scanner error:', error);
         return new Response(JSON.stringify({
-            scannerType: 'threat-intelligence',
+            scannerType: 'threat_intelligence',
             score: 0,
             error: 'Scan failed. Please try again.',
             findings: [],
@@ -225,7 +225,7 @@ async function checkSafeBrowsing(url: string, key: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
-            client: { clientId: "vibe-code", clientVersion: "1.0.0" },
+            client: { clientId: "checkvibe", clientVersion: "1.0.0" },
             threatInfo: {
                 threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
                 platformTypes: ["ANY_PLATFORM"],

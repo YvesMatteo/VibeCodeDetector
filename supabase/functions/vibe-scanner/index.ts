@@ -118,7 +118,7 @@ Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-craft
             : [];
 
         return new Response(JSON.stringify({
-            scannerType: 'vibe-match',
+            scannerType: 'vibe_match',
             score: qualityScore,
             aiLikelihood,
             findings,
@@ -131,7 +131,7 @@ Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-craft
     } catch (error) {
         console.error('Scanner error:', error);
         return new Response(JSON.stringify({
-            scannerType: 'vibe-match',
+            scannerType: 'vibe_match',
             score: 0,
             error: 'Scan failed. Please try again.',
             findings: [],

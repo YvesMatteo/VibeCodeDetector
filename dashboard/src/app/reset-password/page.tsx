@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
                             We&apos;ve sent a password reset link to <span className="font-medium text-white">{email}</span>.
                         </p>
                         <Button variant="outline" asChild className="border-white/[0.08] bg-transparent hover:bg-white/5">
-                            <Link href="/login">Back to Login</Link>
+                            <Link href="/login">Back to login</Link>
                         </Button>
                     </CardContent>
                 </Card>

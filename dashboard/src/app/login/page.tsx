@@ -35,38 +35,21 @@ export default function LoginPage() {
             if (error) {
                 setError(error.message);
             } else {
-                // Diagnostic: check browser cookies and server-side auth
-                const hostname = window.location.hostname;
-                const browserCookieNames = document.cookie
-                    .split(';')
-                    .map(c => c.trim().split('=')[0])
-                    .filter(Boolean);
-                const sbCookies = browserCookieNames.filter(n => n.startsWith('sb-'));
-
-                let serverDebug = 'fetch failed';
+                // Verify server sees the session before redirecting
                 try {
                     const debugRes = await fetch('/api/debug-auth');
                     const debug = await debugRes.json();
-                    serverDebug = `user=${debug.user?.email || 'null'}, serverCookies=${debug.supabaseCookies?.length || 0}, err=${debug.authError || 'none'}`;
 
                     if (debug.user) {
-                        // Server sees the session, safe to navigate
                         window.location.href = '/dashboard';
                         return;
                     }
                 } catch {
-                    // Debug failed
+                    // Fallback: try redirect anyway
                 }
 
-                // Show diagnostic instead of redirecting into a loop
-                setError(
-                    `Auth OK but session not reaching server.\n` +
-                    `Host: ${hostname}\n` +
-                    `Browser sb- cookies: [${sbCookies.join(', ')}]\n` +
-                    `All browser cookies: [${browserCookieNames.join(', ')}]\n` +
-                    `Server: ${serverDebug}`
-                );
-                setLoading(false);
+                // Session may take a moment to propagate — try redirect
+                window.location.href = '/dashboard';
                 return;
             }
         } catch (err) {

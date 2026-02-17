@@ -160,7 +160,7 @@ export default function WaitlistPage() {
                             transition={{ delay: 0.5, duration: 0.5 }}
                             className="text-sm sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto px-2"
                         >
-                            26 automated security scanners. One comprehensive report. Be the first to try it.
+                            30 automated security scanners. One comprehensive report. Be the first to try it.
                         </motion.p>
                     </div>
 

@@ -451,7 +451,7 @@ Deno.serve(async (req: Request) => {
                 severity: "info",
                 title: "All session cookies properly secured",
                 description: `All ${sessionCookies.length} session cookie(s) have Secure, HttpOnly, and SameSite attributes set.`,
-                recommendation: "Excellent! Continue maintaining these security practices.",
+                recommendation: "All cookies have proper security flags. Continue maintaining these practices.",
             });
         }
 

@@ -347,7 +347,7 @@ Deno.serve(async (req: Request) => {
                         severity: 'medium',
                         title: 'Wildcard CORS policy',
                         description: 'Access-Control-Allow-Origin is set to *, allowing any website to read responses. While credentials are not allowed with wildcard, this may still leak sensitive data.',
-                        recommendation: 'Restrict Access-Control-Allow-Origin to specific trusted domains. Never use wildcard with credentials.',
+                        recommendation: 'Consider restricting Access-Control-Allow-Origin to specific trusted origins instead of using a wildcard.',
                         value: `ACAO: ${corsAcao}`,
                     });
                 }
@@ -648,7 +648,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const result: ScanResult = {
-            scannerType: 'security-headers',
+            scannerType: 'security',
             score: Math.max(0, Math.min(100, score)),
             findings,
             headers: filteredHeaders,
@@ -663,7 +663,7 @@ Deno.serve(async (req: Request) => {
         console.error('Scanner error:', error);
         return new Response(
             JSON.stringify({
-                scannerType: 'security-headers',
+                scannerType: 'security',
                 score: 0,
                 error: 'Scan failed. Please try again.',
                 findings: [],

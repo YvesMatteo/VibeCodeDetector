@@ -430,7 +430,7 @@ Deno.serve(async (req: Request) => {
             severity: "critical",
             title: `Live secrets found in ${check.file}`,
             description: `${check.file} contains real credentials: ${secretMatches.map(s => s.label).join(", ")}. These secrets are exposed to anyone with access to this repository.`,
-            recommendation: "Immediately rotate all exposed credentials. Remove the file from the repo and git history using 'git filter-branch' or BFG Repo-Cleaner. Add the file to .gitignore.",
+            recommendation: "Immediately rotate all exposed credentials. Remove the file from the repo and git history using 'git filter-repo' or BFG Repo-Cleaner. Add the file to .gitignore.",
             evidence: maskSecretsInContent(check.content.substring(0, 300)),
             reportUrl: check.htmlUrl,
           });

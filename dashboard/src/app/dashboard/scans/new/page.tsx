@@ -39,6 +39,10 @@ import {
     Globe2,
     Cloud,
     TrainFront,
+    ShieldOff,
+    Upload,
+    Activity,
+    Smartphone,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -100,7 +104,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
@@ -188,7 +192,7 @@ export default function NewScanPage() {
                             <div className="mb-4 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
                                 <h3 className="text-white font-medium mb-1">Domain limit reached</h3>
                                 <p className="text-zinc-400 text-sm mb-3">
-                                    Upgrade to scan more domains — Pro gives you 3 projects, Max gives you 10.
+                                    Upgrade for more projects — Pro gives you 3, Max gives you 10.
                                 </p>
                                 <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
                                     <Link href="/dashboard/credits">Upgrade Plan</Link>
@@ -358,7 +362,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 26 checks automatically
+                            Every scan runs up to 30 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -390,7 +394,10 @@ export default function NewScanPage() {
                                 { icon: Cloud, name: 'Cloudflare Pages', description: 'Workers, old deploys, source maps, config exposure', color: 'text-orange-300' },
                                 { icon: TrainFront, name: 'Railway Hosting', description: 'Error disclosure, config files, connection strings', color: 'text-zinc-300' },
                                 { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
-                                { icon: Search, name: 'AI Detection', description: 'Detects AI-generated sites and vibe-coded patterns', color: 'text-pink-400' },
+                                { icon: ShieldOff, name: 'DDoS Protection', description: 'WAF, CDN, rate limiting, bot protection detection', color: 'text-red-400' },
+                                { icon: Upload, name: 'File Upload Security', description: 'Upload form validation, file type restrictions', color: 'text-purple-400' },
+                                { icon: Activity, name: 'Audit Logging', description: 'Monitoring, logging, and observability checks', color: 'text-cyan-400' },
+                                { icon: Smartphone, name: 'Mobile API', description: 'Mobile API rate limiting and security headers', color: 'text-green-400' },
                             ].map((check) => (
                                 <div
                                     key={check.name}

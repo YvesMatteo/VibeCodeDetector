@@ -289,7 +289,7 @@ async function testParameterRedirects(
                     vulnerabilities.push({
                         endpoint: testUrl,
                         method: label,
-                        severity: label === 'direct URL' ? 'critical' : 'critical',
+                        severity: 'critical',
                         penalty: -25,
                         title: `Open redirect via existing parameter "${param}" (${label})`,
                         description: `The parameter "${param}" in the target URL redirects to an external domain when set to a malicious URL using the ${label} technique. Status: ${result.status}.`,

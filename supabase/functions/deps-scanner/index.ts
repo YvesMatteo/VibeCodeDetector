@@ -634,7 +634,7 @@ function buildFindings(vulnMap: Map<string, PackageVulns>): {
                 "-",
             ),
             severity: mapSeverityToFindingSeverity(worstSeverity),
-            title: `${pkg.name}@${pkg.version} (${pkg.ecosystem}) -- ${uniqueVulns.length} known vulnerability${uniqueVulns.length > 1 ? "ies" : ""}${confidenceLabel}`,
+            title: `${pkg.name}@${pkg.version} (${pkg.ecosystem}) -- ${uniqueVulns.length} known ${uniqueVulns.length > 1 ? "vulnerabilities" : "vulnerability"}${confidenceLabel}`,
             description: `Known vulnerabilities in ${pkg.name} ${pkg.version}:\n  ${cveList}${extraNote}`,
             recommendation: pkg.confidence === "range"
                 ? `${recommendation} Note: version ${pkg.version} was inferred from a semver range — the actual installed version may differ. Add a lockfile for exact results.`

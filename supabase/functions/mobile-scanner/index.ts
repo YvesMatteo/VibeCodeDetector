@@ -499,7 +499,7 @@ Deno.serve(async (req: Request) => {
         score = Math.max(0, Math.min(100, score));
 
         const result: ScanResult = {
-            scannerType: "mobile-api",
+            scannerType: "mobile_api",
             score,
             findings,
             scannedAt: new Date().toISOString(),
@@ -515,7 +515,7 @@ Deno.serve(async (req: Request) => {
         console.error("Mobile API Scanner error:", error);
         return new Response(
             JSON.stringify({
-                scannerType: "mobile-api",
+                scannerType: "mobile_api",
                 score: 0,
                 error: "Scan failed. Please try again.",
                 findings: [],

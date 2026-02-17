@@ -135,7 +135,7 @@ Deno.serve(async (req: Request) => {
         } catch (e) {
             return new Response(
                 JSON.stringify({
-                    scannerType: "file-upload",
+                    scannerType: "file_upload",
                     score: 0,
                     error: `Could not reach target: ${e instanceof Error ? e.message : String(e)}`,
                     findings: [],
@@ -223,7 +223,7 @@ Deno.serve(async (req: Request) => {
             });
 
             const result: ScanResult = {
-                scannerType: "file-upload",
+                scannerType: "file_upload",
                 score: 100,
                 findings,
                 scannedAt: new Date().toISOString(),
@@ -419,7 +419,7 @@ Deno.serve(async (req: Request) => {
         score = Math.max(0, Math.min(100, score));
 
         const result: ScanResult = {
-            scannerType: "file-upload",
+            scannerType: "file_upload",
             score,
             findings,
             scannedAt: new Date().toISOString(),
@@ -434,7 +434,7 @@ Deno.serve(async (req: Request) => {
         console.error("Upload Scanner error:", error);
         return new Response(
             JSON.stringify({
-                scannerType: "file-upload",
+                scannerType: "file_upload",
                 score: 0,
                 error: "Scan failed. Please try again.",
                 findings: [],

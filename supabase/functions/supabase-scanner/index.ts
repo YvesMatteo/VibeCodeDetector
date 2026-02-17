@@ -1153,7 +1153,7 @@ Deno.serve(async (req: Request) => {
                 severity: 'info',
                 title: 'Anon key not found — some tests skipped',
                 description: 'The Supabase anon key was not found in client-side code. Tests that require the anon key (table access audit, storage audit, auth config, RPC introspection) were skipped.',
-                recommendation: 'You can provide the anon key via the supabaseUrl parameter or re-run with the key for a complete audit.',
+                recommendation: 'The anon key is auto-detected from page source. If your Supabase project uses a custom domain, ensure the key is embedded in your frontend code.',
             });
         }
 

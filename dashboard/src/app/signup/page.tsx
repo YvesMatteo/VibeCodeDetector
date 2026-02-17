@@ -89,9 +89,9 @@ export default function SignupPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
 
                 <div className="relative">
-                    <Link href="/" className="flex items-center space-x-2.5">
-                        <Image src="/logo.png" alt="CheckVibe Logo" width={36} height={36} className="h-9 w-9 object-contain rounded-lg" />
-                        <span className="text-lg font-semibold text-white tracking-tight">CheckVibe</span>
+                    <Link href="/" className="flex items-center space-x-3">
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain rounded-lg" />
+                        <span className="text-2xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
 
@@ -100,7 +100,7 @@ export default function SignupPage() {
                         Security scanning for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        26 automated scanners. One comprehensive report. Ship with confidence.
+                        30 automated scanners. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 

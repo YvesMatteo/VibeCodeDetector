@@ -71,7 +71,7 @@ Deno.serve(async (req: Request) => {
                 ? "Timed out fetching the target site (15s)"
                 : `Could not reach the target site: ${fetchErr.message}`;
             return jsonResponse({
-                scannerType: "legal-scanner",
+                scannerType: "legal",
                 score: 50,
                 findings: [{ title: "Site unreachable", severity: "low", description: msg }],
                 scannedAt: new Date().toISOString(),
@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
 
         if (!response.ok) {
             return jsonResponse({
-                scannerType: "legal-scanner",
+                scannerType: "legal",
                 score: 50,
                 findings: [{ title: "Site returned an error", severity: "low", description: `HTTP ${response.status} ${response.statusText}. Could not analyze legal compliance.` }],
                 scannedAt: new Date().toISOString(),
@@ -109,7 +109,7 @@ Deno.serve(async (req: Request) => {
             console.error("Legal scanner Gemini error:", result.error);
             // Internal AI errors are not the site's fault — return clean
             return jsonResponse({
-                scannerType: "legal-scanner",
+                scannerType: "legal",
                 score: 100,
                 findings: [],
                 scannedAt: new Date().toISOString(),
@@ -126,7 +126,7 @@ Deno.serve(async (req: Request) => {
         const findings = Array.isArray(content.findings) ? content.findings : [];
 
         return jsonResponse({
-            scannerType: "legal-scanner",
+            scannerType: "legal",
             score,
             findings,
             scannedAt: new Date().toISOString(),
@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
         console.error("Legal scanner error:", error);
         // Internal errors should never surface as site issues
         return jsonResponse({
-            scannerType: "legal-scanner",
+            scannerType: "legal",
             score: 100,
             findings: [],
             scannedAt: new Date().toISOString(),

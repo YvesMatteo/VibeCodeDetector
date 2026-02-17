@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, DM_Sans, Outfit } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -22,7 +22,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and 17 more checks.",
+  description: "Scan your website with 30 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
   metadataBase: new URL("https://checkvibe.dev"),
   openGraph: {
     title: "CheckVibe - AI Website Scanner",

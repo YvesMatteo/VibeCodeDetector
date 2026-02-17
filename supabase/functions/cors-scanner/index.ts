@@ -342,7 +342,7 @@ Deno.serve(async (req: Request) => {
                     "The server accepts 'null' as a valid Origin. Attackers can send requests with Origin: null using " +
                     "sandboxed iframes (sandbox attribute), data: URIs, or file:// pages, bypassing origin restrictions.",
                 recommendation:
-                    "Never whitelist 'null' as a valid origin. Remove null from your origin allowlist.",
+                    "Never add 'null' to your origin allowlist. Remove null from your origin allowlist.",
                 evidence: "Tested with Origin: null → server responded with ACAO: null",
             });
         }

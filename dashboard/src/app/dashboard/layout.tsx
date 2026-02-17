@@ -22,20 +22,20 @@ import {
     BookOpen,
     ExternalLink,
     Mail,
-    Shield,
+    ScrollText,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const mainNav = [
     { name: 'Projects', href: '/dashboard', icon: FolderKanban },
     { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
-    { name: 'Credits', href: '/dashboard/credits', icon: CreditCard },
+    { name: 'Plans', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const resourceLinks = [
     { name: 'Docs', href: '/dashboard/docs', icon: BookOpen, external: false },
-    { name: 'Changelog', href: '/dashboard/changelog', icon: Shield, external: false },
+    { name: 'Changelog', href: '/dashboard/changelog', icon: ScrollText, external: false },
 ];
 
 const connectLinks = [
@@ -253,11 +253,12 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background">
             {/* Mobile Header */}
-            <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
+            <header className="fixed top-0 left-0 right-0 z-40 h-12 safe-top bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileOpen(true)}
-                        className="p-2 -ml-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        className="h-11 w-11 flex items-center justify-center -ml-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        aria-label="Open navigation"
                     >
                         <Menu className="h-5 w-5" />
                     </button>
@@ -276,7 +277,7 @@ export default function DashboardLayout({
 
             {/* Mobile Drawer */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="w-64 p-0 bg-background border-white/[0.06]" showCloseButton={false}>
+                <SheetContent side="left" className="w-64 p-0 bg-background border-white/[0.06] safe-bottom" showCloseButton={false}>
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     <SidebarContent
                         pathname={pathname}

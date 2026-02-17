@@ -1088,7 +1088,7 @@ Deno.serve(async (req: Request) => {
             + 1; // info disclosure check
 
         return new Response(JSON.stringify({
-            scannerType: 'tech-stack',
+            scannerType: 'tech_stack',
             score,
             checksRun,
             findings: allFindings,
@@ -1101,7 +1101,7 @@ Deno.serve(async (req: Request) => {
     } catch (error) {
         console.error('Scanner error:', error);
         return new Response(JSON.stringify({
-            scannerType: 'tech-stack',
+            scannerType: 'tech_stack',
             score: 0,
             error: 'Scan failed. The target may be unreachable or blocking requests.',
             findings: [],

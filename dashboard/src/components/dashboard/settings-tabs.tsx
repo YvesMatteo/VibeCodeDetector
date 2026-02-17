@@ -102,7 +102,9 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                                     <p className="font-medium text-red-400">Delete account</p>
                                     <p className="text-sm text-zinc-500">Please contact support to delete your account</p>
                                 </div>
-                                <Button variant="destructive" size="sm" disabled className="opacity-50 cursor-not-allowed">Contact Support</Button>
+                                <Button variant="destructive" size="sm" asChild>
+                                    <a href="mailto:hello@checkvibe.dev?subject=Account Deletion Request">Contact Support</a>
+                                </Button>
                             </div>
                         </div>
                     </CardContent>
@@ -123,8 +125,8 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="font-medium text-white">Current plan: <span className="capitalize">{plan}</span></p>
-                                <p className="text-sm text-zinc-500">{plan === 'none' ? 'No active subscription' : 'Manage your plan and payment method'}</p>
+                                <p className="font-medium text-white">Current plan: <span className="capitalize">{plan === 'none' ? 'Free' : plan}</span></p>
+                                <p className="text-sm text-zinc-500">{plan === 'none' ? 'Upgrade for full scan details and more scans' : 'Manage your plan and payment method'}</p>
                             </div>
                             {plan !== 'none' ? (
                                 <ManageSubscriptionButton />
