@@ -72,8 +72,8 @@ const RIBBONS: RibbonDef[] = [
 
 const CURVE_SAMPLES_DESKTOP = 80;
 const CURVE_SAMPLES_MOBILE = 40;
-const STRIPS_DESKTOP = 20;
-const STRIPS_MOBILE = 10;
+const PASSES_DESKTOP = 10;
+const PASSES_MOBILE = 6;
 
 function cubicBez(a: number, b: number, c: number, d: number, t: number) {
   const mt = 1 - t;
@@ -131,7 +131,7 @@ function drawSilkRibbon(
   isMobile: boolean,
 ) {
   const samples = isMobile ? CURVE_SAMPLES_MOBILE : CURVE_SAMPLES_DESKTOP;
-  const strips = isMobile ? STRIPS_MOBILE : STRIPS_DESKTOP;
+  const passes = isMobile ? PASSES_MOBILE : PASSES_DESKTOP;
   // On mobile: narrower ribbons, lower opacity so text stays readable
   const widthScale = isMobile ? 0.55 : 1.0;
   const alphaScale = isMobile ? 0.45 : 1.0;
@@ -139,54 +139,30 @@ function drawSilkRibbon(
   const center = samplePath(ribbon.points, time, w, h, ribbon.speed, samples);
   const maxWidth = ribbon.widthFactor * h * widthScale;
 
-  const data = center.map((p, i) => {
-    const prev = center[Math.max(i - 1, 0)];
-    const next = center[Math.min(i + 1, samples)];
-    const dx = next.x - prev.x;
-    const dy = next.y - prev.y;
-    const len = Math.hypot(dx, dy) || 1;
+  // Draw multiple stroked passes: wide+dim outer glow → narrow+bright core
+  // This naturally blends into a seamless gradient
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
-    const nx = -dy / len;
-    const ny = dx / len;
+  for (let p = 0; p < passes; p++) {
+    const t = p / (passes - 1); // 0 = outermost, 1 = innermost
+    const lineWidth = maxWidth * (1 - t * 0.92); // outer = full width, inner = 8% of full
+    const alpha = ribbon.peakAlpha * alphaScale * (0.03 + t * 0.97) * (1 - t * 0.3);
+    // Gaussian-ish falloff for outer passes, bright core for inner
+    const adjustedAlpha = alpha * Math.pow(t, 0.3);
 
-    const u = i / samples;
-    const twist = Math.sin(u * Math.PI * ribbon.twistFreq + time * 0.6 + ribbon.twistPhase);
-    const ribbonW = maxWidth * (0.85 + 0.15 * Math.abs(twist));
-
-    return { x: p.x, y: p.y, nx, ny, w: ribbonW };
-  });
-
-  for (let s = 0; s < strips; s++) {
-    const frac0 = s / strips;
-    const frac1 = (s + 1) / strips;
-
-    const d = Math.max(Math.abs(frac0 * 2 - 1), Math.abs(frac1 * 2 - 1));
-
-    const alpha = ribbon.peakAlpha * alphaScale * Math.exp(-d * d * 3.5);
-    if (alpha < 0.002) continue;
+    if (adjustedAlpha < 0.002) continue;
 
     ctx.beginPath();
-
     for (let i = 0; i <= samples; i++) {
-      const pt = data[i];
-      const offset = (frac0 - 0.5) * pt.w;
-      const x = pt.x + pt.nx * offset;
-      const y = pt.y + pt.ny * offset;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      const pt = center[i];
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
     }
 
-    for (let i = samples; i >= 0; i--) {
-      const pt = data[i];
-      const offset = (frac1 - 0.5) * pt.w;
-      const x = pt.x + pt.nx * offset;
-      const y = pt.y + pt.ny * offset;
-      ctx.lineTo(x, y);
-    }
-
-    ctx.closePath();
-    ctx.fillStyle = `rgba(${ribbon.color}, ${alpha})`;
-    ctx.fill();
+    ctx.strokeStyle = `rgba(${ribbon.color}, ${adjustedAlpha})`;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
   }
 }
 
