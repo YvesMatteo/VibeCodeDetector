@@ -73,7 +73,9 @@ export default function WaitlistPage() {
             if (!res.ok) {
                 setError(data.error ?? 'Invalid access code');
             } else {
-                window.location.href = '/';
+                // Redirect to GET endpoint that sets cookie via navigation response
+                // (more reliable than Set-Cookie from fetch across all browsers)
+                window.location.href = `/api/waitlist?token=${encodeURIComponent(data.token)}`;
             }
         } catch {
             setError('Something went wrong. Please try again.');

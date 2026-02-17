@@ -60,6 +60,60 @@ const signupSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// GET handler — validates bypass token, sets cookie, redirects to /
+// ---------------------------------------------------------------------------
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get('token');
+  if (!token) {
+    return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+  }
+
+  const secret = process.env.COOKIE_SIGNING_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!secret) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+
+  // Token format: <hmac>:<timestamp>
+  const lastColon = token.lastIndexOf(':');
+  if (lastColon === -1) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+  }
+  const hmacPart = token.slice(0, lastColon);
+  const tsPart = token.slice(lastColon + 1);
+  const ts = parseInt(tsPart, 10);
+  if (isNaN(ts)) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+  }
+
+  // Check token is within 60 seconds
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - ts) > 60) {
+    return NextResponse.json({ error: 'Token expired' }, { status: 401 });
+  }
+
+  // Verify HMAC
+  const expected = createHmac('sha256', secret).update(`bypass:${ts}`).digest('hex');
+  if (hmacPart !== expected) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+
+  // Set cookie and redirect to landing page
+  const signature = createHmac('sha256', secret).update('cv-access=1').digest('hex');
+  const url = req.nextUrl.clone();
+  url.pathname = '/';
+  url.search = '';
+  const res = NextResponse.redirect(url);
+  res.cookies.set('cv-access', `1:${signature}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  return res;
+}
+
+// ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
