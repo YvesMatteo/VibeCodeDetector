@@ -9,125 +9,75 @@ interface ControlPoint {
   ampX: number; ampY: number;
 }
 
-interface StrokePass {
-  color: string;
-  width: number;
-  alpha: number;
-}
-
 interface RibbonDef {
+  color: string;
+  widthFactor: number;
+  peakAlpha: number;
+  twistFreq: number;
+  twistPhase: number;
   speed: number;
-  passes: StrokePass[];
   points: ControlPoint[];
 }
 
-// Blue glow → white-blue bright center
-const BLUE_PASSES: StrokePass[] = [
-  { color: '60, 110, 220', width: 55, alpha: 0.035 },
-  { color: '70, 120, 230', width: 28, alpha: 0.08 },
-  { color: '90, 145, 255', width: 14, alpha: 0.18 },
-  { color: '130, 175, 255', width: 6, alpha: 0.38 },
-  { color: '195, 210, 255', width: 2.5, alpha: 0.7 },
-  { color: '230, 238, 255', width: 1, alpha: 0.95 },
-];
-
-// Light-blue glow → near-white center
-const LIGHT_BLUE_PASSES: StrokePass[] = [
-  { color: '100, 150, 255', width: 45, alpha: 0.03 },
-  { color: '115, 160, 255', width: 22, alpha: 0.07 },
-  { color: '140, 180, 255', width: 11, alpha: 0.16 },
-  { color: '170, 200, 255', width: 5, alpha: 0.35 },
-  { color: '210, 225, 255', width: 2, alpha: 0.65 },
-  { color: '240, 245, 255', width: 0.8, alpha: 0.9 },
-];
-
-// White-blue subtle accent
-const WHITE_PASSES: StrokePass[] = [
-  { color: '150, 175, 230', width: 38, alpha: 0.025 },
-  { color: '170, 195, 245', width: 18, alpha: 0.06 },
-  { color: '195, 210, 255', width: 9, alpha: 0.14 },
-  { color: '215, 225, 255', width: 4, alpha: 0.3 },
-  { color: '235, 240, 255', width: 1.8, alpha: 0.6 },
-  { color: '248, 250, 255', width: 0.7, alpha: 0.85 },
-];
-
 const RIBBONS: RibbonDef[] = [
-  // ── Bundle 1: main blue sweep (top-left → center-right) ──
   {
+    color: '73, 126, 233', // #497EE9 — wide slow blue
+    widthFactor: 0.25,
+    peakAlpha: 0.55,
+    twistFreq: 2.2,
+    twistPhase: 0,
     speed: 1.0,
-    passes: BLUE_PASSES,
     points: [
-      { baseX: -0.15, baseY: -0.05, freqX: 0.35, freqY: 0.25, phaseX: 0, phaseY: 0.5, ampX: 0.04, ampY: 0.12 },
-      { baseX: 0.1, baseY: 0.30, freqX: 0.3, freqY: 0.4, phaseX: 1.2, phaseY: 0.3, ampX: 0.06, ampY: 0.14 },
-      { baseX: 0.35, baseY: 0.05, freqX: 0.45, freqY: 0.3, phaseX: 2.5, phaseY: 1.1, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.6, baseY: 0.32, freqX: 0.3, freqY: 0.4, phaseX: 0.8, phaseY: 2.0, ampX: 0.06, ampY: 0.14 },
-      { baseX: 0.82, baseY: 0.08, freqX: 0.4, freqY: 0.35, phaseX: 1.5, phaseY: 0.7, ampX: 0.05, ampY: 0.10 },
-      { baseX: 1.1, baseY: 0.22, freqX: 0.35, freqY: 0.3, phaseX: 2.0, phaseY: 1.5, ampX: 0.04, ampY: 0.08 },
+      { baseX: -0.1, baseY: 0.05, freqX: 0.4, freqY: 0.3, phaseX: 0, phaseY: 0.5, ampX: 0.05, ampY: 0.14 },
+      { baseX: 0.15, baseY: 0.30, freqX: 0.3, freqY: 0.5, phaseX: 1.2, phaseY: 0.3, ampX: 0.08, ampY: 0.16 },
+      { baseX: 0.38, baseY: 0.02, freqX: 0.5, freqY: 0.35, phaseX: 2.5, phaseY: 1.1, ampX: 0.1, ampY: 0.14 },
+      { baseX: 0.62, baseY: 0.35, freqX: 0.35, freqY: 0.45, phaseX: 0.8, phaseY: 2.0, ampX: 0.08, ampY: 0.16 },
+      { baseX: 0.85, baseY: 0.08, freqX: 0.45, freqY: 0.4, phaseX: 1.5, phaseY: 0.7, ampX: 0.06, ampY: 0.12 },
+      { baseX: 1.1, baseY: 0.25, freqX: 0.4, freqY: 0.35, phaseX: 2.0, phaseY: 1.5, ampX: 0.05, ampY: 0.10 },
     ],
   },
-  // Parallel companion to Bundle 1 (slightly offset)
   {
-    speed: 1.0,
-    passes: LIGHT_BLUE_PASSES,
+    color: '116, 156, 255', // #749CFF — medium light blue
+    widthFactor: 0.2,
+    peakAlpha: 0.48,
+    twistFreq: 2.8,
+    twistPhase: 1.8,
+    speed: 1.2,
     points: [
-      { baseX: -0.12, baseY: -0.02, freqX: 0.35, freqY: 0.25, phaseX: 0.15, phaseY: 0.65, ampX: 0.04, ampY: 0.11 },
-      { baseX: 0.12, baseY: 0.34, freqX: 0.3, freqY: 0.4, phaseX: 1.35, phaseY: 0.45, ampX: 0.06, ampY: 0.13 },
-      { baseX: 0.37, baseY: 0.09, freqX: 0.45, freqY: 0.3, phaseX: 2.65, phaseY: 1.25, ampX: 0.07, ampY: 0.11 },
-      { baseX: 0.62, baseY: 0.36, freqX: 0.3, freqY: 0.4, phaseX: 0.95, phaseY: 2.15, ampX: 0.06, ampY: 0.13 },
-      { baseX: 0.84, baseY: 0.12, freqX: 0.4, freqY: 0.35, phaseX: 1.65, phaseY: 0.85, ampX: 0.05, ampY: 0.09 },
-      { baseX: 1.12, baseY: 0.26, freqX: 0.35, freqY: 0.3, phaseX: 2.15, phaseY: 1.65, ampX: 0.04, ampY: 0.07 },
+      { baseX: -0.1, baseY: 0.35, freqX: 0.5, freqY: 0.4, phaseX: 1.0, phaseY: 0, ampX: 0.06, ampY: 0.12 },
+      { baseX: 0.18, baseY: 0.12, freqX: 0.4, freqY: 0.6, phaseX: 0.3, phaseY: 1.8, ampX: 0.1, ampY: 0.15 },
+      { baseX: 0.42, baseY: 0.40, freqX: 0.55, freqY: 0.35, phaseX: 2.0, phaseY: 0.5, ampX: 0.08, ampY: 0.14 },
+      { baseX: 0.6, baseY: 0.08, freqX: 0.35, freqY: 0.55, phaseX: 1.5, phaseY: 2.3, ampX: 0.1, ampY: 0.16 },
+      { baseX: 0.8, baseY: 0.38, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 1.0, ampX: 0.06, ampY: 0.12 },
+      { baseX: 1.1, baseY: 0.18, freqX: 0.4, freqY: 0.5, phaseX: 1.8, phaseY: 0.8, ampX: 0.05, ampY: 0.10 },
     ],
   },
-  // ── Bundle 2: light blue arc (upper-center → right) ──
   {
-    speed: 1.15,
-    passes: LIGHT_BLUE_PASSES,
-    points: [
-      { baseX: 0.2, baseY: -0.08, freqX: 0.4, freqY: 0.35, phaseX: 1.8, phaseY: 0, ampX: 0.05, ampY: 0.10 },
-      { baseX: 0.42, baseY: 0.22, freqX: 0.35, freqY: 0.5, phaseX: 0.5, phaseY: 1.6, ampX: 0.07, ampY: 0.14 },
-      { baseX: 0.65, baseY: -0.02, freqX: 0.5, freqY: 0.3, phaseX: 2.2, phaseY: 0.8, ampX: 0.06, ampY: 0.12 },
-      { baseX: 0.85, baseY: 0.28, freqX: 0.35, freqY: 0.45, phaseX: 1.0, phaseY: 2.2, ampX: 0.07, ampY: 0.14 },
-      { baseX: 1.05, baseY: 0.05, freqX: 0.4, freqY: 0.35, phaseX: 2.8, phaseY: 1.0, ampX: 0.05, ampY: 0.10 },
-      { baseX: 1.2, baseY: 0.20, freqX: 0.35, freqY: 0.3, phaseX: 0.3, phaseY: 2.5, ampX: 0.03, ampY: 0.06 },
-    ],
-  },
-  // ── Bundle 3: white-blue sweep (right → bottom-left) ──
-  {
+    color: '220, 225, 255', // white-blue tint
+    widthFactor: 0.18,
+    peakAlpha: 0.38,
+    twistFreq: 3.0,
+    twistPhase: 3.5,
     speed: 0.9,
-    passes: WHITE_PASSES,
     points: [
-      { baseX: 1.15, baseY: -0.05, freqX: 0.4, freqY: 0.3, phaseX: 2.5, phaseY: 1.0, ampX: 0.04, ampY: 0.10 },
-      { baseX: 0.88, baseY: 0.25, freqX: 0.35, freqY: 0.45, phaseX: 1.2, phaseY: 0.3, ampX: 0.06, ampY: 0.14 },
-      { baseX: 0.62, baseY: 0.02, freqX: 0.45, freqY: 0.35, phaseX: 0.5, phaseY: 2.0, ampX: 0.07, ampY: 0.12 },
-      { baseX: 0.38, baseY: 0.30, freqX: 0.3, freqY: 0.5, phaseX: 2.0, phaseY: 0.8, ampX: 0.06, ampY: 0.14 },
-      { baseX: 0.12, baseY: 0.05, freqX: 0.4, freqY: 0.35, phaseX: 1.5, phaseY: 1.5, ampX: 0.05, ampY: 0.10 },
-      { baseX: -0.1, baseY: 0.22, freqX: 0.35, freqY: 0.3, phaseX: 0.8, phaseY: 2.5, ampX: 0.04, ampY: 0.08 },
-    ],
-  },
-  // Parallel companion to Bundle 3
-  {
-    speed: 0.9,
-    passes: WHITE_PASSES,
-    points: [
-      { baseX: 1.18, baseY: -0.01, freqX: 0.4, freqY: 0.3, phaseX: 2.65, phaseY: 1.15, ampX: 0.04, ampY: 0.09 },
-      { baseX: 0.9, baseY: 0.29, freqX: 0.35, freqY: 0.45, phaseX: 1.35, phaseY: 0.45, ampX: 0.06, ampY: 0.13 },
-      { baseX: 0.64, baseY: 0.06, freqX: 0.45, freqY: 0.35, phaseX: 0.65, phaseY: 2.15, ampX: 0.07, ampY: 0.11 },
-      { baseX: 0.4, baseY: 0.34, freqX: 0.3, freqY: 0.5, phaseX: 2.15, phaseY: 0.95, ampX: 0.06, ampY: 0.13 },
-      { baseX: 0.14, baseY: 0.09, freqX: 0.4, freqY: 0.35, phaseX: 1.65, phaseY: 1.65, ampX: 0.05, ampY: 0.09 },
-      { baseX: -0.08, baseY: 0.26, freqX: 0.35, freqY: 0.3, phaseX: 0.95, phaseY: 2.65, ampX: 0.04, ampY: 0.07 },
+      { baseX: -0.1, baseY: 0.22, freqX: 0.45, freqY: 0.5, phaseX: 2.0, phaseY: 1.5, ampX: 0.06, ampY: 0.15 },
+      { baseX: 0.2, baseY: 0.45, freqX: 0.55, freqY: 0.35, phaseX: 0.8, phaseY: 0.2, ampX: 0.1, ampY: 0.12 },
+      { baseX: 0.45, baseY: 0.15, freqX: 0.4, freqY: 0.6, phaseX: 1.5, phaseY: 2.5, ampX: 0.08, ampY: 0.14 },
+      { baseX: 0.68, baseY: 0.42, freqX: 0.5, freqY: 0.4, phaseX: 2.8, phaseY: 0.8, ampX: 0.1, ampY: 0.13 },
+      { baseX: 0.88, baseY: 0.10, freqX: 0.4, freqY: 0.55, phaseX: 1.0, phaseY: 1.5, ampX: 0.06, ampY: 0.12 },
+      { baseX: 1.1, baseY: 0.30, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 2.0, ampX: 0.05, ampY: 0.08 },
     ],
   },
 ];
 
 const CURVE_SAMPLES = 80;
+const STRIPS = 20;
 
-/** Evaluate cubic bezier at parameter t */
 function cubicBez(a: number, b: number, c: number, d: number, t: number) {
   const mt = 1 - t;
   return mt * mt * mt * a + 3 * mt * mt * t * b + 3 * mt * t * t * c + t * t * t * d;
 }
 
-/** Sample a Catmull-Rom spline at n evenly-spaced points */
 function samplePath(
   points: ControlPoint[],
   time: number,
@@ -170,8 +120,7 @@ function samplePath(
   return result;
 }
 
-/** Draw a ribbon as layered strokes: wide dim glow → narrow bright core */
-function drawRibbon(
+function drawSilkRibbon(
   ctx: CanvasRenderingContext2D,
   ribbon: RibbonDef,
   time: number,
@@ -179,18 +128,56 @@ function drawRibbon(
   h: number,
 ) {
   const center = samplePath(ribbon.points, time, w, h, ribbon.speed, CURVE_SAMPLES);
+  const maxWidth = ribbon.widthFactor * h;
 
-  for (const pass of ribbon.passes) {
+  const data = center.map((p, i) => {
+    const prev = center[Math.max(i - 1, 0)];
+    const next = center[Math.min(i + 1, CURVE_SAMPLES)];
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const len = Math.hypot(dx, dy) || 1;
+
+    const nx = -dy / len;
+    const ny = dx / len;
+
+    const u = i / CURVE_SAMPLES;
+    const twist = Math.sin(u * Math.PI * ribbon.twistFreq + time * 0.6 + ribbon.twistPhase);
+    const ribbonW = maxWidth * (0.25 + 0.75 * Math.abs(twist));
+
+    return { x: p.x, y: p.y, nx, ny, w: ribbonW };
+  });
+
+  for (let s = 0; s < STRIPS; s++) {
+    const frac0 = s / STRIPS;
+    const frac1 = (s + 1) / STRIPS;
+
+    const d = Math.max(Math.abs(frac0 * 2 - 1), Math.abs(frac1 * 2 - 1));
+
+    const alpha = ribbon.peakAlpha * Math.exp(-d * d * 3.5);
+    if (alpha < 0.002) continue;
+
     ctx.beginPath();
+
     for (let i = 0; i <= CURVE_SAMPLES; i++) {
-      if (i === 0) ctx.moveTo(center[i].x, center[i].y);
-      else ctx.lineTo(center[i].x, center[i].y);
+      const pt = data[i];
+      const offset = (frac0 - 0.5) * pt.w;
+      const x = pt.x + pt.nx * offset;
+      const y = pt.y + pt.ny * offset;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
-    ctx.strokeStyle = `rgba(${pass.color}, ${pass.alpha})`;
-    ctx.lineWidth = pass.width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
+
+    for (let i = CURVE_SAMPLES; i >= 0; i--) {
+      const pt = data[i];
+      const offset = (frac1 - 0.5) * pt.w;
+      const x = pt.x + pt.nx * offset;
+      const y = pt.y + pt.ny * offset;
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${ribbon.color}, ${alpha})`;
+    ctx.fill();
   }
 }
 
@@ -224,7 +211,7 @@ export function FlowingRibbons({ className }: { className?: string }) {
       ctx!.clearRect(0, 0, w, h);
 
       for (const ribbon of RIBBONS) {
-        drawRibbon(ctx!, ribbon, time, w, h);
+        drawSilkRibbon(ctx!, ribbon, time, w, h);
       }
     }
 
