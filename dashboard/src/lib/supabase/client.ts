@@ -8,12 +8,5 @@ export function createClient() {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    cookieOptions: {
-      // Share cookies between checkvibe.dev and www.checkvibe.dev
-      domain: typeof window !== 'undefined' && window.location.hostname.endsWith('checkvibe.dev')
-        ? '.checkvibe.dev'
-        : undefined,
-    },
-  });
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }

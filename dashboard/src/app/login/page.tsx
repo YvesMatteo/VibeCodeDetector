@@ -24,6 +24,9 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
+            // Sign out first to clear any stale cookies from previous sessions
+            await supabase.auth.signOut();
+
             const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -32,6 +35,19 @@ export default function LoginPage() {
             if (error) {
                 setError(error.message);
             } else {
+                // Verify the server can see our auth cookies before navigating
+                try {
+                    const debugRes = await fetch('/api/debug-auth');
+                    const debug = await debugRes.json();
+                    if (!debug.user) {
+                        console.error('Auth debug: server cannot see session after login', debug);
+                        setError(`Login succeeded but session not detected by server. Cookies: ${debug.supabaseCookies?.length || 0} supabase cookies found. Error: ${debug.authError || 'none'}`);
+                        setLoading(false);
+                        return;
+                    }
+                } catch {
+                    // Debug check failed, try navigating anyway
+                }
                 window.location.href = '/dashboard';
                 return;
             }
