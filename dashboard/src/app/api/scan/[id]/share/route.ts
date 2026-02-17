@@ -22,6 +22,17 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Only subscribers can share reports
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || (profile as any).plan === 'none') {
+      return NextResponse.json({ error: 'Sharing requires a subscription' }, { status: 403 });
+    }
+
     // Verify ownership
     const { data: scan, error } = await supabase
       .from('scans')

@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
-import { Clock } from 'lucide-react';
+import { Clock, Globe } from 'lucide-react';
+import { useState } from 'react';
 
 function timeAgo(dateString: string) {
     const now = new Date();
@@ -26,6 +29,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severity, lastAuditDate }: ProjectCardProps) {
+    const [imgError, setImgError] = useState(false);
     const hostname = (() => {
         try { return new URL(url).hostname; } catch { return url; }
     })();
@@ -39,12 +43,19 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
             <div className="relative rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.03]">
                 {/* Top: favicon + name + time */}
                 <div className="flex items-center gap-3 mb-5">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={faviconUrl || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
-                        alt=""
-                        className="h-8 w-8 rounded-md object-contain shrink-0"
-                    />
+                    {imgError ? (
+                        <div className="h-8 w-8 rounded-md bg-white/[0.06] flex items-center justify-center shrink-0">
+                            <Globe className="h-4 w-4 text-zinc-600" />
+                        </div>
+                    ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                            src={faviconUrl || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                            alt=""
+                            className="h-8 w-8 rounded-md object-contain shrink-0"
+                            onError={() => setImgError(true)}
+                        />
+                    )}
                     <div className="min-w-0 flex-1">
                         <h3 className="text-[15px] font-medium text-zinc-200 truncate group-hover:text-white transition-colors">
                             {name}

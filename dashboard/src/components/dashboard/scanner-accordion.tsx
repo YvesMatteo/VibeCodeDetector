@@ -329,6 +329,27 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
     const canDismiss = !!onDismiss && !!scannerKey && finding.severity?.toLowerCase() !== 'info';
     const isFreePlan = userPlan === 'none';
 
+    if (isFreePlan) {
+        return (
+            <div
+                key={index}
+                className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all`}
+            >
+                <div className="flex items-start gap-3">
+                    <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
+                    <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
+                                {finding.severity}
+                            </Badge>
+                            <span className="text-sm text-zinc-500">Issue detected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             key={index}
@@ -343,7 +364,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                         <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
                             {finding.severity}
                         </Badge>
-                        {!isFreePlan && canDismiss && !showDismiss && (
+                        {canDismiss && !showDismiss && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowDismiss(true); }}
                                 className="ml-auto opacity-0 group-hover/finding:opacity-100 inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-all px-2 py-1 rounded hover:bg-white/5"
@@ -355,31 +376,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                         )}
                     </div>
 
-                    {isFreePlan ? (
-                        /* Blurred details for free users */
-                        <div className="relative mt-1">
-                            <div className="max-h-[5.5rem] overflow-hidden">
-                                <div className="blur-[6px] select-none pointer-events-none">
-                                    <p className="text-sm text-muted-foreground">{finding.description}</p>
-                                    {finding.recommendation && (
-                                        <p className="text-sm mt-2 text-muted-foreground">
-                                            <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-transparent flex flex-col items-center justify-center gap-2 px-4 text-center">
-                                <div className="flex items-center gap-2 text-zinc-300">
-                                    <Lock className="h-4 w-4 text-indigo-400" />
-                                    <span className="text-sm font-semibold">Subscribe to see what the issues are</span>
-                                </div>
-                                <p className="text-xs text-zinc-500 max-w-xs">Get the details, recommendations, and AI fix prompts to resolve every finding.</p>
-                                <Button size="sm" asChild className="bg-indigo-600 hover:bg-indigo-500 text-white border-0 text-xs px-5 mt-1">
-                                    <Link href="/dashboard/credits">View Plans</Link>
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
+                    {(
                         /* Full details for paid users */
                         <>
                             <p className="text-sm text-muted-foreground">
@@ -521,8 +518,9 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
 }
 
 /** Collapsible section for info/passing-check findings. */
-function PassingChecksSection({ findings }: { findings: any[] }) {
+function PassingChecksSection({ findings, userPlan }: { findings: any[]; userPlan?: string }) {
     if (findings.length === 0) return null;
+    if (userPlan === 'none') return null;
     return (
         <details className="mt-4 pt-3 border-t border-white/5">
             <summary className="cursor-pointer text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors flex items-center gap-1.5 select-none">
@@ -541,8 +539,24 @@ function PassingChecksSection({ findings }: { findings: any[] }) {
     );
 }
 
+function FreePlanUpgradeCard() {
+    return (
+        <div className="mt-4 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+            <div className="flex items-center gap-2 mb-1.5">
+                <Lock className="h-4 w-4 text-zinc-400" />
+                <span className="text-sm font-medium text-white">Subscribe to see what the issues are</span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3">Get the details, recommendations, and AI fix prompts to resolve every finding.</p>
+            <Button size="sm" asChild className="bg-white hover:bg-zinc-200 text-black border-0 text-xs px-5 font-medium">
+                <Link href="/dashboard/credits">View Plans</Link>
+            </Button>
+        </div>
+    );
+}
+
 function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, userPlan }: { scannerKey: string; result: any; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback; userPlan?: string }) {
     const allFindings: any[] = result.findings || [];
+    const isFreePlan = userPlan === 'none';
 
     // Filter out dismissed findings
     const isActive = (f: any) => {
@@ -588,11 +602,12 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
                 {uncategorized.length > 0 && (
                     <div className="space-y-4">
                         {uncategorized.map((finding: any, i: number) => (
-                            <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} />
+                            <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                         ))}
                     </div>
                 )}
-                <PassingChecksSection findings={passingChecks} />
+                {isFreePlan && actionable.length > 0 && <FreePlanUpgradeCard />}
+                <PassingChecksSection findings={passingChecks} userPlan={userPlan} />
             </div>
         );
     }
@@ -610,7 +625,8 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
                 {plain.length > 0 && plain.map((finding: any, i: number) => (
                     <FindingCard key={`plain-${i}`} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                 ))}
-                <PassingChecksSection findings={passingChecks} />
+                {isFreePlan && actionable.length > 0 && <FreePlanUpgradeCard />}
+                <PassingChecksSection findings={passingChecks} userPlan={userPlan} />
             </div>
         );
     }
@@ -620,7 +636,8 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
             {actionable.map((finding: any, index: number) => (
                 <FindingCard key={index} finding={finding} index={index} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
             ))}
-            <PassingChecksSection findings={passingChecks} />
+            {isFreePlan && actionable.length > 0 && <FreePlanUpgradeCard />}
+            <PassingChecksSection findings={passingChecks} userPlan={userPlan} />
         </div>
     );
 }

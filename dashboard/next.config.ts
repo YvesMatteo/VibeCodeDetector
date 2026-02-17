@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https://www.google.com https://*.supabase.co",
+              "img-src 'self' data: https: http:",
               "font-src 'self'",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
               "frame-src https://js.stripe.com https://checkout.stripe.com",

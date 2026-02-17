@@ -260,8 +260,8 @@ export default function DashboardLayout({
                     >
                         <Menu className="h-5 w-5" />
                     </button>
-                    <Link href="/" className="flex items-center space-x-2">
-                        <Image src="/logo-composite.png" alt="CheckVibe" width={110} height={20} className="w-auto h-5 object-contain" />
+                    <Link href="/" className="flex items-center">
+                        <Image src="/logo-icon.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
                     </Link>
                 </div>
                 <Button asChild size="sm" className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 font-medium h-8 px-3 text-xs rounded-lg">
