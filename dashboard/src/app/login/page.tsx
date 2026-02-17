@@ -32,7 +32,13 @@ export default function LoginPage() {
             if (error) {
                 setError(error.message);
             } else {
-                // Full page navigation to ensure auth cookies are sent with the request
+                // Check if auth cookies were set before navigating
+                const debugRes = await fetch('/api/debug-auth');
+                const debugData = await debugRes.json();
+                if (!debugData.user) {
+                    setError(`Auth cookies not reaching server. Cookies: ${debugData.authCookieNames.length}, Error: ${debugData.authError || 'none'}`);
+                    return;
+                }
                 window.location.href = '/dashboard';
                 return;
             }
