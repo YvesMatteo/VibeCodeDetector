@@ -13,6 +13,7 @@ import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
 import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ExportButton } from '@/components/dashboard/export-button';
+import { ShareButton } from '@/components/dashboard/share-button';
 import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
 
@@ -154,6 +155,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
                     <div className="flex flex-col sm:flex-row gap-3 mb-6">
                         <AIFixPrompt url={p.url} findings={auditData!.allFindings} techStack={auditData!.techStack} />
                         <ExportButton scanId={latestScan.id} />
+                        <ShareButton scanId={latestScan.id} initialPublicId={latestScan.public_id} />
                     </div>
 
                     {missingScanners.length > 0 && (

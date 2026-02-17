@@ -658,6 +658,61 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Feature Comparison Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-12 sm:mt-16 max-w-5xl mx-auto"
+          >
+            <h3 className="text-lg sm:text-xl font-medium text-white text-center mb-6">Compare Plans</h3>
+            <div className="overflow-x-auto rounded-xl border border-white/5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/[0.02]">
+                    <th className="text-left py-3 px-4 text-zinc-400 font-medium w-[40%]">Feature</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium">Free</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium">Starter</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium text-blue-400">Pro</th>
+                    <th className="text-center py-3 px-4 text-zinc-400 font-medium">Max</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[
+                    { feature: 'Projects', values: ['1', '1', '3', '10'] },
+                    { feature: 'Scans / month', values: ['3', '5', '20', '75'] },
+                    { feature: 'Security scanners', values: ['30', '30', '30', '30'] },
+                    { feature: 'Full scan details', values: [false, true, true, true] },
+                    { feature: 'Scan history', values: [false, true, true, true] },
+                    { feature: 'Issue dismissals', values: [false, true, true, true] },
+                    { feature: 'Shareable reports', values: [false, true, true, true] },
+                    { feature: 'API access', values: [false, false, true, true] },
+                    { feature: 'Priority support', values: [false, false, true, true] },
+                    { feature: 'Dedicated support', values: [false, false, false, true] },
+                  ].map((row) => (
+                    <tr key={row.feature} className="hover:bg-white/[0.01] transition-colors">
+                      <td className="py-2.5 px-4 text-zinc-300">{row.feature}</td>
+                      {row.values.map((val, i) => (
+                        <td key={i} className="text-center py-2.5 px-4">
+                          {typeof val === 'boolean' ? (
+                            val ? (
+                              <CheckCircle className="h-4 w-4 text-emerald-400 mx-auto" />
+                            ) : (
+                              <span className="text-zinc-600">—</span>
+                            )
+                          ) : (
+                            <span className="text-white font-medium">{val}</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+
           {/* Custom CTA */}
           <div className="mt-8 text-center text-sm text-zinc-500">
             Need more? <a href="mailto:hello@checkvibe.dev?subject=CheckVibe Custom Plan" className="text-white hover:text-blue-400 transition-colors font-medium">Contact us</a> for custom plans.

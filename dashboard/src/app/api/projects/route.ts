@@ -24,38 +24,45 @@ export async function GET() {
             return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
         }
 
-        // For each project, get the latest scan
-        const projectsWithScans = await Promise.all(
-            (projects || []).map(async (project: any) => {
-                const { data: latestScan } = await supabase
-                    .from('scans')
-                    .select('id, overall_score, completed_at, results')
-                    .eq('project_id', project.id)
-                    .eq('status', 'completed')
-                    .order('completed_at', { ascending: false })
-                    .limit(1)
-                    .single();
+        // Batch-fetch latest scan for all projects in ONE query (fixes N+1)
+        const projectIds = (projects || []).map((p: any) => p.id);
+        const latestScansMap: Record<string, any> = {};
 
-                let issueCount = 0;
-                if (latestScan?.results) {
-                    const results = latestScan.results as Record<string, any>;
-                    Object.values(results).forEach((r: any) => {
-                        if (r.findings && Array.isArray(r.findings)) {
-                            r.findings.forEach((f: any) => {
-                                if (f.severity?.toLowerCase() !== 'info') issueCount++;
-                            });
-                        }
-                    });
+        if (projectIds.length > 0) {
+            const { data: recentScans } = await supabase
+                .from('scans')
+                .select('project_id, id, overall_score, completed_at, results')
+                .in('project_id', projectIds)
+                .eq('status', 'completed')
+                .order('completed_at', { ascending: false });
+
+            for (const scan of (recentScans || [])) {
+                if (!latestScansMap[scan.project_id]) {
+                    latestScansMap[scan.project_id] = scan;
                 }
+            }
+        }
 
-                return {
-                    ...project,
-                    latestScore: latestScan?.overall_score ?? null,
-                    lastAuditDate: latestScan?.completed_at ?? null,
-                    issueCount,
-                };
-            })
-        );
+        const projectsWithScans = (projects || []).map((project: any) => {
+            const latestScan = latestScansMap[project.id] ?? null;
+            let issueCount = 0;
+            if (latestScan?.results) {
+                const results = latestScan.results as Record<string, any>;
+                Object.values(results).forEach((r: any) => {
+                    if (r.findings && Array.isArray(r.findings)) {
+                        r.findings.forEach((f: any) => {
+                            if (f.severity?.toLowerCase() !== 'info') issueCount++;
+                        });
+                    }
+                });
+            }
+            return {
+                ...project,
+                latestScore: latestScan?.overall_score ?? null,
+                lastAuditDate: latestScan?.completed_at ?? null,
+                issueCount,
+            };
+        });
 
         return NextResponse.json({ projects: projectsWithScans });
     } catch (error) {

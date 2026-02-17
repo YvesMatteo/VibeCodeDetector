@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type MouseEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import { useMotionValue, useTransform, useSpring } from 'framer-motion';
 type View = 'email' | 'success' | 'passcode';
 
 export default function WaitlistPage() {
-    const router = useRouter();
     const [view, setView] = useState<View>('email');
     const [email, setEmail] = useState('');
     const [passcode, setPasscode] = useState('');
@@ -75,7 +73,7 @@ export default function WaitlistPage() {
             if (!res.ok) {
                 setError(data.error ?? 'Invalid access code');
             } else {
-                router.push('/');
+                window.location.href = '/';
             }
         } catch {
             setError('Something went wrong. Please try again.');

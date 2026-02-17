@@ -107,11 +107,14 @@ Deno.serve(async (req: Request) => {
         // Fetch headers from target + CORS probe in parallel
         const abortController = new AbortController();
         const corsTimeout = setTimeout(() => abortController.abort(), 5000);
+        const mainAbort = new AbortController();
+        const mainTimeout = setTimeout(() => mainAbort.abort(), 15000);
 
         const [response, corsResponse] = await Promise.all([
             fetch(url, {
                 method: 'HEAD',
                 redirect: 'follow',
+                signal: mainAbort.signal,
             }),
             fetch(url, {
                 method: 'HEAD',
@@ -122,6 +125,7 @@ Deno.serve(async (req: Request) => {
         ]);
 
         clearTimeout(corsTimeout);
+        clearTimeout(mainTimeout);
 
         const findings: Finding[] = [];
         let score = 100;
@@ -455,16 +459,31 @@ Deno.serve(async (req: Request) => {
             let isStrongCsp = true;
 
             if (cspLower.includes("'unsafe-inline'")) {
-                score -= 5;
-                isStrongCsp = false;
-                findings.push({
-                    id: 'csp-unsafe-inline',
-                    severity: 'medium',
-                    title: 'CSP allows unsafe-inline',
-                    description: "CSP allows 'unsafe-inline' scripts, which significantly weakens XSS protection since inline scripts and event handlers are permitted.",
-                    recommendation: "Remove 'unsafe-inline' from CSP and use nonce-based or hash-based script loading instead.",
-                    value: cspHeader.substring(0, 200),
-                });
+                // Check if nonce or hash is present in the CSP — browsers ignore
+                // unsafe-inline in script-src when a nonce or hash is specified,
+                // so it's not a real weakness in that case.
+                const hasNonceOrHash = /nonce-|sha256-|sha384-|sha512-/i.test(cspLower);
+                if (hasNonceOrHash) {
+                    findings.push({
+                        id: 'csp-unsafe-inline-with-nonce',
+                        severity: 'info',
+                        title: "CSP has unsafe-inline but nonce/hash overrides it",
+                        description: "CSP includes 'unsafe-inline' alongside a nonce or hash directive. Modern browsers ignore unsafe-inline when a nonce or hash is present, so this is safe. The unsafe-inline serves as a fallback for older browsers.",
+                        recommendation: "No action needed. Consider removing 'unsafe-inline' once you no longer need to support browsers that don't understand nonces/hashes.",
+                        value: cspHeader.substring(0, 200),
+                    });
+                } else {
+                    score -= 5;
+                    isStrongCsp = false;
+                    findings.push({
+                        id: 'csp-unsafe-inline',
+                        severity: 'medium',
+                        title: 'CSP allows unsafe-inline',
+                        description: "CSP allows 'unsafe-inline' scripts, which significantly weakens XSS protection since inline scripts and event handlers are permitted.",
+                        recommendation: "Remove 'unsafe-inline' from CSP and use nonce-based or hash-based script loading instead.",
+                        value: cspHeader.substring(0, 200),
+                    });
+                }
             }
 
             if (cspLower.includes("'unsafe-eval'")) {
@@ -500,6 +519,39 @@ Deno.serve(async (req: Request) => {
                     recommendation: 'Replace wildcard sources with specific trusted domains.',
                     value: cspHeader.substring(0, 200),
                 });
+            }
+
+            // Check for data: and blob: URI schemes in script-src
+            const scriptSrcForSchemes = cspDirectives.find(d => d.trim().startsWith('script-src'));
+            if (scriptSrcForSchemes) {
+                const hasDataScheme = /\bdata:/i.test(scriptSrcForSchemes);
+                const hasBlobScheme = /\bblob:/i.test(scriptSrcForSchemes);
+
+                if (hasDataScheme) {
+                    score -= 5;
+                    isStrongCsp = false;
+                    findings.push({
+                        id: 'csp-data-uri-script',
+                        severity: 'high',
+                        title: 'CSP script-src allows data: URIs',
+                        description: "CSP script-src includes 'data:' as an allowed scheme. This allows attackers to inject scripts via data: URIs (e.g., <script src=\"data:text/javascript,...\">), effectively bypassing CSP protection against XSS.",
+                        recommendation: "Remove 'data:' from script-src. Use nonce-based or hash-based script loading for inline scripts instead.",
+                        value: cspHeader.substring(0, 200),
+                    });
+                }
+
+                if (hasBlobScheme) {
+                    score -= 5;
+                    isStrongCsp = false;
+                    findings.push({
+                        id: 'csp-blob-uri-script',
+                        severity: 'high',
+                        title: 'CSP script-src allows blob: URIs',
+                        description: "CSP script-src includes 'blob:' as an allowed scheme. This can be exploited to execute arbitrary JavaScript by creating blob URLs containing malicious scripts, bypassing CSP protections.",
+                        recommendation: "Remove 'blob:' from script-src unless absolutely required. If needed, combine with strict nonce-based CSP.",
+                        value: cspHeader.substring(0, 200),
+                    });
+                }
             }
 
             // Check for missing default-src
@@ -589,10 +641,14 @@ Deno.serve(async (req: Request) => {
             // Build the HTTP equivalent URL to test redirect behavior
             const httpUrl = url.replace(/^https:\/\//, 'http://');
             try {
+                const httpAbort = new AbortController();
+                const httpTimer = setTimeout(() => httpAbort.abort(), 10000);
                 const httpResponse = await fetch(httpUrl, {
                     method: 'HEAD',
-                    redirect: 'manual', // Don't follow redirects — we want to inspect the redirect itself
+                    redirect: 'manual',
+                    signal: httpAbort.signal,
                 });
+                clearTimeout(httpTimer);
 
                 const location = httpResponse.headers.get('Location');
                 const status = httpResponse.status;

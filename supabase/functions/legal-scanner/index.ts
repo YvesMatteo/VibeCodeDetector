@@ -107,11 +107,11 @@ Deno.serve(async (req: Request) => {
 
         if (!result.ok) {
             console.error("Legal scanner Gemini error:", result.error);
-            // Internal AI errors are not the site's fault — return clean
+            // AI analysis failed — return degraded result with manual review recommendation
             return jsonResponse({
                 scannerType: "legal",
-                score: 100,
-                findings: [],
+                score: 50,
+                findings: [{ title: "Legal analysis unavailable", description: "AI-powered legal analysis could not be completed. Manual review recommended.", severity: "medium" }],
                 scannedAt: new Date().toISOString(),
                 url,
             }, req);
@@ -135,11 +135,11 @@ Deno.serve(async (req: Request) => {
 
     } catch (error: any) {
         console.error("Legal scanner error:", error);
-        // Internal errors should never surface as site issues
+        // Internal errors — return degraded result with manual review recommendation
         return jsonResponse({
             scannerType: "legal",
-            score: 100,
-            findings: [],
+            score: 50,
+            findings: [{ title: "Legal analysis unavailable", description: "AI-powered legal analysis could not be completed. Manual review recommended.", severity: "medium" }],
             scannedAt: new Date().toISOString(),
         }, req);
     }

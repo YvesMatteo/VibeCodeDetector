@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, FolderKanban } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectCard } from '@/components/dashboard/project-card';
+import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -139,6 +140,9 @@ export default async function DashboardPage() {
                     ))}
                 </div>
             )}
+
+            {/* Onboarding modal for first-time users */}
+            {projectsWithScans.length === 0 && <WelcomeModal />}
         </div>
     );
 }

@@ -47,12 +47,16 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
 
     const p = project as any;
 
-    const { data: scans } = await supabase
+    const PAGE_SIZE = 20;
+    const { data: scans, count } = await supabase
         .from('scans')
-        .select('id, url, status, overall_score, results, created_at, completed_at')
+        .select('id, url, status, overall_score, results, created_at, completed_at', { count: 'exact' })
         .eq('project_id', params.id)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, PAGE_SIZE - 1);
+
+    const totalScans = count || 0;
 
     return (
         <div className="p-4 md:p-8 max-w-3xl">

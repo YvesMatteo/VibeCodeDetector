@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
         if (!GEMINI_API_KEY) {
             console.error("Missing GEMINI_API_KEY");
             return new Response(JSON.stringify({
-                error: "Server configuration error: Missing AI credentials",
+                error: "Scanner configuration error",
                 score: 0
             }), {
                 headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
@@ -37,8 +37,11 @@ Deno.serve(async (req: Request) => {
             });
         }
 
-        // Fetch page content
-        const response = await fetch(url);
+        // Fetch page content with timeout
+        const fetchCtrl = new AbortController();
+        const fetchTimeout = setTimeout(() => fetchCtrl.abort(), 15000);
+        const response = await fetch(url, { signal: fetchCtrl.signal });
+        clearTimeout(fetchTimeout);
         if (!response.ok) {
             throw new Error(`Failed to fetch target URL: ${response.statusText}`);
         }
@@ -64,8 +67,11 @@ Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-craft
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
+        const geminiCtrl = new AbortController();
+        const geminiTimeout = setTimeout(() => geminiCtrl.abort(), 30000);
         const completion = await fetch(geminiUrl, {
             method: "POST",
+            signal: geminiCtrl.signal,
             headers: {
                 "Content-Type": "application/json",
                 "x-goog-api-key": GEMINI_API_KEY,
@@ -82,6 +88,7 @@ Return ONLY valid JSON: { "score": number (0-100, where 0 is clearly human-craft
             })
         });
 
+        clearTimeout(geminiTimeout);
         const aiRes = await completion.json();
 
         if (aiRes.error) {

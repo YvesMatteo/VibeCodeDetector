@@ -759,8 +759,13 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
         );
 
-        // Wait for all
-        await Promise.all(scannerPromises);
+        // Wait for all with a 55s overall deadline to avoid gateway timeout.
+        // Scanners that haven't finished by then are recorded as timeouts.
+        const OVERALL_TIMEOUT_MS = 55_000;
+        await Promise.race([
+            Promise.all(scannerPromises),
+            new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
+        ]);
 
         // Calculate Overall Score using weighted average (weights sum to 1.0)
         const SCANNER_WEIGHTS: Record<string, number> = {
@@ -796,21 +801,24 @@ export async function POST(req: NextRequest) {
             mobile_api: 0.03,     // Mobile API rate limiting
         };
 
+        // Use FIXED denominator so skipped/errored scanners don't inflate the score.
+        // Sum all defined weights to get the fixed total.
+        const FIXED_TOTAL_WEIGHT = Object.values(SCANNER_WEIGHTS).reduce((a, b) => a + b, 0);
         let weightedSum = 0;
-        let totalWeight = 0;
 
         for (const [key, result] of Object.entries(results)) {
             if (typeof result !== 'object' || result === null) continue;
             const r = result as Record<string, any>;
             if (r.error || typeof r.score !== 'number') continue;
+            // Skipped scanners contribute 0 to weighted sum (correct behavior)
+            if (r.skipped) continue;
 
             const weight = SCANNER_WEIGHTS[key] ?? 0.05;
             weightedSum += r.score * weight;
-            totalWeight += weight;
         }
 
-        const overallScore = totalWeight > 0
-            ? Math.round(weightedSum / totalWeight)
+        const overallScore = FIXED_TOTAL_WEIGHT > 0
+            ? Math.round(weightedSum / FIXED_TOTAL_WEIGHT)
             : 0;
 
         let scanId = null;

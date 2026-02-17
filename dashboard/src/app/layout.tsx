@@ -64,6 +64,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'CheckVibe',
+              applicationCategory: 'SecurityApplication',
+              operatingSystem: 'Web',
+              description: 'AI-powered website security scanner with 30 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
+              url: 'https://checkvibe.dev',
+              offers: [
+                { '@type': 'Offer', name: 'Starter', price: '19', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
+                { '@type': 'Offer', name: 'Pro', price: '39', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
+                { '@type': 'Offer', name: 'Max', price: '79', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
+              ],
+              featureList: '30 security scanners, SQL injection detection, XSS detection, API key scanning, SSL/TLS audit, CORS analysis, CSP analysis, dependency scanning',
+            }),
+          }}
+        />
+      </head>
       <body
         className={`${dmSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}
       >

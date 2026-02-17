@@ -1,0 +1,123 @@
+import { notFound } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import { Badge } from '@/components/ui/badge';
+import { Shield, ExternalLink, Clock } from 'lucide-react';
+import { processAuditData } from '@/lib/audit-data';
+import { AuditReport } from '@/components/dashboard/audit-report';
+import type { Metadata } from 'next';
+
+function getSupabaseAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ publicId: string }> }): Promise<Metadata> {
+    const { publicId } = await params;
+    const supabase = getSupabaseAdmin();
+    const { data: scan } = await supabase
+        .from('scans')
+        .select('url, overall_score')
+        .eq('public_id', publicId)
+        .single();
+
+    if (!scan) return { title: 'Report Not Found' };
+
+    const domain = scan.url?.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'Unknown';
+    return {
+        title: `Security Report — ${domain} | CheckVibe`,
+        description: `Security audit score: ${scan.overall_score ?? '—'}/100 for ${domain}. Scanned by CheckVibe.`,
+        openGraph: {
+            title: `${domain} scored ${scan.overall_score ?? '—'}/100 on CheckVibe`,
+            description: `Full security audit report for ${domain}`,
+        },
+    };
+}
+
+export default async function PublicReportPage({ params }: { params: Promise<{ publicId: string }> }) {
+    const { publicId } = await params;
+
+    if (!/^[0-9a-f]{6,16}$/i.test(publicId)) {
+        return notFound();
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: scan, error } = await supabase
+        .from('scans')
+        .select('url, overall_score, results, completed_at, created_at, status')
+        .eq('public_id', publicId)
+        .single();
+
+    if (error || !scan) {
+        return notFound();
+    }
+
+    const auditData = processAuditData(scan.results as Record<string, any>);
+    const domain = scan.url?.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'Unknown';
+
+    return (
+        <div className="min-h-screen bg-zinc-950">
+            {/* Public header */}
+            <div className="border-b border-white/[0.06] bg-zinc-950/80 backdrop-blur-sm sticky top-0 z-10">
+                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-blue-400" />
+                        <span className="text-sm font-medium text-white">CheckVibe</span>
+                        <span className="text-zinc-600">|</span>
+                        <span className="text-sm text-zinc-400">Public Report</span>
+                    </div>
+                    <a
+                        href="https://checkvibe.dev"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-zinc-500 hover:text-white transition-colors"
+                    >
+                        Scan your site free
+                    </a>
+                </div>
+            </div>
+
+            <div className="max-w-5xl mx-auto p-4 md:p-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white break-all">
+                            {domain}
+                        </h1>
+                        <a
+                            href={scan.url?.startsWith('http') ? scan.url : `https://${scan.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        >
+                            <ExternalLink className="h-5 w-5" />
+                        </a>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
+                        </div>
+                        <Badge variant="secondary" className="bg-white/5 border-white/10">
+                            Score: {scan.overall_score ?? '—'}/100
+                        </Badge>
+                    </div>
+                </div>
+
+                <AuditReport data={auditData} />
+
+                {/* Footer */}
+                <div className="mt-12 pt-6 border-t border-white/[0.06] text-center">
+                    <p className="text-xs text-zinc-600">
+                        Generated by{' '}
+                        <a href="https://checkvibe.dev" className="text-zinc-400 hover:text-white transition-colors">
+                            CheckVibe
+                        </a>
+                        {' '}— Security scanning for vibe-coded websites
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}

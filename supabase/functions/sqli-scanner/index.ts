@@ -508,7 +508,7 @@ async function testInjectionPoint(
         const maxLen = Math.max(trueResult.length, falseResult.length, 1);
         const diffRatio = lengthDiff / maxLen;
 
-        if (diffRatio > 0.05 && lengthDiff > 50 && !errorFound) {
+        if (diffRatio > 0.05 && lengthDiff > 500 && !errorFound) {
             findings.push({
                 id: `sqli-blind-${idx}-${point.name}`,
                 severity: 'high',

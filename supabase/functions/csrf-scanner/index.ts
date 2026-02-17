@@ -338,13 +338,11 @@ Deno.serve(async (req: Request) => {
         // Step 3: Analyze cookies for SameSite
         // =================================================================
         const { cookies } = analyzeCookies(response!.headers);
-        // Match cookies that look like session identifiers — require exact name patterns,
-        // not substring matches (avoids flagging "user_theme", "login_attempt", etc.)
+        // Match cookies that look like session identifiers using inclusive/partial matching.
+        // This catches cookies like auth_session, sid_v2, session_management, auth_token, etc.
         const sessionCookies = cookies.filter(c => {
             const name = c.name.toLowerCase();
-            return /^(session[_-]?id|sessionid|sess|sid|ssid|connect\.sid|phpsessid|jsessionid|asp\.net_sessionid)$/i.test(name) ||
-                /^(auth[_-]?token|access[_-]?token|refresh[_-]?token|jwt|id[_-]?token)$/i.test(name) ||
-                /^(csrf[_-]?token|xsrf[_-]?token|_csrf)$/i.test(name) ||
+            return /session|sid|auth.*token|csrf/i.test(name) ||
                 /^sb-[a-z]+-auth-token/i.test(name);  // Supabase auth cookies
         });
 
