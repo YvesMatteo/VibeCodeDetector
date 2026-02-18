@@ -22,7 +22,7 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
-import { AuroraMesh } from '@/components/ui/aurora-mesh';
+import { FlowingRibbons } from '@/components/ui/flowing-ribbons';
 import { SlideIndicator } from '@/components/ui/slide-indicator';
 
 const features = [
@@ -151,9 +151,9 @@ export default function HomePage() {
 
   return (
     <div className="h-[100dvh] overflow-y-auto snap-container bg-[#0E0E10]">
-      {/* Aurora mesh background — fixed behind all slides */}
+      {/* Prismatic ribbon background — fixed behind all slides */}
       <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <AuroraMesh className="absolute inset-0 w-full h-full" />
+        <FlowingRibbons className="absolute inset-0 w-full h-full" />
       </div>
 
       {/* Navigation */}

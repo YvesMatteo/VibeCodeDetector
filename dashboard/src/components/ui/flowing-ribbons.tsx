@@ -2,6 +2,17 @@
 
 import { useEffect, useRef } from 'react';
 
+/**
+ * Prismatic Flowing Ribbons — MONO AI–inspired
+ *
+ * Canvas-based animated ribbons that sweep diagonally with iridescent
+ * gradient coloring (blue → teal → green → gold → purple). Each ribbon
+ * is drawn with multiple stroked passes (wide dim glow → narrow bright core)
+ * and a linear gradient along its length for the prismatic effect.
+ *
+ * GPU-friendly: uses requestAnimationFrame, capped DPR, reduced passes on mobile.
+ */
+
 interface ControlPoint {
   baseX: number; baseY: number;
   freqX: number; freqY: number;
@@ -10,70 +21,142 @@ interface ControlPoint {
 }
 
 interface RibbonDef {
-  color: string;
+  colorStops: [number, number, number][]; // RGB color stops along the ribbon
   widthFactor: number;
   peakAlpha: number;
-  twistFreq: number;
-  twistPhase: number;
   speed: number;
   points: ControlPoint[];
 }
 
+// Iridescent color palette
+const SPECTRUM_A: [number, number, number][] = [
+  [60, 80, 220],    // deep blue
+  [40, 170, 190],   // teal
+  [60, 190, 130],   // green
+  [190, 160, 50],   // gold
+  [140, 70, 190],   // purple
+  [80, 120, 240],   // light blue
+];
+
+const SPECTRUM_B: [number, number, number][] = [
+  [140, 70, 190],   // purple
+  [80, 120, 240],   // blue
+  [40, 170, 190],   // teal
+  [60, 190, 130],   // green
+  [190, 160, 50],   // gold
+  [200, 80, 100],   // rose
+];
+
+const SPECTRUM_C: [number, number, number][] = [
+  [40, 170, 190],   // teal
+  [60, 190, 130],   // green
+  [190, 160, 50],   // gold
+  [200, 80, 100],   // rose
+  [140, 70, 190],   // purple
+  [60, 80, 220],    // deep blue
+];
+
+const SPECTRUM_D: [number, number, number][] = [
+  [190, 160, 50],   // gold
+  [200, 80, 100],   // rose
+  [140, 70, 190],   // purple
+  [60, 80, 220],    // deep blue
+  [40, 170, 190],   // teal
+  [60, 190, 130],   // green
+];
+
+const SPECTRUM_E: [number, number, number][] = [
+  [80, 120, 240],   // light blue
+  [60, 80, 220],    // deep blue
+  [140, 70, 190],   // purple
+  [200, 80, 100],   // rose
+  [190, 160, 50],   // gold
+  [40, 170, 190],   // teal
+];
+
+// 5 ribbons sweeping diagonally across the viewport
 const RIBBONS: RibbonDef[] = [
   {
-    color: '73, 126, 233', // #497EE9 — wide slow blue
-    widthFactor: 0.20,
-    peakAlpha: 0.75,
-    twistFreq: 2.2,
-    twistPhase: 0,
+    // Wide dominant ribbon — bottom-left to upper-right
+    colorStops: SPECTRUM_A,
+    widthFactor: 0.18,
+    peakAlpha: 0.7,
+    speed: 0.8,
+    points: [
+      { baseX: -0.15, baseY: 0.90, freqX: 0.3, freqY: 0.25, phaseX: 0, phaseY: 0, ampX: 0.04, ampY: 0.06 },
+      { baseX: 0.10, baseY: 0.60, freqX: 0.25, freqY: 0.35, phaseX: 1.0, phaseY: 0.5, ampX: 0.06, ampY: 0.10 },
+      { baseX: 0.30, baseY: 0.35, freqX: 0.35, freqY: 0.30, phaseX: 2.0, phaseY: 1.2, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.55, baseY: 0.15, freqX: 0.30, freqY: 0.40, phaseX: 0.5, phaseY: 2.0, ampX: 0.06, ampY: 0.10 },
+      { baseX: 0.80, baseY: 0.05, freqX: 0.40, freqY: 0.30, phaseX: 1.5, phaseY: 0.8, ampX: 0.05, ampY: 0.08 },
+      { baseX: 1.15, baseY: -0.10, freqX: 0.30, freqY: 0.25, phaseX: 2.5, phaseY: 1.5, ampX: 0.03, ampY: 0.05 },
+    ],
+  },
+  {
+    // Second ribbon — arcs higher, more curves
+    colorStops: SPECTRUM_B,
+    widthFactor: 0.14,
+    peakAlpha: 0.6,
     speed: 1.0,
     points: [
-      { baseX: -0.1, baseY: 0.05, freqX: 0.4, freqY: 0.3, phaseX: 0, phaseY: 0.5, ampX: 0.05, ampY: 0.14 },
-      { baseX: 0.15, baseY: 0.30, freqX: 0.3, freqY: 0.5, phaseX: 1.2, phaseY: 0.3, ampX: 0.08, ampY: 0.16 },
-      { baseX: 0.38, baseY: 0.02, freqX: 0.5, freqY: 0.35, phaseX: 2.5, phaseY: 1.1, ampX: 0.1, ampY: 0.14 },
-      { baseX: 0.62, baseY: 0.35, freqX: 0.35, freqY: 0.45, phaseX: 0.8, phaseY: 2.0, ampX: 0.08, ampY: 0.16 },
-      { baseX: 0.85, baseY: 0.08, freqX: 0.45, freqY: 0.4, phaseX: 1.5, phaseY: 0.7, ampX: 0.06, ampY: 0.12 },
-      { baseX: 1.1, baseY: 0.25, freqX: 0.4, freqY: 0.35, phaseX: 2.0, phaseY: 1.5, ampX: 0.05, ampY: 0.10 },
+      { baseX: -0.10, baseY: 0.75, freqX: 0.35, freqY: 0.30, phaseX: 1.5, phaseY: 0.3, ampX: 0.05, ampY: 0.08 },
+      { baseX: 0.12, baseY: 0.45, freqX: 0.30, freqY: 0.45, phaseX: 0.3, phaseY: 1.5, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.35, baseY: 0.55, freqX: 0.45, freqY: 0.35, phaseX: 2.2, phaseY: 0.7, ampX: 0.10, ampY: 0.10 },
+      { baseX: 0.58, baseY: 0.25, freqX: 0.30, freqY: 0.50, phaseX: 1.0, phaseY: 2.5, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.82, baseY: 0.15, freqX: 0.40, freqY: 0.35, phaseX: 0.8, phaseY: 1.2, ampX: 0.05, ampY: 0.08 },
+      { baseX: 1.12, baseY: 0.00, freqX: 0.35, freqY: 0.30, phaseX: 2.0, phaseY: 0.5, ampX: 0.03, ampY: 0.05 },
     ],
   },
   {
-    color: '116, 156, 255', // #749CFF — medium light blue
-    widthFactor: 0.16,
-    peakAlpha: 0.65,
-    twistFreq: 2.8,
-    twistPhase: 1.8,
+    // Third ribbon — thinner, faster, takes a different path
+    colorStops: SPECTRUM_C,
+    widthFactor: 0.11,
+    peakAlpha: 0.55,
     speed: 1.2,
     points: [
-      { baseX: -0.1, baseY: 0.35, freqX: 0.5, freqY: 0.4, phaseX: 1.0, phaseY: 0, ampX: 0.06, ampY: 0.12 },
-      { baseX: 0.18, baseY: 0.12, freqX: 0.4, freqY: 0.6, phaseX: 0.3, phaseY: 1.8, ampX: 0.1, ampY: 0.15 },
-      { baseX: 0.42, baseY: 0.40, freqX: 0.55, freqY: 0.35, phaseX: 2.0, phaseY: 0.5, ampX: 0.08, ampY: 0.14 },
-      { baseX: 0.6, baseY: 0.08, freqX: 0.35, freqY: 0.55, phaseX: 1.5, phaseY: 2.3, ampX: 0.1, ampY: 0.16 },
-      { baseX: 0.8, baseY: 0.38, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 1.0, ampX: 0.06, ampY: 0.12 },
-      { baseX: 1.1, baseY: 0.18, freqX: 0.4, freqY: 0.5, phaseX: 1.8, phaseY: 0.8, ampX: 0.05, ampY: 0.10 },
+      { baseX: -0.05, baseY: 1.05, freqX: 0.40, freqY: 0.35, phaseX: 2.0, phaseY: 1.0, ampX: 0.04, ampY: 0.06 },
+      { baseX: 0.15, baseY: 0.70, freqX: 0.35, freqY: 0.50, phaseX: 0.8, phaseY: 2.0, ampX: 0.07, ampY: 0.12 },
+      { baseX: 0.40, baseY: 0.45, freqX: 0.50, freqY: 0.40, phaseX: 1.5, phaseY: 0.3, ampX: 0.10, ampY: 0.10 },
+      { baseX: 0.65, baseY: 0.30, freqX: 0.35, freqY: 0.55, phaseX: 2.5, phaseY: 1.8, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.90, baseY: 0.10, freqX: 0.45, freqY: 0.35, phaseX: 0.5, phaseY: 0.5, ampX: 0.05, ampY: 0.08 },
+      { baseX: 1.15, baseY: -0.05, freqX: 0.35, freqY: 0.30, phaseX: 1.8, phaseY: 2.5, ampX: 0.03, ampY: 0.05 },
     ],
   },
   {
-    color: '220, 225, 255', // white-blue tint
-    widthFactor: 0.14,
-    peakAlpha: 0.55,
-    twistFreq: 3.0,
-    twistPhase: 3.5,
+    // Fourth ribbon — crosses from upper-left
+    colorStops: SPECTRUM_D,
+    widthFactor: 0.12,
+    peakAlpha: 0.5,
     speed: 0.9,
     points: [
-      { baseX: -0.1, baseY: 0.22, freqX: 0.45, freqY: 0.5, phaseX: 2.0, phaseY: 1.5, ampX: 0.06, ampY: 0.15 },
-      { baseX: 0.2, baseY: 0.45, freqX: 0.55, freqY: 0.35, phaseX: 0.8, phaseY: 0.2, ampX: 0.1, ampY: 0.12 },
-      { baseX: 0.45, baseY: 0.15, freqX: 0.4, freqY: 0.6, phaseX: 1.5, phaseY: 2.5, ampX: 0.08, ampY: 0.14 },
-      { baseX: 0.68, baseY: 0.42, freqX: 0.5, freqY: 0.4, phaseX: 2.8, phaseY: 0.8, ampX: 0.1, ampY: 0.13 },
-      { baseX: 0.88, baseY: 0.10, freqX: 0.4, freqY: 0.55, phaseX: 1.0, phaseY: 1.5, ampX: 0.06, ampY: 0.12 },
-      { baseX: 1.1, baseY: 0.30, freqX: 0.45, freqY: 0.4, phaseX: 0.5, phaseY: 2.0, ampX: 0.05, ampY: 0.08 },
+      { baseX: -0.10, baseY: 0.20, freqX: 0.30, freqY: 0.40, phaseX: 0.5, phaseY: 1.8, ampX: 0.05, ampY: 0.10 },
+      { baseX: 0.10, baseY: 0.40, freqX: 0.40, freqY: 0.30, phaseX: 1.8, phaseY: 0.2, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.35, baseY: 0.20, freqX: 0.35, freqY: 0.50, phaseX: 0.2, phaseY: 2.2, ampX: 0.10, ampY: 0.10 },
+      { baseX: 0.60, baseY: 0.40, freqX: 0.45, freqY: 0.35, phaseX: 2.5, phaseY: 0.8, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.85, baseY: 0.25, freqX: 0.30, freqY: 0.45, phaseX: 1.0, phaseY: 1.5, ampX: 0.05, ampY: 0.08 },
+      { baseX: 1.12, baseY: 0.10, freqX: 0.35, freqY: 0.30, phaseX: 0.5, phaseY: 2.0, ampX: 0.03, ampY: 0.06 },
+    ],
+  },
+  {
+    // Fifth ribbon — tight, bright accent
+    colorStops: SPECTRUM_E,
+    widthFactor: 0.08,
+    peakAlpha: 0.65,
+    speed: 1.1,
+    points: [
+      { baseX: -0.05, baseY: 0.85, freqX: 0.45, freqY: 0.40, phaseX: 1.2, phaseY: 0.8, ampX: 0.04, ampY: 0.06 },
+      { baseX: 0.18, baseY: 0.55, freqX: 0.35, freqY: 0.55, phaseX: 2.5, phaseY: 1.5, ampX: 0.08, ampY: 0.10 },
+      { baseX: 0.42, baseY: 0.30, freqX: 0.50, freqY: 0.40, phaseX: 0.8, phaseY: 2.5, ampX: 0.10, ampY: 0.10 },
+      { baseX: 0.68, baseY: 0.18, freqX: 0.35, freqY: 0.50, phaseX: 1.5, phaseY: 0.3, ampX: 0.06, ampY: 0.10 },
+      { baseX: 0.92, baseY: 0.08, freqX: 0.40, freqY: 0.35, phaseX: 2.0, phaseY: 1.8, ampX: 0.04, ampY: 0.06 },
+      { baseX: 1.15, baseY: -0.08, freqX: 0.30, freqY: 0.30, phaseX: 0.8, phaseY: 0.5, ampX: 0.03, ampY: 0.04 },
     ],
   },
 ];
 
 const CURVE_SAMPLES_DESKTOP = 80;
 const CURVE_SAMPLES_MOBILE = 40;
-const PASSES_DESKTOP = 10;
-const PASSES_MOBILE = 6;
+const PASSES_DESKTOP = 12;
+const PASSES_MOBILE = 7;
 
 function cubicBez(a: number, b: number, c: number, d: number, t: number) {
   const mt = 1 - t;
@@ -122,7 +205,34 @@ function samplePath(
   return result;
 }
 
-function drawSilkRibbon(
+function lerpColor(
+  a: [number, number, number],
+  b: [number, number, number],
+  t: number,
+): [number, number, number] {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
+}
+
+function getSpectrumColor(
+  stops: [number, number, number][],
+  t: number,
+  time: number,
+): [number, number, number] {
+  // Slowly shift the spectrum over time for a flowing color effect
+  const shift = (t + time * 0.03) % 1;
+  const pos = shift * (stops.length - 1);
+  const idx = Math.floor(pos);
+  const frac = pos - idx;
+  const a = stops[idx % stops.length];
+  const b = stops[(idx + 1) % stops.length];
+  return lerpColor(a, b, frac);
+}
+
+function drawPrismaticRibbon(
   ctx: CanvasRenderingContext2D,
   ribbon: RibbonDef,
   time: number,
@@ -132,26 +242,37 @@ function drawSilkRibbon(
 ) {
   const samples = isMobile ? CURVE_SAMPLES_MOBILE : CURVE_SAMPLES_DESKTOP;
   const passes = isMobile ? PASSES_MOBILE : PASSES_DESKTOP;
-  // On mobile: narrower ribbons, lower opacity so text stays readable
   const widthScale = isMobile ? 0.55 : 1.0;
   const alphaScale = isMobile ? 0.45 : 1.0;
 
   const center = samplePath(ribbon.points, time, w, h, ribbon.speed, samples);
   const maxWidth = ribbon.widthFactor * h * widthScale;
 
-  // Draw multiple stroked passes: wide+dim outer glow → narrow+bright core
-  // This naturally blends into a seamless gradient
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
   for (let p = 0; p < passes; p++) {
     const t = p / (passes - 1); // 0 = outermost, 1 = innermost
-    const lineWidth = maxWidth * (1 - t * 0.92); // outer = full width, inner = 8% of full
-    const alpha = ribbon.peakAlpha * alphaScale * (0.03 + t * 0.97) * (1 - t * 0.3);
-    // Gaussian-ish falloff for outer passes, bright core for inner
-    const adjustedAlpha = alpha * Math.pow(t, 0.3);
+    const lineWidth = maxWidth * (1 - t * 0.93);
+    const alpha = ribbon.peakAlpha * alphaScale * (0.02 + t * 0.98) * (1 - t * 0.25);
+    const adjustedAlpha = alpha * Math.pow(t, 0.25);
 
     if (adjustedAlpha < 0.002) continue;
+
+    // Create gradient along the ribbon path (start → end)
+    const start = center[0];
+    const end = center[center.length - 1];
+    const grad = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+
+    // Add prismatic color stops
+    const numStops = 6;
+    for (let s = 0; s <= numStops; s++) {
+      const st = s / numStops;
+      const [r, g, b] = getSpectrumColor(ribbon.colorStops, st, time);
+      // Inner passes are brighter and more saturated
+      const brightness = 0.7 + t * 0.3;
+      grad.addColorStop(st, `rgba(${r * brightness}, ${g * brightness}, ${b * brightness}, ${adjustedAlpha})`);
+    }
 
     ctx.beginPath();
     for (let i = 0; i <= samples; i++) {
@@ -160,7 +281,7 @@ function drawSilkRibbon(
       else ctx.lineTo(pt.x, pt.y);
     }
 
-    ctx.strokeStyle = `rgba(${ribbon.color}, ${adjustedAlpha})`;
+    ctx.strokeStyle = grad;
     ctx.lineWidth = lineWidth;
     ctx.stroke();
   }
@@ -197,7 +318,7 @@ export function FlowingRibbons({ className }: { className?: string }) {
       ctx!.clearRect(0, 0, w, h);
 
       for (const ribbon of RIBBONS) {
-        drawSilkRibbon(ctx!, ribbon, time, w, h, mobile);
+        drawPrismaticRibbon(ctx!, ribbon, time, w, h, mobile);
       }
     }
 
