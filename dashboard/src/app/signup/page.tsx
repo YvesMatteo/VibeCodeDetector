@@ -137,8 +137,8 @@ export default function SignupPage() {
 
                 <div className="relative">
                     <Link href="/" className="flex items-center space-x-3">
-                        <Image src="/logo.png" alt="CheckVibe Logo" width={48} height={48} className="h-12 w-12 object-contain rounded-lg" />
-                        <span className="text-2xl font-semibold text-white tracking-tight">CheckVibe</span>
+                        <Image src="/logo.png" alt="CheckVibe Logo" width={80} height={80} className="h-20 w-20 object-contain rounded-lg" />
+                        <span className="text-4xl font-semibold text-white tracking-tight">CheckVibe</span>
                     </Link>
                 </div>
 
