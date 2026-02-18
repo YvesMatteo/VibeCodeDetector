@@ -21,7 +21,6 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
-import { PulsingCircles } from '@/components/ui/pulsing-circles';
 import { SlideIndicator } from '@/components/ui/slide-indicator';
 
 const features = [
@@ -149,11 +148,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto snap-container bg-[#0E0E10]">
-      {/* Persistent ribbon background — fixed behind all slides */}
+    <div className="h-[100dvh] overflow-y-auto snap-container bg-black">
+      {/* MONO-inspired background — dot grid + radial glow */}
       <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <PulsingCircles className="absolute inset-0 w-full h-full" />
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+        <div className="mono-dot-grid" />
+        <div className="mono-hero-glow" />
       </div>
 
       {/* Navigation */}
@@ -162,7 +161,7 @@ export default function HomePage() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+          className="bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/[0.15]"
         >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
             <Image src="/logo-composite.png" alt="CheckVibe Logo" width={120} height={24} className="w-auto h-6 object-contain" />
@@ -186,7 +185,7 @@ export default function HomePage() {
 
       {/* Mobile Nav Drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="right" className="w-[70vw] max-w-64 bg-[#1C1C1E] border-white/10 p-0">
+        <SheetContent side="right" className="w-[70vw] max-w-64 bg-black border-white/[0.08] p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <div className="flex flex-col gap-1 p-6 pt-12">
             <a href="#slide-features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
@@ -209,9 +208,6 @@ export default function HomePage() {
         id="slide-hero"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/60 pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent pointer-events-none" aria-hidden="true" />
-
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
           <motion.div
@@ -304,7 +300,7 @@ export default function HomePage() {
               style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
-              className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
+              className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
             >
               {/* Header */}
               <div className="h-8 sm:h-10 border-b border-white/5 bg-white/5 flex items-center px-3 sm:px-4 justify-between">
@@ -317,7 +313,7 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
+              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-black">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
                 <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 whitespace-nowrap">
@@ -383,9 +379,6 @@ export default function HomePage() {
         id="slide-features"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/5 to-transparent pointer-events-none" aria-hidden="true" />
-
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
             <motion.span
@@ -448,8 +441,6 @@ export default function HomePage() {
         id="slide-pricing"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 py-16 sm:py-0"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
-
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
             <motion.span
@@ -508,12 +499,12 @@ export default function HomePage() {
                 className="h-full"
               >
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
-                  ? 'bg-zinc-900/60 border-blue-500/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
-                  : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                  ? 'bg-white/[0.04] border-white/[0.12]'
+                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.10]'
                 }`}>
                   {tier.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div className="bg-blue-600 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
+                      <div className="bg-white text-[10px] font-bold px-3 py-1 rounded-full text-black shadow-lg uppercase tracking-wider">
                         Most Popular
                       </div>
                     </div>
@@ -546,7 +537,7 @@ export default function HomePage() {
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-blue-400' : 'text-zinc-500'}`} />
+                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-white/60' : 'text-white/20'}`} />
                           <span className="text-sm text-zinc-300">{feature}</span>
                         </li>
                       ))}
@@ -563,8 +554,8 @@ export default function HomePage() {
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
-                          ? 'bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/20'
-                          : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                          ? 'bg-white hover:bg-zinc-100 text-black border-0'
+                          : 'bg-white/5 border-white/[0.08] hover:bg-white/10 text-white'
                         }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
                         asChild
@@ -586,11 +577,6 @@ export default function HomePage() {
         id="slide-cta"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/65 pointer-events-none" aria-hidden="true" />
-        {/* Gradient orbs */}
-        <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
-        <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
-
         <motion.div {...fadeInView} className="max-w-3xl mx-auto text-center relative z-10 flex-1 flex items-center">
           <div className="w-full">
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
@@ -610,7 +596,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full py-8 relative z-10 border-t border-white/5 safe-bottom mt-auto">
+        <footer className="w-full py-8 relative z-10 border-t border-white/[0.06] safe-bottom mt-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
               <div className="flex items-center gap-2">

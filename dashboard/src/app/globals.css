@@ -401,7 +401,7 @@
 
 /* Auth page background */
 .bg-gradient-animated {
-  background: #09090B;
+  background: #000;
 }
 
 /* Scroll-snap slideshow */
@@ -430,67 +430,81 @@
 }
 
 /* ============================================
-   WAVE CIRCLES BACKGROUND (wave motion style)
-   Filled circles from bottom-left, layered like
-   radial waves with subtle color shifts.
+   MONO AI–INSPIRED BACKGROUND
+   Pure black, subtle dot grid, radial hero glow.
    ============================================ */
-.pulsing-circles-container {
+
+/* Subtle dot grid — tiny dots on pure black */
+.mono-dot-grid {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 70%);
 }
 
-.pulsing-circle {
+@media (max-width: 639px) {
+  .mono-dot-grid {
+    background-size: 20px 20px;
+    mask-image: radial-gradient(ellipse 90% 50% at 50% 30%, black 10%, transparent 60%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 50% at 50% 30%, black 10%, transparent 60%);
+  }
+}
+
+/* Subtle radial glow behind hero — very faint white */
+.mono-hero-glow {
   position: absolute;
-  border-radius: 50%;
-  bottom: -20%;
-  left: -20%;
-  animation: wave-circle 10s ease-in-out infinite alternate;
+  width: 120%;
+  height: 100%;
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(ellipse 50% 40% at 50% 40%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-/* Outermost → innermost: progressively brighter/smaller */
-.pulsing-circle-1 {
-  width: 180vmax;
-  height: 180vmax;
-  background: rgba(14, 20, 40, 0.95);
-  animation-delay: 0s;
-}
-
-.pulsing-circle-2 {
-  width: 140vmax;
-  height: 140vmax;
-  background: rgba(20, 30, 60, 0.8);
-  animation-delay: -2s;
-}
-
-.pulsing-circle-3 {
-  width: 105vmax;
-  height: 105vmax;
-  background: rgba(30, 45, 90, 0.6);
-  animation-delay: -4s;
-}
-
-.pulsing-circle-4 {
-  width: 75vmax;
-  height: 75vmax;
-  background: rgba(50, 70, 130, 0.4);
-  animation-delay: -6s;
-}
-
-.pulsing-circle-5 {
-  width: 50vmax;
-  height: 50vmax;
-  background: rgba(73, 126, 233, 0.2);
-  animation-delay: -8s;
-}
-
-@keyframes wave-circle {
-  0% {
-    transform: scale(1);
+@media (max-width: 639px) {
+  .mono-hero-glow {
+    width: 140%;
+    left: -20%;
+    background: radial-gradient(ellipse 60% 35% at 50% 35%, rgba(255, 255, 255, 0.025) 0%, transparent 70%);
   }
-  100% {
-    transform: scale(1.08);
-  }
+}
+
+/* Progressive backdrop blur band (MONO-style, 4 layers) */
+.mono-blur-band {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mono-blur-band > div {
+  position: absolute;
+  inset: 0;
+}
+
+.mono-blur-1 {
+  backdrop-filter: blur(0.5px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 50%, transparent 60%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 50%, transparent 60%);
+}
+
+.mono-blur-2 {
+  backdrop-filter: blur(1px);
+  mask-image: linear-gradient(to bottom, transparent 20%, black 40%, black 55%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 20%, black 40%, black 55%, transparent 70%);
+}
+
+.mono-blur-3 {
+  backdrop-filter: blur(2px);
+  mask-image: linear-gradient(to bottom, transparent 35%, black 50%, black 60%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 35%, black 50%, black 60%, transparent 80%);
+}
+
+.mono-blur-4 {
+  backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to bottom, transparent 50%, black 65%, black 75%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, black 65%, black 75%, transparent 90%);
 }
 
 /* ============================================
