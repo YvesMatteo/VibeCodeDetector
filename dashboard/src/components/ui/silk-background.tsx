@@ -3,24 +3,34 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+function isMobile(): boolean {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768 || ('ontouchstart' in window);
+}
+
 export function SilkBackground() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
 
+        // Respect reduced-motion preference
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const mobile = isMobile();
+
         // 1. Setup Scene
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: mobile ? 'low-power' : 'default' });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // optimize performance
+        // Lower pixel ratio on mobile for significant GPU savings
+        renderer.setPixelRatio(mobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
         containerRef.current.appendChild(renderer.domElement);
 
         // 2. The Geometry (A flat plane filling the screen)
         const geometry = new THREE.PlaneGeometry(2, 2);
 
-        // 3. The "Prism" Shader
         const fragmentShader = `
             uniform float u_time;
             uniform vec2 u_resolution;
@@ -28,42 +38,41 @@ export function SilkBackground() {
             void main() {
                 vec2 uv = gl_FragCoord.xy / u_resolution.xy;
 
-                // 1. Diagonal Movement & Rotation
-                // Rotate ~45 degrees to get diagonal folds
-                float angle = 0.785; 
-                float c = cos(angle);
+                // 1. Horizontal / Slight Angle
+                float angle = -0.1;
                 float s = sin(angle);
-                mat2 rot = mat2(c, -s, s, c);
-                
-                // Scale upuv to get more "folds" across the screen
-                vec2 p = rot * uv * 3.0; 
+                float c = cos(angle);
 
-                // Animate the phase
-                float t = u_time * 0.3;
-                p += vec2(t, t * 0.5);
+                vec2 centered = uv - 0.5;
+                vec2 p = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
+                p += 0.5;
 
-                // 2. Sine Wave Interference (The "Folds")
-                // Layering pure sine waves to create ridges
-                float wave = sin(p.x * 2.5);
-                wave += sin(p.y * 1.5 + wave * 0.8); // Domain warping for silkiness
-                wave += sin((p.x + p.y) * 1.0 + t * 0.5);
+                // 2. Horizontal Linear Waves (Cylinders)
+                float t = u_time * 0.15;
+                float wave = sin(p.y * 6.0 + t);
 
-                // Normalize roughly to [0, 1] for mixing
-                // The raw wave sum is roughly [-3, 3], so map it
-                float intensity = wave * 0.5 + 0.5;
+                // Secondary layer for detail
+                wave += sin(p.y * 15.0 + t * 1.5) * 0.2;
 
-                // Sharpen the peaks for high contrast
-                intensity = pow(intensity, 3.0); 
+                // Third layer for "machined" texture
+                wave += sin(p.y * 25.0 - t * 0.5) * 0.05;
 
-                // 3. High Contrast Color Mixing
-                vec3 dark = vec3(0.01, 0.02, 0.12);   // Deep Navy / Black
-                vec3 mid = vec3(0.05, 0.3, 0.8);      // Vivid Blue
-                vec3 light = vec3(0.2, 0.7, 1.0);     // Bright Cyan
-                vec3 highlight = vec3(1.0, 1.0, 1.0); // Pure White
+                // 3. Sharpness / Specular
+                float intensity = wave * 0.4 + 0.5;
+                intensity = smoothstep(0.0, 1.0, intensity);
 
-                vec3 col = mix(dark, mid, smoothstep(0.1, 0.4, intensity));
-                col = mix(col, light, smoothstep(0.4, 0.7, intensity));
-                col = mix(col, highlight, smoothstep(0.8, 1.2, intensity));
+                // 4. Colors
+                vec3 dark = vec3(0.01, 0.01, 0.05);
+                vec3 mid = vec3(0.02, 0.2, 0.6);
+                vec3 light = vec3(0.4, 0.8, 1.0);
+                vec3 white = vec3(0.9, 0.95, 1.0);
+
+                vec3 col = mix(dark, mid, smoothstep(0.1, 0.45, intensity));
+                col = mix(col, light, smoothstep(0.45, 0.85, intensity));
+
+                // Subtle glint along the band
+                float shine = intensity + sin(p.x * 2.0 + t) * 0.05;
+                col = mix(col, white, smoothstep(0.9, 1.1, shine));
 
                 gl_FragColor = vec4(col, 1.0);
             }
@@ -87,31 +96,61 @@ export function SilkBackground() {
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
-        // 4. Animation Loop
+        // 4. Animation Loop with visibility control
         const clock = new THREE.Clock();
         let animationId: number;
+        let isPaused = false;
+
+        // If prefers-reduced-motion, render once and stop
+        if (prefersReducedMotion) {
+            uniforms.u_time.value = 0;
+            renderer.render(scene, camera);
+        }
 
         function animate() {
+            if (isPaused || prefersReducedMotion) return;
             animationId = requestAnimationFrame(animate);
             uniforms.u_time.value = clock.getElapsedTime();
             renderer.render(scene, camera);
         }
 
-        animate();
+        if (!prefersReducedMotion) {
+            animate();
+        }
 
-        // 5. Handle Resize
+        // Pause animation when tab is hidden (saves battery on mobile)
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                isPaused = true;
+                clock.stop();
+            } else {
+                isPaused = false;
+                clock.start();
+                if (!prefersReducedMotion) animate();
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // 5. Handle Resize — debounced for performance
+        let resizeTimeout: ReturnType<typeof setTimeout>;
         function handleResize() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            renderer.setSize(width, height);
-            uniforms.u_resolution.value.set(width, height);
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                renderer.setSize(width, height);
+                uniforms.u_resolution.value.set(width, height);
+            }, 150);
         }
 
         window.addEventListener('resize', handleResize);
 
         // Cleanup
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('resize', handleResize);
+            clearTimeout(resizeTimeout);
             cancelAnimationFrame(animationId);
             if (containerRef.current && containerRef.current.contains(renderer.domElement)) {
                 containerRef.current.removeChild(renderer.domElement);
@@ -122,5 +161,11 @@ export function SilkBackground() {
         };
     }, []);
 
-    return <div ref={containerRef} className="fixed inset-0 z-0 pointer-events-none" />;
+    return (
+        <div className="fixed inset-0 z-0 pointer-events-none will-change-transform">
+            <div ref={containerRef} className="absolute inset-0" />
+            <div className="absolute inset-0 bg-[#0E0E10]/60" />
+            <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent" />
+        </div>
+    );
 }
