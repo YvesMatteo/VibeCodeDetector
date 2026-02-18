@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check key count limit
-    const table = supabase.from('api_keys' as any) as any;
+    const table = supabase.from('api_keys');
     const { count } = await table
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
-    const insertTable = supabase.from('api_keys' as any) as any;
+    const insertTable = supabase.from('api_keys');
     const { data: keyRow, error: insertError } = await insertTable
       .insert({
         user_id: userId,
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
 
     // Return the full key ONCE — it will never be shown again
     return NextResponse.json({
-      ...(keyRow as any),
+      ...keyRow,
       key: fullKey,
       message: 'Save this key now — it will not be shown again.',
     }, { status: 201 });
@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
     if (scopeError) return scopeError;
 
     const supabase = getServiceClient();
-    const keysTable = supabase.from('api_keys' as any) as any;
+    const keysTable = supabase.from('api_keys');
     const { data: keys, error } = await keysTable
       .select('id, key_prefix, name, scopes, allowed_domains, allowed_ips, expires_at, revoked_at, last_used_at, created_at')
       .eq('user_id', context.userId)

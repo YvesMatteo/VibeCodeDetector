@@ -14,7 +14,7 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
     }
 
     const { data: project, error: projectError } = await supabase
-        .from('projects' as any)
+        .from('projects')
         .select('*')
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -24,7 +24,7 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
         return notFound();
     }
 
-    const p = project as any;
+    const p = project;
 
     return (
         <div className="p-4 md:p-8 pb-16 max-w-3xl mx-auto">

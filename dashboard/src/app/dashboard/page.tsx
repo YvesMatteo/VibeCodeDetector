@@ -28,16 +28,16 @@ export default async function DashboardPage() {
 
     // Fetch projects
     const { data: projects } = await supabase
-        .from('projects' as any)
+        .from('projects')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-    const projectList = (projects || []) as any[];
+    const projectList = projects || [];
 
     // For each project, get the latest scan with severity breakdown
     const projectsWithScans = await Promise.all(
-        projectList.map(async (project: any) => {
+        projectList.map(async (project) => {
             const { data: latestScan } = await supabase
                 .from('scans')
                 .select('id, overall_score, completed_at, results')
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {projectsWithScans.map((project: any) => (
+                    {projectsWithScans.map((project) => (
                         <ProjectCard
                             key={project.id}
                             id={project.id}

@@ -23,7 +23,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
     }
 
     const { data: project } = await supabase
-        .from('projects' as any)
+        .from('projects')
         .select('id, name')
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -33,7 +33,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
         return notFound();
     }
 
-    const p = project as any;
+    const p = project;
 
     const { data: scan, error } = await supabase
         .from('scans')

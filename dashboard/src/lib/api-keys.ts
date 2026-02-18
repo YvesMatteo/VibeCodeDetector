@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import type { Database } from '@/lib/supabase/database.types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -81,14 +82,14 @@ export function isValidIpOrCidr(ip: string): boolean {
 // Service role client (for audit log writes and key validation)
 // ---------------------------------------------------------------------------
 
-let _serviceClient: ReturnType<typeof createServiceClient> | null = null;
+let _serviceClient: ReturnType<typeof createServiceClient<Database>> | null = null;
 
 export function getServiceClient() {
   if (!_serviceClient) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) throw new Error('Missing SUPABASE_URL or SERVICE_ROLE_KEY');
-    _serviceClient = createServiceClient(url, key);
+    _serviceClient = createServiceClient<Database>(url, key);
   }
   return _serviceClient;
 }

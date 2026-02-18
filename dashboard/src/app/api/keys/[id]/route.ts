@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr } from '@/lib/api-keys';
+import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr, type Scope } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
 import { checkCsrf } from '@/lib/csrf';
 
@@ -27,7 +27,7 @@ export async function DELETE(
 
     const permanent = req.nextUrl.searchParams.get('permanent') === 'true';
     const supabase = getServiceClient();
-    const table = supabase.from('api_keys' as any) as any;
+    const table = supabase.from('api_keys');
 
     if (permanent) {
       // Only allow permanent deletion of inactive keys (revoked or expired)
@@ -149,7 +149,7 @@ export async function PATCH(
       // Scopes: updated scopes must be a subset of parent key's scopes
       if (updates.scopes) {
         const parentScopes = context.scopes ?? [];
-        const escalatedScopes = (updates.scopes as string[]).filter(s => !parentScopes.includes(s as any));
+        const escalatedScopes = (updates.scopes as string[]).filter(s => !parentScopes.includes(s as Scope));
         if (escalatedScopes.length > 0) {
           return NextResponse.json(
             { error: `Cannot grant scopes not present on parent key: ${escalatedScopes.join(', ')}` },
@@ -203,7 +203,7 @@ export async function PATCH(
     }
 
     // Only update active (non-revoked) keys
-    const table2 = supabase.from('api_keys' as any) as any;
+    const table2 = supabase.from('api_keys');
     const { data, error } = await table2
       .update(updates)
       .eq('id', id)

@@ -48,7 +48,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
     const [url, setUrl] = useState(initialData.url || '');
     const [githubRepo, setGithubRepo] = useState(initialData.github_repo || '');
     const [backendType, setBackendType] = useState<'none' | 'supabase' | 'firebase' | 'convex'>(
-        (initialData.backend_type as any) || 'none'
+        (initialData.backend_type as 'none' | 'supabase' | 'firebase' | 'convex') || 'none'
     );
     const [backendUrl, setBackendUrl] = useState(initialData.backend_url || '');
     const [supabasePAT, setSupabasePAT] = useState(initialData.supabase_pat || '');
@@ -169,7 +169,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                 <CustomSelect
                                     value={backendType}
                                     onChange={(v) => {
-                                        setBackendType(v as any);
+                                        setBackendType(v as 'none' | 'supabase' | 'firebase' | 'convex');
                                         setBackendUrl('');
                                         setSupabasePAT('');
                                     }}

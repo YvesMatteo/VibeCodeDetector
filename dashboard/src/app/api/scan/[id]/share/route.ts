@@ -29,7 +29,7 @@ export async function POST(
       .eq('id', user.id)
       .single();
 
-    if (!profile || (profile as any).plan === 'none') {
+    if (!profile || profile.plan === 'none') {
       return NextResponse.json({ error: 'Sharing requires a subscription' }, { status: 403 });
     }
 
@@ -54,8 +54,8 @@ export async function POST(
     const publicId = crypto.randomBytes(4).toString('hex');
 
     const svc = getServiceClient();
-    const { error: updateError } = await (svc
-      .from('scans') as any)
+    const { error: updateError } = await svc
+      .from('scans')
       .update({ public_id: publicId })
       .eq('id', id);
 
@@ -86,8 +86,8 @@ export async function DELETE(
     }
 
     const svc = getServiceClient();
-    const { error } = await (svc
-      .from('scans') as any)
+    const { error } = await svc
+      .from('scans')
       .update({ public_id: null })
       .eq('id', id)
       .eq('user_id', user.id);

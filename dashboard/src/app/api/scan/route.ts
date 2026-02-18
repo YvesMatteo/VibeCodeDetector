@@ -727,7 +727,7 @@ export async function POST(req: NextRequest) {
                     fetchFaviconUrl(targetUrl).then(faviconUrl => {
                         if (faviconUrl) {
                             const svc = getServiceClient();
-                            svc.from('projects').update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId!).then(() => {}).catch(() => {});
+                            void svc.from('projects').update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId!);
                         }
                     }).catch(() => {});
                 }

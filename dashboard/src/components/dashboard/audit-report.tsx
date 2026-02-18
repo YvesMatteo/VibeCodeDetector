@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
-import { ScannerAccordion } from '@/components/dashboard/scanner-accordion';
+import dynamic from 'next/dynamic';
+
+const ScannerAccordion = dynamic(
+    () => import('@/components/dashboard/scanner-accordion').then(m => m.ScannerAccordion),
+    { ssr: false, loading: () => <div className="animate-pulse space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-white/[0.03]" />)}</div> }
+);
 import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import type { ScanDiff } from '@/lib/scan-diff';
 import { buildFingerprint, DISMISSAL_REASONS, type Dismissal, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
@@ -27,7 +32,7 @@ function computeAdjustedCounts(
 ): { critical: number; high: number; medium: number; low: number; total: number } {
     const counts = { critical: 0, high: 0, medium: 0, low: 0, total: 0 };
     for (const [key, result] of Object.entries(results)) {
-        if ((result as any).skipped) continue;
+        if ('skipped' in result && result.skipped) continue;
         if (!result.findings || !Array.isArray(result.findings)) continue;
         for (const f of result.findings) {
             const sev = f.severity?.toLowerCase();

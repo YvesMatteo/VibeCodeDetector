@@ -23,7 +23,7 @@ export default async function ScanDetailsPage(props: { params: Promise<{ id: str
     }
 
     const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
-    const userPlan = (profile as any)?.plan || 'none';
+    const userPlan = profile?.plan || 'none';
 
     const { data: scan, error } = await supabase
         .from('scans')

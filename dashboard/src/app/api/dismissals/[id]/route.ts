@@ -15,7 +15,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
         }
 
         const { error } = await supabase
-            .from('dismissed_findings' as any)
+            .from('dismissed_findings')
             .delete()
             .eq('id', params.id)
             .eq('user_id', user.id);

@@ -15,7 +15,7 @@ export async function GET() {
 
         // Fetch projects with latest scan info
         const { data: projects, error } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
@@ -26,7 +26,7 @@ export async function GET() {
         }
 
         // Batch-fetch latest scan for all projects in ONE query (fixes N+1)
-        const projectIds = (projects || []).map((p: any) => p.id);
+        const projectIds = (projects || []).map((p) => p.id);
         const latestScansMap: Record<string, any> = {};
 
         if (projectIds.length > 0) {
@@ -38,13 +38,13 @@ export async function GET() {
                 .order('completed_at', { ascending: false });
 
             for (const scan of (recentScans || [])) {
-                if (!latestScansMap[scan.project_id]) {
+                if (scan.project_id && !latestScansMap[scan.project_id]) {
                     latestScansMap[scan.project_id] = scan;
                 }
             }
         }
 
-        const projectsWithScans = (projects || []).map((project: any) => {
+        const projectsWithScans = (projects || []).map((project) => {
             const latestScan = latestScansMap[project.id] ?? null;
             let issueCount = 0;
             if (latestScan?.results) {
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Failed to check project limit' }, { status: 500 });
         }
 
-        const limit = (limitResult as any)?.[0] || limitResult;
+        const limit = Array.isArray(limitResult) ? limitResult[0] : limitResult;
         if (!limit?.allowed) {
             // Free users get 1 project
             const isFreeUser = limit?.project_limit === 0;
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
 
         // Insert project
         const { data: project, error: insertError } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .insert({
                 user_id: user.id,
                 name: name.trim(),

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
         // Verify the project belongs to the user
         const { data: project } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .select('id')
             .eq('id', projectId)
             .eq('user_id', user.id)
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { data: dismissal, error } = await supabase
-            .from('dismissed_findings' as any)
+            .from('dismissed_findings')
             .upsert(
                 {
                     user_id: user.id,
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
         const offset = Math.max(parseInt(req.nextUrl.searchParams.get('offset') || '0', 10) || 0, 0);
 
         const { data: dismissals, error, count } = await supabase
-            .from('dismissed_findings' as any)
+            .from('dismissed_findings')
             .select('*', { count: 'exact' })
             .eq('user_id', user.id)
             .eq('project_id', projectId)

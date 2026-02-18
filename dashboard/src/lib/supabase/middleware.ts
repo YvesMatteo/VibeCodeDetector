@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import type { Database } from './database.types';
 
 async function hmacSha256(secret: string, message: string): Promise<string> {
     const enc = new TextEncoder();
@@ -35,7 +36,7 @@ export async function updateSession(request: NextRequest) {
         throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
     }
 
-    const supabase = createServerClient(
+    const supabase = createServerClient<Database>(
         supabaseUrl,
         supabaseAnonKey,
         {

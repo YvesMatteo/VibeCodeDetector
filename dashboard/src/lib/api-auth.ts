@@ -42,21 +42,7 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
     const keyHash = hashApiKey(apiKey);
     const supabase = getServiceClient();
 
-    const { data, error } = await supabase.rpc('validate_api_key', { p_key_hash: keyHash } as any) as {
-      data: Array<{
-        key_id: string;
-        user_id: string;
-        scopes: Scope[];
-        allowed_domains: string[] | null;
-        allowed_ips: string[] | null;
-        plan: string;
-        plan_scans_used: number;
-        plan_scans_limit: number;
-        plan_domains: number;
-        user_allowed_domains: string[];
-      }> | null;
-      error: any;
-    };
+    const { data, error } = await supabase.rpc('validate_api_key', { p_key_hash: keyHash });
 
     if (error || !data || data.length === 0) {
       return {
@@ -105,7 +91,7 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
       context: {
         userId: row.user_id,
         keyId: row.key_id,
-        scopes: row.scopes,
+        scopes: row.scopes as Scope[],
         keyAllowedDomains: row.allowed_domains,
         keyAllowedIps: row.allowed_ips,
         plan: row.plan,
@@ -222,15 +208,14 @@ export function logApiKeyUsage(opts: {
   if (!opts.keyId) return;
 
   const supabase = getServiceClient();
-  const table = supabase.from('api_key_usage_log' as any) as any;
-  table.insert({
+  supabase.from('api_key_usage_log').insert({
     key_id: opts.keyId,
     user_id: opts.userId,
     endpoint: opts.endpoint,
     method: opts.method,
     ip_address: opts.ip,
     status_code: opts.statusCode,
-  }).then(({ error }: { error: any }) => {
+  }).then(({ error }) => {
     if (error) console.error('Audit log write failed:', error);
   });
 }

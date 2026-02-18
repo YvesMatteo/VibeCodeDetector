@@ -270,7 +270,7 @@ export default function NewProjectPage() {
                                 <div className="space-y-4">
                                     <CustomSelect
                                         value={backendType}
-                                        onChange={(v) => { setBackendType(v as any); setBackendUrl(''); setSupabasePAT(''); }}
+                                        onChange={(v) => { setBackendType(v as 'none' | 'supabase' | 'firebase' | 'convex'); setBackendUrl(''); setSupabasePAT(''); }}
                                         options={BACKEND_OPTIONS}
                                     />
                                     {backendType === 'supabase' && (

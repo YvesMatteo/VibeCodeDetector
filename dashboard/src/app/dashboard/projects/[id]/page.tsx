@@ -27,10 +27,10 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     }
 
     const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
-    const userPlan = (profile as any)?.plan || 'none';
+    const userPlan = profile?.plan || 'none';
 
     const { data: project, error: projectError } = await supabase
-        .from('projects' as any)
+        .from('projects')
         .select('*')
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -40,7 +40,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
         return notFound();
     }
 
-    const p = project as any;
+    const p = project;
 
     // Get latest 2 completed scans (current + previous for diff)
     const { data: recentScans } = await supabase
@@ -56,7 +56,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
 
     // Fetch dismissed findings for this project
     const { data: dismissalsRaw } = await supabase
-        .from('dismissed_findings' as any)
+        .from('dismissed_findings')
         .select('*')
         .eq('user_id', user.id)
         .eq('project_id', params.id)

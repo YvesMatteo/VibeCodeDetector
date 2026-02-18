@@ -21,7 +21,7 @@ export async function GET(
     const supabase = getServiceClient();
 
     // Verify key belongs to user
-    const keyTable = supabase.from('api_keys' as any) as any;
+    const keyTable = supabase.from('api_keys');
     const { data: key } = await keyTable
       .select('id')
       .eq('id', id)
@@ -38,7 +38,7 @@ export async function GET(
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Get recent usage logs
-    const logTable = supabase.from('api_key_usage_log' as any) as any;
+    const logTable = supabase.from('api_key_usage_log');
     const { data: logs, error, count } = await logTable
       .select('endpoint, method, ip_address, status_code, created_at', { count: 'exact' })
       .eq('key_id', id)

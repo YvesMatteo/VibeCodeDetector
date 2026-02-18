@@ -73,7 +73,7 @@ const HIDDEN_SCANNER_KEYS = new Set(['vibe_match', 'ai_detection']);
 
 /** Pre-process scan results into the shape needed by AuditReport */
 export function processAuditData(results: Record<string, ScanResultItem>): AuditReportData {
-    const techStack = (results as any).tech_stack;
+    const techStack = (results as Record<string, ScanResultItem>).tech_stack;
     const techStackCveFindings = techStack?.findings?.filter(
         (f: any) => f.severity?.toLowerCase() !== 'info'
     ) || [];

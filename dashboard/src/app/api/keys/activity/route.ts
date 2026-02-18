@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
         const limit = Math.min(parseInt(searchParams.get('limit') || '30', 10), 100);
 
         const svc = getServiceClient();
-        const logTable = svc.from('api_key_usage_log' as any) as any;
+        const logTable = svc.from('api_key_usage_log');
 
         // Get recent logs for this user (across all their keys)
         const { data: logs, error } = await logTable
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Get key names for display
-        const keyTable = svc.from('api_keys' as any) as any;
+        const keyTable = svc.from('api_keys');
         const { data: keys } = await keyTable
             .select('id, name, key_prefix')
             .eq('user_id', user.id);

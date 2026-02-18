@@ -22,10 +22,7 @@ export async function checkRateLimit(
     p_identifier: identifier,
     p_max_requests: maxRequests,
     p_window_seconds: windowSeconds,
-  } as any) as {
-    data: Array<{ allowed: boolean; current_count: number; limit_max: number; reset_at: string }> | null;
-    error: any;
-  };
+  });
 
   if (error) {
     console.error('Rate limit check failed:', error);

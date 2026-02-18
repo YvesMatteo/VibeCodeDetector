@@ -17,7 +17,7 @@ export async function GET(
         }
 
         const { data: project, error } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .select('*')
             .eq('id', params.id)
             .eq('user_id', user.id)
@@ -30,7 +30,7 @@ export async function GET(
         // Decrypt supabase_pat for client display (handles legacy plaintext gracefully)
         const decryptedProject = {
             ...project,
-            supabase_pat: (project as any).supabase_pat ? decrypt((project as any).supabase_pat) : null,
+            supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
         };
 
         return NextResponse.json({ project: decryptedProject });
@@ -58,7 +58,7 @@ export async function PATCH(
 
         // Verify ownership
         const { data: existing } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .select('id')
             .eq('id', params.id)
             .eq('user_id', user.id)
@@ -88,7 +88,7 @@ export async function PATCH(
         }
 
         const { data: project, error: updateError } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .update(updates)
             .eq('id', params.id)
             .eq('user_id', user.id)
@@ -106,7 +106,7 @@ export async function PATCH(
         // Decrypt supabase_pat for client display
         const decryptedProject = {
             ...project,
-            supabase_pat: (project as any).supabase_pat ? decrypt((project as any).supabase_pat) : null,
+            supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
         };
 
         return NextResponse.json({ project: decryptedProject });
@@ -134,7 +134,7 @@ export async function DELETE(
 
         // Verify ownership first
         const { data: project } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .select('id')
             .eq('id', params.id)
             .eq('user_id', user.id)
@@ -160,7 +160,7 @@ export async function DELETE(
 
         // Delete the project itself
         const { error } = await supabase
-            .from('projects' as any)
+            .from('projects')
             .delete()
             .eq('id', params.id)
             .eq('user_id', user.id);

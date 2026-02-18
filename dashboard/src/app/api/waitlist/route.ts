@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       const supabase = getServiceClient();
       const userAgent = req.headers.get('user-agent') ?? '';
 
-      const { error: insertError } = await (supabase.from('waitlist_emails' as any) as any).insert({
+      const { error: insertError } = await supabase.from('waitlist_emails').insert({
         email: parsed.data.email.toLowerCase().trim(),
         ip_address: ip,
         user_agent: userAgent,
