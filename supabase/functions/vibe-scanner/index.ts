@@ -27,13 +27,22 @@ Deno.serve(async (req: Request) => {
         const url = validation.url!;
 
         if (!GEMINI_API_KEY) {
-            console.error("Missing GEMINI_API_KEY");
+            console.warn("Missing GEMINI_API_KEY — returning neutral score");
             return new Response(JSON.stringify({
-                error: "Scanner configuration error",
-                score: 0
+                scannerType: 'vibe_match',
+                score: 50,
+                aiLikelihood: 0,
+                findings: [{
+                    id: 'vibe-config',
+                    severity: 'info',
+                    title: 'AI Detection Unavailable',
+                    description: 'The vibe-match scanner is not configured. Set GEMINI_API_KEY to enable AI generation detection.',
+                    recommendation: 'Configure the GEMINI_API_KEY environment variable.',
+                }],
+                scannedAt: new Date().toISOString(),
+                url: validation.url,
             }), {
                 headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
-                status: 500
             });
         }
 
