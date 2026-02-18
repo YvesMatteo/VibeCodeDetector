@@ -28,50 +28,50 @@ interface RibbonDef {
   points: ControlPoint[];
 }
 
-// Iridescent color palette
+// White and blue color palette
 const SPECTRUM_A: [number, number, number][] = [
-  [60, 80, 220],    // deep blue
-  [40, 170, 190],   // teal
-  [60, 190, 130],   // green
-  [190, 160, 50],   // gold
-  [140, 70, 190],   // purple
-  [80, 120, 240],   // light blue
+  [220, 230, 255],  // ice white
+  [60, 100, 220],   // deep blue
+  [140, 170, 255],  // light blue
+  [240, 245, 255],  // bright white
+  [80, 130, 240],   // mid blue
+  [200, 215, 255],  // pale blue
 ];
 
 const SPECTRUM_B: [number, number, number][] = [
-  [140, 70, 190],   // purple
-  [80, 120, 240],   // blue
-  [40, 170, 190],   // teal
-  [60, 190, 130],   // green
-  [190, 160, 50],   // gold
-  [200, 80, 100],   // rose
+  [80, 130, 240],   // mid blue
+  [240, 245, 255],  // bright white
+  [50, 80, 200],    // royal blue
+  [180, 200, 255],  // soft blue
+  [255, 255, 255],  // pure white
+  [100, 150, 245],  // sky blue
 ];
 
 const SPECTRUM_C: [number, number, number][] = [
-  [40, 170, 190],   // teal
-  [60, 190, 130],   // green
-  [190, 160, 50],   // gold
-  [200, 80, 100],   // rose
-  [140, 70, 190],   // purple
-  [60, 80, 220],    // deep blue
+  [255, 255, 255],  // pure white
+  [70, 110, 230],   // blue
+  [200, 215, 255],  // pale blue
+  [40, 80, 190],    // dark blue
+  [220, 230, 255],  // ice white
+  [120, 160, 250],  // periwinkle
 ];
 
 const SPECTRUM_D: [number, number, number][] = [
-  [190, 160, 50],   // gold
-  [200, 80, 100],   // rose
-  [140, 70, 190],   // purple
-  [60, 80, 220],    // deep blue
-  [40, 170, 190],   // teal
-  [60, 190, 130],   // green
+  [140, 170, 255],  // light blue
+  [255, 255, 255],  // pure white
+  [60, 100, 220],   // deep blue
+  [220, 230, 255],  // ice white
+  [90, 140, 240],   // cornflower
+  [240, 245, 255],  // bright white
 ];
 
 const SPECTRUM_E: [number, number, number][] = [
-  [80, 120, 240],   // light blue
-  [60, 80, 220],    // deep blue
-  [140, 70, 190],   // purple
-  [200, 80, 100],   // rose
-  [190, 160, 50],   // gold
-  [40, 170, 190],   // teal
+  [50, 80, 200],    // royal blue
+  [200, 215, 255],  // pale blue
+  [255, 255, 255],  // pure white
+  [80, 130, 240],   // mid blue
+  [230, 240, 255],  // frosty white
+  [60, 100, 220],   // deep blue
 ];
 
 // 5 ribbons sweeping diagonally across the viewport
