@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle,
   ArrowRight,
@@ -216,73 +215,64 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, filter: 'blur(0px)' }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm"
           >
-            <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Now Live</span>
+            <span className="flex h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse" />
+            <span className="text-xs font-medium text-white/60 tracking-widest uppercase">Now Live</span>
           </motion.div>
 
-          {/* H1 Typography */}
-          <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-1 w-full">
-            <span className="block overflow-hidden">
-              <motion.span
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                className="block"
-              >
-                The <span className="italic text-white/50">All-in-One</span> Scanner
-              </motion.span>
-            </span>
-            <span className="block overflow-hidden">
-              <motion.span
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-                className="block"
-              >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
-              </motion.span>
-            </span>
+          {/* H1 Typography — word-by-word blur reveal */}
+          <h1 className="font-heading text-[26px] leading-[1.1] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.04em] text-white text-center w-full font-medium">
+            {'The '.split('').length && (
+              <>
+                <span className="blur-word" style={{ animationDelay: '0.2s' }}>The</span>{' '}
+                <span className="blur-word italic text-white/50 font-serif" style={{ animationDelay: '0.3s' }}>All-in-One</span>{' '}
+                <span className="blur-word" style={{ animationDelay: '0.4s' }}>Scanner</span>
+                <br />
+                <span className="blur-word" style={{ animationDelay: '0.5s' }}>for</span>{' '}
+                <span className="blur-word text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]" style={{ animationDelay: '0.6s' }}>vibecoded</span>{' '}
+                <span className="blur-word" style={{ animationDelay: '0.7s' }}>Websites</span>
+              </>
+            )}
           </h1>
 
           {/* Subtext */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="text-sm sm:text-lg text-white/70 max-w-2xl mx-auto px-2"
           >
             30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
-            <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
+            <Button size="lg" asChild className="h-12 px-8 sm:px-10 rounded-full bg-white text-black hover:bg-zinc-100 transition-all text-base font-medium border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
+                {isLoggedIn ? 'Dashboard' : 'Get started'}
               </Link>
             </Button>
-            <div className="flex items-center gap-4 text-sm text-zinc-500">
-              <div className="h-px w-10 bg-white/10" />
+            <div className="flex items-center gap-4 text-sm text-white/40">
+              <div className="h-px w-8 bg-white/[0.08]" />
               <span>Free plan available</span>
-              <div className="h-px w-10 bg-white/10" />
+              <div className="h-px w-8 bg-white/[0.08]" />
             </div>
           </motion.div>
 
           {/* Stats row */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 sm:gap-8 w-full max-w-4xl mt-2"
           >
             {stats.map((stat, i) => (
@@ -385,6 +375,7 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
+        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 3: FEATURES ======================== */}
@@ -397,14 +388,20 @@ export default function HomePage() {
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
+            <motion.span
+              initial={{ opacity: 0, filter: 'blur(8px)' }}
+              whileInView={{ opacity: 1, filter: 'blur(0px)' }}
+              viewport={{ once: false, amount: 0.5 }}
+              transition={{ duration: 0.5 }}
+              className="inline-block mb-4 text-xs font-medium text-white/40 tracking-[0.2em] uppercase"
+            >
               Features
-            </Badge>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Everything You Need to{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
+            </motion.span>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
+              Everything you need to{' '}
+              <span className="italic text-white/50">ship safely</span>
             </h2>
-            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-lg text-white/50 max-w-2xl mx-auto">
               30 scanners that catch the issues vibe-coded sites commonly have.
             </p>
           </div>
@@ -443,6 +440,7 @@ export default function HomePage() {
             ))}
           </div>
         </motion.div>
+        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 4: PRICING ======================== */}
@@ -454,13 +452,19 @@ export default function HomePage() {
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <Badge variant="secondary" className="mb-4 bg-blue-500/10 border-blue-500/20 text-blue-300">
+            <motion.span
+              initial={{ opacity: 0, filter: 'blur(8px)' }}
+              whileInView={{ opacity: 1, filter: 'blur(0px)' }}
+              viewport={{ once: false, amount: 0.5 }}
+              transition={{ duration: 0.5 }}
+              className="inline-block mb-4 text-xs font-medium text-white/40 tracking-[0.2em] uppercase"
+            >
               Pricing
-            </Badge>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
+            </motion.span>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
+              Simple, <span className="italic text-white/50">transparent</span> pricing
             </h2>
-            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-6 sm:mb-8">
+            <p className="text-sm sm:text-lg text-white/50 max-w-2xl mx-auto mb-6 sm:mb-8">
               Flexible plans for every team size. Cancel anytime.
             </p>
 
@@ -574,6 +578,7 @@ export default function HomePage() {
             ))}
           </div>
         </motion.div>
+        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
@@ -586,18 +591,19 @@ export default function HomePage() {
         <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
         <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
-        <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10 flex-1 flex items-center">
-          <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
+        <motion.div {...fadeInView} className="max-w-3xl mx-auto text-center relative z-10 flex-1 flex items-center">
+          <div className="w-full">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
+              Don&apos;t ship{' '}
+              <span className="italic text-white/50">vulnerabilities</span>
             </h2>
-            <p className="text-base sm:text-xl text-zinc-400 mb-8">
+            <p className="text-base sm:text-lg text-white/50 mb-8 max-w-xl mx-auto">
               30 scanners. One click. Know exactly what to fix before you deploy.
             </p>
-            <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
+            <Button size="lg" asChild className="h-12 px-8 sm:px-10 rounded-full bg-white text-black hover:bg-zinc-100 transition-all text-base font-medium border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {isLoggedIn ? 'Go to Dashboard' : 'Get started'}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
