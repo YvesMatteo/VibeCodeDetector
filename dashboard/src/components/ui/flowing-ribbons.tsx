@@ -83,12 +83,12 @@ const RIBBONS: RibbonDef[] = [
     peakAlpha: 0.7,
     speed: 0.8,
     points: [
-      { baseX: -0.15, baseY: 0.90, freqX: 0.3, freqY: 0.25, phaseX: 0, phaseY: 0, ampX: 0.04, ampY: 0.06 },
-      { baseX: 0.10, baseY: 0.60, freqX: 0.25, freqY: 0.35, phaseX: 1.0, phaseY: 0.5, ampX: 0.06, ampY: 0.10 },
-      { baseX: 0.30, baseY: 0.35, freqX: 0.35, freqY: 0.30, phaseX: 2.0, phaseY: 1.2, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.55, baseY: 0.15, freqX: 0.30, freqY: 0.40, phaseX: 0.5, phaseY: 2.0, ampX: 0.06, ampY: 0.10 },
-      { baseX: 0.80, baseY: 0.05, freqX: 0.40, freqY: 0.30, phaseX: 1.5, phaseY: 0.8, ampX: 0.05, ampY: 0.08 },
-      { baseX: 1.15, baseY: -0.10, freqX: 0.30, freqY: 0.25, phaseX: 2.5, phaseY: 1.5, ampX: 0.03, ampY: 0.05 },
+      { baseX: -0.15, baseY: 0.90, freqX: 0.6, freqY: 0.5, phaseX: 0, phaseY: 0, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.10, baseY: 0.60, freqX: 0.5, freqY: 0.7, phaseX: 1.0, phaseY: 0.5, ampX: 0.12, ampY: 0.18 },
+      { baseX: 0.30, baseY: 0.35, freqX: 0.7, freqY: 0.6, phaseX: 2.0, phaseY: 1.2, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.55, baseY: 0.15, freqX: 0.6, freqY: 0.8, phaseX: 0.5, phaseY: 2.0, ampX: 0.12, ampY: 0.18 },
+      { baseX: 0.80, baseY: 0.05, freqX: 0.8, freqY: 0.6, phaseX: 1.5, phaseY: 0.8, ampX: 0.10, ampY: 0.15 },
+      { baseX: 1.15, baseY: -0.10, freqX: 0.6, freqY: 0.5, phaseX: 2.5, phaseY: 1.5, ampX: 0.06, ampY: 0.10 },
     ],
   },
   {
@@ -98,12 +98,12 @@ const RIBBONS: RibbonDef[] = [
     peakAlpha: 0.6,
     speed: 1.0,
     points: [
-      { baseX: -0.10, baseY: 0.75, freqX: 0.35, freqY: 0.30, phaseX: 1.5, phaseY: 0.3, ampX: 0.05, ampY: 0.08 },
-      { baseX: 0.12, baseY: 0.45, freqX: 0.30, freqY: 0.45, phaseX: 0.3, phaseY: 1.5, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.35, baseY: 0.55, freqX: 0.45, freqY: 0.35, phaseX: 2.2, phaseY: 0.7, ampX: 0.10, ampY: 0.10 },
-      { baseX: 0.58, baseY: 0.25, freqX: 0.30, freqY: 0.50, phaseX: 1.0, phaseY: 2.5, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.82, baseY: 0.15, freqX: 0.40, freqY: 0.35, phaseX: 0.8, phaseY: 1.2, ampX: 0.05, ampY: 0.08 },
-      { baseX: 1.12, baseY: 0.00, freqX: 0.35, freqY: 0.30, phaseX: 2.0, phaseY: 0.5, ampX: 0.03, ampY: 0.05 },
+      { baseX: -0.10, baseY: 0.75, freqX: 0.7, freqY: 0.6, phaseX: 1.5, phaseY: 0.3, ampX: 0.10, ampY: 0.15 },
+      { baseX: 0.12, baseY: 0.45, freqX: 0.6, freqY: 0.9, phaseX: 0.3, phaseY: 1.5, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.35, baseY: 0.55, freqX: 0.9, freqY: 0.7, phaseX: 2.2, phaseY: 0.7, ampX: 0.18, ampY: 0.18 },
+      { baseX: 0.58, baseY: 0.25, freqX: 0.6, freqY: 1.0, phaseX: 1.0, phaseY: 2.5, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.82, baseY: 0.15, freqX: 0.8, freqY: 0.7, phaseX: 0.8, phaseY: 1.2, ampX: 0.10, ampY: 0.15 },
+      { baseX: 1.12, baseY: 0.00, freqX: 0.7, freqY: 0.6, phaseX: 2.0, phaseY: 0.5, ampX: 0.06, ampY: 0.10 },
     ],
   },
   {
@@ -113,12 +113,12 @@ const RIBBONS: RibbonDef[] = [
     peakAlpha: 0.55,
     speed: 1.2,
     points: [
-      { baseX: -0.05, baseY: 1.05, freqX: 0.40, freqY: 0.35, phaseX: 2.0, phaseY: 1.0, ampX: 0.04, ampY: 0.06 },
-      { baseX: 0.15, baseY: 0.70, freqX: 0.35, freqY: 0.50, phaseX: 0.8, phaseY: 2.0, ampX: 0.07, ampY: 0.12 },
-      { baseX: 0.40, baseY: 0.45, freqX: 0.50, freqY: 0.40, phaseX: 1.5, phaseY: 0.3, ampX: 0.10, ampY: 0.10 },
-      { baseX: 0.65, baseY: 0.30, freqX: 0.35, freqY: 0.55, phaseX: 2.5, phaseY: 1.8, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.90, baseY: 0.10, freqX: 0.45, freqY: 0.35, phaseX: 0.5, phaseY: 0.5, ampX: 0.05, ampY: 0.08 },
-      { baseX: 1.15, baseY: -0.05, freqX: 0.35, freqY: 0.30, phaseX: 1.8, phaseY: 2.5, ampX: 0.03, ampY: 0.05 },
+      { baseX: -0.05, baseY: 1.05, freqX: 0.8, freqY: 0.7, phaseX: 2.0, phaseY: 1.0, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.15, baseY: 0.70, freqX: 0.7, freqY: 1.0, phaseX: 0.8, phaseY: 2.0, ampX: 0.14, ampY: 0.20 },
+      { baseX: 0.40, baseY: 0.45, freqX: 1.0, freqY: 0.8, phaseX: 1.5, phaseY: 0.3, ampX: 0.18, ampY: 0.18 },
+      { baseX: 0.65, baseY: 0.30, freqX: 0.7, freqY: 1.1, phaseX: 2.5, phaseY: 1.8, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.90, baseY: 0.10, freqX: 0.9, freqY: 0.7, phaseX: 0.5, phaseY: 0.5, ampX: 0.10, ampY: 0.15 },
+      { baseX: 1.15, baseY: -0.05, freqX: 0.7, freqY: 0.6, phaseX: 1.8, phaseY: 2.5, ampX: 0.06, ampY: 0.10 },
     ],
   },
   {
@@ -128,12 +128,12 @@ const RIBBONS: RibbonDef[] = [
     peakAlpha: 0.5,
     speed: 0.9,
     points: [
-      { baseX: -0.10, baseY: 0.20, freqX: 0.30, freqY: 0.40, phaseX: 0.5, phaseY: 1.8, ampX: 0.05, ampY: 0.10 },
-      { baseX: 0.10, baseY: 0.40, freqX: 0.40, freqY: 0.30, phaseX: 1.8, phaseY: 0.2, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.35, baseY: 0.20, freqX: 0.35, freqY: 0.50, phaseX: 0.2, phaseY: 2.2, ampX: 0.10, ampY: 0.10 },
-      { baseX: 0.60, baseY: 0.40, freqX: 0.45, freqY: 0.35, phaseX: 2.5, phaseY: 0.8, ampX: 0.08, ampY: 0.12 },
-      { baseX: 0.85, baseY: 0.25, freqX: 0.30, freqY: 0.45, phaseX: 1.0, phaseY: 1.5, ampX: 0.05, ampY: 0.08 },
-      { baseX: 1.12, baseY: 0.10, freqX: 0.35, freqY: 0.30, phaseX: 0.5, phaseY: 2.0, ampX: 0.03, ampY: 0.06 },
+      { baseX: -0.10, baseY: 0.20, freqX: 0.6, freqY: 0.8, phaseX: 0.5, phaseY: 1.8, ampX: 0.10, ampY: 0.18 },
+      { baseX: 0.10, baseY: 0.40, freqX: 0.8, freqY: 0.6, phaseX: 1.8, phaseY: 0.2, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.35, baseY: 0.20, freqX: 0.7, freqY: 1.0, phaseX: 0.2, phaseY: 2.2, ampX: 0.18, ampY: 0.18 },
+      { baseX: 0.60, baseY: 0.40, freqX: 0.9, freqY: 0.7, phaseX: 2.5, phaseY: 0.8, ampX: 0.15, ampY: 0.20 },
+      { baseX: 0.85, baseY: 0.25, freqX: 0.6, freqY: 0.9, phaseX: 1.0, phaseY: 1.5, ampX: 0.10, ampY: 0.15 },
+      { baseX: 1.12, baseY: 0.10, freqX: 0.7, freqY: 0.6, phaseX: 0.5, phaseY: 2.0, ampX: 0.06, ampY: 0.12 },
     ],
   },
   {
@@ -143,12 +143,12 @@ const RIBBONS: RibbonDef[] = [
     peakAlpha: 0.65,
     speed: 1.1,
     points: [
-      { baseX: -0.05, baseY: 0.85, freqX: 0.45, freqY: 0.40, phaseX: 1.2, phaseY: 0.8, ampX: 0.04, ampY: 0.06 },
-      { baseX: 0.18, baseY: 0.55, freqX: 0.35, freqY: 0.55, phaseX: 2.5, phaseY: 1.5, ampX: 0.08, ampY: 0.10 },
-      { baseX: 0.42, baseY: 0.30, freqX: 0.50, freqY: 0.40, phaseX: 0.8, phaseY: 2.5, ampX: 0.10, ampY: 0.10 },
-      { baseX: 0.68, baseY: 0.18, freqX: 0.35, freqY: 0.50, phaseX: 1.5, phaseY: 0.3, ampX: 0.06, ampY: 0.10 },
-      { baseX: 0.92, baseY: 0.08, freqX: 0.40, freqY: 0.35, phaseX: 2.0, phaseY: 1.8, ampX: 0.04, ampY: 0.06 },
-      { baseX: 1.15, baseY: -0.08, freqX: 0.30, freqY: 0.30, phaseX: 0.8, phaseY: 0.5, ampX: 0.03, ampY: 0.04 },
+      { baseX: -0.05, baseY: 0.85, freqX: 0.9, freqY: 0.8, phaseX: 1.2, phaseY: 0.8, ampX: 0.08, ampY: 0.12 },
+      { baseX: 0.18, baseY: 0.55, freqX: 0.7, freqY: 1.1, phaseX: 2.5, phaseY: 1.5, ampX: 0.15, ampY: 0.18 },
+      { baseX: 0.42, baseY: 0.30, freqX: 1.0, freqY: 0.8, phaseX: 0.8, phaseY: 2.5, ampX: 0.18, ampY: 0.18 },
+      { baseX: 0.68, baseY: 0.18, freqX: 0.7, freqY: 1.0, phaseX: 1.5, phaseY: 0.3, ampX: 0.12, ampY: 0.18 },
+      { baseX: 0.92, baseY: 0.08, freqX: 0.8, freqY: 0.7, phaseX: 2.0, phaseY: 1.8, ampX: 0.08, ampY: 0.12 },
+      { baseX: 1.15, baseY: -0.08, freqX: 0.6, freqY: 0.6, phaseX: 0.8, phaseY: 0.5, ampX: 0.06, ampY: 0.08 },
     ],
   },
 ];
@@ -222,8 +222,8 @@ function getSpectrumColor(
   t: number,
   time: number,
 ): [number, number, number] {
-  // Slowly shift the spectrum over time for a flowing color effect
-  const shift = (t + time * 0.03) % 1;
+  // Shift the spectrum over time for a visible flowing color effect
+  const shift = (t + time * 0.12) % 1;
   const pos = shift * (stops.length - 1);
   const idx = Math.floor(pos);
   const frac = pos - idx;
@@ -323,7 +323,7 @@ export function FlowingRibbons({ className }: { className?: string }) {
     }
 
     function loop() {
-      time += 0.003;
+      time += 0.016;
       draw();
       animId = requestAnimationFrame(loop);
     }
