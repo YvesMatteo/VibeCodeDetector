@@ -25,6 +25,7 @@ import {
     ScrollText,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SWRProvider } from '@/lib/swr-config';
 
 const mainNav = [
     { name: 'Projects', href: '/dashboard', icon: FolderKanban },
@@ -300,9 +301,11 @@ export default function DashboardLayout({
 
             {/* Main Content */}
             <main className="md:pl-[220px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
-                <div className="animate-fade-in-up">
-                    {children}
-                </div>
+                <SWRProvider>
+                    <div className="animate-fade-in-up">
+                        {children}
+                    </div>
+                </SWRProvider>
             </main>
         </div>
     );
