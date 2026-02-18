@@ -124,8 +124,8 @@ export default async function DashboardPage() {
             {/* Project Grid */}
             {projectsWithScans.length === 0 ? (
                 <div className="text-center py-20">
-                    <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                        <FolderKanban className="h-5 w-5 text-zinc-600" />
+                    <div className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center mx-auto mb-4">
+                        <FolderKanban className="h-5 w-5 text-zinc-400" />
                     </div>
                     <h2 className="text-base font-medium text-white mb-1.5">No projects yet</h2>
                     <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">
