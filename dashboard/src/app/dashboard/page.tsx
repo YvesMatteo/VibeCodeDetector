@@ -113,7 +113,7 @@ export default async function DashboardPage() {
                         </div>
                     )}
                 </div>
-                <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium">
+                <Button asChild className="bg-blue-500 text-white hover:bg-blue-600 border-0 font-medium">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-2 h-4 w-4" />
                         New Project
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
                     <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">
                         Create your first project to start running security audits.
                     </p>
-                    <Button asChild className="bg-white text-black hover:bg-zinc-200 border-0 font-medium">
+                    <Button asChild className="bg-blue-500 text-white hover:bg-blue-600 border-0 font-medium">
                         <Link href="/dashboard/projects/new">
                             <Plus className="mr-2 h-4 w-4" />
                             Create Project
