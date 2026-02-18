@@ -28,34 +28,30 @@ const features = [
   {
     label: '01',
     title: 'Injection & Code Vulnerabilities',
-    description: 'We send real payloads to your live site — SQL injection probes, XSS canaries, and open redirect bypass attempts — then check your forms and cookies for CSRF gaps.',
+    description: <>We send real payloads to your live site — <span className="text-rose-400 font-medium">SQL injection</span> probes, <span className="text-rose-400 font-medium">XSS</span> canaries, and <span className="text-rose-400 font-medium">open redirect</span> bypass attempts — then check your forms and cookies for <span className="text-rose-400 font-medium">CSRF</span> gaps.</>,
     accent: 'from-rose-500 to-orange-500',
     accentBorder: 'group-hover:border-rose-500/30',
-    includes: ['SQLi', 'XSS', 'Open Redirect', 'CSRF'],
   },
   {
     label: '02',
     title: 'Secrets & Key Exposure',
-    description: 'We scan your JS bundles and source maps for leaked keys, then deep-scan your GitHub commits, branches, and CI files for hardcoded credentials.',
+    description: <>We scan your <span className="text-amber-400 font-medium">JS bundles</span> and <span className="text-amber-400 font-medium">source maps</span> for leaked keys, then deep-scan your <span className="text-purple-300 font-medium">GitHub</span> commits, branches, and CI files for hardcoded credentials.</>,
     accent: 'from-amber-500 to-yellow-500',
     accentBorder: 'group-hover:border-amber-500/30',
-    includes: ['API Keys', 'Source Maps', 'GitHub Repo Scan', 'Git History'],
   },
   {
     label: '03',
     title: 'Hosting & Infrastructure',
-    description: 'We auto-detect your hosting platform, probe your CORS policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.',
+    description: <>We auto-detect <span className="text-zinc-100 font-medium">Vercel</span>, <span className="text-cyan-400 font-medium">Netlify</span>, and <span className="text-orange-400 font-medium">Cloudflare</span>, probe your <span className="text-emerald-400 font-medium">CORS</span> policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.</>,
     accent: 'from-emerald-500 to-teal-500',
     accentBorder: 'group-hover:border-emerald-500/30',
-    includes: ['Vercel', 'Netlify', 'Cloudflare', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'WAF/CDN'],
   },
   {
     label: '04',
     title: 'Backend & BaaS Security',
-    description: 'Using Supabase, Firebase, or Convex? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.',
+    description: <>Using <span className="text-emerald-400 font-medium">Supabase</span>, <span className="text-amber-400 font-medium">Firebase</span>, or <span className="text-yellow-200 font-medium">Convex</span>? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.</>,
     accent: 'from-violet-500 to-purple-500',
     accentBorder: 'group-hover:border-violet-500/30',
-    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth Flows', 'Dependencies'],
   },
 ];
 
@@ -146,12 +142,7 @@ export default function HomePage() {
     cardRotateY.set(0);
   }, [cardRotateX, cardRotateY]);
 
-  const fadeInView = {
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: false, amount: 0.5 as const },
-    transition: { duration: 0.6, ease: 'easeOut' as const },
-  };
+  // No scroll-triggered animations — everything visible immediately
 
   return (
     <div className="min-h-screen bg-[#0E0E10] overflow-x-hidden">
@@ -390,7 +381,7 @@ export default function HomePage() {
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
 
-        <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-10 sm:mb-14">
             <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
               Built for Your Stack
@@ -405,15 +396,9 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className={`group relative h-full rounded-xl border border-white/10 ${feature.accentBorder} bg-[#141418] hover:bg-[#18181E] transition-all duration-300 overflow-hidden shadow-lg shadow-black/20`}>
+            {features.map((feature) => (
+              <div key={feature.title}>
+                <div className={`group relative h-full rounded-xl border border-white/10 ${feature.accentBorder} bg-[#141418] hover:bg-[#18181E] hover:border-white/20 hover:shadow-[0_0_30px_-10px_rgba(255,255,255,0.1)] transition-all duration-300 overflow-hidden shadow-lg shadow-black/20`}>
                   <div className={`h-[2px] bg-gradient-to-r ${feature.accent} opacity-40 group-hover:opacity-100 transition-opacity duration-300`} />
                   <div className="relative p-5 sm:p-7 flex flex-col h-full">
                     <div className="flex items-start gap-4 mb-3">
@@ -422,22 +407,15 @@ export default function HomePage() {
                       </span>
                       <h3 className="text-[15px] sm:text-lg font-semibold text-white tracking-tight leading-tight">{feature.title}</h3>
                     </div>
-                    <p className="text-[13px] sm:text-sm text-zinc-400 leading-relaxed mb-4 pl-10">
+                    <p className="text-sm sm:text-base text-zinc-400 leading-relaxed pl-10">
                       {feature.description}
                     </p>
-                    <div className="flex flex-wrap gap-1.5 mt-auto pl-10">
-                      {feature.includes.map((item) => (
-                        <span key={item} className="text-[11px] px-2.5 py-1 rounded-md bg-white/[0.07] text-zinc-300 font-medium border border-white/[0.06]">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ======================== SLIDE 4: PRICING ======================== */}
@@ -446,7 +424,7 @@ export default function HomePage() {
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
 
-        <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
             <Badge variant="secondary" className="mb-4 bg-sky-400/10 border-sky-400/20 text-sky-300">
               Pricing
@@ -488,15 +466,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 max-w-[340px] sm:max-w-5xl mx-auto">
-            {pricingTiers.map((tier, index) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="h-full"
-              >
+            {pricingTiers.map((tier) => (
+              <div key={tier.name} className="h-full">
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
                   ? 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                   : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
@@ -564,10 +535,10 @@ export default function HomePage() {
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
@@ -579,7 +550,7 @@ export default function HomePage() {
         <div className="hidden sm:block absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
         <div className="hidden sm:block absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
-        <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
@@ -594,7 +565,7 @@ export default function HomePage() {
               </Link>
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Footer */}
         <footer className="w-full pt-12 sm:pt-16 pb-8 relative z-10 safe-bottom mt-12 sm:mt-16">
