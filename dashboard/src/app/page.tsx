@@ -22,7 +22,7 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
-import { FlowingRibbons } from '@/components/ui/flowing-ribbons';
+import { SilkBackground } from '@/components/ui/silk-background';
 
 const features = [
   {
@@ -149,9 +149,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#0E0E10]">
       {/* Prismatic ribbon background — fixed behind all slides */}
-      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <FlowingRibbons className="absolute inset-0 w-full h-full" />
-      </div>
+      <SilkBackground />
 
       {/* Navigation */}
       <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none px-4">
@@ -386,7 +384,6 @@ export default function HomePage() {
         id="slide-features"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-950/5 to-transparent pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
@@ -444,7 +441,6 @@ export default function HomePage() {
         id="slide-pricing"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
@@ -465,7 +461,7 @@ export default function HomePage() {
                 className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${billing === 'monthly'
                   ? 'bg-white text-black shadow-sm'
                   : 'text-zinc-400 hover:text-white'
-                }`}
+                  }`}
               >
                 Monthly
               </button>
@@ -474,13 +470,13 @@ export default function HomePage() {
                 className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${billing === 'annual'
                   ? 'bg-white text-black shadow-sm'
                   : 'text-zinc-400 hover:text-white'
-                }`}
+                  }`}
               >
                 Annual
                 <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${billing === 'annual'
                   ? 'bg-green-100 text-green-700'
                   : 'bg-green-500/10 text-green-400'
-                }`}>
+                  }`}>
                   -30%
                 </span>
               </button>
@@ -500,7 +496,7 @@ export default function HomePage() {
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
                   ? 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                   : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
-                }`}>
+                  }`}>
                   {tier.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <div className="bg-sky-500 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
@@ -555,7 +551,7 @@ export default function HomePage() {
                         className={`w-full ${tier.highlighted
                           ? 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
                           : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
-                        }`}
+                          }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
                         asChild
                       >
@@ -575,7 +571,6 @@ export default function HomePage() {
         id="slide-cta"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/65 pointer-events-none" aria-hidden="true" />
         {/* Gradient orbs */}
         <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
         <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
@@ -598,7 +593,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full pt-16 pb-8 relative z-10 border-t border-white/5 safe-bottom mt-16">
+        <footer className="w-full pt-16 pb-8 relative z-10 safe-bottom mt-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
               <div className="flex items-center gap-2">
