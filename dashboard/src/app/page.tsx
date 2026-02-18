@@ -47,7 +47,7 @@ const features = [
     description: 'We auto-detect your hosting platform, probe your CORS policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.',
     accent: 'from-emerald-500 to-teal-500',
     accentBorder: 'group-hover:border-emerald-500/30',
-    includes: ['Vercel', 'Netlify', 'Cloudflare', 'Railway', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'WAF/CDN'],
+    includes: ['Vercel', 'Netlify', 'Cloudflare', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'WAF/CDN'],
   },
   {
     label: '04',
