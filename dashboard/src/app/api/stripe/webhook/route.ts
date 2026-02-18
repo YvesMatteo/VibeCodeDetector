@@ -2,6 +2,12 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import {
+    resolvePlanByPriceId,
+    resolvePlanByMetadata,
+    isValidUUID,
+    type PlanInfo,
+} from '@/lib/stripe-plans';
 
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing STRIPE_SECRET_KEY environment variable');
@@ -12,25 +18,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-const PLANS_BY_PRICE_ID: Record<string, { plan: string; domains: number; scans: number }> = {
-    // Starter
-    'price_1Sz2CgLRbxIsl4HLE7jp6ecZ': { plan: 'starter', domains: 1, scans: 5 },  // monthly
-    'price_1T1G35LRbxIsl4HLq1Geq4Ov': { plan: 'starter', domains: 1, scans: 5 },  // annual (30% off)
-    'price_1Sz2CiLRbxIsl4HLDkUzXZXs': { plan: 'starter', domains: 1, scans: 5 },  // annual (legacy 20%)
-    // Pro
-    'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 3, scans: 20 },      // monthly
-    'price_1T1G36LRbxIsl4HLcxaSjnej': { plan: 'pro', domains: 3, scans: 20 },      // annual (30% off)
-    'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 20 },      // annual (legacy 20%)
-    // Max (formerly Enterprise)
-    'price_1T1G99LRbxIsl4HLzT5TNktI': { plan: 'max', domains: 10, scans: 75 },       // monthly $79
-    'price_1T1G99LRbxIsl4HLfsEV74xC': { plan: 'max', domains: 10, scans: 75 },       // annual (30% off)
-    'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'max', domains: 10, scans: 75 },       // legacy monthly $89
-    'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'max', domains: 10, scans: 75 },       // legacy annual
-    'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'max', domains: 10, scans: 75 },       // legacy annual
-};
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getSupabaseAdmin() {
     return createClient(
@@ -76,18 +63,18 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
 
-        if (!userId || !UUID_REGEX.test(userId)) {
+        if (!userId || !isValidUUID(userId)) {
             console.error('Invalid userId in webhook metadata:', userId);
             return new NextResponse(null, { status: 200 });
         }
 
         // Re-derive plan from the actual price ID, not just metadata
-        let planInfo: { plan: string; domains: number; scans: number } | null = null;
+        let planInfo: PlanInfo | null = null;
         try {
             const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
             const priceId = lineItems.data[0]?.price?.id;
-            if (priceId && PLANS_BY_PRICE_ID[priceId]) {
-                planInfo = PLANS_BY_PRICE_ID[priceId];
+            if (priceId) {
+                planInfo = resolvePlanByPriceId(priceId);
             }
         } catch (err) {
             console.warn('Could not fetch line items for price verification:', err);
@@ -95,15 +82,9 @@ export async function POST(req: Request) {
 
         // Fall back to metadata only if price lookup fails, but validate against known plans
         if (!planInfo) {
-            const plan = session.metadata?.plan;
-            const VALID_PLANS: Record<string, { domains: number; scans: number }> = {
-                starter: { domains: 1, scans: 5 },
-                pro: { domains: 3, scans: 20 },
-                max: { domains: 10, scans: 75 },
-            };
-            if (plan && VALID_PLANS[plan]) {
-                planInfo = { plan, domains: VALID_PLANS[plan].domains, scans: VALID_PLANS[plan].scans };
-                console.warn(`Fell back to metadata for plan derivation: ${plan} (validated against known plans)`);
+            planInfo = resolvePlanByMetadata(session.metadata?.plan);
+            if (planInfo) {
+                console.warn(`Fell back to metadata for plan derivation: ${planInfo.plan} (validated against known plans)`);
             }
         }
 
@@ -252,30 +233,21 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata;
 
-        let planInfo: { plan: string; domains: number; scans: number } | null = null;
+        let planInfo: PlanInfo | null = null;
 
         // Check price ID first (more reliable than metadata for portal changes)
         const items = (subscription as any).items?.data;
         if (items?.length > 0) {
             const priceId = items[0].price?.id;
-            if (priceId && PLANS_BY_PRICE_ID[priceId]) {
-                planInfo = PLANS_BY_PRICE_ID[priceId];
+            if (priceId) {
+                planInfo = resolvePlanByPriceId(priceId);
             }
         }
 
         // Fall back to metadata only if price lookup fails, validate against known plans
         if (!planInfo && metadata?.plan) {
-            const VALID_PLANS: Record<string, { domains: number; scans: number }> = {
-                starter: { domains: 1, scans: 5 },
-                pro: { domains: 3, scans: 20 },
-                max: { domains: 10, scans: 75 },
-            };
-            if (VALID_PLANS[metadata.plan]) {
-                planInfo = {
-                    plan: metadata.plan,
-                    domains: VALID_PLANS[metadata.plan].domains,
-                    scans: VALID_PLANS[metadata.plan].scans,
-                };
+            planInfo = resolvePlanByMetadata(metadata.plan);
+            if (planInfo) {
                 console.warn(`Fell back to metadata for subscription.updated plan: ${metadata.plan} (validated)`);
             }
         }
