@@ -323,7 +323,7 @@ export function FlowingRibbons({ className }: { className?: string }) {
     }
 
     function loop() {
-      time += 0.016;
+      time += 0.011;
       draw();
       animId = requestAnimationFrame(loop);
     }
