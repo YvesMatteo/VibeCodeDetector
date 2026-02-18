@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle,
   ArrowRight,
@@ -21,6 +22,7 @@ import {
 import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
+import { PulsingCircles } from '@/components/ui/pulsing-circles';
 import { SlideIndicator } from '@/components/ui/slide-indicator';
 
 const features = [
@@ -148,11 +150,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto snap-container bg-black">
-      {/* MONO-inspired background — dot grid + radial glow */}
+    <div className="h-[100dvh] overflow-y-auto snap-container bg-[#0E0E10]">
+      {/* Persistent ribbon background — fixed behind all slides */}
       <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <div className="mono-dot-grid" />
-        <div className="mono-hero-glow" />
+        <PulsingCircles className="absolute inset-0 w-full h-full" />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
       {/* Navigation */}
@@ -161,7 +163,7 @@ export default function HomePage() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/[0.15]"
+          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
         >
           <div className="flex items-center gap-2 pr-4 border-r border-white/10">
             <Image src="/logo-composite.png" alt="CheckVibe Logo" width={120} height={24} className="w-auto h-6 object-contain" />
@@ -185,7 +187,7 @@ export default function HomePage() {
 
       {/* Mobile Nav Drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="right" className="w-[70vw] max-w-64 bg-black border-white/[0.08] p-0">
+        <SheetContent side="right" className="w-[70vw] max-w-64 bg-[#1C1C1E] border-white/10 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <div className="flex flex-col gap-1 p-6 pt-12">
             <a href="#slide-features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
@@ -208,67 +210,79 @@ export default function HomePage() {
         id="slide-hero"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
+        <div className="absolute inset-0 bg-[#0E0E10]/60 pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent pointer-events-none" aria-hidden="true" />
+
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
           >
-            <span className="flex h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse" />
-            <span className="text-xs font-medium text-white/60 tracking-widest uppercase">Now Live</span>
+            <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
+            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Now Live</span>
           </motion.div>
 
-          {/* H1 Typography — word-by-word blur reveal */}
-          <h1 className="font-heading text-[26px] leading-[1.1] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.04em] text-white text-center w-full font-medium">
-            {'The '.split('').length && (
-              <>
-                <span className="blur-word" style={{ animationDelay: '0.2s' }}>The</span>{' '}
-                <span className="blur-word italic text-white/50 font-serif" style={{ animationDelay: '0.3s' }}>All-in-One</span>{' '}
-                <span className="blur-word" style={{ animationDelay: '0.4s' }}>Scanner</span>
-                <br />
-                <span className="blur-word" style={{ animationDelay: '0.5s' }}>for</span>{' '}
-                <span className="blur-word text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]" style={{ animationDelay: '0.6s' }}>vibecoded</span>{' '}
-                <span className="blur-word" style={{ animationDelay: '0.7s' }}>Websites</span>
-              </>
-            )}
+          {/* H1 Typography */}
+          <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-1 w-full">
+            <span className="block overflow-hidden">
+              <motion.span
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                className="block"
+              >
+                The <span className="italic text-white/50">All-in-One</span> Scanner
+              </motion.span>
+            </span>
+            <span className="block overflow-hidden">
+              <motion.span
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+                className="block"
+              >
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
+              </motion.span>
+            </span>
           </h1>
 
           {/* Subtext */}
           <motion.p
-            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="text-sm sm:text-lg text-white/70 max-w-2xl mx-auto px-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
             30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
-            <Button size="lg" asChild className="h-12 px-8 sm:px-10 rounded-full bg-white text-black hover:bg-zinc-100 transition-all text-base font-medium border-0">
+            <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Dashboard' : 'Get started'}
+                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
               </Link>
             </Button>
-            <div className="flex items-center gap-4 text-sm text-white/40">
-              <div className="h-px w-8 bg-white/[0.08]" />
+            <div className="flex items-center gap-4 text-sm text-zinc-500">
+              <div className="h-px w-10 bg-white/10" />
               <span>Free plan available</span>
-              <div className="h-px w-8 bg-white/[0.08]" />
+              <div className="h-px w-10 bg-white/10" />
             </div>
           </motion.div>
 
           {/* Stats row */}
           <motion.div
-            initial={{ opacity: 0, filter: 'blur(10px)', y: 10 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-            transition={{ delay: 1.0, duration: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 sm:gap-8 w-full max-w-4xl mt-2"
           >
             {stats.map((stat, i) => (
@@ -300,7 +314,7 @@ export default function HomePage() {
               style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
-              className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
+              className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
             >
               {/* Header */}
               <div className="h-8 sm:h-10 border-b border-white/5 bg-white/5 flex items-center px-3 sm:px-4 justify-between">
@@ -313,7 +327,7 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-black">
+              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
                 <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 whitespace-nowrap">
@@ -371,7 +385,6 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
-        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 3: FEATURES ======================== */}
@@ -379,22 +392,19 @@ export default function HomePage() {
         id="slide-features"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
       >
+        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/5 to-transparent pointer-events-none" aria-hidden="true" />
+
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <motion.span
-              initial={{ opacity: 0, filter: 'blur(8px)' }}
-              whileInView={{ opacity: 1, filter: 'blur(0px)' }}
-              viewport={{ once: false, amount: 0.5 }}
-              transition={{ duration: 0.5 }}
-              className="inline-block mb-4 text-xs font-medium text-white/40 tracking-[0.2em] uppercase"
-            >
+            <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
               Features
-            </motion.span>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
-              Everything you need to{' '}
-              <span className="italic text-white/50">ship safely</span>
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+              Everything You Need to{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
             </h2>
-            <p className="text-sm sm:text-lg text-white/50 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
               30 scanners that catch the issues vibe-coded sites commonly have.
             </p>
           </div>
@@ -433,7 +443,6 @@ export default function HomePage() {
             ))}
           </div>
         </motion.div>
-        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 4: PRICING ======================== */}
@@ -441,21 +450,17 @@ export default function HomePage() {
         id="slide-pricing"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 py-16 sm:py-0"
       >
+        <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
+
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <motion.span
-              initial={{ opacity: 0, filter: 'blur(8px)' }}
-              whileInView={{ opacity: 1, filter: 'blur(0px)' }}
-              viewport={{ once: false, amount: 0.5 }}
-              transition={{ duration: 0.5 }}
-              className="inline-block mb-4 text-xs font-medium text-white/40 tracking-[0.2em] uppercase"
-            >
+            <Badge variant="secondary" className="mb-4 bg-blue-500/10 border-blue-500/20 text-blue-300">
               Pricing
-            </motion.span>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
-              Simple, <span className="italic text-white/50">transparent</span> pricing
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+              Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
             </h2>
-            <p className="text-sm sm:text-lg text-white/50 max-w-2xl mx-auto mb-6 sm:mb-8">
+            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-6 sm:mb-8">
               Flexible plans for every team size. Cancel anytime.
             </p>
 
@@ -499,12 +504,12 @@ export default function HomePage() {
                 className="h-full"
               >
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
-                  ? 'bg-white/[0.04] border-white/[0.12]'
-                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.10]'
+                  ? 'bg-zinc-900/60 border-blue-500/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                  : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                 }`}>
                   {tier.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div className="bg-white text-[10px] font-bold px-3 py-1 rounded-full text-black shadow-lg uppercase tracking-wider">
+                      <div className="bg-blue-600 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
                         Most Popular
                       </div>
                     </div>
@@ -537,7 +542,7 @@ export default function HomePage() {
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-white/60' : 'text-white/20'}`} />
+                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-blue-400' : 'text-zinc-500'}`} />
                           <span className="text-sm text-zinc-300">{feature}</span>
                         </li>
                       ))}
@@ -554,8 +559,8 @@ export default function HomePage() {
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
-                          ? 'bg-white hover:bg-zinc-100 text-black border-0'
-                          : 'bg-white/5 border-white/[0.08] hover:bg-white/10 text-white'
+                          ? 'bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/20'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
                         }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
                         asChild
@@ -569,7 +574,6 @@ export default function HomePage() {
             ))}
           </div>
         </motion.div>
-        <div className="slide-divider" />
       </section>
 
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
@@ -577,26 +581,30 @@ export default function HomePage() {
         id="slide-cta"
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
       >
-        <motion.div {...fadeInView} className="max-w-3xl mx-auto text-center relative z-10 flex-1 flex items-center">
-          <div className="w-full">
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-[-0.04em] text-white">
-              Don&apos;t ship{' '}
-              <span className="italic text-white/50">vulnerabilities</span>
+        <div className="absolute inset-0 bg-[#0E0E10]/65 pointer-events-none" aria-hidden="true" />
+        {/* Gradient orbs */}
+        <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+
+        <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10 flex-1 flex items-center">
+          <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+              Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
-            <p className="text-base sm:text-lg text-white/50 mb-8 max-w-xl mx-auto">
+            <p className="text-base sm:text-xl text-zinc-400 mb-8">
               30 scanners. One click. Know exactly what to fix before you deploy.
             </p>
-            <Button size="lg" asChild className="h-12 px-8 sm:px-10 rounded-full bg-white text-black hover:bg-zinc-100 transition-all text-base font-medium border-0">
+            <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Go to Dashboard' : 'Get started'}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full py-8 relative z-10 border-t border-white/[0.06] safe-bottom mt-auto">
+        <footer className="w-full py-8 relative z-10 border-t border-white/5 safe-bottom mt-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
               <div className="flex items-center gap-2">
