@@ -430,66 +430,114 @@
 }
 
 /* ============================================
-   WAVE CIRCLES BACKGROUND (wave motion style)
-   Filled circles from bottom-left, layered like
-   radial waves with subtle color shifts.
+   AURORA MESH BACKGROUND
+   3 blurred gradient blobs that slowly drift.
+   Muted indigo/blue/violet on dark background.
+   GPU-accelerated, mobile-optimized.
    ============================================ */
-.pulsing-circles-container {
+.aurora-mesh {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-.pulsing-circle {
+.aurora-blob {
   position: absolute;
   border-radius: 50%;
-  bottom: -20%;
-  left: -20%;
-  animation: wave-circle 10s ease-in-out infinite alternate;
+  filter: blur(100px);
+  opacity: 0.5;
+  will-change: transform;
 }
 
-/* Outermost → innermost: progressively brighter/smaller */
-.pulsing-circle-1 {
-  width: 180vmax;
-  height: 180vmax;
-  background: rgba(14, 20, 40, 0.95);
-  animation-delay: 0s;
-}
-
-.pulsing-circle-2 {
-  width: 140vmax;
-  height: 140vmax;
-  background: rgba(20, 30, 60, 0.8);
-  animation-delay: -2s;
-}
-
-.pulsing-circle-3 {
-  width: 105vmax;
-  height: 105vmax;
-  background: rgba(30, 45, 90, 0.6);
-  animation-delay: -4s;
-}
-
-.pulsing-circle-4 {
-  width: 75vmax;
-  height: 75vmax;
-  background: rgba(50, 70, 130, 0.4);
-  animation-delay: -6s;
-}
-
-.pulsing-circle-5 {
+/* Blob 1 — deep indigo, top-right area, slow clockwise orbit */
+.aurora-blob-1 {
   width: 50vmax;
   height: 50vmax;
-  background: rgba(73, 126, 233, 0.2);
-  animation-delay: -8s;
+  top: -15%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(49, 46, 129, 0.8) 0%, rgba(30, 27, 75, 0.4) 50%, transparent 70%);
+  animation: aurora-drift-1 20s ease-in-out infinite;
 }
 
-@keyframes wave-circle {
-  0% {
-    transform: scale(1);
+/* Blob 2 — muted blue, center-left, slow figure-8 drift */
+.aurora-blob-2 {
+  width: 45vmax;
+  height: 45vmax;
+  top: 30%;
+  left: -15%;
+  background: radial-gradient(circle, rgba(30, 58, 95, 0.7) 0%, rgba(23, 37, 84, 0.3) 50%, transparent 70%);
+  animation: aurora-drift-2 25s ease-in-out infinite;
+}
+
+/* Blob 3 — soft violet, bottom-center, gentle bounce */
+.aurora-blob-3 {
+  width: 40vmax;
+  height: 40vmax;
+  bottom: -10%;
+  left: 30%;
+  background: radial-gradient(circle, rgba(46, 16, 101, 0.6) 0%, rgba(76, 29, 149, 0.2) 50%, transparent 70%);
+  animation: aurora-drift-3 22s ease-in-out infinite;
+}
+
+@keyframes aurora-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
   }
-  100% {
-    transform: scale(1.08);
+  25% {
+    transform: translate(-8vw, 12vh) scale(1.05);
+  }
+  50% {
+    transform: translate(-5vw, 20vh) scale(0.95);
+  }
+  75% {
+    transform: translate(5vw, 8vh) scale(1.02);
+  }
+}
+
+@keyframes aurora-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(12vw, -5vh) scale(1.03);
+  }
+  50% {
+    transform: translate(20vw, 5vh) scale(0.97);
+  }
+  75% {
+    transform: translate(8vw, -8vh) scale(1.05);
+  }
+}
+
+@keyframes aurora-drift-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(10vw, -10vh) scale(1.04);
+  }
+  66% {
+    transform: translate(-8vw, -15vh) scale(0.96);
+  }
+}
+
+/* Mobile: smaller blobs, less blur for perf */
+@media (max-width: 639px) {
+  .aurora-blob {
+    filter: blur(70px);
+    opacity: 0.4;
+  }
+  .aurora-blob-1 {
+    width: 60vmax;
+    height: 60vmax;
+  }
+  .aurora-blob-2 {
+    width: 50vmax;
+    height: 50vmax;
+  }
+  .aurora-blob-3 {
+    width: 45vmax;
+    height: 45vmax;
   }
 }
 
