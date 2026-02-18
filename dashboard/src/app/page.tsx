@@ -19,7 +19,7 @@ import {
   SheetContent,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useState, useEffect, type MouseEvent } from 'react';
+import { useState, useEffect, useCallback, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { SilkBackground } from '@/components/ui/silk-background';
@@ -28,7 +28,7 @@ const features = [
   {
     label: '01',
     title: 'Injection & Code Vulnerabilities',
-    description: 'Your vibe-coded app could have SQL injection, XSS, or CSRF holes and you\'d never know. We test your live site the way an attacker would.',
+    description: 'We send real payloads to your live site — SQL injection probes, XSS canaries, and open redirect bypass attempts — then check your forms and cookies for CSRF gaps.',
     accent: 'from-rose-500 to-orange-500',
     accentBorder: 'group-hover:border-rose-500/30',
     includes: ['SQLi', 'XSS', 'Open Redirect', 'CSRF'],
@@ -36,26 +36,26 @@ const features = [
   {
     label: '02',
     title: 'Secrets & Key Exposure',
-    description: 'Connect your GitHub repo and we\'ll deep-scan your commits, client-side bundles, and security alerts for leaked API keys and credentials.',
+    description: 'We scan your JS bundles and source maps for leaked keys, then deep-scan your GitHub commits, branches, and CI files for hardcoded credentials.',
     accent: 'from-amber-500 to-yellow-500',
     accentBorder: 'group-hover:border-amber-500/30',
-    includes: ['API Keys', 'GitHub Repo Scan', 'GitHub Security Alerts', 'Git History'],
+    includes: ['API Keys', 'Source Maps', 'GitHub Repo Scan', 'Git History'],
   },
   {
     label: '03',
     title: 'Hosting & Infrastructure',
-    description: 'Deployed on Vercel, Netlify, Cloudflare, or Railway? We auto-detect your hosting and check SSL, headers, CORS, cookies, and DDoS protection.',
+    description: 'We auto-detect your hosting platform, probe your CORS policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.',
     accent: 'from-emerald-500 to-teal-500',
     accentBorder: 'group-hover:border-emerald-500/30',
-    includes: ['Vercel', 'Netlify', 'Cloudflare', 'Railway', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'DDoS'],
+    includes: ['Vercel', 'Netlify', 'Cloudflare', 'Railway', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'WAF/CDN'],
   },
   {
     label: '04',
     title: 'Backend & BaaS Security',
-    description: 'Using Supabase, Firebase, or Convex? We check your RLS policies, auth flows, exposed endpoints, and dependency CVEs — the stuff AI-generated code gets wrong.',
+    description: 'Using Supabase, Firebase, or Convex? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.',
     accent: 'from-violet-500 to-purple-500',
     accentBorder: 'group-hover:border-violet-500/30',
-    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth Flows', 'Dependencies', 'OpenSSF Scorecard'],
+    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth Flows', 'Dependencies'],
   },
 ];
 
@@ -120,24 +120,31 @@ export default function HomePage() {
     });
   }, []);
 
-  // Card tilt — follows cursor position over the terminal card
+  // Detect touch device — disable tilt on mobile (no hover)
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || window.matchMedia('(pointer: coarse)').matches);
+  }, []);
+
+  // Card tilt — follows cursor position over the terminal card (desktop only)
   const cardRotateX = useMotionValue(0);
   const cardRotateY = useMotionValue(0);
   const smoothCardRotateX = useSpring(cardRotateX, { stiffness: 200, damping: 25 });
   const smoothCardRotateY = useSpring(cardRotateY, { stiffness: 200, damping: 25 });
 
-  function handleCardMouseMove(e: MouseEvent<HTMLDivElement>) {
+  const handleCardMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
+    if (isTouch) return;
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - left) / width - 0.5;
     const y = (e.clientY - top) / height - 0.5;
     cardRotateX.set(-y * 12);
     cardRotateY.set(x * 12);
-  }
+  }, [isTouch, cardRotateX, cardRotateY]);
 
-  function handleCardMouseLeave() {
+  const handleCardMouseLeave = useCallback(() => {
     cardRotateX.set(0);
     cardRotateY.set(0);
-  }
+  }, [cardRotateX, cardRotateY]);
 
   const fadeInView = {
     initial: { opacity: 0, y: 30 },
@@ -147,7 +154,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0E10]">
+    <div className="min-h-screen bg-[#0E0E10] overflow-x-hidden">
       {/* Prismatic ribbon background — fixed behind all slides */}
       <SilkBackground />
 
@@ -224,7 +231,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                 className="block"
               >
-                #1 Fullstack security scanner
+                The <span className="italic text-white/50">#1 Fullstack</span> security scanner
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -297,11 +304,11 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
             className="relative w-full max-w-4xl group mt-2"
-            style={{ perspective: 800 }}
+            style={isTouch ? undefined : { perspective: 800 }}
             aria-hidden="true"
           >
             <motion.div
-              style={{ rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
+              style={isTouch ? undefined : { rotateX: smoothCardRotateX, rotateY: smoothCardRotateY }}
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
               className="relative bg-[#1C1C1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[160px] min-[400px]:h-[200px] sm:h-[260px] md:h-[320px] w-full flex flex-col"
@@ -317,10 +324,10 @@ export default function HomePage() {
               </div>
 
               {/* Code Content & Scanner */}
-              <div className="relative p-2.5 sm:p-5 font-mono text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
+              <div className="relative p-2.5 sm:p-5 font-mono text-[8px] min-[400px]:text-[9px] sm:text-sm overflow-hidden flex-1 bg-[#0E0E10]">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
-                <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 whitespace-nowrap">
+                <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 overflow-hidden">
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">01</span> <span className="text-sky-400">export</span> <span className="text-cyan-400">default</span> <span className="text-sky-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">03</span>   <span className="text-sky-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">&quot;sk_live_EXAMPLE_KEY...&quot;</span>;</div>
@@ -352,11 +359,11 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
-                  className="absolute top-[20px] sm:top-[50px] right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
+                  className="absolute top-[16px] min-[400px]:top-[20px] sm:top-[50px] right-2 min-[400px]:right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-16px)] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[9px] sm:text-xs font-bold truncate">Exposed Stripe Key</div>
+                    <div className="text-[8px] min-[400px]:text-[9px] sm:text-xs font-bold truncate">Exposed Stripe Key</div>
                   </div>
                 </motion.div>
 
@@ -364,11 +371,11 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
-                  className="absolute top-[55px] sm:top-[140px] md:top-[200px] right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-24px)] sm:max-w-none"
+                  className="absolute top-[45px] min-[400px]:top-[55px] sm:top-[140px] md:top-[200px] right-2 min-[400px]:right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-16px)] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[9px] sm:text-xs font-bold truncate">CORS Misconfigured</div>
+                    <div className="text-[8px] min-[400px]:text-[9px] sm:text-xs font-bold truncate">CORS Misconfigured</div>
                   </div>
                 </motion.div>
               </div>
@@ -382,9 +389,6 @@ export default function HomePage() {
         id="slide-features"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        {/* Stronger darkened backdrop for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0C] via-[#080810] to-[#0A0A0C] pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-950/10 via-transparent to-sky-950/10 pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-10 sm:mb-14">
@@ -483,7 +487,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-sm sm:max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 max-w-[340px] sm:max-w-5xl mx-auto">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -571,9 +575,9 @@ export default function HomePage() {
         id="slide-cta"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        {/* Gradient orbs */}
-        <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
-        <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        {/* Gradient orbs — hidden on small mobile for GPU savings */}
+        <div className="hidden sm:block absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        <div className="hidden sm:block absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10">
           <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
@@ -593,7 +597,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full pt-16 pb-8 relative z-10 safe-bottom mt-16">
+        <footer className="w-full pt-12 sm:pt-16 pb-8 relative z-10 safe-bottom mt-12 sm:mt-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
               <div className="flex items-center gap-2">
