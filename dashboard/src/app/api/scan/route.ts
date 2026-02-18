@@ -6,6 +6,7 @@ import { getServiceClient } from '@/lib/api-keys';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
+import type { Json } from '@/lib/supabase/database.types';
 
 const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
         if (projectId) {
             const projectClient = auth.keyId ? getServiceClient() : await createClient();
             const { data: project, error: projectError } = await projectClient
-                .from('projects' as any)
+                .from('projects')
                 .select('*')
                 .eq('id', projectId)
                 .eq('user_id', auth.userId)
@@ -122,14 +123,14 @@ export async function POST(req: NextRequest) {
             }
 
             // Use project config (decrypt supabase_pat — handles legacy plaintext gracefully)
-            url = (project as any).url;
-            githubRepo = (project as any).github_repo || githubRepo;
-            const rawProjectPAT = (project as any).supabase_pat;
+            url = project.url;
+            githubRepo = project.github_repo || githubRepo;
+            const rawProjectPAT = project.supabase_pat;
             supabasePAT = rawProjectPAT ? decrypt(rawProjectPAT) : supabasePAT;
-            body.backendType = (project as any).backend_type || body.backendType;
-            body.backendUrl = (project as any).backend_url || body.backendUrl;
-            if ((project as any).backend_type === 'convex' && (project as any).backend_url) {
-                body.convexUrl = (project as any).backend_url;
+            body.backendType = project.backend_type || body.backendType;
+            body.backendUrl = project.backend_url || body.backendUrl;
+            if (project.backend_type === 'convex' && project.backend_url) {
+                body.convexUrl = project.backend_url;
             }
             resolvedProjectId = projectId;
         }
@@ -216,13 +217,13 @@ export async function POST(req: NextRequest) {
         }
 
         // ==========================================
-        // RUN SCANNERS
+        // RUN SCANNERS (with real-time progress)
         // ==========================================
 
         const results: Record<string, any> = {};
         const scannerPromises: Promise<void>[] = [];
 
-        const SCANNER_TIMEOUT_MS = 45000; // 45 second timeout per scanner (8 scanners run in parallel)
+        const SCANNER_TIMEOUT_MS = 45000; // 45 second timeout per scanner (all run in parallel)
 
         function fetchWithTimeout(fetchUrl: string, options: RequestInit): Promise<Response> {
             const controller = new AbortController();
@@ -242,392 +243,262 @@ export async function POST(req: NextRequest) {
             accessToken = validatedUser ? (await sessionClient.auth.getSession()).data.session?.access_token : undefined;
         }
 
+        // ------------------------------------------------------------------
+        // Progress tracking: count completed scanners, batch-update every 5
+        // ------------------------------------------------------------------
+        let scannersCompleted = 0;
+        let lastReportedCompleted = 0;
+        const PROGRESS_BATCH_SIZE = 5;
+
+        // Use service client for progress updates (bypasses RLS)
+        const progressClient = getServiceClient();
+
+        // Helper to create a tracked scanner promise that increments progress
+        function trackedScanner(
+            _resultKey: string,
+            scannerFn: () => Promise<void>,
+        ): Promise<void> {
+            return scannerFn().finally(async () => {
+                scannersCompleted++;
+                // Batch-update the scan row every PROGRESS_BATCH_SIZE completions
+                if (scanId && (scannersCompleted - lastReportedCompleted >= PROGRESS_BATCH_SIZE)) {
+                    lastReportedCompleted = scannersCompleted;
+                    try {
+                        await progressClient
+                            .from('scans')
+                            .update({ scanners_completed: scannersCompleted })
+                            .eq('id', scanId);
+                    } catch {
+                        // fire-and-forget, non-critical
+                    }
+                }
+            });
+        }
+
+        // Helper: common headers for scanner calls
+        const scannerHeaders = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+            'x-scanner-key': scannerSecretKey,
+        };
+
         // 1. Security Headers Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('security', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/security-headers-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.security = data; })
-                .catch(err => { results.security = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.security = data; })
+              .catch(err => { results.security = { error: err.message, score: 0 }; })
+        ));
 
         // 2. API Key Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('api_keys', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/api-key-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.api_keys = data; })
-                .catch(err => { results.api_keys = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.api_keys = data; })
+              .catch(err => { results.api_keys = { error: err.message, score: 0 }; })
+        ));
 
         // 3. Legal Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('legal', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/legal-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.legal = data; })
-                .catch(err => { results.legal = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.legal = data; })
+              .catch(err => { results.legal = { error: err.message, score: 0 }; })
+        ));
 
         // 4. Threat Intelligence Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('threat_intelligence', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/threat-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.threat_intelligence = data; })
-                .catch(err => { results.threat_intelligence = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.threat_intelligence = data; })
+              .catch(err => { results.threat_intelligence = { error: err.message, score: 0 }; })
+        ));
 
         // 6. SQL Injection Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('sqli', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/sqli-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.sqli = data; })
-                .catch(err => { results.sqli = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.sqli = data; })
+              .catch(err => { results.sqli = { error: err.message, score: 0 }; })
+        ));
 
         // 7. Technology Stack Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('tech_stack', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/tech-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.tech_stack = data; })
-                .catch(err => { results.tech_stack = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.tech_stack = data; })
+              .catch(err => { results.tech_stack = { error: err.message, score: 0 }; })
+        ));
 
         // 8. GitHub Secrets Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('github_secrets', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/github-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.github_secrets = data; })
-                    .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.github_secrets = data; })
+                  .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.github_secrets = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 9. CORS Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('cors', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cors-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.cors = data; })
-                .catch(err => { results.cors = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.cors = data; })
+              .catch(err => { results.cors = { error: err.message, score: 0 }; })
+        ));
 
         // 10. CSRF Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('csrf', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/csrf-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.csrf = data; })
-                .catch(err => { results.csrf = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.csrf = data; })
+              .catch(err => { results.csrf = { error: err.message, score: 0 }; })
+        ));
 
         // 11. Cookie/Session Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('cookies', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cookie-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.cookies = data; })
-                .catch(err => { results.cookies = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.cookies = data; })
+              .catch(err => { results.cookies = { error: err.message, score: 0 }; })
+        ));
 
         // 12. Auth Flow Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('auth', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/auth-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.auth = data; })
-                .catch(err => { results.auth = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.auth = data; })
+              .catch(err => { results.auth = { error: err.message, score: 0 }; })
+        ));
 
         // 13. Supabase Backend Scanner (Edge Function) — runs when supabase or auto-detect
         if (backendType === 'supabase' || backendType === 'none') {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('supabase_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({
                         targetUrl,
                         ...(userSupabaseUrl && typeof userSupabaseUrl === 'string' ? { supabaseUrl: userSupabaseUrl.trim() } : {}),
                     }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.supabase_backend = data; })
-                    .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.supabase_backend = data; })
+                  .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.supabase_backend = { skipped: true, reason: 'Backend type is not Supabase', missingConfig: 'backendType' };
         }
 
         // 13b. Firebase Backend Scanner (Edge Function) — runs when firebase is selected
         if (backendType === 'firebase') {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('firebase_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/firebase-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
-                    body: JSON.stringify({ targetUrl }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.firebase_backend = data; })
-                    .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
-            );
+                    method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                }).then(res => res.json()).then(data => { results.firebase_backend = data; })
+                  .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.firebase_backend = { skipped: true, reason: 'Backend type is not Firebase', missingConfig: 'backendType' };
         }
 
         // 13c. Convex Backend Scanner (Edge Function) — runs when convex is selected
         if (backendType === 'convex') {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('convex_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/convex-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({
                         targetUrl,
                         ...(convexUrl && typeof convexUrl === 'string' ? { convexUrl: convexUrl.trim() } : {}),
                     }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.convex_backend = data; })
-                    .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.convex_backend = data; })
+                  .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.convex_backend = { skipped: true, reason: 'Backend type is not Convex', missingConfig: 'backendType' };
         }
 
         // 14. Dependency Vulnerability Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('dependencies', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/deps-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.dependencies = data; })
-                    .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.dependencies = data; })
+                  .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.dependencies = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 15. SSL/TLS Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('ssl_tls', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/ssl-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.ssl_tls = data; })
-                .catch(err => { results.ssl_tls = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.ssl_tls = data; })
+              .catch(err => { results.ssl_tls = { error: err.message, score: 0 }; })
+        ));
 
         // 16. DNS & Email Security Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('dns_email', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/dns-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.dns_email = data; })
-                .catch(err => { results.dns_email = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.dns_email = data; })
+              .catch(err => { results.dns_email = { error: err.message, score: 0 }; })
+        ));
 
         // 17. XSS Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('xss', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/xss-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.xss = data; })
-                .catch(err => { results.xss = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.xss = data; })
+              .catch(err => { results.xss = { error: err.message, score: 0 }; })
+        ));
 
         // 18. Open Redirect Scanner (Edge Function)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('open_redirect', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/redirect-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.open_redirect = data; })
-                .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.open_redirect = data; })
+              .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
+        ));
 
         // 19. OpenSSF Scorecard Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('scorecard', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/scorecard-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.scorecard = data; })
-                    .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.scorecard = data; })
+                  .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.scorecard = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 20. GitHub Native Security Scanner (Edge Function) — only if repo URL provided
         if (githubRepo && typeof githubRepo === 'string' && githubRepo.trim()) {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('github_security', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/github-security-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.github_security = data; })
-                    .catch(err => { results.github_security = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.github_security = data; })
+                  .catch(err => { results.github_security = { error: err.message, score: 0 }; })
+            ));
         } else {
             results.github_security = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
         }
 
         // 21. Supabase Management API Scanner (Edge Function) — only if PAT provided
         if (supabasePAT && typeof supabasePAT === 'string' && supabasePAT.startsWith('sbp_') && userSupabaseUrl) {
-            scannerPromises.push(
+            scannerPromises.push(trackedScanner('supabase_mgmt', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-mgmt-scanner`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                        'x-scanner-key': scannerSecretKey,
-                    },
+                    method: 'POST', headers: scannerHeaders,
                     body: JSON.stringify({ targetUrl, supabasePAT, supabaseUrl: userSupabaseUrl.trim() }),
-                })
-                    .then(res => res.json())
-                    .then(data => { results.supabase_mgmt = data; })
-                    .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
-            );
+                }).then(res => res.json()).then(data => { results.supabase_mgmt = data; })
+                  .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
+            ));
         } else if (backendType === 'supabase' || userSupabaseUrl) {
             results.supabase_mgmt = { skipped: true, reason: 'Supabase PAT not provided', missingConfig: 'supabasePAT' };
         } else {
@@ -635,198 +506,74 @@ export async function POST(req: NextRequest) {
         }
 
         // 22. Vercel Hosting Scanner (always runs, auto-detects)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('vercel_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/vercel-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.vercel_hosting = data; })
-                .catch(err => { results.vercel_hosting = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.vercel_hosting = data; })
+              .catch(err => { results.vercel_hosting = { error: err.message, score: 0 }; })
+        ));
 
         // 23. Netlify Hosting Scanner (always runs, auto-detects)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('netlify_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/netlify-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.netlify_hosting = data; })
-                .catch(err => { results.netlify_hosting = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.netlify_hosting = data; })
+              .catch(err => { results.netlify_hosting = { error: err.message, score: 0 }; })
+        ));
 
         // 24. Cloudflare Pages Hosting Scanner (always runs, auto-detects)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('cloudflare_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cloudflare-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.cloudflare_hosting = data; })
-                .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.cloudflare_hosting = data; })
+              .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
+        ));
 
         // 25. Railway Hosting Scanner (always runs, auto-detects)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('railway_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/railway-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.railway_hosting = data; })
-                .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.railway_hosting = data; })
+              .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
+        ));
 
         // 26. DDoS Protection Scanner (always runs)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('ddos_protection', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/ddos-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.ddos_protection = data; })
-                .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.ddos_protection = data; })
+              .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
+        ));
 
         // 28. File Upload Security Scanner (always runs)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('file_upload', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/upload-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.file_upload = data; })
-                .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.file_upload = data; })
+              .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
+        ));
 
         // 29. Audit Logging & Monitoring Scanner (always runs)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('audit_logging', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/audit-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.audit_logging = data; })
-                .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.audit_logging = data; })
+              .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
+        ));
 
         // 30. Mobile API Rate Limiting Scanner (always runs)
-        scannerPromises.push(
+        scannerPromises.push(trackedScanner('mobile_api', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/mobile-scanner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
-                    'x-scanner-key': scannerSecretKey,
-                },
-                body: JSON.stringify({ targetUrl }),
-            })
-                .then(res => res.json())
-                .then(data => { results.mobile_api = data; })
-                .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
-        );
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.mobile_api = data; })
+              .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
+        ));
 
-        // Wait for all with a 55s overall deadline to avoid gateway timeout.
-        // Scanners that haven't finished by then are recorded as timeouts.
-        const OVERALL_TIMEOUT_MS = 55_000;
-        await Promise.race([
-            Promise.all(scannerPromises),
-            new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
-        ]);
-
-        // Calculate Overall Score using weighted average (weights sum to 1.0)
-        const SCANNER_WEIGHTS: Record<string, number> = {
-            security: 0.08,       // Security headers — broad impact
-            sqli: 0.07,           // SQL injection — critical vulnerability
-            xss: 0.07,            // XSS — critical vulnerability
-            ssl_tls: 0.06,        // TLS — foundational
-            api_keys: 0.06,       // Exposed keys — high impact
-            cors: 0.04,           // CORS misconfiguration
-            csrf: 0.04,           // CSRF protection
-            cookies: 0.04,        // Cookie security
-            auth: 0.04,           // Authentication flow
-            supabase_backend: 0.04, // Supabase misconfig
-            firebase_backend: 0.04, // Firebase misconfig
-            convex_backend: 0.04, // Convex misconfig
-            supabase_mgmt: 0.04,  // Supabase deep lint
-            open_redirect: 0.03,  // Open redirects
-            github_secrets: 0.03, // Leaked secrets in repo
-            github_security: 0.03, // Dependabot/CodeQL/secret scanning
-            dependencies: 0.03,   // Known CVEs in deps
-            dns_email: 0.03,      // SPF/DMARC/DKIM
-            threat_intelligence: 0.03, // Threat feeds
-            tech_stack: 0.03,     // Tech fingerprint & CVEs
-            vercel_hosting: 0.02, // Vercel platform checks
-            netlify_hosting: 0.02, // Netlify platform checks
-            cloudflare_hosting: 0.02, // Cloudflare Pages checks
-            railway_hosting: 0.02, // Railway platform checks
-            scorecard: 0.02,      // OpenSSF supply chain score
-            legal: 0.01,          // Legal compliance
-            ddos_protection: 0.04, // DDoS/WAF protection
-            file_upload: 0.03,    // File upload security
-            audit_logging: 0.02,  // Monitoring & audit readiness
-            mobile_api: 0.03,     // Mobile API rate limiting
-        };
-
-        // Use FIXED denominator so skipped/errored scanners don't inflate the score.
-        // Sum all defined weights to get the fixed total.
-        const FIXED_TOTAL_WEIGHT = Object.values(SCANNER_WEIGHTS).reduce((a, b) => a + b, 0);
-        let weightedSum = 0;
-
-        for (const [key, result] of Object.entries(results)) {
-            if (typeof result !== 'object' || result === null) continue;
-            const r = result as Record<string, any>;
-            if (r.error || typeof r.score !== 'number') continue;
-            // Skipped scanners contribute 0 to weighted sum (correct behavior)
-            if (r.skipped) continue;
-
-            const weight = SCANNER_WEIGHTS[key] ?? 0.05;
-            weightedSum += r.score * weight;
-        }
-
-        const overallScore = FIXED_TOTAL_WEIGHT > 0
-            ? Math.round(weightedSum / FIXED_TOTAL_WEIGHT)
-            : 0;
-
-        let scanId = null;
-
-        // Use service client for insert when using API key auth
+        // ------------------------------------------------------------------
+        // Create the scan row with status 'running' BEFORE launching scanners
+        // so the client can subscribe to real-time progress updates via the scanId.
+        // ------------------------------------------------------------------
+        const totalScanners = scannerPromises.length;
         const insertClient = auth.keyId ? getServiceClient() : await createClient();
 
         const { data: scan, error: insertError } = await insertClient
@@ -834,46 +581,199 @@ export async function POST(req: NextRequest) {
             .insert({
                 user_id: auth.userId,
                 url: targetUrl,
-                status: 'completed',
-                overall_score: overallScore,
-                results,
-                completed_at: new Date().toISOString(),
-                ...(resolvedProjectId ? { project_id: resolvedProjectId } : {}),
+                status: 'running',
+                scanners_completed: 0,
+                scanners_total: totalScanners,
+                project_id: resolvedProjectId ?? null,
             })
             .select()
             .single();
 
+        let scanId: string | null = null;
         if (!insertError && scan) {
             scanId = scan.id;
         } else {
-            console.error('Failed to save scan:', insertError);
+            console.error('Failed to create scan row:', insertError);
+            // Continue without progress tracking — the scan still works
         }
 
-        // Update project favicon (fire-and-forget)
-        if (resolvedProjectId) {
-            (async () => {
-                try {
-                    const faviconUrl = await fetchFaviconUrl(targetUrl);
-                    if (faviconUrl) {
-                        const svc = getServiceClient();
-                        await (svc.from('projects' as any) as any).update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId);
-                    }
-                } catch {
-                    // Non-critical, ignore
-                }
-            })();
-        }
+        // ------------------------------------------------------------------
+        // Stream response: send scanId immediately, then full results when done.
+        // Format: newline-delimited JSON (NDJSON).
+        //   Line 1: { "type": "started", "scanId": "...", "totalScanners": N }
+        //   Line 2: { "type": "result", "success": true, ... }
+        // ------------------------------------------------------------------
+        const encoder = new TextEncoder();
+        const stream = new TransformStream();
+        const writer = stream.writable.getWriter();
 
-        // Audit log (fire-and-forget)
-        logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 200 });
-
-        return NextResponse.json({
-            success: true,
+        // Send the scanId to the client immediately
+        const startedChunk = JSON.stringify({
+            type: 'started',
             scanId,
-            url: targetUrl,
-            overallScore,
-            results,
-            completedAt: new Date().toISOString(),
+            totalScanners,
+        }) + '\n';
+        writer.write(encoder.encode(startedChunk));
+
+        // Run scanners and send results in the background
+        (async () => {
+            try {
+                // Wait for all with a 55s overall deadline to avoid gateway timeout.
+                const OVERALL_TIMEOUT_MS = 55_000;
+                await Promise.race([
+                    Promise.all(scannerPromises),
+                    new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
+                ]);
+
+                // Calculate Overall Score using weighted average (weights sum to 1.0)
+                const SCANNER_WEIGHTS: Record<string, number> = {
+                    security: 0.08,       // Security headers — broad impact
+                    sqli: 0.07,           // SQL injection — critical vulnerability
+                    xss: 0.07,            // XSS — critical vulnerability
+                    ssl_tls: 0.06,        // TLS — foundational
+                    api_keys: 0.06,       // Exposed keys — high impact
+                    cors: 0.04,           // CORS misconfiguration
+                    csrf: 0.04,           // CSRF protection
+                    cookies: 0.04,        // Cookie security
+                    auth: 0.04,           // Authentication flow
+                    supabase_backend: 0.04, // Supabase misconfig
+                    firebase_backend: 0.04, // Firebase misconfig
+                    convex_backend: 0.04, // Convex misconfig
+                    supabase_mgmt: 0.04,  // Supabase deep lint
+                    open_redirect: 0.03,  // Open redirects
+                    github_secrets: 0.03, // Leaked secrets in repo
+                    github_security: 0.03, // Dependabot/CodeQL/secret scanning
+                    dependencies: 0.03,   // Known CVEs in deps
+                    dns_email: 0.03,      // SPF/DMARC/DKIM
+                    threat_intelligence: 0.03, // Threat feeds
+                    tech_stack: 0.03,     // Tech fingerprint & CVEs
+                    vercel_hosting: 0.02, // Vercel platform checks
+                    netlify_hosting: 0.02, // Netlify platform checks
+                    cloudflare_hosting: 0.02, // Cloudflare Pages checks
+                    railway_hosting: 0.02, // Railway platform checks
+                    scorecard: 0.02,      // OpenSSF supply chain score
+                    legal: 0.01,          // Legal compliance
+                    ddos_protection: 0.04, // DDoS/WAF protection
+                    file_upload: 0.03,    // File upload security
+                    audit_logging: 0.02,  // Monitoring & audit readiness
+                    mobile_api: 0.03,     // Mobile API rate limiting
+                };
+
+                // Use FIXED denominator so skipped/errored scanners don't inflate the score.
+                const FIXED_TOTAL_WEIGHT = Object.values(SCANNER_WEIGHTS).reduce((a, b) => a + b, 0);
+                let weightedSum = 0;
+
+                for (const [key, result] of Object.entries(results)) {
+                    if (typeof result !== 'object' || result === null) continue;
+                    const r = result as Record<string, any>;
+                    if (r.error || typeof r.score !== 'number') continue;
+                    if (r.skipped) continue;
+
+                    const weight = SCANNER_WEIGHTS[key] ?? 0.05;
+                    weightedSum += r.score * weight;
+                }
+
+                const overallScore = FIXED_TOTAL_WEIGHT > 0
+                    ? Math.round(weightedSum / FIXED_TOTAL_WEIGHT)
+                    : 0;
+
+                // ------------------------------------------------------------------
+                // Final update: mark scan as completed with results & score.
+                // ------------------------------------------------------------------
+                if (scanId) {
+                    const updateClient = auth.keyId ? getServiceClient() : await createClient();
+                    const { error: updateError } = await updateClient
+                        .from('scans')
+                        .update({
+                            status: 'completed',
+                            overall_score: overallScore,
+                            results: results as unknown as Json,
+                            completed_at: new Date().toISOString(),
+                            scanners_completed: totalScanners,
+                        })
+                        .eq('id', scanId);
+
+                    if (updateError) {
+                        console.error('Failed to update scan with results:', updateError);
+                    }
+                } else {
+                    // Fallback: if the initial insert failed, try inserting the completed scan
+                    const fallbackClient = auth.keyId ? getServiceClient() : await createClient();
+                    const { data: fallbackScan, error: fallbackError } = await fallbackClient
+                        .from('scans')
+                        .insert({
+                            user_id: auth.userId,
+                            url: targetUrl,
+                            status: 'completed',
+                            overall_score: overallScore,
+                            results: results as unknown as Json,
+                            completed_at: new Date().toISOString(),
+                            scanners_completed: totalScanners,
+                            scanners_total: totalScanners,
+                            project_id: resolvedProjectId ?? null,
+                        })
+                        .select()
+                        .single();
+
+                    if (!fallbackError && fallbackScan) {
+                        scanId = fallbackScan.id;
+                    } else {
+                        console.error('Failed to save scan (fallback):', fallbackError);
+                    }
+                }
+
+                // Update project favicon (fire-and-forget)
+                if (resolvedProjectId) {
+                    fetchFaviconUrl(targetUrl).then(faviconUrl => {
+                        if (faviconUrl) {
+                            const svc = getServiceClient();
+                            svc.from('projects').update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId!).then(() => {}).catch(() => {});
+                        }
+                    }).catch(() => {});
+                }
+
+                // Audit log (fire-and-forget)
+                logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 200 });
+
+                // Send the final result chunk
+                const resultChunk = JSON.stringify({
+                    type: 'result',
+                    success: true,
+                    scanId,
+                    url: targetUrl,
+                    overallScore,
+                    results,
+                    completedAt: new Date().toISOString(),
+                }) + '\n';
+                await writer.write(encoder.encode(resultChunk));
+            } catch (streamError) {
+                console.error('Scan error (stream):', streamError);
+
+                // Mark scan as failed if we have a scanId
+                if (scanId) {
+                    try {
+                        const failClient = getServiceClient();
+                        await failClient.from('scans').update({ status: 'failed' }).eq('id', scanId);
+                    } catch {
+                        // non-critical
+                    }
+                }
+
+                const errorChunk = JSON.stringify({
+                    type: 'error',
+                    error: 'An internal error occurred',
+                }) + '\n';
+                await writer.write(encoder.encode(errorChunk));
+            } finally {
+                await writer.close();
+            }
+        })();
+
+        return new Response(stream.readable, {
+            headers: {
+                'Content-Type': 'application/x-ndjson',
+                'Cache-Control': 'no-cache',
+            },
         });
 
     } catch (error) {
