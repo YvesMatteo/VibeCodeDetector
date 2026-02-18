@@ -266,7 +266,7 @@ export default function TermsPage() {
               If informal resolution fails, any dispute arising out of or relating to these terms or the
               service shall be resolved by binding arbitration administered by the Swiss Chambers&apos;
               Arbitration Institution under its Swiss Rules of International Arbitration. The arbitration
-              shall be conducted in Zurich, Switzerland, in the English language, by a single arbitrator.
+              shall be conducted in Zug, Switzerland, in the English language, by a single arbitrator.
               The arbitrator&apos;s decision shall be final and binding.
             </p>
 
@@ -286,7 +286,7 @@ export default function TermsPage() {
                 support@checkvibe.dev
               </a>{' '}
               within 30 days of creating your account. If you opt out, disputes will be resolved in the
-              courts of Zurich, Switzerland.
+              courts of Zug, Switzerland.
             </p>
           </section>
 
@@ -295,7 +295,7 @@ export default function TermsPage() {
             <p>
               These Terms shall be governed by and construed in accordance with the laws of Switzerland,
               without regard to its conflict of law provisions. Subject to the arbitration provisions
-              above, the courts of Zurich, Switzerland shall have exclusive jurisdiction over any
+              above, the courts of Zug, Switzerland shall have exclusive jurisdiction over any
               disputes arising from these terms.
             </p>
           </section>
