@@ -46,12 +46,12 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
 
     return (
         <Link href={`/dashboard/projects/${id}`} className="group block">
-            <div className="relative rounded-xl border border-zinc-200/60 bg-white px-5 py-5 min-h-[160px] flex flex-col transition-all duration-200 hover:border-blue-300/60 hover:shadow-lg hover:shadow-blue-500/[0.04]">
+            <div className="relative rounded-xl border border-sky-200/50 bg-sky-50/80 px-5 py-5 min-h-[160px] flex flex-col transition-all duration-200 hover:border-sky-300/70 hover:shadow-lg hover:shadow-sky-300/[0.08] hover:bg-sky-50">
                 {/* Top: favicon + name + time */}
                 <div className="flex items-start gap-3 mb-4">
                     {imgError ? (
-                        <div className="h-10 w-10 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
-                            <Globe className="h-5 w-5 text-zinc-400" />
+                        <div className="h-10 w-10 rounded-lg bg-sky-100 flex items-center justify-center shrink-0">
+                            <Globe className="h-5 w-5 text-sky-400" />
                         </div>
                     ) : (
                         /* eslint-disable-next-line @next/next/no-img-element */
@@ -81,11 +81,11 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
                         <>
                             {/* Severity mini-bar */}
                             {issueCount > 0 && (
-                                <div className="flex h-1.5 rounded-full overflow-hidden bg-zinc-100 mb-3">
+                                <div className="flex h-1.5 rounded-full overflow-hidden bg-sky-100 mb-3">
                                     {sev.critical > 0 && <div className="bg-red-500" style={{ width: `${(sev.critical / barTotal) * 100}%` }} />}
                                     {sev.high > 0 && <div className="bg-orange-500" style={{ width: `${(sev.high / barTotal) * 100}%` }} />}
                                     {sev.medium > 0 && <div className="bg-amber-500" style={{ width: `${(sev.medium / barTotal) * 100}%` }} />}
-                                    {sev.low > 0 && <div className="bg-blue-400" style={{ width: `${(sev.low / barTotal) * 100}%` }} />}
+                                    {sev.low > 0 && <div className="bg-sky-400" style={{ width: `${(sev.low / barTotal) * 100}%` }} />}
                                 </div>
                             )}
 
@@ -115,7 +115,7 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
                                         )}
                                         {sev.low > 0 && (
                                             <div className="flex items-center gap-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />
                                                 <span className="text-[11px] text-zinc-500 tabular-nums">{sev.low}</span>
                                             </div>
                                         )}

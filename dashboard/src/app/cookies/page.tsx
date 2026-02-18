@@ -109,7 +109,7 @@ export default function CookiePolicyPage() {
                 href="https://stripe.com/cookie-settings"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
               >
                 Stripe&apos;s Cookie Policy
               </a>.
@@ -173,7 +173,7 @@ export default function CookiePolicyPage() {
               If you have questions about our use of cookies, contact us at{' '}
               <a
                 href="mailto:support@checkvibe.dev"
-                className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
               >
                 support@checkvibe.dev
               </a>.
@@ -183,9 +183,9 @@ export default function CookiePolicyPage() {
           <div className="mt-12 pt-8 border-t border-white/10 text-sm text-zinc-500">
             <p>
               See also:{' '}
-              <Link href="/privacy" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">Privacy Policy</Link>
+              <Link href="/privacy" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">Privacy Policy</Link>
               {' '}&middot;{' '}
-              <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">Terms of Service</Link>
+              <Link href="/terms" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">Terms of Service</Link>
             </p>
           </div>
         </div>

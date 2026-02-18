@@ -158,7 +158,7 @@ export default function NewScanPage() {
                 <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-white">
-                            <Globe className="h-5 w-5 text-blue-400" />
+                            <Globe className="h-5 w-5 text-sky-400" />
                             Target URL
                         </CardTitle>
                         <CardDescription className="text-zinc-400">
@@ -167,12 +167,12 @@ export default function NewScanPage() {
                     </CardHeader>
                     <CardContent>
                         {errorCode === 'PLAN_REQUIRED' && (
-                            <div className="mb-4 p-5 rounded-xl border border-blue-500/20 bg-blue-500/5">
+                            <div className="mb-4 p-5 rounded-xl border border-sky-400/20 bg-sky-400/5">
                                 <h3 className="text-white font-medium mb-1">Choose a plan to run scans</h3>
                                 <p className="text-zinc-400 text-sm mb-3">
                                     Start with Starter for 5 scans/month, or go Pro for 20 scans and API access.
                                 </p>
-                                <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                                <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                                     <Link href="/dashboard/credits">View Plans</Link>
                                 </Button>
                             </div>
@@ -208,7 +208,7 @@ export default function NewScanPage() {
                                     placeholder="https://example.com"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                 />
                                 {isValidUrl(url) && (
                                     <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
@@ -309,7 +309,7 @@ export default function NewScanPage() {
                                         />
                                         <p className="text-xs text-zinc-500">
                                             Runs 12 deep SQL checks via the Management API: RLS status, permissive policies, SECURITY DEFINER functions, dangerous extensions, and more. Your token is used for this scan only and is never stored.{' '}
-                                            <a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                            <a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">
                                                 Generate a token &rarr;
                                             </a>
                                         </p>
@@ -378,7 +378,7 @@ export default function NewScanPage() {
                                 { icon: Lock, name: 'SSL/TLS', description: 'Certificate, HSTS, TLS version, mixed content', color: 'text-emerald-500' },
                                 { icon: ExternalLink, name: 'Open Redirect', description: 'URL parameter and path-based redirect testing', color: 'text-fuchsia-500' },
                                 { icon: Key, name: 'API Key Detector', description: 'Find exposed credentials and secrets in code', color: 'text-amber-500' },
-                                { icon: GitBranch, name: 'GitHub Deep Scan', description: '40+ secret patterns across git history', color: 'text-blue-500' },
+                                { icon: GitBranch, name: 'GitHub Deep Scan', description: '40+ secret patterns across git history', color: 'text-sky-400' },
                                 { icon: ServerCrash, name: 'Supabase Backend', description: 'RLS, storage, auth config, exposed tables', color: 'text-emerald-400' },
                                 { icon: Flame, name: 'Firebase Backend', description: 'RTDB, Firestore, Storage, API key, auth enum', color: 'text-orange-400' },
                                 { icon: Package, name: 'Dependencies', description: 'Known vulnerabilities via OSV.dev database', color: 'text-lime-500' },
@@ -386,14 +386,14 @@ export default function NewScanPage() {
                                 { icon: Radar, name: 'Threat Intelligence', description: 'Safe Browsing, VirusTotal, Shodan analysis', color: 'text-cyan-500' },
                                 { icon: Cpu, name: 'Tech Stack & CVEs', description: 'Technology detection with live OSV.dev lookups', color: 'text-indigo-500' },
                                 { icon: ClipboardCheck, name: 'OpenSSF Scorecard', description: 'Supply chain security: branch protection, pinned deps', color: 'text-green-500' },
-                                { icon: ShieldCheck, name: 'GitHub Security', description: 'Dependabot, code scanning, and secret scanning alerts', color: 'text-blue-400' },
+                                { icon: ShieldCheck, name: 'GitHub Security', description: 'Dependabot, code scanning, and secret scanning alerts', color: 'text-sky-400' },
                                 { icon: Settings2, name: 'Supabase Deep Lint', description: 'RLS, policies, SECURITY DEFINER, extensions audit', color: 'text-emerald-300' },
                                 { icon: Zap, name: 'Convex Backend', description: 'Deployment URL, admin keys, function enum, CORS', color: 'text-yellow-400' },
                                 { icon: Triangle, name: 'Vercel Hosting', description: 'Source maps, .env, _next/data leaks, git exposure', color: 'text-white' },
                                 { icon: Globe2, name: 'Netlify Hosting', description: 'Functions, build metadata, config files, git exposure', color: 'text-teal-400' },
                                 { icon: Cloud, name: 'Cloudflare Pages', description: 'Workers, old deploys, source maps, config exposure', color: 'text-orange-300' },
                                 { icon: TrainFront, name: 'Railway Hosting', description: 'Error disclosure, config files, connection strings', color: 'text-zinc-300' },
-                                { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-blue-500' },
+                                { icon: Scale, name: 'Legal Compliance', description: 'GDPR, CCPA, claim verification', color: 'text-sky-400' },
                                 { icon: ShieldOff, name: 'DDoS Protection', description: 'WAF, CDN, rate limiting, bot protection detection', color: 'text-red-400' },
                                 { icon: Upload, name: 'File Upload Security', description: 'Upload form validation, file type restrictions', color: 'text-purple-400' },
                                 { icon: Activity, name: 'Audit Logging', description: 'Monitoring, logging, and observability checks', color: 'text-cyan-400' },
@@ -424,7 +424,7 @@ export default function NewScanPage() {
                     <Button type="button" variant="outline" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-zinc-300">
                         <Link href="/dashboard/scans">Cancel</Link>
                     </Button>
-                    <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                    <Button type="submit" disabled={loading} size="lg" className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                         {loading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

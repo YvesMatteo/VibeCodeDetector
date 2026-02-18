@@ -212,8 +212,8 @@ export default function DemoResultsPage() {
                                                 const plainEnglish = getPlainEnglish(rec.title, rec.description);
                                                 if (plainEnglish) {
                                                     return (
-                                                        <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                                                            <div className="flex items-center gap-1 mb-1 text-blue-400">
+                                                        <div className="mt-2 p-2 bg-sky-400/10 border border-sky-400/20 rounded-md">
+                                                            <div className="flex items-center gap-1 mb-1 text-sky-400">
                                                                 <Info className="h-3 w-3" />
                                                                 <span className="text-[10px] font-bold uppercase tracking-wider">Plain English</span>
                                                             </div>

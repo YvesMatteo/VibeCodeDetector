@@ -135,7 +135,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="My App"
-                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -145,7 +145,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
                                     placeholder="https://example.com"
-                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -158,7 +158,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                     value={githubRepo}
                                     onChange={(e) => setGithubRepo(e.target.value)}
                                     placeholder="https://github.com/org/repo"
-                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -184,7 +184,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                             value={backendUrl}
                                             onChange={(e) => setBackendUrl(e.target.value)}
                                             placeholder="https://yourproject.supabase.co"
-                                            className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                            className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -197,7 +197,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                             value={supabasePAT}
                                             onChange={(e) => setSupabasePAT(e.target.value)}
                                             placeholder="sbp_..."
-                                            className="bg-white/[0.03] border-white/[0.08] text-white font-mono placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                            className="bg-white/[0.03] border-white/[0.08] text-white font-mono placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                         />
                                     </div>
                                 </>
@@ -209,7 +209,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
                                         placeholder="your-project-id or https://your-project.firebaseapp.com"
-                                        className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                        className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                     />
                                 </div>
                             )}
@@ -220,7 +220,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                         value={backendUrl}
                                         onChange={(e) => setBackendUrl(e.target.value)}
                                         placeholder="https://your-project.convex.cloud"
-                                        className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                        className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                     />
                                 </div>
                             )}
@@ -234,7 +234,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                 </Card>
 
                 <div className="flex justify-end mb-12">
-                    <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                    <Button type="submit" disabled={saving} className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                         {saving ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

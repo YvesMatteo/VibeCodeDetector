@@ -45,8 +45,8 @@ export default function ScanDetailLoading() {
         <div className="p-4 md:p-8 max-w-2xl mx-auto">
             <div className="flex flex-col items-center text-center py-20">
                 <div className="relative mb-8">
-                    <div className="h-20 w-20 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                        <Shield className="h-10 w-10 text-blue-400 animate-pulse" />
+                    <div className="h-20 w-20 rounded-full bg-sky-400/10 border border-sky-400/20 flex items-center justify-center">
+                        <Shield className="h-10 w-10 text-sky-400 animate-pulse" />
                     </div>
                 </div>
 
@@ -60,7 +60,7 @@ export default function ScanDetailLoading() {
                 <div className="w-full max-w-md mb-8">
                     <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full transition-all duration-500 ease-out"
+                            className="h-full bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full transition-all duration-500 ease-out"
                             style={{ width: `${progress}%` }}
                         />
                     </div>

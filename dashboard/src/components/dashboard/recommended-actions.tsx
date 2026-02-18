@@ -38,7 +38,7 @@ const severityDot: Record<string, string> = {
     critical: 'bg-red-500',
     high: 'bg-orange-500',
     medium: 'bg-amber-500',
-    low: 'bg-blue-500',
+    low: 'bg-sky-400',
 };
 
 interface Action {

@@ -107,13 +107,13 @@ export default async function DashboardPage() {
                                 <span className="text-zinc-600">/1</span> project
                             </span>
                             <span className="text-zinc-700">·</span>
-                            <Link href="/dashboard/credits" className="text-[13px] text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
+                            <Link href="/dashboard/credits" className="text-[13px] text-sky-400 hover:text-sky-300 transition-colors font-medium">
                                 Upgrade
                             </Link>
                         </div>
                     )}
                 </div>
-                <Button asChild className="bg-blue-500 text-white hover:bg-blue-600 border-0 font-medium">
+                <Button asChild className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-2 h-4 w-4" />
                         New Project
@@ -124,14 +124,14 @@ export default async function DashboardPage() {
             {/* Project Grid */}
             {projectsWithScans.length === 0 ? (
                 <div className="text-center py-20">
-                    <div className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center mx-auto mb-4">
-                        <FolderKanban className="h-5 w-5 text-zinc-400" />
+                    <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200/60 flex items-center justify-center mx-auto mb-4">
+                        <FolderKanban className="h-5 w-5 text-sky-400" />
                     </div>
                     <h2 className="text-base font-medium text-white mb-1.5">No projects yet</h2>
                     <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">
                         Create your first project to start running security audits.
                     </p>
-                    <Button asChild className="bg-blue-500 text-white hover:bg-blue-600 border-0 font-medium">
+                    <Button asChild className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium">
                         <Link href="/dashboard/projects/new">
                             <Plus className="mr-2 h-4 w-4" />
                             Create Project

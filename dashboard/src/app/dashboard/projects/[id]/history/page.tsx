@@ -95,9 +95,9 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                                     <div className="absolute left-[17px] top-10 bottom-0 w-px bg-white/[0.06]" />
                                 )}
                                 <div className={`relative z-10 mt-1 h-[35px] w-[35px] rounded-full flex items-center justify-center shrink-0 border ${
-                                    isFirst ? 'bg-blue-500/15 border-blue-500/30' : 'bg-white/[0.03] border-white/[0.06]'
+                                    isFirst ? 'bg-sky-400/15 border-sky-400/30' : 'bg-white/[0.03] border-white/[0.06]'
                                 }`}>
-                                    <span className={`text-xs font-bold ${isFirst ? 'text-blue-400' : 'text-zinc-500'}`}>
+                                    <span className={`text-xs font-bold ${isFirst ? 'text-sky-400' : 'text-zinc-500'}`}>
                                         {score ?? '—'}
                                     </span>
                                 </div>
@@ -109,7 +109,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                                 <Badge className={`${rating.bg} ${rating.color} text-xs border`}>{rating.label}</Badge>
-                                                {isFirst && <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs border">Latest</Badge>}
+                                                {isFirst && <Badge className="bg-sky-400/10 text-sky-400 border-sky-400/20 text-xs border">Latest</Badge>}
                                             </div>
                                             <span className="text-xs text-zinc-600">
                                                 {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -125,7 +125,7 @@ export default function WaitlistPage() {
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
                     >
                         <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-                        <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Early Access</span>
+                        <span className="text-xs font-medium text-sky-200 tracking-wide uppercase">Early Access</span>
                     </motion.div>
 
                     {/* Headline with reveal animation */}

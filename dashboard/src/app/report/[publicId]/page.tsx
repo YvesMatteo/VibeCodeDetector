@@ -62,7 +62,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ p
             <div className="border-b border-white/[0.06] bg-zinc-950/80 backdrop-blur-sm sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-blue-400" />
+                        <Shield className="h-5 w-5 text-sky-400" />
                         <span className="text-sm font-medium text-white">CheckVibe</span>
                         <span className="text-zinc-600">|</span>
                         <span className="text-sm text-zinc-400">Public Report</span>

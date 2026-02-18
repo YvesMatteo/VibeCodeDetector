@@ -127,19 +127,19 @@ export default function NewProjectPage() {
 
             {/* Step indicator */}
             <div className="flex items-center gap-3 mb-8">
-                <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium transition-colors ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>1</div>
-                <div className={`flex-1 h-px transition-colors ${step >= 2 ? 'bg-blue-600' : 'bg-zinc-700'}`} />
-                <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium transition-colors ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>2</div>
+                <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium transition-colors ${step >= 1 ? 'bg-sky-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>1</div>
+                <div className={`flex-1 h-px transition-colors ${step >= 2 ? 'bg-sky-500' : 'bg-zinc-700'}`} />
+                <div className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-medium transition-colors ${step >= 2 ? 'bg-sky-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>2</div>
             </div>
 
             {/* Upgrade nudges */}
             {errorCode === 'PLAN_REQUIRED' && (
-                <div className="mb-6 p-5 rounded-xl border border-blue-500/20 bg-blue-500/5">
+                <div className="mb-6 p-5 rounded-xl border border-sky-400/20 bg-sky-400/5">
                     <h3 className="text-white font-medium mb-1">Choose a plan to create projects</h3>
                     <p className="text-zinc-400 text-sm mb-3">
                         Start with Starter for 1 project and 5 scans/month, or go Pro for 3 projects and 20 scans.
                     </p>
-                    <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                    <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                         <Link href="/dashboard/credits">View Plans</Link>
                     </Button>
                 </div>
@@ -163,7 +163,7 @@ export default function NewProjectPage() {
                         <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-white">
-                                    <FolderKanban className="h-5 w-5 text-blue-400" />
+                                    <FolderKanban className="h-5 w-5 text-sky-400" />
                                     Project Details
                                 </CardTitle>
                                 <CardDescription className="text-zinc-400">
@@ -180,7 +180,7 @@ export default function NewProjectPage() {
                                             placeholder="My App"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                            className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -192,7 +192,7 @@ export default function NewProjectPage() {
                                                 placeholder="https://example.com"
                                                 value={url}
                                                 onChange={(e) => handleUrlChange(e.target.value)}
-                                                className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/50"
+                                                className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                             />
                                             {isValidUrl(url) && (
                                                 <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
@@ -221,7 +221,7 @@ export default function NewProjectPage() {
                                     if (!url.trim() || !isValidUrl(url)) { toast.error('Please enter a valid URL'); return; }
                                     setStep(2);
                                 }}
-                                className="bg-blue-600 hover:bg-blue-500 text-white border-0"
+                                className="bg-sky-500 hover:bg-sky-400 text-white border-0"
                             >
                                 Next
                                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -338,7 +338,7 @@ export default function NewProjectPage() {
                                 <ArrowLeft className="mr-1.5 h-4 w-4" />
                                 Back
                             </Button>
-                            <Button type="submit" disabled={loading} size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0">
+                            <Button type="submit" disabled={loading} size="lg" className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

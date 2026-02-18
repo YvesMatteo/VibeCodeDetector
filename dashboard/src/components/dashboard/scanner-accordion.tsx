@@ -68,7 +68,7 @@ function getSeverityStyles(severity: string) {
         case 'medium':
             return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' };
         case 'low':
-            return { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
+            return { icon: Info, color: 'text-sky-400', bg: 'bg-sky-400/10', border: 'border-sky-400/30' };
         default:
             return { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30' };
     }
@@ -252,7 +252,7 @@ function SeveritySummary({ findings }: { findings: any[] }) {
                 </span>
             )}
             {counts.low > 0 && (
-                <span className="flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
+                <span className="flex items-center gap-1 text-xs font-medium text-sky-400 bg-sky-400/10 border border-sky-400/20 rounded-full px-2 py-0.5">
                     {counts.low} low
                 </span>
             )}
@@ -387,8 +387,8 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                                 const plainEnglish = getPlainEnglish(finding.title, finding.description);
                                 if (plainEnglish) {
                                     return (
-                                        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                                            <div className="flex items-center gap-2 mb-1 text-blue-400">
+                                        <div className="mt-3 p-3 bg-sky-400/10 border border-sky-400/20 rounded-md">
+                                            <div className="flex items-center gap-2 mb-1 text-sky-400">
                                                 <Info className="h-4 w-4" />
                                                 <span className="text-xs font-medium tracking-wide">What this means</span>
                                             </div>
@@ -401,7 +401,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                             })()}
                             {finding.recommendation && (
                                 <p className="text-sm mt-2 text-muted-foreground">
-                                    <span className="font-medium text-blue-400">Recommendation:</span> {finding.recommendation}
+                                    <span className="font-medium text-sky-400">Recommendation:</span> {finding.recommendation}
                                 </p>
                             )}
                             {finding.reportUrl && (
@@ -409,7 +409,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                                     href={finding.reportUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
+                                    className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-sky-400 hover:text-sky-300 transition-colors bg-sky-400/10 border border-sky-400/20 rounded-md px-3 py-1.5"
                                 >
                                     <ExternalLink className="h-3 w-3" />
                                     View Full Report
@@ -423,15 +423,15 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                             {finding.severity?.toLowerCase() !== 'info' && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setShowAiFix(!showAiFix); }}
-                                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 transition-colors"
                                 >
                                     <Sparkles className="h-3 w-3" />
                                     {showAiFix ? 'Hide AI fix' : 'AI fix suggestion'}
                                 </button>
                             )}
                             {showAiFix && (
-                                <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                                    <p className="text-blue-400 font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
+                                <div className="mt-2 p-3 rounded-lg bg-sky-400/5 border border-sky-400/10">
+                                    <p className="text-sky-400 font-medium mb-2 text-xs">Copy this to your AI coding assistant:</p>
                                     <pre className="text-zinc-400 text-[11px] leading-relaxed whitespace-pre-wrap font-mono">{`Fix the following security issue:\n\nIssue: ${finding.title}\nSeverity: ${finding.severity}${finding.description ? `\nDetails: ${finding.description}` : ''}${finding.recommendation ? `\nRecommendation: ${finding.recommendation}` : ''}${finding.evidence ? `\nEvidence: ${finding.evidence}` : ''}\n\nPlease provide the exact code changes needed.`}</pre>
                                     <button
                                         onClick={(e) => {
@@ -440,7 +440,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                                             navigator.clipboard.writeText(text);
                                             toast.success('Copied to clipboard');
                                         }}
-                                        className="mt-2 text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+                                        className="mt-2 text-sky-400 hover:text-sky-300 text-xs flex items-center gap-1 transition-colors"
                                     >
                                         <Copy className="h-3 w-3" /> Copy
                                     </button>
@@ -485,7 +485,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
                         <p className="text-sm text-muted-foreground">{summary.description}</p>
                         {summary.recommendation && (
                             <p className="text-sm mt-2 text-muted-foreground">
-                                <span className="font-medium text-blue-400">Recommendation:</span> {summary.recommendation}
+                                <span className="font-medium text-sky-400">Recommendation:</span> {summary.recommendation}
                             </p>
                         )}
                         {summary.evidence && (
@@ -496,7 +496,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
                         {details.length > 0 && (
                             <button
                                 onClick={() => setShowDetails(v => !v)}
-                                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-1.5"
+                                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-sky-400 hover:text-sky-300 transition-colors bg-sky-400/10 border border-sky-400/20 rounded-md px-3 py-1.5"
                             >
                                 <Eye className="h-3 w-3" />
                                 {showDetails ? 'Hide' : 'See'} {details.length} {details.length === 1 ? 'finding' : 'findings'}

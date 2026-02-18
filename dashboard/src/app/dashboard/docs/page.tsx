@@ -62,7 +62,7 @@ const sections = [
             <div className="space-y-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">GET</span>
+                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-sky-400/10 text-sky-400 border border-sky-400/20">GET</span>
                         <code className="text-sm text-zinc-300 font-mono">/api/scan/:id</code>
                     </div>
                     <p className="text-sm text-zinc-500 mb-3">Fetch results for a specific scan. Requires <code className="text-zinc-400 text-xs">scan:read</code> scope.</p>
@@ -97,7 +97,7 @@ const sections = [
             <div className="space-y-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">GET</span>
+                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-sky-400/10 text-sky-400 border border-sky-400/20">GET</span>
                         <code className="text-sm text-zinc-300 font-mono">/api/scan</code>
                     </div>
                     <p className="text-sm text-zinc-500 mb-3">List all scans for the authenticated user. Requires <code className="text-zinc-400 text-xs">scan:read</code> scope.</p>

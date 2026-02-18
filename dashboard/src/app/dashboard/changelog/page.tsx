@@ -93,7 +93,7 @@ const changelog = [
 
 const typeColors: Record<string, string> = {
     added: 'text-emerald-400',
-    changed: 'text-blue-400',
+    changed: 'text-sky-400',
     fixed: 'text-amber-400',
     removed: 'text-red-400',
 };

@@ -66,7 +66,7 @@ const SEVERITY_COLORS: Record<string, string> = {
     critical: 'text-red-400 bg-red-500/10 border-red-500/20',
     high: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
     medium: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    low: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    low: 'text-sky-400 bg-sky-400/10 border-sky-400/20',
 };
 
 interface AuditReportProps {
@@ -104,7 +104,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
         { key: 'critical', count: adjusted.critical, color: 'bg-red-500', label: 'Critical' },
         { key: 'high', count: adjusted.high, color: 'bg-orange-500', label: 'High' },
         { key: 'medium', count: adjusted.medium, color: 'bg-amber-500', label: 'Medium' },
-        { key: 'low', count: adjusted.low, color: 'bg-blue-500', label: 'Low' },
+        { key: 'low', count: adjusted.low, color: 'bg-sky-400', label: 'Low' },
     ];
 
     return (

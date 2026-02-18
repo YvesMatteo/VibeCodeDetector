@@ -263,7 +263,7 @@ export function AIFixPrompt({ url, findings, techStack, userPlan }: AIFixPromptP
             <DialogContent className="max-w-2xl bg-[#070D19] border-white/10 text-white">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl">
-                        <Sparkles className="h-5 w-5 text-blue-400" />
+                        <Sparkles className="h-5 w-5 text-sky-400" />
                         AI Remediation Prompt
                     </DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -289,7 +289,7 @@ export function AIFixPrompt({ url, findings, techStack, userPlan }: AIFixPromptP
                     <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-white/5 hover:text-white">
                         Close
                     </Button>
-                    <Button onClick={handleCopy} className="bg-blue-600 hover:bg-blue-500 text-white">
+                    <Button onClick={handleCopy} className="bg-sky-500 hover:bg-sky-400 text-white">
                         {copied ? (
                             <>
                                 <Check className="mr-2 h-4 w-4" />

@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             <p>
               CheckVibe (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is operated by CheckVibe,
               based in Switzerland. We operate the{' '}
-              <a href="https://checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <a href="https://checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 checkvibe.dev
               </a>{' '}
               website and scanning platform. This Privacy Policy explains how we collect, use, disclose,
@@ -37,11 +37,11 @@ export default function PrivacyPage() {
             <p className="mt-3">
               By using CheckVibe, you agree to the collection and use of information in accordance with
               this policy. This policy should be read alongside our{' '}
-              <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <Link href="/terms" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/cookies" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <Link href="/cookies" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 Cookie Policy
               </Link>.
             </p>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 href="https://stripe.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
               >
                 Stripe&apos;s Privacy Policy
               </a>.
@@ -130,15 +130,15 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 ml-2">
               <li>
                 <span className="font-medium text-white">Stripe</span> &mdash; payment processing ({' '}
-                <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">privacy policy</a>).
+                <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">privacy policy</a>).
               </li>
               <li>
                 <span className="font-medium text-white">Supabase</span> &mdash; authentication and database hosting ({' '}
-                <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">privacy policy</a>).
+                <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">privacy policy</a>).
               </li>
               <li>
                 <span className="font-medium text-white">Vercel</span> &mdash; web hosting and deployment ({' '}
-                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">privacy policy</a>).
+                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">privacy policy</a>).
               </li>
               <li>
                 <span className="font-medium text-white">GitHub API</span> &mdash; repository security scanning (only when you connect a repository).
@@ -208,7 +208,7 @@ export default function PrivacyPage() {
             <p>
               We use cookies and similar technologies for authentication and session management. For
               detailed information about the cookies we use and how to manage them, please see our{' '}
-              <Link href="/cookies" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <Link href="/cookies" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 Cookie Policy
               </Link>.
             </p>
@@ -263,14 +263,14 @@ export default function PrivacyPage() {
               <li>
                 <span className="font-medium text-white">Lodge a complaint</span> &mdash; file a complaint
                 with your local data protection authority. In Switzerland, this is the{' '}
-                <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                   Federal Data Protection and Information Commissioner (FDPIC)
                 </a>.
               </li>
             </ul>
             <p className="mt-3">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 support@checkvibe.dev
               </a>. We will respond within 30 days.
             </p>
@@ -303,7 +303,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{' '}
-              <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+              <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                 support@checkvibe.dev
               </a>.
             </p>
@@ -338,19 +338,19 @@ export default function PrivacyPage() {
             <ul className="space-y-2 ml-2">
               <li>
                 <span className="font-medium text-white">Email:</span>{' '}
-                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                   support@checkvibe.dev
                 </a>
               </li>
               <li>
                 <span className="font-medium text-white">General inquiries:</span>{' '}
-                <a href="mailto:support@checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                   support@checkvibe.dev
                 </a>
               </li>
               <li>
                 <span className="font-medium text-white">Website:</span>{' '}
-                <a href="https://checkvibe.dev" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                <a href="https://checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
                   checkvibe.dev
                 </a>
               </li>
@@ -360,9 +360,9 @@ export default function PrivacyPage() {
           <div className="mt-12 pt-8 border-t border-white/10 text-sm text-zinc-500">
             <p>
               See also:{' '}
-              <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">Terms of Service</Link>
+              <Link href="/terms" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">Terms of Service</Link>
               {' '}&middot;{' '}
-              <Link href="/cookies" className="text-blue-400 hover:text-blue-300 underline underline-offset-2">Cookie Policy</Link>
+              <Link href="/cookies" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">Cookie Policy</Link>
             </p>
           </div>
         </div>

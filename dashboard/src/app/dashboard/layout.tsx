@@ -89,7 +89,7 @@ function SidebarContent({
 
             {/* New Project Button */}
             <div className="px-3 pt-3 pb-1">
-                <Button asChild className="w-full h-9 bg-blue-500 text-white hover:bg-blue-600 border-0 text-[13px] font-medium transition-colors rounded-lg">
+                <Button asChild className="w-full h-9 bg-sky-400 text-white hover:bg-sky-500 border-0 text-[13px] font-medium transition-colors rounded-lg">
                     <Link href="/dashboard/projects/new" onClick={onNavClick}>
                         <Plus className="mr-1.5 h-3.5 w-3.5" />
                         New Project
@@ -111,12 +111,12 @@ function SidebarContent({
                                 href={item.href}
                                 onClick={onNavClick}
                                 className={`group relative flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${isActive
-                                    ? 'text-white bg-blue-500/[0.08] border border-blue-500/[0.1]'
+                                    ? 'text-white bg-sky-400/[0.08] border border-sky-400/[0.1]'
                                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] border border-transparent'
                                     }`}
                             >
                                 <div className="flex items-center gap-2.5">
-                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-blue-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-sky-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
                                     {item.name}
                                 </div>
                             </Link>
@@ -155,12 +155,12 @@ function SidebarContent({
                                 href={item.href}
                                 onClick={onNavClick}
                                 className={`group flex items-center justify-between px-3 py-2 min-h-[44px] rounded-lg text-[13px] transition-all duration-150 ${isActive
-                                        ? 'text-white bg-blue-500/[0.08]'
+                                        ? 'text-white bg-sky-400/[0.08]'
                                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
                                     }`}
                             >
                                 <div className="flex items-center gap-2.5">
-                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-blue-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
+                                    <item.icon className={`h-[15px] w-[15px] ${isActive ? 'text-sky-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
                                     {item.name}
                                 </div>
                             </Link>
@@ -264,7 +264,7 @@ export default function DashboardLayout({
                         <Image src="/logo-icon.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
                     </Link>
                 </div>
-                <Button asChild size="sm" className="bg-blue-500 text-white hover:bg-blue-600 border-0 font-medium h-8 px-3 text-xs rounded-lg">
+                <Button asChild size="sm" className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium h-8 px-3 text-xs rounded-lg">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-1 h-3.5 w-3.5" />
                         New

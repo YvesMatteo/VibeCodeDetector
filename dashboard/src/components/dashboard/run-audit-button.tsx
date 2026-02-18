@@ -90,7 +90,7 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                 disabled={loading}
                 variant={variant}
                 size={size}
-                className={className || 'bg-blue-600 hover:bg-blue-500 text-white border-0'}
+                className={className || 'bg-sky-500 hover:bg-sky-400 text-white border-0'}
             >
                 {loading ? (
                     <>
@@ -108,7 +108,7 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                 <div className="mt-2 space-y-1">
                     <div className="h-1 w-full bg-white/[0.06] rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                            className="h-full bg-sky-400 rounded-full transition-all duration-500"
                             style={{ width: `${progress}%` }}
                         />
                     </div>

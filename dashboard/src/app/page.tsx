@@ -221,7 +221,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
           >
             <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-            <span className="text-xs font-medium text-blue-200 tracking-wide uppercase">Now Live</span>
+            <span className="text-xs font-medium text-sky-200 tracking-wide uppercase">Now Live</span>
           </motion.div>
 
           {/* H1 Typography */}
@@ -330,30 +330,30 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
                 <div className="space-y-0.5 sm:space-y-1 relative z-10 opacity-80 whitespace-nowrap">
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">01</span> <span className="text-blue-400">export</span> <span className="text-cyan-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">01</span> <span className="text-sky-400">export</span> <span className="text-cyan-400">default</span> <span className="text-sky-400">function</span> <span className="text-yellow-200">PaymentHandler</span>() {'{'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">02</span>   <span className="text-zinc-400">// TODO: Refactor this later</span></div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">03</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">&quot;sk_live_EXAMPLE_KEY...&quot;</span>;</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">04</span>   <span className="text-blue-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">03</span>   <span className="text-sky-400">const</span> <span className="text-cyan-200">stripeKey</span> = <span className="text-green-300">&quot;sk_live_EXAMPLE_KEY...&quot;</span>;</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">04</span>   <span className="text-sky-400">const</span> <span className="text-cyan-200">headers</span> = {'{'}</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">05</span>     <span className="text-green-300">&quot;Authorization&quot;</span>: <span className="text-green-300">`Bearer ${'{'}stripeKey{'}'}`</span></div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">06</span>   {'}'};</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">07</span>   <span className="text-blue-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">&quot;/api/charge&quot;</span>, {'{'} <span className="text-cyan-200">method</span>: <span className="text-green-300">&quot;POST&quot;</span>, <span className="text-cyan-200">headers</span> {'}'});</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">07</span>   <span className="text-sky-400">await</span> <span className="text-cyan-400">fetch</span>(<span className="text-green-300">&quot;/api/charge&quot;</span>, {'{'} <span className="text-cyan-200">method</span>: <span className="text-green-300">&quot;POST&quot;</span>, <span className="text-cyan-200">headers</span> {'}'});</div>
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">08</span> {'}'}</div>
-                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span> <span className="text-blue-400">export</span> <span className="text-blue-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
+                  <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span> <span className="text-sky-400">export</span> <span className="text-sky-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
                 </div>
 
                 {/* Scanning Beam */}
                 <motion.div
                   animate={{ top: ['0%', '100%', '0%'] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                  className="absolute left-0 right-0 h-[2px] bg-blue-500/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
+                  className="absolute left-0 right-0 h-[2px] bg-sky-400/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
                 >
-                  <div className="absolute right-2 sm:right-4 -top-3 bg-blue-500 text-[9px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-blue-500/30 whitespace-nowrap">SCANNING</div>
+                  <div className="absolute right-2 sm:right-4 -top-3 bg-sky-400 text-[9px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-sky-400/30 whitespace-nowrap">SCANNING</div>
                 </motion.div>
 
                 <motion.div
                   animate={{ top: ['-10%', '90%', '-10%'] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                  className="absolute left-0 right-0 h-16 bg-gradient-to-b from-blue-500/10 to-transparent z-10 pointer-events-none"
+                  className="absolute left-0 right-0 h-16 bg-gradient-to-b from-sky-400/10 to-transparent z-10 pointer-events-none"
                 />
 
                 {/* Detection Markers */}
@@ -392,7 +392,7 @@ export default function HomePage() {
         className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
       >
         <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/5 to-transparent pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-950/5 to-transparent pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
@@ -453,7 +453,7 @@ export default function HomePage() {
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <Badge variant="secondary" className="mb-4 bg-blue-500/10 border-blue-500/20 text-blue-300">
+            <Badge variant="secondary" className="mb-4 bg-sky-400/10 border-sky-400/20 text-sky-300">
               Pricing
             </Badge>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
@@ -503,12 +503,12 @@ export default function HomePage() {
                 className="h-full"
               >
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
-                  ? 'bg-zinc-900/60 border-blue-500/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                  ? 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                   : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                 }`}>
                   {tier.highlighted && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div className="bg-blue-600 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
+                      <div className="bg-sky-500 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
                         Most Popular
                       </div>
                     </div>
@@ -541,7 +541,7 @@ export default function HomePage() {
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-blue-400' : 'text-zinc-500'}`} />
+                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-sky-400' : 'text-zinc-500'}`} />
                           <span className="text-sm text-zinc-300">{feature}</span>
                         </li>
                       ))}
@@ -558,7 +558,7 @@ export default function HomePage() {
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
-                          ? 'bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/20'
+                          ? 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
                           : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
                         }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
@@ -593,7 +593,7 @@ export default function HomePage() {
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
               30 scanners. One click. Know exactly what to fix before you deploy.
             </p>
-            <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 glow-on-hover text-white">
+            <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
                 {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
                 <ArrowRight className="ml-2 h-5 w-5" />

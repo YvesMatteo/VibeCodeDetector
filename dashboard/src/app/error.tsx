@@ -13,7 +13,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             <div className="text-center space-y-4">
                 <h2 className="text-2xl font-bold text-white">Something went wrong</h2>
                 <p className="text-zinc-400 max-w-md">An unexpected error occurred. Please try again.</p>
-                <Button onClick={reset} className="bg-blue-600 hover:bg-blue-500">
+                <Button onClick={reset} className="bg-sky-500 hover:bg-sky-400">
                     Try again
                 </Button>
             </div>

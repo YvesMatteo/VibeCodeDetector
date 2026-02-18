@@ -459,7 +459,7 @@ export default function ApiKeysPage() {
                                         onClick={() => toggleScope(scope.value)}
                                         className={`text-left p-2.5 rounded-lg border transition-colors ${
                                             newKeyScopes.includes(scope.value)
-                                                ? 'border-blue-500/50 bg-blue-500/10'
+                                                ? 'border-sky-400/50 bg-sky-400/10'
                                                 : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]'
                                         }`}
                                     >
@@ -636,7 +636,7 @@ function KeyRow({
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
                         <button
                             onClick={() => setShowInfo(v => !v)}
-                            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${showInfo ? 'text-blue-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${showInfo ? 'text-sky-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <Info className="h-3.5 w-3.5" />
                             {showInfo ? 'Hide details' : 'View details'}
@@ -768,7 +768,7 @@ function ActivityFeed() {
     }
 
     const methodColors: Record<string, string> = {
-        GET: 'text-blue-400',
+        GET: 'text-sky-400',
         POST: 'text-emerald-400',
         DELETE: 'text-red-400',
         PATCH: 'text-amber-400',
@@ -813,7 +813,7 @@ function ActivityFeed() {
                                 >
                                     <div className="shrink-0 mt-1">
                                         {log.method === 'GET' ? (
-                                            <ArrowLeft className="h-3 w-3 text-blue-400/60" />
+                                            <ArrowLeft className="h-3 w-3 text-sky-400/60" />
                                         ) : (
                                             <ArrowRight className="h-3 w-3 text-emerald-400/60" />
                                         )}
