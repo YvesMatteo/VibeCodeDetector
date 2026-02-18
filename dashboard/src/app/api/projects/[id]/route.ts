@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateTargetUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
+import { encrypt, decrypt } from '@/lib/encryption';
 
 export async function GET(
     _req: NextRequest,
@@ -26,7 +27,13 @@ export async function GET(
             return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ project });
+        // Decrypt supabase_pat for client display (handles legacy plaintext gracefully)
+        const decryptedProject = {
+            ...project,
+            supabase_pat: (project as any).supabase_pat ? decrypt((project as any).supabase_pat) : null,
+        };
+
+        return NextResponse.json({ project: decryptedProject });
     } catch (error) {
         console.error('Get project error:', error);
         return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });
@@ -75,7 +82,10 @@ export async function PATCH(
         if (body.githubRepo !== undefined) updates.github_repo = body.githubRepo?.trim() || null;
         if (body.backendType !== undefined) updates.backend_type = body.backendType;
         if (body.backendUrl !== undefined) updates.backend_url = body.backendUrl?.trim() || null;
-        if (body.supabasePAT !== undefined) updates.supabase_pat = body.supabasePAT?.trim() || null;
+        if (body.supabasePAT !== undefined) {
+            const rawPAT = body.supabasePAT?.trim() || null;
+            updates.supabase_pat = rawPAT ? encrypt(rawPAT) : null;
+        }
 
         const { data: project, error: updateError } = await supabase
             .from('projects' as any)
@@ -93,7 +103,13 @@ export async function PATCH(
             return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
         }
 
-        return NextResponse.json({ project });
+        // Decrypt supabase_pat for client display
+        const decryptedProject = {
+            ...project,
+            supabase_pat: (project as any).supabase_pat ? decrypt((project as any).supabase_pat) : null,
+        };
+
+        return NextResponse.json({ project: decryptedProject });
     } catch (error) {
         console.error('Update project error:', error);
         return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });

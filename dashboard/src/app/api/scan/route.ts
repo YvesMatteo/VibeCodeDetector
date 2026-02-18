@@ -5,6 +5,7 @@ import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/
 import { getServiceClient } from '@/lib/api-keys';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
+import { decrypt } from '@/lib/encryption';
 
 const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
@@ -120,10 +121,11 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Project not found' }, { status: 404 });
             }
 
-            // Use project config
+            // Use project config (decrypt supabase_pat — handles legacy plaintext gracefully)
             url = (project as any).url;
             githubRepo = (project as any).github_repo || githubRepo;
-            supabasePAT = (project as any).supabase_pat || supabasePAT;
+            const rawProjectPAT = (project as any).supabase_pat;
+            supabasePAT = rawProjectPAT ? decrypt(rawProjectPAT) : supabasePAT;
             body.backendType = (project as any).backend_type || body.backendType;
             body.backendUrl = (project as any).backend_url || body.backendUrl;
             if ((project as any).backend_type === 'convex' && (project as any).backend_url) {

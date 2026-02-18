@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
+import { encrypt, decrypt } from '@/lib/encryption';
 
 export async function GET() {
     try {
@@ -58,6 +59,8 @@ export async function GET() {
             }
             return {
                 ...project,
+                // Decrypt supabase_pat for client display (handles legacy plaintext gracefully)
+                supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
                 latestScore: latestScan?.overall_score ?? null,
                 lastAuditDate: latestScan?.completed_at ?? null,
                 issueCount,
@@ -144,6 +147,10 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Encrypt supabase_pat before storing (AES-256-GCM)
+        const rawPAT = supabasePAT?.trim() || null;
+        const encryptedPAT = rawPAT ? encrypt(rawPAT) : null;
+
         // Insert project
         const { data: project, error: insertError } = await supabase
             .from('projects' as any)
@@ -154,7 +161,7 @@ export async function POST(req: NextRequest) {
                 github_repo: githubRepo?.trim() || null,
                 backend_type: ['supabase', 'firebase', 'convex', 'none'].includes(backendType) ? backendType : 'none',
                 backend_url: backendUrl?.trim() || null,
-                supabase_pat: supabasePAT?.trim() || null,
+                supabase_pat: encryptedPAT,
             })
             .select()
             .single();
