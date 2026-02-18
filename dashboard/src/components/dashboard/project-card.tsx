@@ -45,31 +45,31 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
         : `https://www.google.com/s2/favicons?domain=${hostname}&sz=64${cacheBuster ? `&_=${new Date(lastAuditDate!).getTime()}` : ''}`;
 
     return (
-        <Link href={`/dashboard/projects/${id}`} className="group block">
-            <div className="relative rounded-xl border border-sky-200/50 bg-sky-50/80 px-5 py-5 min-h-[160px] flex flex-col transition-all duration-200 hover:border-sky-300/70 hover:shadow-lg hover:shadow-sky-300/[0.08] hover:bg-sky-50">
+        <Link href={`/dashboard/projects/${id}`} className="group block h-full">
+            <div className="relative h-full rounded-xl border border-zinc-800 bg-[#1C1C1C] px-5 py-5 flex flex-col transition-all duration-200 hover:border-zinc-700 hover:bg-[#232323]">
                 {/* Top: favicon + name + time */}
-                <div className="flex items-start gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-6">
                     {imgError ? (
-                        <div className="h-10 w-10 rounded-lg bg-sky-100 flex items-center justify-center shrink-0">
-                            <Globe className="h-5 w-5 text-sky-400" />
+                        <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-700/50">
+                            <Globe className="h-5 w-5 text-zinc-400" />
                         </div>
                     ) : (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                             src={faviconSrc}
                             alt=""
-                            className="h-10 w-10 rounded-lg object-contain shrink-0"
+                            className="h-10 w-10 rounded-lg object-contain shrink-0 bg-white p-1"
                             onError={() => setImgError(true)}
                         />
                     )}
-                    <div className="min-w-0 flex-1">
-                        <h3 className="text-[15px] font-medium text-zinc-800 truncate group-hover:text-zinc-950 transition-colors">
+                    <div className="min-w-0 flex-1 py-0.5">
+                        <h3 className="text-[15px] font-medium text-zinc-100 truncate group-hover:text-white transition-colors">
                             {name}
                         </h3>
-                        <p className="text-[12px] text-zinc-400 truncate mt-0.5">{hostname}</p>
+                        <p className="text-[13px] text-zinc-500 truncate mt-0.5">{hostname}</p>
                     </div>
                     {hasAudit && (
-                        <div className="flex items-center gap-1 text-[11px] text-zinc-400 shrink-0 mt-0.5">
+                        <div className="flex items-center gap-1 text-[11px] text-zinc-500 shrink-0 mt-1">
                             <Clock className="h-3 w-3" />
                             {timeAgo(lastAuditDate!)}
                         </div>
@@ -81,42 +81,42 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
                         <>
                             {/* Severity mini-bar */}
                             {issueCount > 0 && (
-                                <div className="flex h-1.5 rounded-full overflow-hidden bg-sky-100 mb-3">
+                                <div className="flex h-1.5 rounded-full overflow-hidden bg-zinc-800 mb-4">
                                     {sev.critical > 0 && <div className="bg-red-500" style={{ width: `${(sev.critical / barTotal) * 100}%` }} />}
                                     {sev.high > 0 && <div className="bg-orange-500" style={{ width: `${(sev.high / barTotal) * 100}%` }} />}
                                     {sev.medium > 0 && <div className="bg-amber-500" style={{ width: `${(sev.medium / barTotal) * 100}%` }} />}
-                                    {sev.low > 0 && <div className="bg-sky-400" style={{ width: `${(sev.low / barTotal) * 100}%` }} />}
+                                    {sev.low > 0 && <div className="bg-sky-500" style={{ width: `${(sev.low / barTotal) * 100}%` }} />}
                                 </div>
                             )}
 
                             {/* Bottom: severity breakdown */}
                             <div className="flex items-center gap-3">
-                                <span className="text-base font-semibold text-zinc-900 tabular-nums">{issueCount}</span>
-                                <span className="text-[12px] text-zinc-400">{issueCount === 1 ? 'issue' : 'issues'}</span>
+                                <span className="text-base font-semibold text-zinc-200 tabular-nums">{issueCount}</span>
+                                <span className="text-[13px] text-zinc-500">{issueCount === 1 ? 'Issues' : 'Issues'}</span>
                                 {issueCount > 0 && (
                                     <div className="flex items-center gap-2 ml-auto">
                                         {sev.critical > 0 && (
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1.5">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                                                <span className="text-[11px] text-zinc-500 tabular-nums">{sev.critical}</span>
+                                                <span className="text-[11px] text-zinc-400 tabular-nums">{sev.critical}</span>
                                             </div>
                                         )}
                                         {sev.high > 0 && (
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1.5">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                                <span className="text-[11px] text-zinc-500 tabular-nums">{sev.high}</span>
+                                                <span className="text-[11px] text-zinc-400 tabular-nums">{sev.high}</span>
                                             </div>
                                         )}
                                         {sev.medium > 0 && (
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1.5">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                                <span className="text-[11px] text-zinc-500 tabular-nums">{sev.medium}</span>
+                                                <span className="text-[11px] text-zinc-400 tabular-nums">{sev.medium}</span>
                                             </div>
                                         )}
                                         {sev.low > 0 && (
-                                            <div className="flex items-center gap-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                                                <span className="text-[11px] text-zinc-500 tabular-nums">{sev.low}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                                                <span className="text-[11px] text-zinc-400 tabular-nums">{sev.low}</span>
                                             </div>
                                         )}
                                     </div>
@@ -124,7 +124,7 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
                             </div>
                         </>
                     ) : (
-                        <p className="text-[12px] text-zinc-400">No audits yet</p>
+                        <p className="text-[13px] text-zinc-500">No audits yet</p>
                     )}
                 </div>
             </div>
