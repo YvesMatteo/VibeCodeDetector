@@ -43,13 +43,13 @@ export function SilkBackground() {
             height += sin(p.x * 3.0 + p.y * 1.5 + t);
 
             // Colors: Deep Blue to Cyan/White
-            vec3 col1 = vec3(0.02, 0.05, 0.2); // Deep Black-Blue
-            vec3 col2 = vec3(0.1, 0.3, 0.8);  // Mid Blue
-            vec3 col3 = vec3(0.6, 0.8, 1.0);  // Highlight White-Blue
+            vec3 col1 = vec3(0.01, 0.02, 0.08); // Deeper Black-Blue
+            vec3 col2 = vec3(0.05, 0.2, 0.7);   // Rich Mid Blue
+            vec3 col3 = vec3(0.6, 0.9, 1.0);    // Sharp Cyan Highlight
 
             // Mix colors based on the wave height
-            vec3 color = mix(col1, col2, smoothstep(-2.0, 1.0, height));
-            color = mix(color, col3, smoothstep(1.0, 2.5, height));
+            vec3 color = mix(col1, col2, smoothstep(-1.5, 0.5, height)); // Stick to darks longer
+            color = mix(color, col3, smoothstep(1.2, 2.5, height));      // Highlights only on peaks
 
             gl_FragColor = vec4(color, 1.0);
         }
