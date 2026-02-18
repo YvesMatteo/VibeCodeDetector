@@ -23,7 +23,6 @@ import { useState, useEffect, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { FlowingRibbons } from '@/components/ui/flowing-ribbons';
-import { SlideIndicator } from '@/components/ui/slide-indicator';
 
 const features = [
   {
@@ -107,8 +106,6 @@ const stats = [
   { value: '<30s', label: 'Average Scan Time' },
 ];
 
-const SLIDE_IDS = ['slide-hero', 'slide-features', 'slide-pricing', 'slide-cta'];
-const SLIDE_LABELS = ['Hero', 'Features', 'Pricing', 'Get Started'];
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -150,7 +147,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto snap-container bg-[#0E0E10]">
+    <div className="min-h-screen bg-[#0E0E10]">
       {/* Prismatic ribbon background — fixed behind all slides */}
       <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
         <FlowingRibbons className="absolute inset-0 w-full h-full" />
@@ -201,13 +198,11 @@ export default function HomePage() {
         </SheetContent>
       </Sheet>
 
-      {/* Slide navigation dots */}
-      <SlideIndicator slideIds={SLIDE_IDS} labels={SLIDE_LABELS} />
 
       {/* ======================== SLIDE 1: HERO + DEMO ======================== */}
       <section
         id="slide-hero"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
+        className="min-h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
         <div className="absolute inset-0 bg-[#0E0E10]/60 pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent pointer-events-none" aria-hidden="true" />
@@ -389,7 +384,7 @@ export default function HomePage() {
       {/* ======================== SLIDE 3: FEATURES ======================== */}
       <section
         id="slide-features"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
         <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-950/5 to-transparent pointer-events-none" aria-hidden="true" />
@@ -447,7 +442,7 @@ export default function HomePage() {
       {/* ======================== SLIDE 4: PRICING ======================== */}
       <section
         id="slide-pricing"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 py-16 sm:py-0"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
         <div className="absolute inset-0 bg-[#0E0E10]/75 pointer-events-none" aria-hidden="true" />
 
@@ -578,14 +573,14 @@ export default function HomePage() {
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
       <section
         id="slide-cta"
-        className="snap-slide min-h-[100dvh] sm:h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
         <div className="absolute inset-0 bg-[#0E0E10]/65 pointer-events-none" aria-hidden="true" />
         {/* Gradient orbs */}
         <div className="absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
         <div className="absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
-        <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10 flex-1 flex items-center">
+        <motion.div {...fadeInView} className="max-w-4xl mx-auto text-center relative z-10">
           <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
@@ -603,7 +598,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full py-8 relative z-10 border-t border-white/5 safe-bottom mt-auto">
+        <footer className="w-full pt-16 pb-8 relative z-10 border-t border-white/5 safe-bottom mt-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
               <div className="flex items-center gap-2">

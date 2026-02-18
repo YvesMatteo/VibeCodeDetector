@@ -154,9 +154,9 @@ const RIBBONS: RibbonDef[] = [
 ];
 
 const CURVE_SAMPLES_DESKTOP = 80;
-const CURVE_SAMPLES_MOBILE = 40;
+const CURVE_SAMPLES_MOBILE = 30;
 const PASSES_DESKTOP = 12;
-const PASSES_MOBILE = 7;
+const PASSES_MOBILE = 5;
 
 function cubicBez(a: number, b: number, c: number, d: number, t: number) {
   const mt = 1 - t;
@@ -300,9 +300,14 @@ export function FlowingRibbons({ className }: { className?: string }) {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let animId = 0;
     let time = 0;
+    let isScrolling = false;
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    const isMobile = window.innerWidth < 640;
+    // Only render 3 ribbons on mobile for performance
+    const activeRibbons = isMobile ? RIBBONS.slice(0, 3) : RIBBONS;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
       const rect = canvas!.getBoundingClientRect();
       canvas!.width = rect.width * dpr;
       canvas!.height = rect.height * dpr;
@@ -317,15 +322,30 @@ export function FlowingRibbons({ className }: { className?: string }) {
 
       ctx!.clearRect(0, 0, w, h);
 
-      for (const ribbon of RIBBONS) {
+      for (const ribbon of activeRibbons) {
         drawPrismaticRibbon(ctx!, ribbon, time, w, h, mobile);
       }
     }
 
     function loop() {
+      // On mobile, pause animation during scroll to prevent jank
+      if (isMobile && isScrolling) {
+        animId = requestAnimationFrame(loop);
+        return;
+      }
       time += 0.011;
       draw();
       animId = requestAnimationFrame(loop);
+    }
+
+    // Pause canvas animation while scrolling on mobile
+    function onScroll() {
+      if (!isMobile) return;
+      isScrolling = true;
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        isScrolling = false;
+      }, 150);
     }
 
     resize();
@@ -337,10 +357,13 @@ export function FlowingRibbons({ className }: { className?: string }) {
     }
 
     window.addEventListener('resize', resize);
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
+      if (scrollTimer) clearTimeout(scrollTimer);
     };
   }, []);
 
