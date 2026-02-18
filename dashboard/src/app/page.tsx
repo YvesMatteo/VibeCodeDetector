@@ -28,34 +28,34 @@ const features = [
   {
     label: '01',
     title: 'Injection & Code Vulnerabilities',
-    description: 'SQL injection, XSS, open redirects, and CSRF detection across your live site.',
+    description: 'Your vibe-coded app could have SQL injection, XSS, or CSRF holes and you\'d never know. We test your live site the way an attacker would.',
     accent: 'from-rose-500 to-orange-500',
-    accentBorder: 'group-hover:border-rose-500/20',
+    accentBorder: 'group-hover:border-rose-500/30',
     includes: ['SQLi', 'XSS', 'Open Redirect', 'CSRF'],
   },
   {
     label: '02',
-    title: 'Secrets & Key Detection',
-    description: 'API keys, credentials, and secrets found in client-side code and git history.',
+    title: 'Secrets & Key Exposure',
+    description: 'Connect your GitHub repo and we\'ll deep-scan your commits, client-side bundles, and security alerts for leaked API keys and credentials.',
     accent: 'from-amber-500 to-yellow-500',
-    accentBorder: 'group-hover:border-amber-500/20',
-    includes: ['API Keys', 'GitHub Deep Scan', 'GitHub Security Alerts'],
+    accentBorder: 'group-hover:border-amber-500/30',
+    includes: ['API Keys', 'GitHub Repo Scan', 'GitHub Security Alerts', 'Git History'],
   },
   {
     label: '03',
-    title: 'Infrastructure Security',
-    description: 'SSL/TLS, security headers, CORS, cookies, and DNS/email configuration auditing.',
+    title: 'Hosting & Infrastructure',
+    description: 'Deployed on Vercel, Netlify, Cloudflare, or Railway? We auto-detect your hosting and check SSL, headers, CORS, cookies, and DDoS protection.',
     accent: 'from-emerald-500 to-teal-500',
-    accentBorder: 'group-hover:border-emerald-500/20',
-    includes: ['SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'DDoS', 'Vercel', 'Netlify', 'Cloudflare', 'Railway'],
+    accentBorder: 'group-hover:border-emerald-500/30',
+    includes: ['Vercel', 'Netlify', 'Cloudflare', 'Railway', 'SSL/TLS', 'Headers', 'CORS', 'Cookies', 'DNS', 'DDoS'],
   },
   {
     label: '04',
-    title: 'Backend Security',
-    description: 'Supabase + Firebase misconfigs, auth flow analysis, and dependency CVEs.',
+    title: 'Backend & BaaS Security',
+    description: 'Using Supabase, Firebase, or Convex? We check your RLS policies, auth flows, exposed endpoints, and dependency CVEs — the stuff AI-generated code gets wrong.',
     accent: 'from-violet-500 to-purple-500',
-    accentBorder: 'group-hover:border-violet-500/20',
-    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth', 'Dependencies', 'OpenSSF Scorecard'],
+    accentBorder: 'group-hover:border-violet-500/30',
+    includes: ['Supabase', 'Supabase Deep Lint', 'Firebase', 'Convex', 'Auth Flows', 'Dependencies', 'OpenSSF Scorecard'],
   },
 ];
 
@@ -202,8 +202,6 @@ export default function HomePage() {
         id="slide-hero"
         className="min-h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
-        <div className="absolute inset-0 bg-[#0E0E10]/60 pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-[#0E0E10]/70 via-transparent to-transparent sm:from-transparent pointer-events-none" aria-hidden="true" />
 
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
@@ -226,7 +224,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                 className="block"
               >
-                The <span className="italic text-white/50">All-in-One</span> Scanner
+                #1 Fullstack security scanner
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -384,19 +382,21 @@ export default function HomePage() {
         id="slide-features"
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-950/5 to-transparent pointer-events-none" aria-hidden="true" />
+        {/* Stronger darkened backdrop for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0C] via-[#080810] to-[#0A0A0C] pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-950/10 via-transparent to-sky-950/10 pointer-events-none" aria-hidden="true" />
 
         <motion.div {...fadeInView} className="max-w-7xl mx-auto relative z-10 w-full">
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-10 sm:mb-14">
             <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
-              Features
+              Built for Your Stack
             </Badge>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Everything You Need to{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Safely</span>
+              Scans the Tools{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">You Actually Use</span>
             </h2>
-            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-              30 scanners that catch the issues vibe-coded sites commonly have.
+            <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Supabase, Firebase, Vercel, Netlify, GitHub — 30 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
             </p>
           </div>
 
@@ -409,21 +409,21 @@ export default function HomePage() {
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className={`group relative h-full rounded-xl border border-white/[0.06] ${feature.accentBorder} bg-white/[0.02] hover:bg-white/[0.035] transition-all duration-300 overflow-hidden`}>
-                  <div className={`h-[2px] bg-gradient-to-r ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                  <div className="relative p-5 sm:p-6 flex flex-col h-full">
+                <div className={`group relative h-full rounded-xl border border-white/10 ${feature.accentBorder} bg-[#141418] hover:bg-[#18181E] transition-all duration-300 overflow-hidden shadow-lg shadow-black/20`}>
+                  <div className={`h-[2px] bg-gradient-to-r ${feature.accent} opacity-40 group-hover:opacity-100 transition-opacity duration-300`} />
+                  <div className="relative p-5 sm:p-7 flex flex-col h-full">
                     <div className="flex items-start gap-4 mb-3">
                       <span className={`text-[11px] font-mono font-bold tracking-widest bg-gradient-to-r ${feature.accent} bg-clip-text text-transparent shrink-0 pt-1`}>
                         {feature.label}
                       </span>
-                      <h3 className="text-[15px] sm:text-base font-semibold text-white tracking-tight leading-tight">{feature.title}</h3>
+                      <h3 className="text-[15px] sm:text-lg font-semibold text-white tracking-tight leading-tight">{feature.title}</h3>
                     </div>
-                    <p className="text-[13px] text-zinc-500 leading-relaxed mb-4 pl-10">
+                    <p className="text-[13px] sm:text-sm text-zinc-400 leading-relaxed mb-4 pl-10">
                       {feature.description}
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-auto pl-10">
                       {feature.includes.map((item) => (
-                        <span key={item} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 font-medium">
+                        <span key={item} className="text-[11px] px-2.5 py-1 rounded-md bg-white/[0.07] text-zinc-300 font-medium border border-white/[0.06]">
                           {item}
                         </span>
                       ))}
