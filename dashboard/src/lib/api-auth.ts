@@ -36,6 +36,32 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
     ?? req.headers.get('x-real-ip')
     ?? '0.0.0.0';
 
+  // ── Cron service auth (internal scheduled scans) ────────────────────
+  const cronSecret = req.headers.get('x-cron-secret');
+  const cronUserId = req.headers.get('x-cron-user-id');
+  if (cronSecret && cronUserId && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) {
+    const supabase = getServiceClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
+      .eq('id', cronUserId)
+      .single();
+
+    return {
+      context: {
+        userId: cronUserId,
+        keyId: '__cron__',
+        scopes: ['scan:read', 'scan:write', 'keys:read', 'keys:manage'] as Scope[],
+        plan: profile?.plan ?? 'none',
+        planScansUsed: profile?.plan_scans_used ?? 0,
+        planScansLimit: profile?.plan_scans_limit ?? 0,
+        planDomains: profile?.plan_domains ?? 0,
+        userAllowedDomains: profile?.allowed_domains ?? [],
+      },
+      error: null,
+    };
+  }
+
   // ── API Key auth ──────────────────────────────────────────────────────
   if (authHeader?.startsWith('Bearer cvd_live_')) {
     const apiKey = authHeader.slice('Bearer '.length);
