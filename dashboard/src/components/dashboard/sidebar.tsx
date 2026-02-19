@@ -9,7 +9,6 @@ import {
     CreditCard,
     Settings,
     LogOut,
-    Plus,
     Key,
     BookOpen,
     ExternalLink,
@@ -70,14 +69,14 @@ export function Sidebar({
             <div className={cn(
                 "relative flex items-center px-2.5 py-1.5 min-h-[32px] rounded-md transition-colors duration-100 group/item overflow-hidden",
                 isActive
-                    ? "text-white bg-sky-400/[0.08] border border-sky-400/[0.1]"
+                    ? "text-zinc-200 bg-white/[0.06] border border-white/[0.08]"
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"
             )}>
                 {/* Fixed size icon container perfectly aligned */}
                 <div className="flex items-center justify-center min-w-[24px] w-[24px] shrink-0">
                     <Icon className={cn(
                         "h-[14px] w-[14px] transition-colors stroke-[2px]",
-                        isActive ? "text-sky-400" : "text-zinc-500 group-hover/item:text-zinc-400"
+                        isActive ? "text-zinc-300" : "text-zinc-500 group-hover/item:text-zinc-400"
                     )} />
                 </div>
 
@@ -178,24 +177,6 @@ export function Sidebar({
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 space-y-4 scrollbar-none">
                 {/* Main Nav */}
                 <div className="space-y-0.5">
-                    {/* New Project Button */}
-                    <div className="mb-3">
-                        <Link href="/dashboard/projects/new" onClick={onNavClick} className="block w-full">
-                            <div className="flex items-center px-2.5 py-1.5 min-h-[32px] rounded-md bg-sky-500 hover:bg-sky-400 text-white transition-colors duration-100 shadow-[0_0_15px_-3px_rgba(14,165,233,0.3)]">
-                                <div className="flex items-center justify-center w-[24px] shrink-0">
-                                    <Plus className="h-[14px] w-[14px] shrink-0 stroke-[2.5px]" />
-                                </div>
-                                <span className={cn(
-                                    "ml-2.5 whitespace-nowrap text-[12px] font-medium opacity-0 transition-opacity duration-100",
-                                    !isMobile && "group-hover:opacity-100",
-                                    isMobile && "opacity-100"
-                                )}>
-                                    New Project
-                                </span>
-                            </div>
-                        </Link>
-                    </div>
-
                     {mainNav.map((item) => (
                         <NavItem key={item.name} item={item} />
                     ))}
