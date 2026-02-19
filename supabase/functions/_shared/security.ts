@@ -51,6 +51,34 @@ export function validateTargetUrl(targetUrl: unknown): { valid: boolean; url?: s
   return { valid: true, url: urlStr };
 }
 
+/**
+ * Async version of validateTargetUrl that also resolves DNS to catch rebinding attacks.
+ * Falls back to hostname-only validation if DNS resolution fails.
+ */
+export async function validateTargetUrlWithDns(targetUrl: unknown): Promise<{ valid: boolean; url?: string; error?: string }> {
+  const result = validateTargetUrl(targetUrl);
+  if (!result.valid) return result;
+
+  const parsed = new URL(result.url!);
+  // Skip DNS check for IP addresses (already validated by isPrivateOrReservedIP)
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname) || parsed.hostname.includes(':')) {
+    return result;
+  }
+
+  try {
+    const ips = await Deno.resolveDns(parsed.hostname, 'A');
+    for (const ip of ips) {
+      if (isPrivateOrReservedIP(ip)) {
+        return { valid: false, error: 'URL resolves to a private/internal IP address' };
+      }
+    }
+  } catch {
+    // DNS resolution failed — allow through (hostname validation already passed)
+  }
+
+  return result;
+}
+
 export function validateScannerAuth(req: Request): boolean {
   const authKey = req.headers.get('x-scanner-key');
   const expectedKey = Deno.env.get('SCANNER_SECRET_KEY');

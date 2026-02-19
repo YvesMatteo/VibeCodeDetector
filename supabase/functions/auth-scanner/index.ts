@@ -71,7 +71,8 @@ async function probeAuthPage(baseUrl: string, path: string): Promise<AuthPageRes
             method: "GET",
             headers: { Accept: "text/html" },
         });
-        const html = response.status < 400 ? await response.text() : "";
+        let html = response.status < 400 ? await response.text() : "";
+        if (html.length > 1_000_000) html = html.substring(0, 1_000_000);
         return { path, status: response.status, html, headers: response.headers, found: response.status < 400 };
     } catch {
         return { path, status: 0, html: "", headers: new Headers(), found: false };

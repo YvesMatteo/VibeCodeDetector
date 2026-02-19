@@ -90,7 +90,8 @@ Deno.serve(async (req: Request) => {
             }, req);
         }
 
-        const html = await response.text();
+        let html = await response.text();
+        if (html.length > 1_000_000) html = html.substring(0, 1_000_000);
         const cleanText = html
             .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "")
             .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gm, "")

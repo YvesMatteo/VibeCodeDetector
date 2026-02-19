@@ -226,7 +226,8 @@ async function sendProbe(
         if (point.method === 'GET') {
             const probeUrl = `${point.action}?${params.toString()}`;
             const response = await fetchWithTimeout(probeUrl, { method: 'GET' });
-            const body = await response.text();
+            let body = await response.text();
+            if (body.length > 1_000_000) body = body.substring(0, 1_000_000);
             return { body, status: response.status, length: body.length, elapsed: Date.now() - start };
         } else {
             const response = await fetchWithTimeout(point.action, {
@@ -234,7 +235,8 @@ async function sendProbe(
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString(),
             });
-            const body = await response.text();
+            let body = await response.text();
+            if (body.length > 1_000_000) body = body.substring(0, 1_000_000);
             return { body, status: response.status, length: body.length, elapsed: Date.now() - start };
         }
     } catch {
