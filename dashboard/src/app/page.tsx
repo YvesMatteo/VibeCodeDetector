@@ -157,17 +157,17 @@ export default function HomePage() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 sm:gap-6 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center gap-4 sm:gap-8 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
         >
-          <div className="flex items-center gap-2 pr-4 border-r border-white/10">
-            <Image src="/logo-composite.png" alt="CheckVibe Logo" width={120} height={24} className="w-auto h-6 object-contain" />
+          <div className="flex items-center gap-2 pr-5 border-r border-white/10">
+            <Image src="/logo-composite.png" alt="CheckVibe Logo" width={140} height={28} className="w-auto h-7 object-contain" />
           </div>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
+          <div className="hidden md:flex items-center gap-8 text-[15px] font-medium text-zinc-400">
             <a href="#slide-features" className="hover:text-white transition-colors">Features</a>
             <a href="#slide-pricing" className="hover:text-white transition-colors">Pricing</a>
             {!isLoggedIn && <Link href="/login" className="hover:text-white transition-colors">Login</Link>}
           </div>
-          <Button asChild size="sm" className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+          <Button asChild className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-6 py-2.5 text-[15px] font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
             <Link href={isLoggedIn ? '/dashboard' : '/signup'}>{isLoggedIn ? 'Dashboard' : 'Get Started'}</Link>
           </Button>
           <button
