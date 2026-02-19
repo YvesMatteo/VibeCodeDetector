@@ -95,7 +95,7 @@ export default function IntegrationsPage() {
         setTimeout(() => setCopiedId(null), 2000);
     }
 
-    const badgeUrl = `https://checkvibe.dev/api/badge/${projectId}`;
+    const badgeUrl = `https://checkvibe.dev/api/badge/project/${projectId}`;
     const badgeMarkdown = `[![CheckVibe Security](${badgeUrl})](https://checkvibe.dev)`;
 
     const ciSnippet = `# .github/workflows/security-audit.yml

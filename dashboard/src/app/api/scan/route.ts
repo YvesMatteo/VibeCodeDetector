@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
+import { dispatchWebhooks } from '@/lib/webhook-dispatch';
 import { getServiceClient } from '@/lib/api-keys';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
@@ -807,6 +808,17 @@ export async function POST(req: NextRequest) {
                             const svc = getServiceClient();
                             void svc.from('projects').update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId!);
                         }
+                    }).catch(() => { });
+                }
+
+                // Dispatch webhooks (fire-and-forget)
+                if (resolvedProjectId && scanId) {
+                    dispatchWebhooks({
+                        projectId: resolvedProjectId,
+                        scanId,
+                        url: targetUrl,
+                        overallScore,
+                        results,
                     }).catch(() => { });
                 }
 
