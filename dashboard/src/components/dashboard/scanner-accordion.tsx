@@ -38,6 +38,7 @@ import {
     Upload,
     FileText,
     Smartphone,
+    Anchor,
     CircleSlash,
     Flag,
     X,
@@ -105,6 +106,7 @@ const scannerIcons: Record<string, any> = {
     file_upload: Upload,
     audit_logging: FileText,
     mobile_api: Smartphone,
+    domain_hijacking: Anchor,
 };
 
 const scannerNames: Record<string, string> = {
@@ -138,6 +140,7 @@ const scannerNames: Record<string, string> = {
     file_upload: 'File Upload Security',
     audit_logging: 'Audit Logging & Monitoring',
     mobile_api: 'Mobile API Rate Limiting',
+    domain_hijacking: 'Domain Hijacking Detection',
 };
 
 interface DismissCallback {
@@ -720,6 +723,7 @@ const SCANNER_ORDER: string[] = [
     'dependencies',
     'xss',
     'dns_email',
+    'domain_hijacking',
     'vercel_hosting',
     'netlify_hosting',
     'cloudflare_hosting',

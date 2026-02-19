@@ -23,33 +23,35 @@ import { useState, useEffect, useCallback, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { SilkBackground } from '@/components/ui/silk-background';
+import { SupportedTools } from '@/components/ui/supported-tools';
+
 
 const features = [
   {
     label: '01',
     title: 'Injection & Code Vulnerabilities',
-    description: <>We send real payloads to your live site — <span className="text-rose-400 font-medium">SQL injection</span> probes, <span className="text-rose-400 font-medium">XSS</span> canaries, and <span className="text-rose-400 font-medium">open redirect</span> bypass attempts — then check your forms and cookies for <span className="text-rose-400 font-medium">CSRF</span> gaps.</>,
+    description: 'We send real payloads to your live site — SQL injection probes, XSS canaries, and open redirect bypass attempts — then check your forms and cookies for CSRF gaps.',
     accent: 'from-rose-500 to-orange-500',
     accentBorder: 'group-hover:border-rose-500/30',
   },
   {
     label: '02',
     title: 'Secrets & Key Exposure',
-    description: <>We scan your <span className="text-amber-400 font-medium">JS bundles</span> and <span className="text-amber-400 font-medium">source maps</span> for leaked keys, then deep-scan your <span className="text-purple-300 font-medium">GitHub</span> commits, branches, and CI files for hardcoded credentials.</>,
+    description: 'We scan your JS bundles and source maps for leaked keys, then deep-scan your GitHub commits, branches, and CI files for hardcoded credentials.',
     accent: 'from-amber-500 to-yellow-500',
     accentBorder: 'group-hover:border-amber-500/30',
   },
   {
     label: '03',
     title: 'Hosting & Infrastructure',
-    description: <>We auto-detect <span className="text-zinc-100 font-medium">Vercel</span>, <span className="text-cyan-400 font-medium">Netlify</span>, and <span className="text-orange-400 font-medium">Cloudflare</span>, probe your <span className="text-emerald-400 font-medium">CORS</span> policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.</>,
+    description: 'We auto-detect Vercel, Netlify, and Cloudflare, probe your CORS policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.',
     accent: 'from-emerald-500 to-teal-500',
     accentBorder: 'group-hover:border-emerald-500/30',
   },
   {
     label: '04',
     title: 'Backend & BaaS Security',
-    description: <>Using <span className="text-emerald-400 font-medium">Supabase</span>, <span className="text-amber-400 font-medium">Firebase</span>, or <span className="text-yellow-200 font-medium">Convex</span>? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.</>,
+    description: 'Using Supabase, Firebase, or Convex? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.',
     accent: 'from-violet-500 to-purple-500',
     accentBorder: 'group-hover:border-violet-500/30',
   },
@@ -200,6 +202,7 @@ export default function HomePage() {
         id="slide-hero"
         className="min-h-[100dvh] flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12"
       >
+
 
         <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
           {/* Badge */}
@@ -395,6 +398,8 @@ export default function HomePage() {
             </p>
           </div>
 
+
+          <SupportedTools />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
             {features.map((feature) => (
               <div key={feature.title}>
@@ -415,6 +420,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
         </div>
       </section>
 

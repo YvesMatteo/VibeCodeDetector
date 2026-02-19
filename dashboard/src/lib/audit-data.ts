@@ -13,6 +13,7 @@ export const CURRENT_SCANNER_KEYS = [
     'scorecard', 'github_security', 'supabase_mgmt',
     'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting',
     'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
+    'domain_hijacking',
 ] as const;
 
 const SCANNER_DISPLAY_NAMES: Record<string, string> = {
@@ -25,6 +26,7 @@ const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
     ddos_protection: 'DDoS Protection', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
+    domain_hijacking: 'Domain Hijacking',
 };
 
 /**

@@ -569,6 +569,14 @@ export async function POST(req: NextRequest) {
               .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
         ));
 
+        // 31. Domain Hijacking Scanner (always runs)
+        scannerPromises.push(trackedScanner('domain_hijacking', () =>
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/domain-hijacking-scanner`, {
+                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+            }).then(res => res.json()).then(data => { results.domain_hijacking = data; })
+              .catch(err => { results.domain_hijacking = { error: err.message, score: 0 }; })
+        ));
+
         // ------------------------------------------------------------------
         // Create the scan row with status 'running' BEFORE launching scanners
         // so the client can subscribe to real-time progress updates via the scanId.
@@ -657,6 +665,7 @@ export async function POST(req: NextRequest) {
                     file_upload: 0.03,    // File upload security
                     audit_logging: 0.02,  // Monitoring & audit readiness
                     mobile_api: 0.03,     // Mobile API rate limiting
+                    domain_hijacking: 0.03, // Domain hijacking & registration
                 };
 
                 // Use FIXED denominator so skipped/errored scanners don't inflate the score.

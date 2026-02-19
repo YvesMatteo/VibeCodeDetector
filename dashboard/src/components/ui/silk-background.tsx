@@ -37,46 +37,52 @@ export function SilkBackground() {
 
             void main() {
                 vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-
-                // 1. Horizontal / Slight Angle
-                float angle = -0.1;
+                
+                // 1. Diagonal Orientation (Prism Style)
+                // Rotate ~45 degrees to match the reference image (top-left to bottom-right)
+                float angle = -0.785; // -45 degrees
                 float s = sin(angle);
                 float c = cos(angle);
-
+                
                 vec2 centered = uv - 0.5;
                 vec2 p = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
                 p += 0.5;
 
-                // 2. Horizontal Linear Waves (Cylinders)
-                float t = u_time * 0.15;
-                float wave = sin(p.y * 6.0 + t);
-
-                // Secondary layer for detail
-                wave += sin(p.y * 15.0 + t * 1.5) * 0.2;
-
-                // Third layer for "machined" texture
-                wave += sin(p.y * 25.0 - t * 0.5) * 0.05;
+                // 2. Linear Prism Waves
+                // Use p.x to create bands perpendicular to the rotation
+                float t = u_time * 0.1; // Slow, majestic drift
+                
+                // Main large folds (Low frequency for the "big" look)
+                float wave = sin(p.x * 3.0 + t);
+                
+                // Secondary layer for the "sharp edges" within the folds
+                wave += sin(p.x * 8.0 + t * 1.5) * 0.4;
+                
+                // Third layer for fine metallic texture
+                wave += sin(p.x * 15.0 - t * 0.5) * 0.1;
 
                 // 3. Sharpness / Specular
-                float intensity = wave * 0.4 + 0.5;
+                // High contrast to get those bright white peaks
+                float intensity = wave * 0.5 + 0.5;
                 intensity = smoothstep(0.0, 1.0, intensity);
-
-                // 4. Colors
-                vec3 dark = vec3(0.01, 0.01, 0.05);
-                vec3 mid = vec3(0.02, 0.2, 0.6);
-                vec3 light = vec3(0.4, 0.8, 1.0);
-                vec3 white = vec3(0.9, 0.95, 1.0);
-
-                vec3 col = mix(dark, mid, smoothstep(0.1, 0.45, intensity));
-                col = mix(col, light, smoothstep(0.45, 0.85, intensity));
-
-                // Subtle glint along the band
-                float shine = intensity + sin(p.x * 2.0 + t) * 0.05;
-                col = mix(col, white, smoothstep(0.9, 1.1, shine));
+                
+                // 4. Colors - "Prism" Blue
+                vec3 dark = vec3(0.00, 0.00, 0.02); // Deep black/blue
+                vec3 mid = vec3(0.05, 0.25, 0.65);   // Rich Blue
+                vec3 light = vec3(0.6, 0.85, 1.0);  // Bright Cyan/White
+                
+                vec3 col = mix(dark, mid, smoothstep(0.2, 0.5, intensity));
+                col = mix(col, light, smoothstep(0.5, 0.9, intensity));
+                
+                // Add the characteristic "shine" or "glint" 
+                float glint = smoothstep(0.95, 1.0, intensity);
+                col += vec3(glint * 0.5);
 
                 gl_FragColor = vec4(col, 1.0);
             }
         `;
+
+
 
         const uniforms = {
             u_time: { value: 0.0 },
@@ -88,8 +94,8 @@ export function SilkBackground() {
             fragmentShader: fragmentShader,
             vertexShader: `
             void main() {
-                gl_Position = vec4( position, 1.0 );
-            }
+        gl_Position = vec4(position, 1.0);
+    }
         `
         });
 
