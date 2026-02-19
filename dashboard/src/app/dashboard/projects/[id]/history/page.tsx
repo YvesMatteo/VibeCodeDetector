@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ScoreChart } from '@/components/dashboard/score-chart';
 
 function getVibeRating(issues: number): { label: string; color: string; bg: string } {
     if (issues === 0) return { label: 'Clean', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
@@ -30,9 +30,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-        redirect('/login');
-    }
+    if (!user) redirect('/login');
 
     const { data: project } = await supabase
         .from('projects')
@@ -41,11 +39,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
         .eq('user_id', user.id)
         .single();
 
-    if (!project) {
-        return notFound();
-    }
-
-    const p = project;
+    if (!project) return notFound();
 
     const PAGE_SIZE = 20;
     const { data: scans, count } = await supabase
@@ -58,22 +52,28 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
 
     const totalScans = count || 0;
 
+    // Chart data (oldest first)
+    const chartData = (scans || [])
+        .filter(s => s.overall_score !== null && s.status === 'completed')
+        .reverse()
+        .map(s => ({
+            date: new Date(s.completed_at || s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            score: s.overall_score!,
+        }));
+
     return (
-        <div className="p-4 md:p-8 max-w-3xl">
-            <div className="mb-8">
-                <Link
-                    href={`/dashboard/projects/${params.id}`}
-                    className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
-                >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to {p.name}
-                </Link>
-                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
-                    Audit History
-                </h1>
-                <p className="text-zinc-400 mt-1">
-                    All audits for {p.name}
-                </p>
+        <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto w-full">
+            {/* Score trend chart */}
+            {chartData.length >= 2 && (
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 mb-8">
+                    <h3 className="text-sm font-medium text-white mb-4">Score Over Time</h3>
+                    <ScoreChart data={chartData} height={200} />
+                </div>
+            )}
+
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-medium text-white">All Audits</h2>
+                <span className="text-xs text-zinc-500">{totalScans} total</span>
             </div>
 
             {!scans || scans.length === 0 ? (

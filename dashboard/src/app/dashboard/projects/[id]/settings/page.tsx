@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ChevronRight } from 'lucide-react';
 import { ProjectSettingsForm } from '@/components/dashboard/project-settings-form';
 
 export default async function ProjectSettingsPage(props: { params: Promise<{ id: string }> }) {
@@ -9,9 +7,7 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-        redirect('/login');
-    }
+    if (!user) redirect('/login');
 
     const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -20,46 +16,24 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
         .eq('user_id', user.id)
         .single();
 
-    if (projectError || !project) {
-        return notFound();
-    }
-
-    const p = project;
+    if (projectError || !project) return notFound();
 
     return (
-        <div className="p-4 md:p-8 pb-16 max-w-3xl mx-auto">
-            {/* Breadcrumbs */}
-            <nav className="flex items-center gap-1.5 text-sm text-zinc-500 mb-6">
-                <Link href="/dashboard" className="hover:text-white transition-colors">
-                    Projects
-                </Link>
-                <ChevronRight className="h-3.5 w-3.5" />
-                <Link href={`/dashboard/projects/${params.id}`} className="hover:text-white transition-colors truncate max-w-[200px]">
-                    {p.name}
-                </Link>
-                <ChevronRight className="h-3.5 w-3.5" />
-                <span className="text-zinc-300">Settings</span>
-            </nav>
-
-            {/* Header */}
+        <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto w-full">
             <div className="mb-8">
-                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
-                    Project Settings
-                </h1>
-                <p className="text-zinc-400 mt-1">
-                    Update your project configuration
-                </p>
+                <h2 className="text-lg font-medium text-white">Project Settings</h2>
+                <p className="text-zinc-500 text-sm mt-1">Update your project configuration</p>
             </div>
 
             <ProjectSettingsForm
                 projectId={params.id}
                 initialData={{
-                    name: p.name,
-                    url: p.url,
-                    github_repo: p.github_repo,
-                    backend_type: p.backend_type,
-                    backend_url: p.backend_url,
-                    supabase_pat: p.supabase_pat,
+                    name: project.name,
+                    url: project.url,
+                    github_repo: project.github_repo,
+                    backend_type: project.backend_type,
+                    backend_url: project.backend_url,
+                    supabase_pat: project.supabase_pat,
                 }}
             />
         </div>
