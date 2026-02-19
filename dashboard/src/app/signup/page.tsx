@@ -104,9 +104,14 @@ export default function SignupPage() {
                         We sent a confirmation link to
                     </p>
                     <p className="text-white font-medium text-sm mb-6">{email}</p>
-                    <p className="text-zinc-600 text-xs mb-8">
-                        Click the link in the email to activate your account. Check your spam folder if you don&apos;t see it.
+                    <p className="text-zinc-400 text-sm mb-3">
+                        Click the link in the email to activate your account.
                     </p>
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mb-8">
+                        <p className="text-amber-400 text-xs font-medium">
+                            Don&apos;t see it? Check your spam or junk folder — confirmation emails sometimes end up there.
+                        </p>
+                    </div>
                     <Link href="/login">
                         <Button variant="outline" className="border-white/[0.08] bg-transparent hover:bg-white/5 text-white">
                             Back to login
