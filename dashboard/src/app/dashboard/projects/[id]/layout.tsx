@@ -69,7 +69,7 @@ export default async function ProjectLayout({
                                 <img
                                     src={project.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
                                     alt=""
-                                    className="h-8 w-8 rounded-md object-contain shrink-0 bg-white p-0.5 shadow-sm"
+                                    className="h-8 w-8 rounded-md object-contain shrink-0 p-1 bg-zinc-900/50 border border-white/10"
                                 />
                                 <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">
                                     {project.name}

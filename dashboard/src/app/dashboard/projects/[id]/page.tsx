@@ -5,7 +5,6 @@ import {
     Shield,
     Clock,
     AlertTriangle,
-    Scan,
     ExternalLink,
     ArrowRight,
     GitBranch,
@@ -17,7 +16,6 @@ import {
 import { processAuditData } from '@/lib/audit-data';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
-import { CURRENT_SCANNER_KEYS } from '@/lib/audit-data';
 
 function getScoreColor(score: number | null): string {
     if (score === null) return 'text-zinc-500';
@@ -68,15 +66,6 @@ function countIssuesBySeverity(results: Record<string, any>): { critical: number
     return counts;
 }
 
-function countScannersCovered(results: Record<string, any>): { ran: number; total: number } {
-    let ran = 0;
-    for (const key of Object.keys(results)) {
-        const scanner = results[key];
-        if (scanner && !scanner.skipped) ran++;
-    }
-    return { ran, total: CURRENT_SCANNER_KEYS.length };
-}
-
 export default async function ProjectOverviewPage(props: { params: Promise<{ id: string }> }) {
     const { id } = await props.params;
     const supabase = await createClient();
@@ -110,8 +99,6 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
     const scoreDelta = (score !== null && previousScore !== null) ? score - previousScore : null;
 
     const issues = latestScan ? countIssuesBySeverity(latestScan.results as Record<string, any>) : null;
-    const coverage = latestScan ? countScannersCovered(latestScan.results as Record<string, any>) : null;
-
     // Chart data (oldest first)
     const chartData = (recentScans || [])
         .filter(s => s.overall_score !== null)
@@ -151,7 +138,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             {/* Status cards row - Supabase style */}
             {latestScan ? (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Security Score */}
                         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                             <div className="flex items-center justify-between mb-3">
@@ -227,19 +214,6 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                             )}
                         </div>
 
-                        {/* Scan Coverage */}
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Scan Coverage</span>
-                                <div className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                                    <Scan className="h-3.5 w-3.5 text-violet-400" />
-                                </div>
-                            </div>
-                            <p className="text-3xl font-bold tracking-tight text-white">
-                                {coverage?.ran ?? 0}<span className="text-zinc-600 text-lg">/{coverage?.total ?? CURRENT_SCANNER_KEYS.length}</span>
-                            </p>
-                            <p className="text-xs text-zinc-500 mt-1">scanners executed</p>
-                        </div>
                     </div>
 
                     {/* Two column: Score trend + Project config */}
