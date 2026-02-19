@@ -71,7 +71,12 @@ export async function PATCH(
         const body = await req.json();
         const updates: Record<string, any> = {};
 
-        if (body.name !== undefined) updates.name = body.name.trim();
+        if (body.name !== undefined) {
+            if (typeof body.name !== 'string' || body.name.trim().length < 1 || body.name.trim().length > 100) {
+                return NextResponse.json({ error: 'Project name must be 1-100 characters' }, { status: 400 });
+            }
+            updates.name = body.name.trim();
+        }
         if (body.url !== undefined) {
             const urlValidation = validateTargetUrl(body.url);
             if (!urlValidation.valid) {
@@ -80,7 +85,13 @@ export async function PATCH(
             updates.url = urlValidation.parsed.href;
         }
         if (body.githubRepo !== undefined) updates.github_repo = body.githubRepo?.trim() || null;
-        if (body.backendType !== undefined) updates.backend_type = body.backendType;
+        if (body.backendType !== undefined) {
+            const validBackendTypes = ['supabase', 'firebase', 'convex', 'none'];
+            if (!validBackendTypes.includes(body.backendType)) {
+                return NextResponse.json({ error: 'Invalid backendType' }, { status: 400 });
+            }
+            updates.backend_type = body.backendType;
+        }
         if (body.backendUrl !== undefined) updates.backend_url = body.backendUrl?.trim() || null;
         if (body.supabasePAT !== undefined) {
             const rawPAT = body.supabasePAT?.trim() || null;

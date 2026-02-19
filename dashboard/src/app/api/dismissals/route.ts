@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
         if (scope && !VALID_SCOPES.includes(scope)) {
             return NextResponse.json({ error: 'Invalid scope' }, { status: 400 });
         }
+        if (note !== undefined && note !== null && (typeof note !== 'string' || note.length > 500)) {
+            return NextResponse.json({ error: 'Note must be 500 characters or less' }, { status: 400 });
+        }
 
         // Verify the project belongs to the user
         const { data: project } = await supabase

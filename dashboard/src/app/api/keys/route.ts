@@ -56,15 +56,15 @@ export async function POST(req: NextRequest) {
 
     // Validate domains
     if (allowed_domains !== undefined && allowed_domains !== null) {
-      if (!Array.isArray(allowed_domains) || !allowed_domains.every(isValidDomain)) {
-        return NextResponse.json({ error: 'Invalid allowed_domains' }, { status: 400 });
+      if (!Array.isArray(allowed_domains) || allowed_domains.length > 50 || !allowed_domains.every(isValidDomain)) {
+        return NextResponse.json({ error: 'Invalid allowed_domains (max 50)' }, { status: 400 });
       }
     }
 
     // Validate IPs
     if (allowed_ips !== undefined && allowed_ips !== null) {
-      if (!Array.isArray(allowed_ips) || !allowed_ips.every(isValidIpOrCidr)) {
-        return NextResponse.json({ error: 'Invalid allowed_ips' }, { status: 400 });
+      if (!Array.isArray(allowed_ips) || allowed_ips.length > 50 || !allowed_ips.every(isValidIpOrCidr)) {
+        return NextResponse.json({ error: 'Invalid allowed_ips (max 50)' }, { status: 400 });
       }
     }
 

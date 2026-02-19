@@ -72,7 +72,7 @@ export default function SignupPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Could not create account. Please try again.');
+                setError('Could not create account. Please try again.');
                 setLoading(false);
             } else {
                 setEmailSent(true);

@@ -292,7 +292,8 @@ async function fetchSources(url: string): Promise<Array<{ content: string; locat
     try {
         // Fetch main HTML
         const response = await fetchWithTimeout(url);
-        const html = await response.text();
+        let html = await response.text();
+        if (html.length > 1_000_000) html = html.substring(0, 1_000_000);
         sources.push({ content: html, location: 'HTML source' });
 
         // Extract script URLs from HTML

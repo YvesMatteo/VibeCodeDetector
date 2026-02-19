@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
         if (request.nextUrl.pathname.startsWith('/dashboard')) {
             const url = request.nextUrl.clone();
             url.pathname = '/login';
-            url.searchParams.set('mw_error', e instanceof Error ? e.message : String(e));
+            url.searchParams.set('mw_error', 'auth_refresh_failed');
             return NextResponse.redirect(url);
         }
         // For public routes, allow through even if auth refresh fails

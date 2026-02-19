@@ -245,6 +245,7 @@ Deno.serve(async (req: Request) => {
         try {
             response = await fetchWithTimeout(targetUrl, { method: "GET" });
             html = await response.text();
+            if (html.length > 1_000_000) html = html.substring(0, 1_000_000);
         } catch (e) {
             return new Response(
                 JSON.stringify({

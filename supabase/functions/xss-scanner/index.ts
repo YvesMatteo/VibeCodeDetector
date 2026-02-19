@@ -172,6 +172,7 @@ async function fetchSourceFiles(
         const response = await fetchWithTimeout(url, {}, 10000);
         htmlResponse = response;
         html = await response.text();
+        if (html.length > 1_000_000) html = html.substring(0, 1_000_000);
         sources.push({ content: html, location: "HTML source" });
 
         // Extract <script src="..."> tags
