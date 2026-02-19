@@ -157,7 +157,7 @@ export function GoogleSignInButton({ onError, text = 'continue_with' }: GoogleSi
     return (
         <button
             type="button"
-            onClick={clientId ? undefined : handleOAuthFallback}
+            onClick={handleOAuthFallback}
             className="w-full h-11 flex items-center justify-center gap-3 rounded-md border border-white/[0.08] bg-white/[0.03] text-white text-sm font-medium hover:bg-white/[0.06] transition-colors"
         >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
