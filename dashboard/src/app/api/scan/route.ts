@@ -8,7 +8,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
 import type { Json } from '@/lib/supabase/database.types';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -282,52 +282,98 @@ export async function POST(req: NextRequest) {
             'x-scanner-key': scannerSecretKey,
         };
 
+        // ------------------------------------------------------------------
+        // Pre-rendering with Headless Browser (SPA Support)
+        // ------------------------------------------------------------------
+        const RENDERER_URL = process.env.RENDERER_URL || 'http://127.0.0.1:8080';
+        const RENDERER_SECRET_KEY = process.env.RENDERER_SECRET_KEY || 'default-secret';
+
+        let renderedHtml: string | undefined = undefined;
+        let interceptedApiCalls: string[] = [];
+        let interceptedCookies: any[] = [];
+
+        try {
+            // Give the renderer up to 25 seconds
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 25000);
+
+            const renderRes = await fetch(`${RENDERER_URL}/render`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-renderer-key': RENDERER_SECRET_KEY
+                },
+                body: JSON.stringify({ url: targetUrl }),
+                signal: controller.signal
+            }).finally(() => clearTimeout(timeout));
+
+            if (renderRes.ok) {
+                const rData = await renderRes.json();
+                renderedHtml = rData.html;
+                interceptedApiCalls = rData.apiCalls || [];
+                interceptedCookies = rData.cookies || [];
+            }
+        } catch (e) {
+            console.error('Renderer service failed or unavailable. Falling back to static fetching.', e);
+        }
+
+        // Helper: Format body for scanners
+        const buildScannerBody = (extraParams: Record<string, any> = {}) => {
+            return JSON.stringify({
+                targetUrl,
+                renderedHtml,
+                interceptedApiCalls,
+                interceptedCookies,
+                ...extraParams
+            });
+        };
+
         // 1. Security Headers Scanner (Edge Function)
         scannerPromises.push(trackedScanner('security', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/security-headers-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody()
             }).then(res => res.json()).then(data => { results.security = data; })
-              .catch(err => { results.security = { error: err.message, score: 0 }; })
+                .catch(err => { results.security = { error: err.message, score: 0 }; })
         ));
 
         // 2. API Key Scanner (Edge Function)
         scannerPromises.push(trackedScanner('api_keys', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/api-key-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.api_keys = data; })
-              .catch(err => { results.api_keys = { error: err.message, score: 0 }; })
+                .catch(err => { results.api_keys = { error: err.message, score: 0 }; })
         ));
 
         // 3. Legal Scanner (Edge Function)
         scannerPromises.push(trackedScanner('legal', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/legal-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.legal = data; })
-              .catch(err => { results.legal = { error: err.message, score: 0 }; })
+                .catch(err => { results.legal = { error: err.message, score: 0 }; })
         ));
 
         // 4. Threat Intelligence Scanner (Edge Function)
         scannerPromises.push(trackedScanner('threat_intelligence', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/threat-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.threat_intelligence = data; })
-              .catch(err => { results.threat_intelligence = { error: err.message, score: 0 }; })
+                .catch(err => { results.threat_intelligence = { error: err.message, score: 0 }; })
         ));
 
         // 6. SQL Injection Scanner (Edge Function)
         scannerPromises.push(trackedScanner('sqli', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/sqli-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.sqli = data; })
-              .catch(err => { results.sqli = { error: err.message, score: 0 }; })
+                .catch(err => { results.sqli = { error: err.message, score: 0 }; })
         ));
 
         // 7. Technology Stack Scanner (Edge Function)
         scannerPromises.push(trackedScanner('tech_stack', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/tech-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.tech_stack = data; })
-              .catch(err => { results.tech_stack = { error: err.message, score: 0 }; })
+                .catch(err => { results.tech_stack = { error: err.message, score: 0 }; })
         ));
 
         // 8. GitHub Secrets Scanner (Edge Function) — only if repo URL provided
@@ -335,9 +381,9 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('github_secrets', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/github-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                    body: buildScannerBody({ githubRepo: githubRepo.trim() }),
                 }).then(res => res.json()).then(data => { results.github_secrets = data; })
-                  .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
+                    .catch(err => { results.github_secrets = { error: err.message, score: 0 }; })
             ));
         } else {
             results.github_secrets = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
@@ -346,33 +392,33 @@ export async function POST(req: NextRequest) {
         // 9. CORS Scanner (Edge Function)
         scannerPromises.push(trackedScanner('cors', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cors-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.cors = data; })
-              .catch(err => { results.cors = { error: err.message, score: 0 }; })
+                .catch(err => { results.cors = { error: err.message, score: 0 }; })
         ));
 
         // 10. CSRF Scanner (Edge Function)
         scannerPromises.push(trackedScanner('csrf', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/csrf-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.csrf = data; })
-              .catch(err => { results.csrf = { error: err.message, score: 0 }; })
+                .catch(err => { results.csrf = { error: err.message, score: 0 }; })
         ));
 
         // 11. Cookie/Session Scanner (Edge Function)
         scannerPromises.push(trackedScanner('cookies', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cookie-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.cookies = data; })
-              .catch(err => { results.cookies = { error: err.message, score: 0 }; })
+                .catch(err => { results.cookies = { error: err.message, score: 0 }; })
         ));
 
         // 12. Auth Flow Scanner (Edge Function)
         scannerPromises.push(trackedScanner('auth', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/auth-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.auth = data; })
-              .catch(err => { results.auth = { error: err.message, score: 0 }; })
+                .catch(err => { results.auth = { error: err.message, score: 0 }; })
         ));
 
         // 13. Supabase Backend Scanner (Edge Function) — runs when supabase or auto-detect
@@ -380,12 +426,11 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('supabase_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({
-                        targetUrl,
+                    body: buildScannerBody({
                         ...(userSupabaseUrl && typeof userSupabaseUrl === 'string' ? { supabaseUrl: userSupabaseUrl.trim() } : {}),
                     }),
                 }).then(res => res.json()).then(data => { results.supabase_backend = data; })
-                  .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
+                    .catch(err => { results.supabase_backend = { error: err.message, score: 0 }; })
             ));
         } else {
             results.supabase_backend = { skipped: true, reason: 'Backend type is not Supabase', missingConfig: 'backendType' };
@@ -395,9 +440,9 @@ export async function POST(req: NextRequest) {
         if (backendType === 'firebase') {
             scannerPromises.push(trackedScanner('firebase_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/firebase-scanner`, {
-                    method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                    method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
                 }).then(res => res.json()).then(data => { results.firebase_backend = data; })
-                  .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
+                    .catch(err => { results.firebase_backend = { error: err.message, score: 0 }; })
             ));
         } else {
             results.firebase_backend = { skipped: true, reason: 'Backend type is not Firebase', missingConfig: 'backendType' };
@@ -408,12 +453,11 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('convex_backend', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/convex-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({
-                        targetUrl,
+                    body: buildScannerBody({
                         ...(convexUrl && typeof convexUrl === 'string' ? { convexUrl: convexUrl.trim() } : {}),
                     }),
                 }).then(res => res.json()).then(data => { results.convex_backend = data; })
-                  .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
+                    .catch(err => { results.convex_backend = { error: err.message, score: 0 }; })
             ));
         } else {
             results.convex_backend = { skipped: true, reason: 'Backend type is not Convex', missingConfig: 'backendType' };
@@ -424,9 +468,9 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('dependencies', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/deps-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                    body: buildScannerBody({ githubRepo: githubRepo.trim() }),
                 }).then(res => res.json()).then(data => { results.dependencies = data; })
-                  .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
+                    .catch(err => { results.dependencies = { error: err.message, score: 0 }; })
             ));
         } else {
             results.dependencies = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
@@ -435,33 +479,33 @@ export async function POST(req: NextRequest) {
         // 15. SSL/TLS Scanner (Edge Function)
         scannerPromises.push(trackedScanner('ssl_tls', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/ssl-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.ssl_tls = data; })
-              .catch(err => { results.ssl_tls = { error: err.message, score: 0 }; })
+                .catch(err => { results.ssl_tls = { error: err.message, score: 0 }; })
         ));
 
         // 16. DNS & Email Security Scanner (Edge Function)
         scannerPromises.push(trackedScanner('dns_email', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/dns-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.dns_email = data; })
-              .catch(err => { results.dns_email = { error: err.message, score: 0 }; })
+                .catch(err => { results.dns_email = { error: err.message, score: 0 }; })
         ));
 
         // 17. XSS Scanner (Edge Function)
         scannerPromises.push(trackedScanner('xss', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/xss-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.xss = data; })
-              .catch(err => { results.xss = { error: err.message, score: 0 }; })
+                .catch(err => { results.xss = { error: err.message, score: 0 }; })
         ));
 
         // 18. Open Redirect Scanner (Edge Function)
         scannerPromises.push(trackedScanner('open_redirect', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/redirect-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.open_redirect = data; })
-              .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
+                .catch(err => { results.open_redirect = { error: err.message, score: 0 }; })
         ));
 
         // 19. OpenSSF Scorecard Scanner (Edge Function) — only if repo URL provided
@@ -469,9 +513,9 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('scorecard', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/scorecard-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                    body: buildScannerBody({ githubRepo: githubRepo.trim() }),
                 }).then(res => res.json()).then(data => { results.scorecard = data; })
-                  .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
+                    .catch(err => { results.scorecard = { error: err.message, score: 0 }; })
             ));
         } else {
             results.scorecard = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
@@ -482,9 +526,9 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('github_security', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/github-security-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({ targetUrl, githubRepo: githubRepo.trim() }),
+                    body: buildScannerBody({ githubRepo: githubRepo.trim() }),
                 }).then(res => res.json()).then(data => { results.github_security = data; })
-                  .catch(err => { results.github_security = { error: err.message, score: 0 }; })
+                    .catch(err => { results.github_security = { error: err.message, score: 0 }; })
             ));
         } else {
             results.github_security = { skipped: true, reason: 'GitHub repository not linked', missingConfig: 'githubRepo' };
@@ -495,9 +539,9 @@ export async function POST(req: NextRequest) {
             scannerPromises.push(trackedScanner('supabase_mgmt', () =>
                 fetchWithTimeout(`${supabaseUrl}/functions/v1/supabase-mgmt-scanner`, {
                     method: 'POST', headers: scannerHeaders,
-                    body: JSON.stringify({ targetUrl, supabasePAT, supabaseUrl: userSupabaseUrl.trim() }),
+                    body: buildScannerBody({ supabasePAT, supabaseUrl: userSupabaseUrl.trim() }),
                 }).then(res => res.json()).then(data => { results.supabase_mgmt = data; })
-                  .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
+                    .catch(err => { results.supabase_mgmt = { error: err.message, score: 0 }; })
             ));
         } else if (backendType === 'supabase' || userSupabaseUrl) {
             results.supabase_mgmt = { skipped: true, reason: 'Supabase PAT not provided', missingConfig: 'supabasePAT' };
@@ -505,52 +549,74 @@ export async function POST(req: NextRequest) {
             results.supabase_mgmt = { skipped: true, reason: 'Backend type is not Supabase', missingConfig: 'backendType' };
         }
 
+        // --- NEW SCANNERS ---
+        scannerPromises.push(trackedScanner('graphql', () =>
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/graphql-scanner`, {
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
+            }).then(res => res.json()).then(data => { results.graphql = data; })
+                .catch(err => { results.graphql = { error: err.message, score: 0 }; })
+        ));
+
+        scannerPromises.push(trackedScanner('jwt_audit', () =>
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/jwt-audit-scanner`, {
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
+            }).then(res => res.json()).then(data => { results.jwt_audit = data; })
+                .catch(err => { results.jwt_audit = { error: err.message, score: 0 }; })
+        ));
+
+        scannerPromises.push(trackedScanner('ai_llm', () =>
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/ai-llm-scanner`, {
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
+            }).then(res => res.json()).then(data => { results.ai_llm = data; })
+                .catch(err => { results.ai_llm = { error: err.message, score: 0 }; })
+        ));
+
         // 22. Vercel Hosting Scanner (always runs, auto-detects)
         scannerPromises.push(trackedScanner('vercel_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/vercel-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.vercel_hosting = data; })
-              .catch(err => { results.vercel_hosting = { error: err.message, score: 0 }; })
+                .catch(err => { results.vercel_hosting = { error: err.message, score: 0 }; })
         ));
 
         // 23. Netlify Hosting Scanner (always runs, auto-detects)
         scannerPromises.push(trackedScanner('netlify_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/netlify-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.netlify_hosting = data; })
-              .catch(err => { results.netlify_hosting = { error: err.message, score: 0 }; })
+                .catch(err => { results.netlify_hosting = { error: err.message, score: 0 }; })
         ));
 
         // 24. Cloudflare Pages Hosting Scanner (always runs, auto-detects)
         scannerPromises.push(trackedScanner('cloudflare_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/cloudflare-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.cloudflare_hosting = data; })
-              .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
+                .catch(err => { results.cloudflare_hosting = { error: err.message, score: 0 }; })
         ));
 
         // 25. Railway Hosting Scanner (always runs, auto-detects)
         scannerPromises.push(trackedScanner('railway_hosting', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/railway-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.railway_hosting = data; })
-              .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
+                .catch(err => { results.railway_hosting = { error: err.message, score: 0 }; })
         ));
 
         // 26. DDoS Protection Scanner (always runs)
         scannerPromises.push(trackedScanner('ddos_protection', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/ddos-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.ddos_protection = data; })
-              .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
+                .catch(err => { results.ddos_protection = { error: err.message, score: 0 }; })
         ));
 
         // 28. File Upload Security Scanner (always runs)
         scannerPromises.push(trackedScanner('file_upload', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/upload-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.file_upload = data; })
-              .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
+                .catch(err => { results.file_upload = { error: err.message, score: 0 }; })
         ));
 
         // 29. Audit Logging & Monitoring Scanner (always runs)
@@ -558,7 +624,7 @@ export async function POST(req: NextRequest) {
             fetchWithTimeout(`${supabaseUrl}/functions/v1/audit-scanner`, {
                 method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
             }).then(res => res.json()).then(data => { results.audit_logging = data; })
-              .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
+                .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
         ));
 
         // 30. Mobile API Rate Limiting Scanner (always runs)
@@ -566,7 +632,7 @@ export async function POST(req: NextRequest) {
             fetchWithTimeout(`${supabaseUrl}/functions/v1/mobile-scanner`, {
                 method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
             }).then(res => res.json()).then(data => { results.mobile_api = data; })
-              .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
+                .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
         ));
 
         // 31. Domain Hijacking Scanner (always runs)
@@ -574,7 +640,7 @@ export async function POST(req: NextRequest) {
             fetchWithTimeout(`${supabaseUrl}/functions/v1/domain-hijacking-scanner`, {
                 method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
             }).then(res => res.json()).then(data => { results.domain_hijacking = data; })
-              .catch(err => { results.domain_hijacking = { error: err.message, score: 0 }; })
+                .catch(err => { results.domain_hijacking = { error: err.message, score: 0 }; })
         ));
 
         // ------------------------------------------------------------------
@@ -660,10 +726,13 @@ export async function POST(req: NextRequest) {
                     cloudflare_hosting: 0.02, // Cloudflare Pages checks
                     railway_hosting: 0.02, // Railway platform checks
                     scorecard: 0.02,      // OpenSSF supply chain score
-                    legal: 0.01,          // Legal compliance
+                    graphql: 0.05,        // GraphQL security
+                    jwt_audit: 0.05,      // JWT deep audit
+                    ai_llm: 0.04,         // AI endpoint tests
+                    legal: 0.00,          // Legal compliance
                     ddos_protection: 0.04, // DDoS/WAF protection
                     file_upload: 0.03,    // File upload security
-                    audit_logging: 0.02,  // Monitoring & audit readiness
+                    audit_logging: 0.01,  // Monitoring & audit readiness
                     mobile_api: 0.03,     // Mobile API rate limiting
                     domain_hijacking: 0.03, // Domain hijacking & registration
                 };
@@ -738,7 +807,7 @@ export async function POST(req: NextRequest) {
                             const svc = getServiceClient();
                             void svc.from('projects').update({ favicon_url: faviconUrl }).eq('id', resolvedProjectId!);
                         }
-                    }).catch(() => {});
+                    }).catch(() => { });
                 }
 
                 // Audit log (fire-and-forget)

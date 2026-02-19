@@ -24,7 +24,7 @@ export function WelcomeModal() {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDismiss} />
-            <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.08] bg-zinc-900 p-6 md:p-8 shadow-2xl">
+            <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.06] bg-[#111113] p-6 md:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <button
                     onClick={handleDismiss}
                     className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"

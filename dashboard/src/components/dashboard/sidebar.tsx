@@ -68,24 +68,23 @@ export function Sidebar({
 
         const content = (
             <div className={cn(
-                "relative flex items-center px-3 py-2 min-h-[44px] rounded-lg transition-all duration-200 group/item overflow-hidden",
+                "relative flex items-center px-2.5 py-1.5 min-h-[32px] rounded-md transition-colors duration-100 group/item overflow-hidden",
                 isActive
                     ? "text-white bg-sky-400/[0.08] border border-sky-400/[0.1]"
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] border border-transparent"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"
             )}>
-                {/* Icon Container - Fixed Width */}
-                <div className="flex items-center justify-center min-w-[20px] mr-3">
+                {/* Fixed size icon container perfectly aligned */}
+                <div className="flex items-center justify-center min-w-[24px] w-[24px] shrink-0">
                     <Icon className={cn(
-                        "h-[18px] w-[18px] transition-colors",
-                        isActive ? "text-sky-400" : "text-zinc-500 group-hover/item:text-zinc-300"
+                        "h-[14px] w-[14px] transition-colors stroke-[2px]",
+                        isActive ? "text-sky-400" : "text-zinc-500 group-hover/item:text-zinc-400"
                     )} />
                 </div>
 
-                {/* Text Label - Transitions opacity/width/transform */}
                 <span className={cn(
-                    "whitespace-nowrap font-medium text-[13px] transition-all duration-300 origin-left",
-                    !isMobile && "opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 w-0 group-hover:w-auto delay-75", // Desktop: hidden by default
-                    isMobile && "opacity-100 w-auto" // Mobile: always visible
+                    "ml-2.5 whitespace-nowrap font-normal text-[12px] opacity-0 transition-opacity duration-100",
+                    !isMobile && "group-hover:opacity-100",
+                    isMobile && "opacity-100"
                 )}>
                     {item.name}
                 </span>
@@ -123,53 +122,50 @@ export function Sidebar({
     return (
         <div
             className={cn(
-                "flex flex-col h-full bg-background border-r border-white/[0.06] transition-[width] duration-300 ease-in-out overflow-hidden z-50",
-                !isMobile && "w-[70px] hover:w-[240px] group", // Desktop expand logic
+                "flex flex-col h-full bg-background border-r border-white/[0.06] transition-[width] duration-100 ease-out overflow-hidden z-50",
+                !isMobile && "w-[60px] hover:w-[220px] group", // Desktop expand logic
                 isMobile && "w-full",
                 className
             )}
         >
             {/* Logo Section */}
-            <div className="h-16 flex items-center shrink-0 px-4">
-                <Link href="/" className="flex items-center gap-3 overflow-hidden">
-                    {/* Always visible Icon */}
-                    <div className="min-w-[24px] flex justify-center">
-                        <Image src="/logo-icon.png" alt="Icon" width={24} height={24} className="w-6 h-6 object-contain" />
+            <div className="h-16 flex items-center shrink-0 px-2">
+                <Link href="/" className="flex items-center px-2.5 w-full overflow-hidden hover:opacity-80 transition-opacity">
+                    <div className="w-[24px] flex justify-center shrink-0">
+                        <Image src="/logo-icon.png" alt="Icon" width={20} height={20} className="w-5 h-5 object-contain" />
                     </div>
-                    {/* Text Logo - Hidden on collapsed */}
                     <div className={cn(
-                        "transition-all duration-300 origin-left",
-                        !isMobile && "opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 w-0 group-hover:w-auto delay-75",
-                        isMobile && "opacity-100 w-auto"
+                        "ml-2.5 opacity-0 transition-opacity duration-100",
+                        !isMobile && "group-hover:opacity-100",
+                        isMobile && "opacity-100"
                     )}>
-                        <h1 className="font-bold text-lg tracking-tight select-none">
+                        <h1 className="font-semibold text-sm tracking-tight select-none whitespace-nowrap">
                             CheckVibe
                         </h1>
                     </div>
                 </Link>
             </div>
 
-            {/* User Profile - Compact vs Expanded */}
-            <div className="px-3 pb-4">
-                <div className={cn(
-                    "flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-white/[0.03]",
-                    !isMobile && "justify-center group-hover:justify-start"
-                )}>
-                    <Avatar className="h-8 w-8 ring-1 ring-white/[0.08] shrink-0">
-                        <AvatarFallback className="bg-white/[0.06] text-zinc-300 text-xs font-medium">
-                            {initials}
-                        </AvatarFallback>
-                    </Avatar>
+            {/* User Profile */}
+            <div className="px-2 pb-4">
+                <div className="flex items-center p-2 rounded-xl transition-colors hover:bg-white/[0.03]">
+                    <div className="w-[24px] flex justify-center shrink-0">
+                        <Avatar className="h-[24px] w-[24px] ring-1 ring-white/[0.08] shrink-0">
+                            <AvatarFallback className="bg-white/[0.06] text-zinc-300 text-[10px] font-medium">
+                                {initials}
+                            </AvatarFallback>
+                        </Avatar>
+                    </div>
 
                     <div className={cn(
-                        "flex flex-col min-w-0 transition-all duration-300 overflow-hidden",
-                        !isMobile && "opacity-0 w-0 group-hover:opacity-100 group-hover:w-auto delay-75",
-                        isMobile && "opacity-100 w-auto"
+                        "flex flex-col min-w-0 overflow-hidden ml-2.5 opacity-0 transition-opacity duration-100",
+                        !isMobile && "group-hover:opacity-100",
+                        isMobile && "opacity-100"
                     )}>
-                        <p className="text-[13px] font-medium text-white truncate">
+                        <p className="text-[12px] font-medium text-white truncate">
                             {userEmail?.split('@')[0] || 'User'}
                         </p>
-                        <p className="text-[11px] text-zinc-500 capitalize leading-none">
+                        <p className="text-[10px] text-zinc-500 capitalize leading-none whitespace-nowrap">
                             {userPlan === 'none' ? 'Free Plan' : `${userPlan} Plan`}
                         </p>
                     </div>
@@ -179,22 +175,20 @@ export function Sidebar({
             <div className="h-px bg-white/[0.06] mx-4 mb-4" />
 
             {/* Scrollable Nav Area */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 space-y-6 scrollbar-none">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 space-y-4 scrollbar-none">
                 {/* Main Nav */}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                     {/* New Project Button */}
-                    <div className="mb-4">
-                        <Link href="/dashboard/projects/new" onClick={onNavClick}>
-                            <div className={cn(
-                                "flex items-center justify-center p-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white transition-all duration-200 group/btn shadow-[0_0_15px_-3px_rgba(14,165,233,0.3)]",
-                                !isMobile && "h-10 w-10 mx-auto group-hover:w-full group-hover:mx-0 group-hover:justify-start group-hover:px-3",
-                                isMobile && "w-full h-10 px-3 justify-start"
-                            )}>
-                                <Plus className="h-5 w-5 shrink-0" />
+                    <div className="mb-3">
+                        <Link href="/dashboard/projects/new" onClick={onNavClick} className="block w-full">
+                            <div className="flex items-center px-2.5 py-1.5 min-h-[32px] rounded-md bg-sky-500 hover:bg-sky-400 text-white transition-colors duration-100 shadow-[0_0_15px_-3px_rgba(14,165,233,0.3)]">
+                                <div className="flex items-center justify-center w-[24px] shrink-0">
+                                    <Plus className="h-[14px] w-[14px] shrink-0 stroke-[2.5px]" />
+                                </div>
                                 <span className={cn(
-                                    "ml-3 whitespace-nowrap text-[13px] font-medium overflow-hidden transition-all duration-300",
-                                    !isMobile && "w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 delay-75",
-                                    isMobile && "w-auto opacity-100"
+                                    "ml-2.5 whitespace-nowrap text-[12px] font-medium opacity-0 transition-opacity duration-100",
+                                    !isMobile && "group-hover:opacity-100",
+                                    isMobile && "opacity-100"
                                 )}>
                                     New Project
                                 </span>
@@ -208,10 +202,10 @@ export function Sidebar({
                 </div>
 
                 {/* Resources */}
-                <div className="space-y-1">
+                <div className="space-y-0.5 mt-6">
                     <p className={cn(
-                        "px-3 text-[10px] font-medium tracking-wider text-zinc-600 uppercase mb-2 transition-opacity duration-300",
-                        !isMobile && "opacity-0 group-hover:opacity-100 delay-75",
+                        "px-3 text-[9px] font-medium tracking-wider text-zinc-600 uppercase mb-1.5 opacity-0 transition-opacity duration-100",
+                        !isMobile && "group-hover:opacity-100",
                         isMobile && "opacity-100"
                     )}>
                         Resources
@@ -222,10 +216,10 @@ export function Sidebar({
                 </div>
 
                 {/* Connect */}
-                <div className="space-y-1">
+                <div className="space-y-0.5 mt-6">
                     <p className={cn(
-                        "px-3 text-[10px] font-medium tracking-wider text-zinc-600 uppercase mb-2 transition-opacity duration-300",
-                        !isMobile && "opacity-0 group-hover:opacity-100 delay-75",
+                        "px-3 text-[9px] font-medium tracking-wider text-zinc-600 uppercase mb-1.5 opacity-0 transition-opacity duration-100",
+                        !isMobile && "group-hover:opacity-100",
                         isMobile && "opacity-100"
                     )}>
                         Connect
@@ -237,19 +231,18 @@ export function Sidebar({
             </div>
 
             {/* Logout */}
-            <div className="p-3 mt-auto">
+            <div className="p-2 mt-auto shrink-0 border-t border-white/[0.06]">
                 <button
                     onClick={handleLogout}
-                    className={cn(
-                        "flex items-center w-full p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-all duration-200 group/logout",
-                        !isMobile && "justify-center group-hover:justify-start"
-                    )}
+                    className="flex items-center w-full px-2.5 py-1.5 min-h-[32px] rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] transition-colors duration-100"
                 >
-                    <LogOut className="h-[18px] w-[18px] shrink-0" />
+                    <div className="flex items-center justify-center w-[24px] shrink-0">
+                        <LogOut className="h-[14px] w-[14px] shrink-0 stroke-[2px]" />
+                    </div>
                     <span className={cn(
-                        "ml-3 whitespace-nowrap text-[13px] font-medium overflow-hidden transition-all duration-300",
-                        !isMobile && "w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 delay-75",
-                        isMobile && "w-auto opacity-100"
+                        "ml-2.5 whitespace-nowrap text-[12px] font-normal opacity-0 transition-opacity duration-100",
+                        !isMobile && "group-hover:opacity-100",
+                        isMobile && "opacity-100"
                     )}>
                         Log out
                     </span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -230,99 +231,97 @@ export default function ApiKeysPage() {
     const inactiveKeys = keys.filter(k => k.revoked_at || (k.expires_at && new Date(k.expires_at) < new Date()));
 
     return (
-        <div className="p-4 md:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">API Keys</h1>
-                    <p className="text-zinc-500 text-sm mt-1">
-                        Manage API keys for programmatic access to CheckVibe
-                    </p>
-                </div>
-                <Button
-                    onClick={() => setShowCreate(true)}
-                    className="bg-white text-zinc-900 hover:bg-zinc-200 border-0 w-full sm:w-auto shrink-0"
-                >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Key
-                </Button>
-            </div>
+        <div>
+            <PageHeader
+                title="API Keys"
+                description="Manage API keys for programmatic access to CheckVibe"
+                actions={
+                    <Button
+                        onClick={() => setShowCreate(true)}
+                        className="bg-sky-500 text-white hover:bg-sky-400 border-0 font-medium shadow-[0_0_15px_-3px_rgba(14,165,233,0.3)] w-full sm:w-auto shrink-0"
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Key
+                    </Button>
+                }
+            />
+            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-8">
+                    {/* Left column — keys */}
+                    <div className="min-w-0">
 
-            <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
-            {/* Left column — keys */}
-            <div className="min-w-0">
-
-            {/* Getting Started */}
-            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="cursor-pointer py-4" onClick={() => setDocsOpen(!docsOpen)}>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-white text-sm font-medium">Getting Started</CardTitle>
-                            <CardDescription className="text-zinc-500 text-xs">Authentication and API usage</CardDescription>
-                        </div>
-                        {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
-                    </div>
-                </CardHeader>
-                {docsOpen && (
-                    <CardContent>
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="text-sm font-medium text-zinc-300 mb-2">Authentication</h4>
-                                <p className="text-xs text-zinc-500 mb-3">
-                                    Include your API key in the Authorization header:
-                                </p>
-                            </div>
-                            <div className="space-y-3">
-                                <div>
-                                    <p className="text-xs text-zinc-400 mb-1">Run a scan:</p>
-                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl -X POST https://checkvibe.dev/api/scan \\
+                        {/* Getting Started */}
+                        <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                            <CardHeader className="cursor-pointer py-4" onClick={() => setDocsOpen(!docsOpen)}>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-white text-sm font-medium">Getting Started</CardTitle>
+                                        <CardDescription className="text-zinc-500 text-xs">Authentication and API usage</CardDescription>
+                                    </div>
+                                    {docsOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
+                                </div>
+                            </CardHeader>
+                            {docsOpen && (
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h4 className="text-sm font-medium text-zinc-300 mb-2">Authentication</h4>
+                                            <p className="text-xs text-zinc-500 mb-3">
+                                                Include your API key in the Authorization header:
+                                            </p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <p className="text-xs text-zinc-400 mb-1">Run a scan:</p>
+                                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                                    {`curl -X POST https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com"}'`}
-                                    </pre>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-400 mb-1">List scans:</p>
-                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl https://checkvibe.dev/api/scan \\
+                                                </pre>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-zinc-400 mb-1">List scans:</p>
+                                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                                    {`curl https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
-                                    </pre>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-400 mb-1">Get scan results:</p>
-                                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl https://checkvibe.dev/api/scan/SCAN_ID \\
+                                                </pre>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-zinc-400 mb-1">Get scan results:</p>
+                                                <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                                    {`curl https://checkvibe.dev/api/scan/SCAN_ID \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
-                                    </pre>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                )}
-            </Card>
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
 
-            {/* MCP Server Config */}
-            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="cursor-pointer py-4" onClick={() => setMcpOpen(!mcpOpen)}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Terminal className="h-4 w-4 text-zinc-400" />
-                            <div>
-                                <CardTitle className="text-white text-sm font-medium">Use with Claude Code (MCP)</CardTitle>
-                                <CardDescription className="text-zinc-500 text-xs">Let coding agents run security scans</CardDescription>
-                            </div>
-                        </div>
-                        {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
-                    </div>
-                </CardHeader>
-                {mcpOpen && (
-                    <CardContent>
-                        <div className="space-y-3">
-                            <p className="text-xs text-zinc-500">
-                                Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
-                            </p>
-                            <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`{
+                        {/* MCP Server Config */}
+                        <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
+                            <CardHeader className="cursor-pointer py-4" onClick={() => setMcpOpen(!mcpOpen)}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Terminal className="h-4 w-4 text-zinc-400" />
+                                        <div>
+                                            <CardTitle className="text-white text-sm font-medium">Use with Claude Code (MCP)</CardTitle>
+                                            <CardDescription className="text-zinc-500 text-xs">Let coding agents run security scans</CardDescription>
+                                        </div>
+                                    </div>
+                                    {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
+                                </div>
+                            </CardHeader>
+                            {mcpOpen && (
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        <p className="text-xs text-zinc-500">
+                                            Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
+                                        </p>
+                                        <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                            {`{
   "mcpServers": {
     "checkvibe": {
       "command": "npx",
@@ -333,264 +332,258 @@ export default function ApiKeysPage() {
     }
   }
 }`}
-                            </pre>
-                            <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                <Terminal className="h-3.5 w-3.5" />
-                                <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
+                                        </pre>
+                                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                            <Terminal className="h-3.5 w-3.5" />
+                                            <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
+
+                        {/* Active Keys */}
+                        <div className="mb-8">
+                            <div className="mb-3">
+                                <h3 className="text-sm font-medium text-white mb-0.5">Active Keys ({activeKeys.length})</h3>
+                                <p className="text-xs text-zinc-500">Keys that can authenticate API requests</p>
                             </div>
+                            {loading ? (
+                                <div className="text-zinc-500 text-xs py-4">Loading...</div>
+                            ) : activeKeys.length === 0 ? (
+                                <div className="text-center py-10 border border-white/[0.06] border-dashed rounded-xl">
+                                    <p className="text-zinc-400 text-xs font-medium">No active API keys</p>
+                                    <p className="text-zinc-600 text-xs mt-1">Create a key to get started with the API</p>
+                                </div>
+                            ) : (
+                                <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-transparent">
+                                    {activeKeys.map((key, i) => (
+                                        <div key={key.id} className={i !== 0 ? 'border-t border-white/[0.06]' : ''}>
+                                            <KeyRow
+                                                apiKey={key}
+                                                status={getKeyStatus(key)}
+                                                formatDate={formatDate}
+                                                formatRelative={formatRelative}
+                                                onRevoke={() => { setRevokeTarget(key); setShowRevoke(true); }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    </CardContent>
-                )}
-            </Card>
 
-            {/* Active Keys */}
-            <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
-                <CardHeader className="py-4">
-                    <div>
-                        <CardTitle className="text-white text-sm font-medium">Active Keys ({activeKeys.length})</CardTitle>
-                        <CardDescription className="text-zinc-500 text-xs">Keys that can authenticate API requests</CardDescription>
+                        {/* Inactive Keys */}
+                        {inactiveKeys.length > 0 && (
+                            <div className="mb-8">
+                                <div className="mb-3">
+                                    <h3 className="text-sm font-medium text-zinc-400 mb-0.5">Inactive Keys ({inactiveKeys.length})</h3>
+                                    <p className="text-xs text-zinc-500">Revoked or expired keys</p>
+                                </div>
+                                <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-transparent">
+                                    {inactiveKeys.map((key, i) => (
+                                        <div key={key.id} className={i !== 0 ? 'border-t border-white/[0.06]' : ''}>
+                                            <KeyRow
+                                                apiKey={key}
+                                                status={getKeyStatus(key)}
+                                                formatDate={formatDate}
+                                                formatRelative={formatRelative}
+                                                onDelete={() => { setDeleteTarget(key); setShowDelete(true); }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Security Notice */}
+                        <Card className="bg-white/[0.02] border-white/[0.06]">
+                            <CardContent className="py-4 px-5">
+                                <div className="flex gap-3">
+                                    <AlertTriangle className="h-4 w-4 text-amber-400/80 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-zinc-300 mb-1.5">Security Best Practices</p>
+                                        <ul className="space-y-1 text-xs text-zinc-500">
+                                            <li>Use the minimum scopes needed for your integration</li>
+                                            <li>Restrict keys to specific domains when possible</li>
+                                            <li>Rotate keys regularly (default expiry: 90 days)</li>
+                                            <li>Revoke any key that may have been exposed</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="text-zinc-500 text-sm py-4">Loading...</div>
-                    ) : activeKeys.length === 0 ? (
-                        <div className="text-center py-8">
-                            <p className="text-zinc-500 text-sm">No active API keys</p>
-                            <p className="text-zinc-600 text-xs mt-1">Create a key to get started with the API</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {activeKeys.map(key => (
-                                <KeyRow
-                                    key={key.id}
-                                    apiKey={key}
-                                    status={getKeyStatus(key)}
-                                    formatDate={formatDate}
-                                    formatRelative={formatRelative}
-                                    onRevoke={() => { setRevokeTarget(key); setShowRevoke(true); }}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
 
-            {/* Inactive Keys */}
-            {inactiveKeys.length > 0 && (
-                <Card className="mb-4 bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader className="py-4">
-                        <div>
-                            <CardTitle className="text-zinc-400 text-sm font-medium">Inactive Keys ({inactiveKeys.length})</CardTitle>
-                            <CardDescription className="text-zinc-500 text-xs">Revoked or expired keys</CardDescription>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {inactiveKeys.map(key => (
-                                <KeyRow
-                                    key={key.id}
-                                    apiKey={key}
-                                    status={getKeyStatus(key)}
-                                    formatDate={formatDate}
-                                    formatRelative={formatRelative}
-                                    onDelete={() => { setDeleteTarget(key); setShowDelete(true); }}
-                                />
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Security Notice */}
-            <Card className="bg-white/[0.02] border-white/[0.06]">
-                <CardContent className="py-4 px-5">
-                    <div className="flex gap-3">
-                        <AlertTriangle className="h-4 w-4 text-amber-400/80 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="text-sm font-medium text-zinc-300 mb-1.5">Security Best Practices</p>
-                            <ul className="space-y-1 text-xs text-zinc-500">
-                                <li>Use the minimum scopes needed for your integration</li>
-                                <li>Restrict keys to specific domains when possible</li>
-                                <li>Rotate keys regularly (default expiry: 90 days)</li>
-                                <li>Revoke any key that may have been exposed</li>
-                            </ul>
-                        </div>
+                    {/* Right column — activity feed */}
+                    <div className="hidden xl:block">
+                        <ActivityFeed />
                     </div>
-                </CardContent>
-            </Card>
-            </div>
+                </div>
 
-            {/* Right column — activity feed */}
-            <div className="hidden xl:block">
-                <ActivityFeed />
-            </div>
-            </div>
+                {/* ── Create Key Dialog ────────────────────────────── */}
+                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                    <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Create API Key</DialogTitle>
+                            <DialogDescription className="text-zinc-400">
+                                Generate a new key for programmatic access
+                            </DialogDescription>
+                        </DialogHeader>
 
-            {/* ── Create Key Dialog ────────────────────────────── */}
-            <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">Create API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400">
-                            Generate a new key for programmatic access
-                        </DialogDescription>
-                    </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="space-y-2">
+                                <Label>Name</Label>
+                                <Input
+                                    value={newKeyName}
+                                    onChange={e => setNewKeyName(e.target.value)}
+                                    placeholder="e.g., CI Pipeline, Monitoring Script"
+                                    className="bg-white/[0.02] border-white/[0.06]"
+                                    maxLength={64}
+                                />
+                            </div>
 
-                    <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                            <Label>Name</Label>
-                            <Input
-                                value={newKeyName}
-                                onChange={e => setNewKeyName(e.target.value)}
-                                placeholder="e.g., CI Pipeline, Monitoring Script"
-                                className="bg-white/[0.02] border-white/[0.06]"
-                                maxLength={64}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Scopes</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {SCOPE_OPTIONS.map(scope => (
-                                    <button
-                                        key={scope.value}
-                                        type="button"
-                                        onClick={() => toggleScope(scope.value)}
-                                        className={`text-left p-2.5 rounded-lg border transition-colors ${
-                                            newKeyScopes.includes(scope.value)
+                            <div className="space-y-2">
+                                <Label>Scopes</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {SCOPE_OPTIONS.map(scope => (
+                                        <button
+                                            key={scope.value}
+                                            type="button"
+                                            onClick={() => toggleScope(scope.value)}
+                                            className={`text-left p-2.5 rounded-lg border transition-colors ${newKeyScopes.includes(scope.value)
                                                 ? 'border-sky-400/50 bg-sky-400/10'
                                                 : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]'
-                                        }`}
-                                    >
-                                        <div className="text-xs font-medium text-white">{scope.label}</div>
-                                        <div className="text-xs text-zinc-500 mt-0.5">{scope.description}</div>
-                                    </button>
-                                ))}
+                                                }`}
+                                        >
+                                            <div className="text-xs font-medium text-white">{scope.label}</div>
+                                            <div className="text-xs text-zinc-500 mt-0.5">{scope.description}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Restrict to Domains (optional)</Label>
+                                <Input
+                                    value={newKeyDomains}
+                                    onChange={e => setNewKeyDomains(e.target.value)}
+                                    placeholder="example.com, app.example.com"
+                                    className="bg-white/[0.02] border-white/[0.06]"
+                                />
+                                <p className="text-xs text-zinc-500">Comma-separated. Leave empty to allow all domains.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Expires in (days)</Label>
+                                <Input
+                                    type="number"
+                                    value={newKeyExpiry}
+                                    onChange={e => setNewKeyExpiry(e.target.value)}
+                                    min={1}
+                                    max={365}
+                                    className="bg-white/[0.02] border-white/[0.06] w-24"
+                                />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Restrict to Domains (optional)</Label>
-                            <Input
-                                value={newKeyDomains}
-                                onChange={e => setNewKeyDomains(e.target.value)}
-                                placeholder="example.com, app.example.com"
-                                className="bg-white/[0.02] border-white/[0.06]"
-                            />
-                            <p className="text-xs text-zinc-500">Comma-separated. Leave empty to allow all domains.</p>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/[0.02] border-white/[0.06]">
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleCreate}
+                                disabled={creating || newKeyScopes.length === 0}
+                                className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
+                            >
+                                {creating ? 'Creating...' : 'Create Key'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Show-Once Key Dialog ────────────────────────── */}
+                <Dialog open={!!createdKey} onOpenChange={() => setCreatedKey(null)}>
+                    <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-lg" showCloseButton={false}>
+                        <DialogHeader>
+                            <DialogTitle className="text-white flex items-center gap-2">
+                                <Check className="h-5 w-5 text-green-400" />
+                                API Key Created
+                            </DialogTitle>
+                            <DialogDescription className="text-amber-400 font-medium">
+                                Copy this key now. It will not be shown again.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="relative">
+                            <code className="block p-3 bg-black/30 border border-white/[0.06] rounded-lg text-sm text-green-400 font-mono break-all">
+                                {createdKey}
+                            </code>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="absolute top-2 right-2 h-7 px-2 text-zinc-400 hover:text-white"
+                                onClick={() => copyToClipboard(createdKey || '')}
+                            >
+                                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                            </Button>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Expires in (days)</Label>
-                            <Input
-                                type="number"
-                                value={newKeyExpiry}
-                                onChange={e => setNewKeyExpiry(e.target.value)}
-                                min={1}
-                                max={365}
-                                className="bg-white/[0.02] border-white/[0.06] w-24"
-                            />
-                        </div>
-                    </div>
+                        <DialogFooter>
+                            <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/[0.08] hover:bg-white/20">
+                                Done
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowCreate(false)} className="bg-white/[0.02] border-white/[0.06]">
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleCreate}
-                            disabled={creating || newKeyScopes.length === 0}
-                            className="bg-white text-zinc-900 hover:bg-zinc-200 border-0"
-                        >
-                            {creating ? 'Creating...' : 'Create Key'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                {/* ── Revoke Confirmation Dialog ──────────────────── */}
+                <Dialog open={showRevoke} onOpenChange={setShowRevoke}>
+                    <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Revoke API Key</DialogTitle>
+                            <DialogDescription className="text-zinc-400">
+                                Are you sure you want to revoke <span className="font-mono text-zinc-300">{revokeTarget?.name}</span>? This action cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/[0.02] border-white/[0.06]">
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleRevoke}
+                                disabled={!!revoking}
+                            >
+                                {revoking ? 'Revoking...' : 'Revoke Key'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
-            {/* ── Show-Once Key Dialog ────────────────────────── */}
-            <Dialog open={!!createdKey} onOpenChange={() => setCreatedKey(null)}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-lg" showCloseButton={false}>
-                    <DialogHeader>
-                        <DialogTitle className="text-white flex items-center gap-2">
-                            <Check className="h-5 w-5 text-green-400" />
-                            API Key Created
-                        </DialogTitle>
-                        <DialogDescription className="text-amber-400 font-medium">
-                            Copy this key now. It will not be shown again.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="relative">
-                        <code className="block p-3 bg-black/30 border border-white/[0.06] rounded-lg text-sm text-green-400 font-mono break-all">
-                            {createdKey}
-                        </code>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="absolute top-2 right-2 h-7 px-2 text-zinc-400 hover:text-white"
-                            onClick={() => copyToClipboard(createdKey || '')}
-                        >
-                            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        </Button>
-                    </div>
-
-                    <DialogFooter>
-                        <Button onClick={() => setCreatedKey(null)} className="bg-white/10 border-white/[0.08] hover:bg-white/20">
-                            Done
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* ── Revoke Confirmation Dialog ──────────────────── */}
-            <Dialog open={showRevoke} onOpenChange={setShowRevoke}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">Revoke API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400">
-                            Are you sure you want to revoke <span className="font-mono text-zinc-300">{revokeTarget?.name}</span>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowRevoke(false)} className="bg-white/[0.02] border-white/[0.06]">
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleRevoke}
-                            disabled={!!revoking}
-                        >
-                            {revoking ? 'Revoking...' : 'Revoke Key'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* ── Permanent Delete Confirmation Dialog ─────────── */}
-            <Dialog open={showDelete} onOpenChange={setShowDelete}>
-                <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">Delete API Key</DialogTitle>
-                        <DialogDescription className="text-zinc-400">
-                            Permanently delete <span className="font-mono text-zinc-300">{deleteTarget?.name}</span>? This removes all associated usage logs and cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-white/[0.02] border-white/[0.06]">
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={!!deleting}
-                        >
-                            {deleting ? 'Deleting...' : 'Delete Forever'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                {/* ── Permanent Delete Confirmation Dialog ─────────── */}
+                <Dialog open={showDelete} onOpenChange={setShowDelete}>
+                    <DialogContent className="bg-[#111113] border-white/[0.08] sm:max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Delete API Key</DialogTitle>
+                            <DialogDescription className="text-zinc-400">
+                                Permanently delete <span className="font-mono text-zinc-300">{deleteTarget?.name}</span>? This removes all associated usage logs and cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-white/[0.02] border-white/[0.06]">
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleDelete}
+                                disabled={!!deleting}
+                            >
+                                {deleting ? 'Deleting...' : 'Delete Forever'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     );
 }
@@ -622,7 +615,7 @@ function KeyRow({
     };
 
     return (
-        <div className="rounded-lg border border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
+        <div className="bg-transparent hover:bg-white/[0.02] transition-colors">
             <div className="p-4 flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -750,7 +743,7 @@ function ActivityFeed() {
         fetch('/api/keys/activity?limit=30')
             .then(res => res.json())
             .then(data => setLogs(data.logs || []))
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoading(false));
     }, []);
 

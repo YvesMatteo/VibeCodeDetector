@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { SettingsTabs } from '@/components/dashboard/settings-tabs';
+import { PageHeader } from '@/components/dashboard/page-header';
 
 export default async function SettingsPage() {
     const supabase = await createClient();
@@ -18,20 +19,19 @@ export default async function SettingsPage() {
     }
 
     return (
-        <div className="p-4 md:p-8 max-w-4xl">
-            <div className="mb-8">
-                <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white mb-2">Settings</h1>
-                <p className="text-zinc-500">
-                    Manage your account settings
-                </p>
-            </div>
-
-            <SettingsTabs
-                email={user?.email || ''}
-                userId={user?.id || ''}
-                createdAt={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
-                plan={plan}
+        <div>
+            <PageHeader
+                title="Settings"
+                description="Manage your account settings"
             />
+            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+                <SettingsTabs
+                    email={user?.email || ''}
+                    userId={user?.id || ''}
+                    createdAt={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+                    plan={plan}
+                />
+            </div>
         </div>
     );
 }

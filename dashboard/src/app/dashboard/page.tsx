@@ -5,6 +5,7 @@ import { Plus, FolderKanban } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
+import { PageHeader } from '@/components/dashboard/page-header';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -76,88 +77,90 @@ export default async function DashboardPage() {
         })
     );
 
-    return (
-        <div className="p-4 md:p-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
-                        Projects
-                    </h1>
-                    {planScansLimit > 0 ? (
-                        <div className="flex items-center gap-4 mt-2">
-                            <span className="text-[13px] text-zinc-500">
-                                <span className="text-zinc-300 font-medium tabular-nums">{planScansUsed}</span>
-                                <span className="text-zinc-600">/{planScansLimit}</span> scans
-                            </span>
-                            <span className="text-zinc-700">·</span>
-                            <span className="text-[13px] text-zinc-500">
-                                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
-                                <span className="text-zinc-600">/{projectLimit}</span> projects
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-3 mt-2">
-                            <span className="text-[13px] text-zinc-500">
-                                Free plan
-                            </span>
-                            <span className="text-zinc-700">·</span>
-                            <span className="text-[13px] text-zinc-500">
-                                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
-                                <span className="text-zinc-600">/1</span> project
-                            </span>
-                            <span className="text-zinc-700">·</span>
-                            <Link href="/dashboard/credits" className="text-[13px] text-sky-400 hover:text-sky-300 transition-colors font-medium">
-                                Upgrade
-                            </Link>
-                        </div>
-                    )}
-                </div>
-                <Button asChild className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium">
-                    <Link href="/dashboard/projects/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Project
-                    </Link>
-                </Button>
-            </div>
+    const usageStats = planScansLimit > 0 ? (
+        <div className="flex items-center gap-4 mt-1">
+            <span className="text-[13px] text-zinc-500">
+                <span className="text-zinc-300 font-medium tabular-nums">{planScansUsed}</span>
+                <span className="text-zinc-600">/{planScansLimit}</span> scans
+            </span>
+            <span className="text-zinc-700">·</span>
+            <span className="text-[13px] text-zinc-500">
+                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
+                <span className="text-zinc-600">/{projectLimit}</span> projects
+            </span>
+        </div>
+    ) : (
+        <div className="flex items-center gap-3 mt-1">
+            <span className="text-[13px] text-zinc-500">
+                Free plan
+            </span>
+            <span className="text-zinc-700">·</span>
+            <span className="text-[13px] text-zinc-500">
+                <span className="text-zinc-300 font-medium tabular-nums">{projectList.length}</span>
+                <span className="text-zinc-600">/1</span> project
+            </span>
+            <span className="text-zinc-700">·</span>
+            <Link href="/dashboard/credits" className="text-[13px] text-sky-400 hover:text-sky-300 transition-colors font-medium">
+                Upgrade
+            </Link>
+        </div>
+    );
 
-            {/* Project Grid */}
-            {projectsWithScans.length === 0 ? (
-                <div className="text-center py-20">
-                    <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200/60 flex items-center justify-center mx-auto mb-4">
-                        <FolderKanban className="h-5 w-5 text-sky-400" />
-                    </div>
-                    <h2 className="text-base font-medium text-white mb-1.5">No projects yet</h2>
-                    <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">
-                        Create your first project to start running security audits.
-                    </p>
-                    <Button asChild className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium">
+    return (
+        <div>
+            {/* Header */}
+            <PageHeader
+                title="Projects"
+                description={usageStats}
+                actions={
+                    <Button asChild className="bg-sky-500 text-white hover:bg-sky-400 border-0 font-medium shadow-[0_0_15px_-3px_rgba(14,165,233,0.3)]">
                         <Link href="/dashboard/projects/new">
                             <Plus className="mr-2 h-4 w-4" />
-                            Create Project
+                            New Project
                         </Link>
                     </Button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {projectsWithScans.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            id={project.id}
-                            name={project.name}
-                            url={project.url}
-                            faviconUrl={project.favicon_url}
-                            latestScore={project.latestScore}
-                            issueCount={project.issueCount}
-                            severity={project.severity}
-                            lastAuditDate={project.lastAuditDate}
-                        />
-                    ))}
-                </div>
-            )}
+                }
+            />
 
-            {/* Onboarding modal for first-time users */}
-            {projectsWithScans.length === 0 && <WelcomeModal />}
+            {/* Content */}
+            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+                {projectsWithScans.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mx-auto mb-4">
+                            <FolderKanban className="h-5 w-5 text-sky-400" />
+                        </div>
+                        <h2 className="text-sm font-medium text-zinc-200 mb-1.5">No projects yet</h2>
+                        <p className="text-zinc-500 text-[13px] mb-6 max-w-sm mx-auto">
+                            Create your first project to start running security audits.
+                        </p>
+                        <Button asChild className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700 hover:text-white border border-white/[0.06] font-medium shadow-sm transition-all text-xs h-9">
+                            <Link href="/dashboard/projects/new">
+                                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                Create Project
+                            </Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {projectsWithScans.map((project) => (
+                            <ProjectCard
+                                key={project.id}
+                                id={project.id}
+                                name={project.name}
+                                url={project.url}
+                                faviconUrl={project.favicon_url}
+                                latestScore={project.latestScore}
+                                issueCount={project.issueCount}
+                                severity={project.severity}
+                                lastAuditDate={project.lastAuditDate}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Onboarding modal for first-time users */}
+                {projectsWithScans.length === 0 && <WelcomeModal />}
+            </div>
         </div>
     );
 }

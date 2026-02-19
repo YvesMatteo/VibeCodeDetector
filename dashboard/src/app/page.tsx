@@ -381,7 +381,7 @@ export default function HomePage() {
       {/* ======================== SLIDE 3: FEATURES ======================== */}
       <section
         id="slide-features"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-20 sm:pb-28"
       >
 
         <div className="max-w-7xl mx-auto relative z-10 w-full">

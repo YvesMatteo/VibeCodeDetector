@@ -118,7 +118,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
             <div className="mb-8 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 items-start">
                 {/* Issue Count */}
                 <div className="flex flex-col items-center sm:items-start justify-center sm:pr-8 sm:border-r sm:border-white/[0.06]">
-                    <span className={`text-5xl sm:text-6xl font-bold tracking-tight tabular-nums ${getIssueCountColor(adjusted.total)}`}>
+                    <span className={`text-4xl sm:text-5xl font-bold tracking-tight tabular-nums ${getIssueCountColor(adjusted.total)}`}>
                         {adjusted.total}
                     </span>
                     <span className="text-[13px] text-zinc-500 mt-1">
@@ -133,7 +133,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                 <div className="flex flex-col gap-4">
                     {/* Severity bar */}
                     {adjusted.total > 0 && (
-                        <div className="flex h-2 rounded-full overflow-hidden bg-white/[0.04]" role="img" aria-label={`Severity breakdown: ${severities.map(s => `${s.count} ${s.label}`).join(', ')}`}>
+                        <div className="flex h-1.5 rounded-full overflow-hidden bg-white/[0.04]" role="img" aria-label={`Severity breakdown: ${severities.map(s => `${s.count} ${s.label}`).join(', ')}`}>
                             {severities.map(s => s.count > 0 && (
                                 <div
                                     key={s.key}
@@ -146,9 +146,9 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                     )}
 
                     {/* Severity counts */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="list" aria-label="Issue severity counts">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5" role="list" aria-label="Issue severity counts">
                         {severities.map(s => (
-                            <div key={s.key} role="listitem" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                            <div key={s.key} role="listitem" className="flex items-center gap-2.5 px-3 py-2 rounded-md bg-white/[0.02] border border-white/[0.04]">
                                 <div className={`w-2 h-2 rounded-full ${s.color} shrink-0`} aria-hidden="true" />
                                 <div className="flex items-baseline gap-1.5 min-w-0">
                                     <span className="text-sm font-semibold text-white tabular-nums">{s.count}</span>

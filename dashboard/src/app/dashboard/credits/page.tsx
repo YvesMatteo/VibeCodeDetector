@@ -195,7 +195,7 @@ export default function CreditsPage() {
                 {/* Billing Toggle */}
                 <div
                     ref={toggleRef}
-                    className="relative inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.02] p-1"
+                    className="relative inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.01] p-1"
                 >
                     {/* Sliding pill */}
                     <div
@@ -233,7 +233,7 @@ export default function CreditsPage() {
 
             {/* Current plan banner */}
             {scansLimit > 0 && (
-                <div className="mb-8 p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="mb-8 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Crown className="h-5 w-5 text-zinc-400" />
                         <div>
@@ -259,7 +259,7 @@ export default function CreditsPage() {
             )}
 
             {/* Desktop comparison table */}
-            <div className="hidden md:block overflow-x-auto rounded-xl border border-white/[0.08]">
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-white/[0.06]">
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b border-white/[0.04]">
@@ -397,8 +397,8 @@ export default function CreditsPage() {
                         <Card
                             key={plan.id}
                             className={`relative transition-colors flex flex-col ${plan.highlighted
-                                ? 'bg-white/[0.04] border-white/[0.12]'
-                                : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.10]'
+                                ? 'bg-white/[0.02] border-white/[0.10]'
+                                : 'bg-white/[0.01] border-white/[0.06] hover:border-white/[0.10]'
                                 }`}
                         >
                             {plan.highlighted && (

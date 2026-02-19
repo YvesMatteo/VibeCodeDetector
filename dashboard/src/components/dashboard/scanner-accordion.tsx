@@ -284,7 +284,7 @@ function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: Dismissal
                         className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${reason === r.value
                             ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
                             : 'bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20'
-                        }`}
+                            }`}
                     >
                         {r.label}
                     </button>
@@ -336,7 +336,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
         return (
             <div
                 key={index}
-                className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all`}
+                className="p-3 sm:p-4 rounded-md border border-white/[0.06] bg-white/[0.02] transition-all"
             >
                 <div className="flex items-start gap-3">
                     <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
@@ -356,7 +356,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
     return (
         <div
             key={index}
-            className={`p-4 rounded-lg border ${styles.bg} ${styles.border} transition-all hover:bg-opacity-20 group/finding relative`}
+            className="p-3 sm:p-4 rounded-md border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group/finding relative"
         >
             <div className="flex items-start gap-3">
                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
@@ -474,8 +474,8 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
     const SeverityIcon = styles.icon;
 
     return (
-        <div className={`rounded-lg border ${styles.bg} ${styles.border}`}>
-            <div className="p-4">
+        <div className="rounded-md border border-white/[0.06] bg-white/[0.02]">
+            <div className="p-3 sm:p-4">
                 <div className="flex items-start gap-3">
                     <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
                     <div className="flex-1">
@@ -821,174 +821,176 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
     const sorted = sortedEntries(results);
 
     return (
-        <div>
-            <div className="flex items-center justify-end gap-2 mb-4">
+        <div className="flex flex-col rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.005]">
+            <div className="flex items-center justify-end gap-2 mb-2 p-3 pb-0">
                 <button
                     onClick={allExpanded ? collapseAll : expandAll}
-                    className="text-xs text-zinc-400 hover:text-white transition-colors px-3 py-1.5 rounded-md border border-white/10 hover:border-white/20 bg-white/5"
+                    className="text-[11px] font-medium text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10"
                 >
                     {allExpanded ? 'Collapse all' : 'Expand all'}
                 </button>
             </div>
 
-            {sorted.map(([key, result], scannerIndex) => {
-                // Hide non-applicable scanners
-                if (shouldHide(key, result)) return null;
+            <div className="divide-y divide-white/[0.06]">
+                {sorted.map(([key, result], scannerIndex) => {
+                    // Hide non-applicable scanners
+                    if (shouldHide(key, result)) return null;
 
-                const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
-                const errorMessage = result.error;
-                const isOpen = openSections.has(key);
+                    const Icon = scannerIcons[key as keyof typeof scannerIcons] || AlertTriangle;
+                    const errorMessage = result.error;
+                    const isOpen = openSections.has(key);
 
-                // Error state - always show
-                if (errorMessage) {
-                    return (
-                        <Card key={key} className="mb-4 bg-slate-900/50 border-red-500/30 animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                            <CardHeader>
+                    // Error state - always show
+                    if (errorMessage) {
+                        <div key={key} className="bg-white/[0.01] animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                            <div className="px-3 sm:px-4 py-3 sm:py-4">
                                 <div className="flex items-center gap-3">
-                                    <Icon className="h-5 w-5 text-red-400 shrink-0" />
+                                    <Icon className="h-4 w-4 text-red-400 shrink-0" />
                                     <div>
-                                        <CardTitle className="text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</CardTitle>
-                                        <p className="text-sm text-red-400/70">Scan Failed</p>
+                                        <h3 className="text-sm font-semibold text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</h3>
+                                        <p className="text-[11px] text-red-400/70">Scan Failed</p>
                                     </div>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm font-mono text-red-400 bg-red-500/10 p-4 rounded-lg border border-red-500/20">
-                                    {errorMessage}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    );
-                }
-
-                // Skipped state — scanner didn't run because config is missing
-                if (result.skipped) {
-                    const configHints: Record<string, string> = {
-                        githubRepo: 'Add a GitHub repository link in your project settings to enable this scanner.',
-                        supabasePAT: 'Add a Supabase Personal Access Token in your project settings to enable this scanner.',
-                    };
-                    const hint = configHints[result.missingConfig] || result.reason;
-                    return (
-                        <Card key={key} className="mb-4 bg-slate-900/30 border-zinc-800/50 animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                            <div className="px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <Icon className="h-5 w-5 text-zinc-600 shrink-0" />
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <h3 className="font-semibold text-zinc-500">
-                                                {scannerNames[key as keyof typeof scannerNames] || key}
-                                            </h3>
-                                            <span className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-full px-2 py-0.5">
-                                                <CircleSlash className="h-3 w-3" />
-                                                Skipped
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-zinc-600 mt-1">{hint}</p>
-                                    </div>
-                                </div>
-                                <span className="text-lg font-semibold tabular-nums text-zinc-700">—</span>
-                            </div>
-                        </Card>
-                    );
-                }
-
-                // "Not detected" scanners — render like skipped
-                if (isNotDetectedResult(key, result)) {
-                    const hint = getNotDetectedHint(key, result);
-                    return (
-                        <Card key={key} className="mb-4 bg-slate-900/30 border-zinc-800/50 animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                            <div className="px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <Icon className="h-5 w-5 text-zinc-600 shrink-0" />
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <h3 className="font-semibold text-zinc-500">
-                                                {scannerNames[key as keyof typeof scannerNames] || key}
-                                            </h3>
-                                            <span className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-full px-2 py-0.5">
-                                                <CircleSlash className="h-3 w-3" />
-                                                Not Detected
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-zinc-600 mt-1">{hint}</p>
-                                    </div>
-                                </div>
-                                <span className="text-lg font-semibold tabular-nums text-zinc-700">—</span>
-                            </div>
-                        </Card>
-                    );
-                }
-
-                // Skip scanners with no findings
-                if ((!result.findings || result.findings.length === 0) && !result.technologies?.length) return null;
-
-                return (
-                    <Card key={key} className={"mb-4 bg-slate-900/50 animate-fade-in-up overflow-hidden border-slate-700/20"} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                        {/* Clickable header */}
-                        <button
-                            onClick={() => toggle(key)}
-                            className="w-full text-left px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3 min-w-0">
-                                <Icon className="h-5 w-5 text-zinc-400 shrink-0" />
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-3 flex-wrap">
-                                        <h3 className="font-semibold text-white">
-                                            {scannerNames[key as keyof typeof scannerNames] || key}
-                                        </h3>
-                                        <span className="text-xs text-zinc-500">
-                                            {(() => { const c = countActiveIssues(key, result.findings || [], dismissedFingerprints); return `${c} ${c === 1 ? 'issue' : 'issues'}`; })()}
-                                        </span>
-                                    </div>
-                                    <div className="mt-1.5">
-                                        <SeveritySummary findings={(result.findings || []).filter((f: any) => !dismissedFingerprints?.has(buildFingerprint(key, f)))} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 shrink-0">
-                                {(() => {
-                                    const issues = countActiveIssues(key, result.findings || [], dismissedFingerprints);
-                                    return (
-                                        <span className={`text-lg font-semibold tabular-nums ${getIssueCountColor(issues)}`}>
-                                            {issues}
-                                        </span>
-                                    );
-                                })()}
-                                <ChevronDown
-                                    className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                                />
-                            </div>
-                        </button>
-
-                        {/* Collapsible content */}
-                        <div
-                            className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-                        >
-                            <div className="overflow-hidden">
-                                <div className="px-3 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-white/5">
-                                    {/* Tech Stack Badges */}
-                                    {key === 'tech_stack' && result.technologies?.length > 0 && (
-                                        <div className="mb-4 pb-4 border-b border-white/5">
-                                            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Detected Technologies</h4>
-                                            <div className="flex flex-wrap gap-2">
-                                                {result.technologies.map((tech: any, i: number) => (
-                                                    <Badge key={i} variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30">
-                                                        {tech.name}{tech.version ? ` ${tech.version}` : ''}
-                                                        {tech.category && <span className="ml-1 text-zinc-500 text-xs">({tech.category})</span>}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <FindingsList scannerKey={key} result={result} dismissedFingerprints={dismissedFingerprints} onDismiss={onDismiss} userPlan={userPlan} />
+                                <div className="mt-3">
+                                    <p className="text-[12px] font-mono text-red-400 bg-red-500/10 p-3 rounded border border-red-500/20">
+                                        {errorMessage}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                    </Card>
-                );
-            })}
+                    }
+
+                    // Skipped state — scanner didn't run because config is missing
+                    if (result.skipped) {
+                        const configHints: Record<string, string> = {
+                            githubRepo: 'Add a GitHub repository link in your project settings to enable this scanner.',
+                            supabasePAT: 'Add a Supabase Personal Access Token in your project settings to enable this scanner.',
+                        };
+                        const hint = configHints[result.missingConfig] || result.reason;
+                        return (
+                            <div key={key} className="bg-white/[0.01] animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                                <div className="px-3 sm:px-4 py-3 pb-3 flex items-center justify-between gap-3 sm:gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Icon className="h-4 w-4 text-zinc-600 shrink-0" />
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                <h3 className="text-sm font-semibold text-zinc-500">
+                                                    {scannerNames[key as keyof typeof scannerNames] || key}
+                                                </h3>
+                                                <span className="flex items-center gap-1 text-[10px] font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded px-1.5 py-0.5">
+                                                    <CircleSlash className="h-2.5 w-2.5" />
+                                                    Skipped
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] text-zinc-600 mt-0.5">{hint}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">—</span>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // "Not detected" scanners — render like skipped
+                    if (isNotDetectedResult(key, result)) {
+                        const hint = getNotDetectedHint(key, result);
+                        return (
+                            <div key={key} className="bg-white/[0.01] animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                                <div className="px-3 sm:px-4 py-3 pb-3 flex items-center justify-between gap-3 sm:gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Icon className="h-4 w-4 text-zinc-600 shrink-0" />
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                <h3 className="text-sm font-semibold text-zinc-500">
+                                                    {scannerNames[key as keyof typeof scannerNames] || key}
+                                                </h3>
+                                                <span className="flex items-center gap-1 text-[10px] font-medium text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded px-1.5 py-0.5">
+                                                    <CircleSlash className="h-2.5 w-2.5" />
+                                                    Not Detected
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] text-zinc-600 mt-0.5">{hint}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">—</span>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // Skip scanners with no findings
+                    if ((!result.findings || result.findings.length === 0) && !result.technologies?.length) return null;
+
+                    return (
+                        <div key={key} className={`bg-white/[0.01] animate-fade-in-up overflow-hidden transition-colors ${isOpen ? 'bg-white/[0.03]' : ''}`} style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                            {/* Clickable header */}
+                            <button
+                                onClick={() => toggle(key)}
+                                className="w-full text-left px-3 sm:px-4 py-3 flex items-center justify-between gap-3 sm:gap-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Icon className="h-4 w-4 text-zinc-400 shrink-0" />
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <h3 className="text-sm font-medium text-white">
+                                                {scannerNames[key as keyof typeof scannerNames] || key}
+                                            </h3>
+                                            <span className="text-[11px] text-zinc-500">
+                                                {(() => { const c = countActiveIssues(key, result.findings || [], dismissedFingerprints); return `${c} ${c === 1 ? 'issue' : 'issues'}`; })()}
+                                            </span>
+                                        </div>
+                                        <div className="mt-1">
+                                            <SeveritySummary findings={(result.findings || []).filter((f: any) => !dismissedFingerprints?.has(buildFingerprint(key, f)))} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {(() => {
+                                        const issues = countActiveIssues(key, result.findings || [], dismissedFingerprints);
+                                        return (
+                                            <span className={`text-sm font-semibold tabular-nums ${getIssueCountColor(issues)}`}>
+                                                {issues}
+                                            </span>
+                                        );
+                                    })()}
+                                    <ChevronDown
+                                        className={`h-4 w-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </div>
+                            </button>
+
+                            {/* Collapsible content */}
+                            <div
+                                className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                            >
+                                <div className="overflow-hidden">
+                                    <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0 border-t border-white/5">
+                                        {/* Tech Stack Badges */}
+                                        {key === 'tech_stack' && result.technologies?.length > 0 && (
+                                            <div className="mb-4 pb-4 border-b border-white/5 pt-3">
+                                                <h4 className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Detected Technologies</h4>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {result.technologies.map((tech: any, i: number) => (
+                                                        <Badge key={i} variant="outline" className="text-[11px] bg-indigo-500/10 text-indigo-400 border-indigo-500/30 rounded py-0 h-6">
+                                                            {tech.name}{tech.version ? ` ${tech.version}` : ''}
+                                                            {tech.category && <span className="ml-1 text-indigo-400/50">({tech.category})</span>}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="pt-3">
+                                            <FindingsList scannerKey={key} result={result} dismissedFingerprints={dismissedFingerprints} onDismiss={onDismiss} userPlan={userPlan} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }

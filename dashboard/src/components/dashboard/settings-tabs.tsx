@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,17 +26,17 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
     const [activeTab, setActiveTab] = useState<string>('profile');
 
     return (
-        <>
-            <div className="flex gap-1 mb-6 border-b border-white/[0.06] pb-0">
+        <div className="flex flex-col md:flex-row gap-8">
+            {/* Sidebar Tabs */}
+            <div className="w-full md:w-48 shrink-0 flex flex-row md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 border-b md:border-b-0 border-white/[0.06]">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                            activeTab === tab.id
-                                ? 'text-white border-white'
-                                : 'text-zinc-500 border-transparent hover:text-zinc-300'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
+                                ? 'bg-white/[0.05] text-white'
+                                : 'text-zinc-500 hover:bg-white/[0.02] hover:text-zinc-300'
+                            }`}
                     >
                         <tab.icon className="h-4 w-4" />
                         {tab.label}
@@ -45,100 +44,88 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                 ))}
             </div>
 
-            {activeTab === 'profile' && (
-                <Card className="bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <User className="h-5 w-5 text-zinc-400" />
-                            <div>
-                                <CardTitle className="text-white">Profile</CardTitle>
-                                <CardDescription className="text-zinc-500">Your account information</CardDescription>
+            {/* Tab Content */}
+            <div className="flex-1 min-w-0">
+                {activeTab === 'profile' && (
+                    <div className="space-y-8 animate-fade-in-up">
+                        <div>
+                            <h2 className="text-lg font-medium text-white mb-1">Profile</h2>
+                            <p className="text-sm text-zinc-500">Your account information</p>
+                        </div>
+                        <div className="space-y-6 max-w-lg">
+                            <div className="space-y-2">
+                                <Label htmlFor="email" className="text-zinc-400">Email Address</Label>
+                                <Input id="email" type="email" defaultValue={email} disabled className="bg-transparent border-white/[0.06] focus-visible:ring-0 focus-visible:border-white/[0.2] text-zinc-300 h-10" />
+                                <p className="text-[11px] text-zinc-600 mt-1">Email cannot be changed at this time.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400">Account ID</Label>
+                                <Input defaultValue={userId} disabled className="bg-transparent border-white/[0.06] font-mono text-xs text-zinc-500 h-10 truncate" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400">Member Since</Label>
+                                <Input defaultValue={createdAt} disabled className="bg-transparent border-white/[0.06] text-zinc-500 h-10" />
                             </div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" defaultValue={email} disabled className="bg-white/[0.02] border-white/[0.06]" />
-                            <p className="text-xs text-zinc-600">Email cannot be changed</p>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Account ID</Label>
-                            <Input defaultValue={userId} disabled className="bg-white/[0.02] border-white/[0.06] font-mono text-xs" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Member since</Label>
-                            <Input defaultValue={createdAt} disabled className="bg-white/[0.02] border-white/[0.06]" />
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                    </div>
+                )}
 
-            {activeTab === 'security' && (
-                <Card className="bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <Shield className="h-5 w-5 text-zinc-400" />
-                            <div>
-                                <CardTitle className="text-white">Security</CardTitle>
-                                <CardDescription className="text-zinc-500">Manage your account security</CardDescription>
-                            </div>
+                {activeTab === 'security' && (
+                    <div className="space-y-8 animate-fade-in-up">
+                        <div>
+                            <h2 className="text-lg font-medium text-white mb-1">Security</h2>
+                            <p className="text-sm text-zinc-500">Manage your account security</p>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                        <div className="space-y-6 max-w-xl">
+                            <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01]">
                                 <div>
-                                    <p className="font-medium text-white">Password</p>
-                                    <p className="text-sm text-zinc-500">Change your account password</p>
+                                    <p className="font-medium text-sm text-white">Password</p>
+                                    <p className="text-[13px] text-zinc-500 mt-0.5">Change your account password to keep it secure.</p>
                                 </div>
-                                <Button variant="outline" size="sm" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04]">
-                                    <Link href="/update-password">Change</Link>
+                                <Button variant="outline" size="sm" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-xs h-8">
+                                    <Link href="/update-password">Update</Link>
                                 </Button>
                             </div>
+
                             <Separator className="bg-white/[0.06]" />
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="font-medium text-red-400">Delete account</p>
-                                    <p className="text-sm text-zinc-500">Please contact support to delete your account</p>
-                                </div>
-                                <Button variant="destructive" size="sm" asChild>
-                                    <a href="mailto:support@checkvibe.dev?subject=Account Deletion Request">Contact Support</a>
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
 
-            {activeTab === 'billing' && (
-                <Card className="bg-white/[0.02] border-white/[0.06]">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <CreditCard className="h-5 w-5 text-zinc-400" />
-                            <div>
-                                <CardTitle className="text-white">Billing</CardTitle>
-                                <CardDescription className="text-zinc-500">Manage your subscription</CardDescription>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-white">Current plan: <span className="capitalize">{plan === 'none' ? 'Free' : plan}</span></p>
-                                <p className="text-sm text-zinc-500">{plan === 'none' ? 'Upgrade for full scan details and more scans' : 'Manage your plan and payment method'}</p>
-                            </div>
-                            {plan !== 'none' ? (
-                                <ManageSubscriptionButton />
-                            ) : (
-                                <Button variant="outline" size="sm" asChild className="bg-transparent border-white/[0.08] hover:bg-white/[0.04]">
-                                    <Link href="/dashboard/credits">View Plans</Link>
+                            <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-red-500/10 bg-red-500/[0.02]">
+                                <div>
+                                    <p className="font-medium text-sm text-red-400">Delete Account</p>
+                                    <p className="text-[13px] text-zinc-500 mt-0.5">Permanently remove your account and all associated data.</p>
+                                </div>
+                                <Button variant="destructive" size="sm" asChild className="text-xs h-8">
+                                    <a href="mailto:support@checkvibe.dev?subject=Account Deletion Request">Request Deletion</a>
                                 </Button>
-                            )}
+                            </div>
                         </div>
-                    </CardContent>
-                </Card>
-            )}
-        </>
+                    </div>
+                )}
+
+                {activeTab === 'billing' && (
+                    <div className="space-y-8 animate-fade-in-up">
+                        <div>
+                            <h2 className="text-lg font-medium text-white mb-1">Billing</h2>
+                            <p className="text-sm text-zinc-500">Manage your subscription and credits</p>
+                        </div>
+                        <div className="max-w-xl">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl border border-white/[0.06] bg-white/[0.01]">
+                                <div>
+                                    <p className="text-sm text-zinc-400 mb-1">Current Plan</p>
+                                    <p className="font-medium text-lg text-white capitalize">{plan === 'none' ? 'Free Plan' : plan}</p>
+                                </div>
+                                {plan !== 'none' ? (
+                                    <ManageSubscriptionButton />
+                                ) : (
+                                    <Button asChild className="bg-sky-500 text-white hover:bg-sky-400 border-0 font-medium shadow-sm transition-all h-9">
+                                        <Link href="/dashboard/credits">Upgrade Plan</Link>
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }
