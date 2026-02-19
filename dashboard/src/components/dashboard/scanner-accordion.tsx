@@ -693,8 +693,16 @@ function getNotDetectedHint(key: string, result: any): string {
     return names[key] || 'Not applicable for this site.';
 }
 
+// Hide backend scanners that were skipped because a different backend is configured.
+// e.g. when Supabase is selected, Firebase/Convex show "Backend type is not Firebase" —
+// these are irrelevant, not actionable, so hide them entirely.
+function isIrrelevantBackend(key: string, result: any): boolean {
+    if (!result.skipped) return false;
+    return typeof result.reason === 'string' && result.reason.startsWith('Backend type is not');
+}
+
 function shouldHide(key: string, result: any): boolean {
-    return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result);
+    return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result) || isIrrelevantBackend(key, result);
 }
 
 /** Check if a scanner should be shown in the skipped section at the bottom */
