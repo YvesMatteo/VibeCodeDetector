@@ -250,6 +250,7 @@ export async function POST(req: NextRequest) {
         let scannersCompleted = 0;
         let lastReportedCompleted = 0;
         const PROGRESS_BATCH_SIZE = 5;
+        let scanId: string | null = null; // Declare early to avoid TDZ in trackedScanner
 
         // Use service client for progress updates (bypasses RLS)
         const progressClient = getServiceClient();
@@ -664,7 +665,6 @@ export async function POST(req: NextRequest) {
             .select()
             .single();
 
-        let scanId: string | null = null;
         if (!insertError && scan) {
             scanId = scan.id;
         } else {
