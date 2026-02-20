@@ -138,7 +138,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             {/* Status cards row - Supabase style */}
             {latestScan ? (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {/* Security Score */}
                         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                             <div className="flex items-center justify-between mb-3">
@@ -302,7 +302,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                                             {f.severity}
                                         </span>
                                         <div className="min-w-0">
-                                            <p className="text-sm text-zinc-200 truncate">{f.finding}</p>
+                                            <p className="text-sm text-zinc-200 break-words">{f.finding}</p>
                                             <p className="text-xs text-zinc-600">{f.scanner}</p>
                                         </div>
                                     </div>

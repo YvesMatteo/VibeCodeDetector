@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
+import { isPrivateHostname } from '@/lib/url-validation';
 
 // GET /api/integrations/webhooks?projectId=xxx
 export async function GET(req: NextRequest) {
@@ -35,11 +36,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'projectId and url required' }, { status: 400 });
     }
 
-    // Validate URL
+    // Validate URL with SSRF protection
     try {
         const parsed = new URL(url);
         if (!['http:', 'https:'].includes(parsed.protocol)) {
             return NextResponse.json({ error: 'URL must be http or https' }, { status: 400 });
+        }
+        if (isPrivateHostname(parsed.hostname)) {
+            return NextResponse.json({ error: 'Internal/private URLs are not allowed' }, { status: 400 });
         }
     } catch {
         return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
@@ -59,6 +63,10 @@ export async function POST(req: NextRequest) {
 
     const validEvents = ['scan.completed', 'scan.started', 'score.changed'];
     const safeEvents = (events || ['scan.completed']).filter((e: string) => validEvents.includes(e));
+
+    if (safeEvents.length === 0) {
+        return NextResponse.json({ error: 'At least one valid event is required' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
         .from('project_webhooks' as any)

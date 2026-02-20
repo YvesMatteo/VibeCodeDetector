@@ -24,39 +24,7 @@ import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { SilkBackground } from '@/components/ui/silk-background';
 import { SupportedTools } from '@/components/ui/supported-tools';
-
-
-const features = [
-  {
-    label: '01',
-    title: 'Injection & Code Vulnerabilities',
-    description: 'We send real payloads to your live site — SQL injection probes, XSS canaries, and open redirect bypass attempts — then check your forms and cookies for CSRF gaps.',
-    accent: 'from-rose-500 to-orange-500',
-    accentBorder: 'group-hover:border-rose-500/30',
-  },
-  {
-    label: '02',
-    title: 'Secrets & Key Exposure',
-    description: 'We scan your JS bundles and source maps for leaked keys, then deep-scan your GitHub commits, branches, and CI files for hardcoded credentials.',
-    accent: 'from-amber-500 to-yellow-500',
-    accentBorder: 'group-hover:border-amber-500/30',
-  },
-  {
-    label: '03',
-    title: 'Hosting & Infrastructure',
-    description: 'We auto-detect Vercel, Netlify, and Cloudflare, probe your CORS policy with real origin bypasses, and audit your SSL, headers, cookies, and WAF/CDN setup.',
-    accent: 'from-emerald-500 to-teal-500',
-    accentBorder: 'group-hover:border-emerald-500/30',
-  },
-  {
-    label: '04',
-    title: 'Backend & BaaS Security',
-    description: 'Using Supabase, Firebase, or Convex? We probe your endpoints for unauthorized access, audit RLS policies, and check your dependencies against known CVEs.',
-    accent: 'from-violet-500 to-purple-500',
-    accentBorder: 'group-hover:border-violet-500/30',
-  },
-];
-
+import { FeatureBento } from '@/components/ui/feature-bento';
 const pricingTiers = [
   {
     name: 'Free',
@@ -400,26 +368,8 @@ export default function HomePage() {
 
 
           <SupportedTools />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-            {features.map((feature) => (
-              <div key={feature.title}>
-                <div className={`group relative h-full rounded-xl border border-white/10 ${feature.accentBorder} bg-[#141418] hover:bg-[#18181E] hover:border-white/20 hover:shadow-[0_0_30px_-10px_rgba(255,255,255,0.1)] transition-all duration-300 overflow-hidden shadow-lg shadow-black/20`}>
-                  <div className={`h-[2px] bg-gradient-to-r ${feature.accent} opacity-40 group-hover:opacity-100 transition-opacity duration-300`} />
-                  <div className="relative p-5 sm:p-7 flex flex-col h-full">
-                    <div className="flex items-start gap-4 mb-3">
-                      <span className={`text-[11px] font-mono font-bold tracking-widest bg-gradient-to-r ${feature.accent} bg-clip-text text-transparent shrink-0 pt-1`}>
-                        {feature.label}
-                      </span>
-                      <h3 className="text-[15px] sm:text-lg font-semibold text-white tracking-tight leading-tight">{feature.title}</h3>
-                    </div>
-                    <p className="text-sm sm:text-base text-zinc-400 leading-relaxed pl-10">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+
+          <FeatureBento />
 
         </div>
       </section>

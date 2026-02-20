@@ -265,7 +265,7 @@ jobs:
                 ) : (
                     <div className="space-y-3">
                         {webhooks.map((wh) => (
-                            <div key={wh.id} className="flex items-center justify-between p-3 rounded-lg border border-white/[0.06] bg-white/[0.01]">
+                            <div key={wh.id} className="flex items-start sm:items-center justify-between p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] gap-2">
                                 <div className="min-w-0">
                                     <p className="text-sm text-zinc-300 truncate">{wh.url}</p>
                                     <div className="flex items-center gap-2 mt-1">
@@ -281,9 +281,9 @@ jobs:
                                 </div>
                                 <button
                                     onClick={() => deleteWebhook(wh.id)}
-                                    className="text-zinc-600 hover:text-red-400 transition-colors shrink-0 p-1"
+                                    className="text-zinc-600 hover:text-red-400 transition-colors shrink-0 p-2.5 -mr-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                                 >
-                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
                         ))}

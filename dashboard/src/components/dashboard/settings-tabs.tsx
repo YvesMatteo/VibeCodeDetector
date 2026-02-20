@@ -33,7 +33,7 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
+                        className={`flex items-center gap-3 px-3 py-2.5 min-h-[44px] text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
                                 ? 'bg-white/[0.05] text-white'
                                 : 'text-zinc-500 hover:bg-white/[0.02] hover:text-zinc-300'
                             }`}

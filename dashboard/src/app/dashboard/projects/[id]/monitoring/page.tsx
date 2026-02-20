@@ -195,7 +195,7 @@ export default function MonitoringPage() {
                                     <button
                                         key={f.value}
                                         onClick={() => setFrequency(f.value)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
                                             frequency === f.value
                                                 ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
                                                 : 'bg-white/[0.03] text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'
@@ -213,7 +213,7 @@ export default function MonitoringPage() {
                                 <select
                                     value={dayOfWeek}
                                     onChange={(e) => setDayOfWeek(Number(e.target.value))}
-                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-zinc-300 w-full max-w-xs"
+                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-xs min-h-[44px]"
                                 >
                                     {DAYS.map((d, i) => (
                                         <option key={i} value={i}>{d}</option>
@@ -227,7 +227,7 @@ export default function MonitoringPage() {
                             <select
                                 value={hourUtc}
                                 onChange={(e) => setHourUtc(Number(e.target.value))}
-                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-zinc-300 w-full max-w-xs"
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-xs min-h-[44px]"
                             >
                                 {Array.from({ length: 24 }, (_, i) => (
                                     <option key={i} value={i}>{String(i).padStart(2, '0')}:00 UTC</option>
@@ -296,7 +296,7 @@ export default function MonitoringPage() {
                                 </div>
 
                                 {alert.enabled && (
-                                    <div className="ml-10 space-y-3">
+                                    <div className="ml-0 sm:ml-10 mt-3 space-y-3">
                                         {defaultThreshold !== null && (
                                             <div>
                                                 <label className="text-xs text-zinc-400 mb-1 block">Threshold</label>
@@ -307,7 +307,7 @@ export default function MonitoringPage() {
                                                         ...alerts,
                                                         [type]: { ...alert, threshold: Number(e.target.value) },
                                                     })}
-                                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-zinc-300 w-24"
+                                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-24 min-h-[44px]"
                                                     min={1}
                                                     max={100}
                                                 />
@@ -326,7 +326,7 @@ export default function MonitoringPage() {
                                                     [type]: { ...alert, email: e.target.value },
                                                 })}
                                                 placeholder="your@email.com"
-                                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-zinc-300 w-full max-w-xs placeholder:text-zinc-600"
+                                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-sm placeholder:text-zinc-600 min-h-[44px]"
                                             />
                                         </div>
                                         <Button

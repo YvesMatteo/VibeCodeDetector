@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { decrypt } from '@/lib/encryption';
+import { computeNextRun, resolveAppUrl } from '@/lib/schedule-utils';
 
 /**
  * Cron endpoint for executing scheduled scans.
- * Called by Vercel Cron Jobs every hour.
+ * Called by Vercel Cron Jobs daily (configurable in vercel.json).
  *
  * Flow:
- * 1. Authenticate via CRON_SECRET header
+ * 1. Authenticate via CRON_SECRET Bearer token
  * 2. Query scheduled_scans where next_run_at <= now() AND enabled = true
  * 3. For each due schedule, fetch the project config and trigger the scan
  * 4. Update last_run_at and compute next_run_at
@@ -20,41 +21,19 @@ function getServiceClient() {
     );
 }
 
-function computeNextRun(frequency: string, hourUtc: number, dayOfWeek: number | null): string {
-    const now = new Date();
-    const next = new Date(now);
-    next.setUTCMinutes(0, 0, 0);
-    next.setUTCHours(hourUtc);
-
-    if (frequency === 'daily') {
-        // Always advance to next day since we're executing now
-        next.setUTCDate(next.getUTCDate() + 1);
-    } else if (frequency === 'weekly') {
-        const dow = dayOfWeek ?? 1;
-        next.setUTCDate(next.getUTCDate() + 7);
-        // Adjust to the correct day of week
-        const currentDow = next.getUTCDay();
-        let daysUntil = dow - currentDow;
-        if (daysUntil < 0) daysUntil += 7;
-        if (daysUntil > 0) {
-            next.setUTCDate(next.getUTCDate() + daysUntil);
-        }
-    } else if (frequency === 'monthly') {
-        next.setUTCMonth(next.getUTCMonth() + 1);
-        next.setUTCDate(1);
-    }
-
-    return next.toISOString();
-}
-
 export const maxDuration = 300; // 5 min max for Vercel Pro
 
 export async function GET(req: NextRequest) {
-    // Verify cron secret
+    // Verify cron secret — must be a non-empty string
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || cronSecret.length < 16) {
+        console.error('CRON_SECRET is not configured or too short');
+        return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -120,9 +99,7 @@ export async function GET(req: NextRequest) {
             }
 
             // Trigger scan via internal fetch to our own /api/scan endpoint
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : 'http://localhost:3000';
+            const appUrl = resolveAppUrl();
 
             const scanRes = await fetch(`${appUrl}/api/scan`, {
                 method: 'POST',

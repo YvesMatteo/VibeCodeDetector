@@ -64,29 +64,33 @@ export default async function ProjectLayout({
                                 <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                                 Projects
                             </Link>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={project.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
                                     alt=""
                                     className="h-8 w-8 rounded-md object-contain shrink-0 p-1 bg-zinc-900/50 border border-white/10"
                                 />
-                                <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">
-                                    {project.name}
-                                </h1>
-                                <Badge className={`${planColors[userPlan] || planColors.none} text-[10px] font-medium border capitalize shrink-0`}>
-                                    {userPlan === 'none' ? 'Free' : userPlan}
-                                </Badge>
-                                <a
-                                    href={project.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-zinc-500 hover:text-white transition-colors shrink-0"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                </a>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">
+                                            {project.name}
+                                        </h1>
+                                        <Badge className={`${planColors[userPlan] || planColors.none} text-[10px] font-medium border capitalize shrink-0`}>
+                                            {userPlan === 'none' ? 'Free' : userPlan}
+                                        </Badge>
+                                        <a
+                                            href={project.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-zinc-500 hover:text-white transition-colors shrink-0 p-1"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                    </div>
+                                    <p className="text-sm text-zinc-500 mt-0.5 truncate">{hostname}</p>
+                                </div>
                             </div>
-                            <p className="text-sm text-zinc-500 mt-1 ml-11">{hostname}</p>
                         </div>
                         <div className="shrink-0">
                             <RunAuditButton projectId={id} size="sm" />

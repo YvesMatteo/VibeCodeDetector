@@ -343,7 +343,7 @@ function Section({ id, title, content }: { id: string; title: string; content: R
         <div className="border-b border-white/[0.04] last:border-0">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between py-4 text-left group"
+                className="w-full flex items-center justify-between py-4 min-h-[48px] text-left group"
             >
                 <span className="text-sm font-medium text-white group-hover:text-zinc-200 transition-colors">{title}</span>
                 {open
@@ -362,7 +362,7 @@ function Section({ id, title, content }: { id: string; title: string; content: R
 
 export default function DocsPage() {
     return (
-        <div className="p-4 md:p-8 max-w-3xl">
+        <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">
             <div className="mb-10">
                 <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                     API Documentation

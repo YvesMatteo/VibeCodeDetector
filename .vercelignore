@@ -1,0 +1,9 @@
+*.dmg
+*.zip
+*.mov
+*.mp4
+*.mp3
+*.avi
+*.app
+Framer.app
+supabase/

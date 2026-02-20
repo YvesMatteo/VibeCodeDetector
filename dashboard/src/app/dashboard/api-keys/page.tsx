@@ -444,7 +444,7 @@ export default function ApiKeysPage() {
 
                             <div className="space-y-2">
                                 <Label>Scopes</Label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {SCOPE_OPTIONS.map(scope => (
                                         <button
                                             key={scope.value}
@@ -654,7 +654,7 @@ function KeyRow({
                         variant="ghost"
                         size="sm"
                         onClick={onRevoke}
-                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
+                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-10 w-10 p-0"
                         title="Revoke key"
                     >
                         <Trash2 className="h-4 w-4" />
@@ -665,7 +665,7 @@ function KeyRow({
                         variant="ghost"
                         size="sm"
                         onClick={onDelete}
-                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
+                        className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-10 w-10 p-0"
                         title="Delete permanently"
                     >
                         <Trash2 className="h-4 w-4" />
@@ -677,7 +677,7 @@ function KeyRow({
                 <div className="px-4 pb-4 pt-1 border-t border-white/[0.04] space-y-3">
                     <div>
                         <h4 className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider mb-2">Permissions</h4>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {apiKey.scopes.map(scope => {
                                 const info = scopeInfo[scope];
                                 return (

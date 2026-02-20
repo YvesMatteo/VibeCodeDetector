@@ -41,7 +41,7 @@ export function ProjectTabNav({ projectId }: { projectId: string }) {
                                 key={tab.name}
                                 href={tabPath}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap",
+                                    "flex items-center gap-1.5 px-3.5 py-3 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap min-h-[44px]",
                                     isActive
                                         ? "border-sky-400 text-white"
                                         : "border-transparent text-zinc-500 hover:text-zinc-300 hover:border-white/[0.1]"

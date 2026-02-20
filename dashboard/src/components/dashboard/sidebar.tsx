@@ -67,7 +67,7 @@ export function Sidebar({
 
         const content = (
             <div className={cn(
-                "relative flex items-center px-2.5 py-1.5 min-h-[32px] rounded-md transition-colors duration-100 group/item overflow-hidden",
+                "relative flex items-center px-2.5 py-2 min-h-[44px] rounded-md transition-colors duration-100 group/item overflow-hidden",
                 isActive
                     ? "text-zinc-200 bg-white/[0.06] border border-white/[0.08]"
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"

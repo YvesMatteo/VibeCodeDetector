@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-function computeNextRun(frequency: string, hourUtc: number, dayOfWeek?: number): string {
-    const now = new Date();
-    const next = new Date(now);
-    next.setUTCMinutes(0, 0, 0);
-    next.setUTCHours(hourUtc);
-
-    if (frequency === 'daily') {
-        if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
-    } else if (frequency === 'weekly') {
-        const dow = dayOfWeek ?? 1; // default Monday
-        const currentDow = next.getUTCDay();
-        let daysUntil = dow - currentDow;
-        if (daysUntil < 0 || (daysUntil === 0 && next <= now)) daysUntil += 7;
-        next.setUTCDate(next.getUTCDate() + daysUntil);
-    } else if (frequency === 'monthly') {
-        next.setUTCDate(1);
-        if (next <= now) next.setUTCMonth(next.getUTCMonth() + 1);
-    }
-
-    return next.toISOString();
-}
+import { computeNextRun } from '@/lib/schedule-utils';
 
 // GET /api/monitoring?projectId=xxx — get schedule + alerts for a project
 export async function GET(req: NextRequest) {
@@ -97,6 +76,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid alert type' }, { status: 400 });
         }
 
+        // Validate threshold range for types that use it
+        if (threshold != null && (typeof threshold !== 'number' || threshold < 1 || threshold > 100)) {
+            return NextResponse.json({ error: 'Threshold must be between 1 and 100' }, { status: 400 });
+        }
+
         const { data, error } = await supabase
             .from('alert_rules' as any)
             .upsert({
@@ -127,6 +111,10 @@ export async function DELETE(req: NextRequest) {
     const type = req.nextUrl.searchParams.get('type');
 
     if (!id || !type) return NextResponse.json({ error: 'id and type required' }, { status: 400 });
+
+    if (type !== 'schedule' && type !== 'alert') {
+        return NextResponse.json({ error: 'type must be "schedule" or "alert"' }, { status: 400 });
+    }
 
     const table = type === 'schedule' ? 'scheduled_scans' : 'alert_rules';
 

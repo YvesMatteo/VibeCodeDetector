@@ -20,6 +20,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
         .select('*')
         .eq('id', params.scanId)
         .eq('user_id', user.id)
+        .eq('project_id', params.id)
         .single();
 
     if (error || !scan) return notFound();

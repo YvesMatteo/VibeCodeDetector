@@ -72,7 +72,7 @@ export default function DashboardLayout({
                         <Image src="/logo-icon.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
                     </Link>
                 </div>
-                <Button asChild size="sm" className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium h-8 px-3 text-xs rounded-lg">
+                <Button asChild size="sm" className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium h-9 px-3.5 text-xs rounded-lg">
                     <Link href="/dashboard/projects/new">
                         <Plus className="mr-1 h-3.5 w-3.5" />
                         New
