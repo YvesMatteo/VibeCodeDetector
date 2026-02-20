@@ -24,7 +24,7 @@ import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { SilkBackground } from '@/components/ui/silk-background';
 import { SupportedTools } from '@/components/ui/supported-tools';
-import { FeatureBento } from '@/components/ui/feature-bento';
+import { FeatureRoadmap } from '@/components/ui/feature-roadmap';
 const pricingTiers = [
   {
     name: 'Free',
@@ -368,9 +368,7 @@ export default function HomePage() {
 
 
           <SupportedTools />
-
-          <FeatureBento />
-
+          <FeatureRoadmap />
         </div>
       </section>
 
