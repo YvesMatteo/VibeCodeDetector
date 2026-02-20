@@ -116,7 +116,7 @@ async function probeWithUA(url: string, userAgent: string, method = "GET"): Prom
         }, 5000);
 
         const rl = hasRateLimitHeaders(res.headers);
-        await res.text().catch(() => {});
+        await res.text().catch(() => { });
 
         return {
             hasRateLimit: rl.found || res.status === 429,
@@ -216,20 +216,6 @@ Deno.serve(async (req: Request) => {
                     "This indicates platform-agnostic rate limiting, which is the recommended approach.",
                 recommendation: "Good practice. Continue using platform-agnostic rate limiting (IP or token-based).",
                 evidence: `Desktop: ${desktopProbe.rateLimitHeaders.join(", ")} | Mobile: ${mobileWithRL.map((p) => p.name).join(", ")}`,
-            });
-        } else if (!desktopHasRL) {
-            score -= 10;
-            findings.push({
-                id: "mobile-no-rate-limit-any",
-                severity: "medium",
-                title: "No rate limiting detected on any platform",
-                description:
-                    "No rate limiting headers or 429 responses were detected for either desktop or mobile User-Agents. " +
-                    "Without rate limiting, the API is vulnerable to brute-force attacks, credential stuffing, " +
-                    "and DDoS from any client platform.",
-                recommendation:
-                    "Implement rate limiting at the application or reverse proxy level. " +
-                    "Apply limits based on IP address and/or authentication token, not User-Agent.",
             });
         }
 
@@ -382,20 +368,20 @@ Deno.serve(async (req: Request) => {
                     }, 3000);
 
                     if (res.status === 404 || res.status === 405) {
-                        await res.text().catch(() => {});
+                        await res.text().catch(() => { });
                         break;
                     }
 
                     if (res.status === 429) {
                         gotLimited = true;
-                        await res.text().catch(() => {});
+                        await res.text().catch(() => { });
                         break;
                     }
 
                     const rl = hasRateLimitHeaders(res.headers);
                     if (rl.found) authRLHeaders = rl.headers;
 
-                    await res.text().catch(() => {});
+                    await res.text().catch(() => { });
 
                     // Only count as auth endpoint if it returned a meaningful response
                     if (i === 0 && (res.status === 200 || res.status === 401 || res.status === 422 || res.status === 400)) {
@@ -462,7 +448,7 @@ Deno.serve(async (req: Request) => {
                     headers: { "User-Agent": DESKTOP_UA },
                 }, 3000);
                 const apiVersion = res.headers.get("api-version") || res.headers.get("x-api-version") || res.headers.get("accept-version");
-                await res.text().catch(() => {});
+                await res.text().catch(() => { });
                 if (apiVersion) hasVersioning = true;
             } catch {
                 // Skip
@@ -493,6 +479,39 @@ Deno.serve(async (req: Request) => {
                     "Implement API versioning using path prefixes (/api/v1/) or headers (API-Version). " +
                     "This is especially important for mobile APIs since users may be on old app versions for months.",
             });
+        }
+
+        // =================================================================
+        // 6. Final Architecture-Aware Rate Limiting Assessment
+        // =================================================================
+        if (!desktopHasRL) {
+            const isPurelyStatic = apiEndpointsFound.length === 0 && !foundAuthEndpoint && !graphqlDetected;
+
+            if (isPurelyStatic) {
+                findings.push({
+                    id: "mobile-no-rate-limit-any",
+                    severity: "info",
+                    title: "No rate limiting detected (Static Site)",
+                    description:
+                        "No rate limiting was detected, but no mobile API or authentication endpoints were found either. " +
+                        "This appears to be a purely static site, so application-level rate limiting may not be necessary.",
+                    recommendation: "If you add backend API routes later, ensure rate limiting is implemented.",
+                });
+            } else {
+                score -= 10;
+                findings.push({
+                    id: "mobile-no-rate-limit-any",
+                    severity: "medium",
+                    title: "No rate limiting detected on any platform",
+                    description:
+                        "No rate limiting headers or 429 responses were detected for either desktop or mobile User-Agents. " +
+                        "Without rate limiting, the API is vulnerable to brute-force attacks, credential stuffing, " +
+                        "and DDoS from any client platform.",
+                    recommendation:
+                        "Implement rate limiting at the application or reverse proxy level. " +
+                        "Apply limits based on IP address and/or authentication token, not User-Agent.",
+                });
+            }
         }
 
         // Clamp score

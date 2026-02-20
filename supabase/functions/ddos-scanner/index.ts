@@ -246,7 +246,7 @@ Deno.serve(async (req: Request) => {
                 if (res.status === 429) {
                     gotRateLimited = true;
                     // Consume body to free connection
-                    await res.text().catch(() => {});
+                    await res.text().catch(() => { });
                     break;
                 }
 
@@ -258,7 +258,7 @@ Deno.serve(async (req: Request) => {
                 }
 
                 // Consume body
-                await res.text().catch(() => {});
+                await res.text().catch(() => { });
 
                 if (i < RAPID_REQUEST_COUNT - 1) {
                     await new Promise((r) => setTimeout(r, RAPID_REQUEST_DELAY_MS));
@@ -291,21 +291,37 @@ Deno.serve(async (req: Request) => {
                 evidence: detectedRLHeaders.map((h) => `${h}: ${response.headers.get(h)}`).join(", "),
             });
         } else {
-            score -= 15;
-            findings.push({
-                id: "ddos-no-rate-limiting",
-                severity: "high",
-                title: "No rate limiting detected",
-                description:
-                    "After sending 5 rapid requests, no rate limiting was detected — no HTTP 429 response " +
-                    "and no rate limit headers. Without rate limiting, the server is vulnerable to " +
-                    "brute-force attacks, credential stuffing, and resource exhaustion.",
-                recommendation:
-                    "Implement rate limiting at the application or infrastructure level. " +
-                    "Use standard headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset) " +
-                    "to communicate limits to clients. Consider using a reverse proxy (nginx, HAProxy) " +
-                    "or WAF for automatic rate limiting.",
-            });
+            const isStaticEdge = detectedWAFs.some(waf => ["Vercel Edge Network", "Netlify", "Cloudflare", "AWS CloudFront", "Fastly", "Akamai"].includes(waf));
+
+            if (isStaticEdge) {
+                findings.push({
+                    id: "ddos-no-rate-limiting",
+                    severity: "low",
+                    title: "No application-level rate limiting detected",
+                    description:
+                        "After sending 5 rapid requests, no rate limiting was detected. " +
+                        "However, since this site is protected by an Edge Network / CDN, " +
+                        "infrastructure-level DDoS protection is handled natively by the provider.",
+                    recommendation:
+                        "Consider adding application-level rate limiting using Edge Middleware or built-in framework features if your application has sensitive backend operations.",
+                });
+            } else {
+                score -= 15;
+                findings.push({
+                    id: "ddos-no-rate-limiting",
+                    severity: "high",
+                    title: "No rate limiting detected",
+                    description:
+                        "After sending 5 rapid requests, no rate limiting was detected — no HTTP 429 response " +
+                        "and no rate limit headers. Without rate limiting, the server is vulnerable to " +
+                        "brute-force attacks, credential stuffing, and resource exhaustion.",
+                    recommendation:
+                        "Implement rate limiting at the application or infrastructure level. " +
+                        "Use standard headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset) " +
+                        "to communicate limits to clients. Consider using a reverse proxy (nginx, HAProxy) " +
+                        "or WAF for automatic rate limiting.",
+                });
+            }
         }
 
         // =================================================================
@@ -359,9 +375,10 @@ Deno.serve(async (req: Request) => {
         // =================================================================
         // 4. Bot protection detection
         // =================================================================
+        const pageContent = body.renderedHtml || html;
         const detectedBotProtection: string[] = [];
         for (const pattern of BOT_PROTECTION_PATTERNS) {
-            if (pattern.test(html)) {
+            if (pattern.test(pageContent)) {
                 const name = pattern.source
                     .replace(/\\./g, ".")
                     .replace(/[\\^$.*+?()[\]{}|]/g, "")
@@ -371,6 +388,8 @@ Deno.serve(async (req: Request) => {
                 }
             }
         }
+
+        const hasForms = /<form/i.test(pageContent) || /<input[^>]+type=["']?(password|email)["']?/i.test(pageContent);
 
         if (detectedBotProtection.length > 0) {
             findings.push({
@@ -383,18 +402,28 @@ Deno.serve(async (req: Request) => {
                 recommendation: "Good practice. Ensure bot protection does not interfere with legitimate API integrations or accessibility.",
                 evidence: detectedBotProtection.join(", "),
             });
-        } else {
+        } else if (hasForms) {
             score -= 3;
             findings.push({
                 id: "ddos-no-bot-protection",
                 severity: "low",
                 title: "No bot protection detected",
                 description:
-                    "No CAPTCHA, challenge page, or bot detection service was found in the page source. " +
-                    "Without bot protection, automated attacks and scrapers can freely interact with the application.",
+                    "No CAPTCHA, challenge page, or bot detection service was found on this page, which contains HTML forms. " +
+                    "Without bot protection, automated attacks and scrapers can freely interact with the inputs.",
                 recommendation:
                     "Consider adding bot protection (Cloudflare Turnstile, hCaptcha, reCAPTCHA) " +
                     "on sensitive forms (login, registration, contact). Use invisible challenges for minimal UX impact.",
+            });
+        } else {
+            findings.push({
+                id: "ddos-no-bot-protection-needed",
+                severity: "info",
+                title: "No bot protection detected (None needed)",
+                description:
+                    "No CAPTCHA or bot detection was found, but no sensitive HTML forms (login, contact, etc.) were detected on the page either.",
+                recommendation:
+                    "If you add authentication or data-submission forms later, ensure bot protection is implemented.",
             });
         }
 

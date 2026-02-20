@@ -572,7 +572,7 @@ Deno.serve(async (req: Request) => {
             const scriptSrcDirective = cspDirectives.find(d => d.trim().startsWith('script-src'));
             const defaultSrcDirective = cspDirectives.find(d => d.trim().startsWith('default-src'));
             const hasHttpSource = (scriptSrcDirective && scriptSrcDirective.includes('http:')) ||
-                                  (defaultSrcDirective && defaultSrcDirective.includes('http:'));
+                (defaultSrcDirective && defaultSrcDirective.includes('http:'));
 
             if (hasHttpSource) {
                 score -= 5;
@@ -600,39 +600,8 @@ Deno.serve(async (req: Request) => {
             }
         }
 
-        // =====================================================================
-        // NEW CHECK 5: Rate Limiting Headers
-        // =====================================================================
-        const rateLimitHeaders = [
-            'x-ratelimit-limit',
-            'x-ratelimit-remaining',
-            'ratelimit-limit',
-            'ratelimit-remaining',
-            'retry-after',
-            'x-rate-limit-limit',
-        ];
-
-        const foundRateLimitHeaders = rateLimitHeaders.filter(h => response.headers.get(h) !== null);
-
-        if (foundRateLimitHeaders.length > 0) {
-            findings.push({
-                id: 'rate-limiting-detected',
-                severity: 'info',
-                title: 'Rate limiting detected',
-                description: `Rate limiting headers found: ${foundRateLimitHeaders.join(', ')}. This helps protect against brute-force and abuse.`,
-                recommendation: 'Good practice. Ensure rate limits are also enforced server-side, not just communicated via headers.',
-                value: foundRateLimitHeaders.map(h => `${h}: ${response.headers.get(h)}`).join(', '),
-            });
-        } else {
-            score -= 3;
-            findings.push({
-                id: 'no-rate-limiting',
-                severity: 'low',
-                title: 'No rate limiting headers detected',
-                description: 'No rate limiting headers were found in the response. APIs and endpoints without rate limiting are vulnerable to brute-force and DDoS attacks.',
-                recommendation: 'Implement rate limiting and expose standard rate limit headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset).',
-            });
-        }
+        // Rate Limiting checks have been moved to dedicated scanners (DDoS and Mobile API)
+        // to consolidate duplicate findings and prevent scanner overlap.
 
         // =====================================================================
         // NEW CHECK 6: HTTPS Redirect Check
@@ -700,7 +669,7 @@ Deno.serve(async (req: Request) => {
         ];
         const filteredHeaders: Record<string, string> = {};
         for (const header of securityHeaderNames) {
-          if (headersRecord[header]) filteredHeaders[header] = headersRecord[header];
+            if (headersRecord[header]) filteredHeaders[header] = headersRecord[header];
         }
 
         const result: ScanResult = {

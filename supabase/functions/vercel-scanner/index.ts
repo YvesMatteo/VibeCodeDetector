@@ -155,7 +155,7 @@ async function checkNextDataLeaks(
 ): Promise<number> {
     // Extract buildId from _next/static/{buildId}
     const buildIdMatch = html.match(/\/_next\/static\/([a-zA-Z0-9_-]{10,})\//) ||
-                         html.match(/"buildId"\s*:\s*"([^"]+)"/);
+        html.match(/"buildId"\s*:\s*"([^"]+)"/);
     if (!buildIdMatch) return 0;
 
     const buildId = buildIdMatch[1];
@@ -262,8 +262,8 @@ async function checkApiStackTraces(
 
             // Check for verbose error responses / stack traces
             const hasStackTrace = /at\s+\w+\s+\(.*:\d+:\d+\)/i.test(text) ||
-                                  /Error:.*\n\s+at\s+/i.test(text) ||
-                                  /NEXT_PUBLIC_|VERCEL_|process\.env/i.test(text);
+                /Error:.*\n\s+at\s+/i.test(text) ||
+                /NEXT_PUBLIC_|VERCEL_|process\.env/i.test(text);
 
             if (hasStackTrace && res.status >= 400) {
                 stackTraceFound = true;
@@ -309,7 +309,7 @@ function checkSecurityHeaders(
             severity: 'low',
             title: `${issues.length} security header(s) missing on Vercel deployment`,
             description: `The following security headers are missing: ${issues.join('; ')}.`,
-            recommendation: 'Add security headers via vercel.json headers config or Next.js middleware. Vercel does not set these by default.',
+            recommendation: 'Add security headers via vercel.json headers config or Next.js next.config.ts headers function. Vercel does not set these by default.\n\nExample `vercel.json` snippet:\n```json\n{\n  "headers": [\n    {\n      "source": "/(.*)",\n      "headers": [\n        {"key": "X-Frame-Options", "value": "DENY"},\n        {"key": "X-Content-Type-Options", "value": "nosniff"},\n        {"key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload"}\n      ]\n    }\n  ]\n}\n```\n\nExample `next.config.ts` snippet:\n```typescript\nconst nextConfig = {\n  async headers() {\n    return [\n      {\n        source: "/:path*",\n        headers: [\n          { key: "X-Frame-Options", value: "DENY" },\n          { key: "X-Content-Type-Options", value: "nosniff" },\n          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }\n        ],\n      },\n    ];\n  },\n};\nexport default nextConfig;\n```',
             evidence: issues.join('\n'),
         });
         return 5;
