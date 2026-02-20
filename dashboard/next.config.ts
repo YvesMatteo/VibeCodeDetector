@@ -6,10 +6,11 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -29,14 +30,23 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: http:",
               "font-src 'self'",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
-              "frame-src https://js.stripe.com https://checkout.stripe.com",
+              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self' https://checkout.stripe.com",
+              "report-uri /api/security/csp-report"
             ].join('; '),
           },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
           { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
+          {
+            key: 'Report-To',
+            value: '{"group":"default","max_age":31536000,"endpoints":[{"url":"/api/security/report"}]}'
+          },
+          {
+            key: 'NEL',
+            value: '{"report_to":"default","max_age":31536000,"include_subdomains":true}'
+          }
         ],
       },
     ];
