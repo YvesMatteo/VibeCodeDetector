@@ -201,14 +201,14 @@ async function markdownToPdf(markdown: string, domain: string, date: string): Pr
       continue;
     }
 
-    // Bullet points
+    // Bullet points — use hyphen instead of \u2022 (bullet char not in basic PDF fonts)
     if (line.startsWith('- ')) {
       const text = cleanMarkdown(line.slice(2));
       const wrapped = wrapText(text, 10, PAGE_WIDTH - 15);
       for (let i = 0; i < wrapped.length; i++) {
         y -= LINE_HEIGHT_BODY;
         if (y < 60) { y = 750 - LINE_HEIGHT_BODY; pageLines.push({ text: '---PAGE_BREAK---', size: 0, bold: false, y: 0, indent: 0 }); }
-        pageLines.push({ text: i === 0 ? `\u2022 ${wrapped[i]}` : wrapped[i], size: 10, bold: false, y, indent: i === 0 ? 0 : 15 });
+        pageLines.push({ text: i === 0 ? `- ${wrapped[i]}` : wrapped[i], size: 10, bold: false, y, indent: i === 0 ? 5 : 15 });
       }
       continue;
     }
@@ -264,22 +264,25 @@ async function markdownToPdf(markdown: string, domain: string, date: string): Pr
   for (const page of pages) {
     if (page.length === 0) continue;
 
-    // Build content stream
-    let stream = 'BT\n';
+    // Build content stream — use Tm (text matrix) for absolute positioning.
+    // Td is relative and accumulates, which breaks multi-line layout.
+    let stream = '';
     for (const pl of page) {
       const font = pl.bold ? '/F2' : '/F1';
       const escaped = pdfEscape(pl.text);
+      stream += 'BT\n';
       if (pl.color) stream += `${pl.color} rg\n`;
       else stream += '0 0 0 rg\n';
       stream += `${font} ${pl.size} Tf\n`;
-      stream += `${LEFT_MARGIN + pl.indent} ${pl.y} Td\n`;
+      stream += `1 0 0 1 ${LEFT_MARGIN + pl.indent} ${pl.y} Tm\n`;
       stream += `(${escaped}) Tj\n`;
+      stream += 'ET\n';
     }
-    stream += 'ET\n';
 
-    // Content stream object
+    // Content stream object — use byte length for PDF spec compliance
+    const streamBytes = new TextEncoder().encode(stream);
     const streamObjId = addObject(
-      `${objectCount + 1} 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}endstream\nendobj`
+      `${objectCount + 1} 0 obj\n<< /Length ${streamBytes.length} >>\nstream\n${stream}endstream\nendobj`
     );
 
     // Page object
