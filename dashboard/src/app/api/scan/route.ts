@@ -9,7 +9,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
 import type { Json } from '@/lib/supabase/database.types';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api', 'domain_hijacking'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -624,7 +624,7 @@ export async function POST(req: NextRequest) {
         // 29. Audit Logging & Monitoring Scanner (always runs)
         scannerPromises.push(trackedScanner('audit_logging', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/audit-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.audit_logging = data; })
                 .catch(err => { results.audit_logging = { error: err.message, score: 0 }; })
         ));
@@ -632,7 +632,7 @@ export async function POST(req: NextRequest) {
         // 30. Mobile API Rate Limiting Scanner (always runs)
         scannerPromises.push(trackedScanner('mobile_api', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/mobile-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.mobile_api = data; })
                 .catch(err => { results.mobile_api = { error: err.message, score: 0 }; })
         ));
@@ -640,7 +640,7 @@ export async function POST(req: NextRequest) {
         // 31. Domain Hijacking Scanner (always runs)
         scannerPromises.push(trackedScanner('domain_hijacking', () =>
             fetchWithTimeout(`${supabaseUrl}/functions/v1/domain-hijacking-scanner`, {
-                method: 'POST', headers: scannerHeaders, body: JSON.stringify({ targetUrl }),
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
             }).then(res => res.json()).then(data => { results.domain_hijacking = data; })
                 .catch(err => { results.domain_hijacking = { error: err.message, score: 0 }; })
         ));
@@ -700,42 +700,50 @@ export async function POST(req: NextRequest) {
                     new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
                 ]);
 
-                // Calculate Overall Score using weighted average (weights sum to 1.0)
+                // Calculate Overall Score using weighted average (weights MUST sum to 1.0)
+                // 34 scanners, rebalanced 2026-02-20. Sum verified: 1.00
                 const SCANNER_WEIGHTS: Record<string, number> = {
-                    security: 0.08,       // Security headers — broad impact
+                    // Core vulnerability scanners — 0.44
+                    security: 0.07,       // Security headers — broad impact
                     sqli: 0.07,           // SQL injection — critical vulnerability
-                    xss: 0.07,            // XSS — critical vulnerability
-                    ssl_tls: 0.06,        // TLS — foundational
+                    xss: 0.06,            // XSS — critical vulnerability
+                    ssl_tls: 0.05,        // TLS — foundational
                     api_keys: 0.06,       // Exposed keys — high impact
-                    cors: 0.04,           // CORS misconfiguration
-                    csrf: 0.04,           // CSRF protection
-                    cookies: 0.04,        // Cookie security
-                    auth: 0.04,           // Authentication flow
-                    supabase_backend: 0.04, // Supabase misconfig
-                    firebase_backend: 0.04, // Firebase misconfig
-                    convex_backend: 0.04, // Convex misconfig
-                    supabase_mgmt: 0.04,  // Supabase deep lint
-                    open_redirect: 0.03,  // Open redirects
-                    github_secrets: 0.03, // Leaked secrets in repo
-                    github_security: 0.03, // Dependabot/CodeQL/secret scanning
-                    dependencies: 0.03,   // Known CVEs in deps
-                    dns_email: 0.03,      // SPF/DMARC/DKIM
-                    threat_intelligence: 0.03, // Threat feeds
-                    tech_stack: 0.03,     // Tech fingerprint & CVEs
+                    graphql: 0.04,        // GraphQL security
+                    jwt_audit: 0.04,      // JWT deep audit
+                    csrf: 0.03,           // CSRF protection
+                    // Auth & session — 0.11
+                    cors: 0.03,           // CORS misconfiguration
+                    cookies: 0.03,        // Cookie security
+                    auth: 0.05,           // Authentication flow
+                    // Backend providers — 0.10
+                    supabase_backend: 0.03, // Supabase misconfig
+                    firebase_backend: 0.03, // Firebase misconfig
+                    convex_backend: 0.02, // Convex misconfig
+                    supabase_mgmt: 0.02,  // Supabase deep lint
+                    // Infrastructure & network — 0.17
+                    ai_llm: 0.03,         // AI/LLM endpoint tests
+                    ddos_protection: 0.04, // DDoS/WAF protection
+                    file_upload: 0.02,    // File upload security
+                    open_redirect: 0.02,  // Open redirects
+                    dns_email: 0.02,      // SPF/DMARC/DKIM
+                    domain_hijacking: 0.02, // Domain hijacking & registration
+                    mobile_api: 0.02,     // Mobile API rate limiting
+                    // Repo & supply-chain — 0.09
+                    github_secrets: 0.02, // Leaked secrets in repo
+                    github_security: 0.02, // Dependabot/CodeQL/secret scanning
+                    dependencies: 0.02,   // Known CVEs in deps
+                    scorecard: 0.02,      // OpenSSF supply chain score
+                    threat_intelligence: 0.01, // Threat feeds
+                    // Hosting (auto-detect, low impact) — 0.08
                     vercel_hosting: 0.02, // Vercel platform checks
                     netlify_hosting: 0.02, // Netlify platform checks
                     cloudflare_hosting: 0.02, // Cloudflare Pages checks
                     railway_hosting: 0.02, // Railway platform checks
-                    scorecard: 0.02,      // OpenSSF supply chain score
-                    graphql: 0.05,        // GraphQL security
-                    jwt_audit: 0.05,      // JWT deep audit
-                    ai_llm: 0.04,         // AI endpoint tests
-                    legal: 0.00,          // Legal compliance
-                    ddos_protection: 0.04, // DDoS/WAF protection
-                    file_upload: 0.03,    // File upload security
+                    // Informational — 0.03
+                    tech_stack: 0.02,     // Tech fingerprint & CVEs
                     audit_logging: 0.01,  // Monitoring & audit readiness
-                    mobile_api: 0.03,     // Mobile API rate limiting
-                    domain_hijacking: 0.03, // Domain hijacking & registration
+                    legal: 0.00,          // Legal compliance (informational only)
                 };
 
                 // Use FIXED denominator so skipped/errored scanners don't inflate the score.

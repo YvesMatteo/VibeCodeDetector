@@ -54,7 +54,7 @@ export default function ScanDetailLoading() {
                     Running Security Audit
                 </h2>
                 <p className="text-zinc-500 text-sm mb-8">
-                    30 scanners analyzing your site in parallel
+                    34 scanners analyzing your site in parallel
                 </p>
 
                 <div className="w-full max-w-md mb-8">

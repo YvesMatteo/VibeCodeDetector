@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website with 30 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
+  description: "Scan your website with 34 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
   metadataBase: new URL("https://checkvibe.dev"),
   icons: {
     icon: [
@@ -85,7 +85,7 @@ export default function RootLayout({
               name: 'CheckVibe',
               applicationCategory: 'SecurityApplication',
               operatingSystem: 'Web',
-              description: 'AI-powered website security scanner with 30 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
+              description: 'AI-powered website security scanner with 34 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
               url: 'https://checkvibe.dev',
               offers: [
                 { '@type': 'Offer', name: 'Starter', price: '19', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },

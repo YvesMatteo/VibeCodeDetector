@@ -66,7 +66,7 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '30', label: 'Security Scanners' },
+  { value: '34', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
   { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
@@ -215,7 +215,7 @@ export default function HomePage() {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
-            30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
+            34 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -362,7 +362,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">You Actually Use</span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Supabase, Firebase, Vercel, Netlify, GitHub — 30 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
+              Supabase, Firebase, Vercel, Netlify, GitHub — 34 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
             </p>
           </div>
 
@@ -510,7 +510,7 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              30 scanners. One click. Know exactly what to fix before you deploy.
+              34 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>

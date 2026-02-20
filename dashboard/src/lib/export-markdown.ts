@@ -28,11 +28,14 @@ const scannerNames: Record<string, string> = {
   cloudflare_hosting: 'Cloudflare Pages',
   railway_hosting: 'Railway Hosting',
   convex_backend: 'Convex Backend',
-  vibe_match: 'AI Detection',
   ddos_protection: 'DDoS Protection',
   file_upload: 'File Upload Security',
   audit_logging: 'Audit Logging & Monitoring',
   mobile_api: 'Mobile API Rate Limiting',
+  domain_hijacking: 'Domain Hijacking Detection',
+  graphql: 'GraphQL Security',
+  jwt_audit: 'JWT Deep Audit',
+  ai_llm: 'AI/LLM Security',
 };
 
 const SCANNER_ORDER: string[] = [
@@ -62,7 +65,14 @@ const SCANNER_ORDER: string[] = [
   'threat_intelligence',
   'tech_stack',
   'legal',
-  'vibe_match',
+  'graphql',
+  'jwt_audit',
+  'ai_llm',
+  'ddos_protection',
+  'file_upload',
+  'audit_logging',
+  'mobile_api',
+  'domain_hijacking',
 ];
 
 function getVibeRating(issues: number): string {

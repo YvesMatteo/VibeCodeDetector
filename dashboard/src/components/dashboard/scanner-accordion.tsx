@@ -107,6 +107,9 @@ const scannerIcons: Record<string, any> = {
     audit_logging: FileText,
     mobile_api: Smartphone,
     domain_hijacking: Anchor,
+    graphql: Globe,
+    jwt_audit: Lock,
+    ai_llm: Sparkles,
 };
 
 const scannerNames: Record<string, string> = {
@@ -141,6 +144,9 @@ const scannerNames: Record<string, string> = {
     audit_logging: 'Audit Logging & Monitoring',
     mobile_api: 'Mobile API Rate Limiting',
     domain_hijacking: 'Domain Hijacking Detection',
+    graphql: 'GraphQL Security',
+    jwt_audit: 'JWT Deep Audit',
+    ai_llm: 'AI/LLM Security',
 };
 
 interface DismissCallback {

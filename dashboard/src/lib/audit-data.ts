@@ -1,7 +1,7 @@
 /** Shared audit data types and processing — importable from both server and client components */
 
 /**
- * All scanner result keys expected in the current version (v7, 30 scanners).
+ * All scanner result keys expected in the current version (v8, 34 scanners).
  * Even conditional scanners appear in results (as `skipped: true`).
  * Used to detect stale scan results from older versions.
  */
@@ -13,10 +13,10 @@ export const CURRENT_SCANNER_KEYS = [
     'scorecard', 'github_security', 'supabase_mgmt',
     'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting',
     'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
-    'domain_hijacking',
+    'domain_hijacking', 'graphql', 'jwt_audit', 'ai_llm',
 ] as const;
 
-const SCANNER_DISPLAY_NAMES: Record<string, string> = {
+export const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     security: 'Security Headers', api_keys: 'API Keys', legal: 'Legal', threat_intelligence: 'Threat Intel',
     sqli: 'SQL Injection', github_secrets: 'GitHub Secrets', tech_stack: 'Tech Stack', cors: 'CORS',
     csrf: 'CSRF', cookies: 'Cookies', auth: 'Auth', supabase_backend: 'Supabase', firebase_backend: 'Firebase',
@@ -26,7 +26,8 @@ const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
     ddos_protection: 'DDoS Protection', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
-    domain_hijacking: 'Domain Hijacking',
+    domain_hijacking: 'Domain Hijacking', graphql: 'GraphQL',
+    jwt_audit: 'JWT Audit', ai_llm: 'AI/LLM Security',
 };
 
 /**

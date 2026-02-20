@@ -2,10 +2,24 @@ import { Badge } from '@/components/ui/badge';
 
 const changelog = [
     {
+        version: '0.8.0',
+        date: 'February 20, 2026',
+        title: 'Scanner Suite v8 — 34 Scanners',
+        badge: 'Latest',
+        changes: [
+            { type: 'added', text: 'GraphQL security scanner — introspection, injection, and auth bypass detection' },
+            { type: 'added', text: 'JWT deep audit scanner — algorithm confusion, expiration, and claim validation' },
+            { type: 'added', text: 'AI/LLM security scanner — prompt injection and AI endpoint exposure checks' },
+            { type: 'added', text: 'Domain hijacking scanner — registration, nameserver, and typosquatting detection' },
+            { type: 'fixed', text: 'Scanner weights rebalanced to sum to exactly 1.0 (fixes deflated scores)' },
+            { type: 'fixed', text: 'All 34 scanners now properly registered with display names in UI and exports' },
+            { type: 'added', text: 'CSP violation and Network Error Logging report endpoints' },
+        ],
+    },
+    {
         version: '0.7.0',
         date: 'February 16, 2026',
         title: 'Free Tier & Blurred Findings',
-        badge: 'Latest',
         changes: [
             { type: 'added', text: 'Free plan — 1 project, 3 scans/month, blurred finding details' },
             { type: 'added', text: 'Upgrade CTAs on blurred findings with direct link to pricing' },
@@ -22,7 +36,7 @@ const changelog = [
             { type: 'added', text: 'File upload scanner — checks upload forms for security restrictions' },
             { type: 'added', text: 'Audit logging scanner — monitoring and logging verification' },
             { type: 'added', text: 'Mobile API scanner — rate limiting checks for mobile endpoints' },
-            { type: 'changed', text: 'All 30 edge functions deployed and wired to scan pipeline' },
+            { type: 'changed', text: 'All 30 edge functions deployed and wired to scan pipeline (expanded to 34 in v0.8)' },
             { type: 'changed', text: 'Scanner weights rebalanced for new categories' },
         ],
     },

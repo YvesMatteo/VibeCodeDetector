@@ -140,7 +140,7 @@ export default function SignupPage() {
                         Security scanning for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        30 automated scanners. One comprehensive report. Ship with confidence.
+                        34 automated scanners. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 

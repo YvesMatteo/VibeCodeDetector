@@ -65,6 +65,8 @@ const SCANNER_NAMES: Record<string, string> = {
     cloudflare_hosting: 'Cloudflare', railway_hosting: 'Railway', convex_backend: 'Convex',
     ddos_protection: 'DDoS', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
+    domain_hijacking: 'Domain Hijacking', graphql: 'GraphQL',
+    jwt_audit: 'JWT Audit', ai_llm: 'AI/LLM Security',
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
