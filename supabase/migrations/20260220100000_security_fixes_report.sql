@@ -288,6 +288,11 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_scans_user_id ON public.scheduled_scans
 -- -----------------------------------------------------------------------------
 -- 4. Explicit Policies for Closed Tables
 -- -----------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Deny all access" ON public.rate_limit_windows;
 CREATE POLICY "Deny all access" ON public.rate_limit_windows FOR ALL USING (false);
+
+DROP POLICY IF EXISTS "Deny all access" ON public.waitlist_emails;
 CREATE POLICY "Deny all access" ON public.waitlist_emails FOR ALL USING (false);
+
+DROP POLICY IF EXISTS "Deny all access" ON public.processed_webhook_events;
 CREATE POLICY "Deny all access" ON public.processed_webhook_events FOR ALL USING (false);
