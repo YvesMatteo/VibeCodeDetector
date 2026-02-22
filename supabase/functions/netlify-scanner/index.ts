@@ -343,7 +343,7 @@ async function checkPlatformConfig(
     const exposed: string[] = [];
     let hasSecrets = false;
 
-    for (const { path, name, desc } of configFiles) {
+    for (const { path, name } of configFiles) {
         try {
             const configUrl = new URL(path, targetUrl).href;
             const res = await fetchWithTimeout(configUrl, {}, 5000);

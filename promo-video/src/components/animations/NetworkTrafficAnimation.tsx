@@ -97,8 +97,8 @@ const TrafficFlow: React.FC = () => {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {packets}
         </div>
-    )
-}
+    );
+};
 
 
 const Packet: React.FC<{ startFrame: number, angle: number, isThreat: boolean }> = ({ startFrame, angle, isThreat }) => {
@@ -123,5 +123,5 @@ const Packet: React.FC<{ startFrame: number, angle: number, isThreat: boolean }>
                 opacity
             }}
         />
-    )
-}
+    );
+};

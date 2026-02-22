@@ -842,22 +842,24 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
 
                     // Error state - always show
                     if (errorMessage) {
-                        <div key={key} className="bg-white/[0.01] animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
-                            <div className="px-3 sm:px-4 py-3 sm:py-4">
-                                <div className="flex items-center gap-3">
-                                    <Icon className="h-4 w-4 text-red-400 shrink-0" />
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</h3>
-                                        <p className="text-[11px] text-red-400/70">Scan Failed</p>
+                        return (
+                            <div key={key} className="bg-white/[0.01] animate-fade-in-up" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
+                                <div className="px-3 sm:px-4 py-3 sm:py-4">
+                                    <div className="flex items-center gap-3">
+                                        <Icon className="h-4 w-4 text-red-400 shrink-0" />
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</h3>
+                                            <p className="text-[11px] text-red-400/70">Scan Failed</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3">
+                                        <p className="text-[12px] font-mono text-red-400 bg-red-500/10 p-3 rounded border border-red-500/20">
+                                            {errorMessage}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="mt-3">
-                                    <p className="text-[12px] font-mono text-red-400 bg-red-500/10 p-3 rounded border border-red-500/20">
-                                        {errorMessage}
-                                    </p>
-                                </div>
                             </div>
-                        </div>
+                        );
                     }
 
                     // Skipped state — scanner didn't run because config is missing

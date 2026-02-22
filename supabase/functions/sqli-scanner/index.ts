@@ -540,19 +540,17 @@ async function testInjectionPoint(
         }
 
         // Check tautology response for errors too
-        if (orResult) {
-            const errorMatch = findSqlErrors(orResult.body);
-            if (errorMatch && !errorFound) {
-                errorFound = true;
-                findings.push({
-                    id: `sqli-error-or-${idx}-${point.name}`,
-                    severity: 'critical',
-                    title: `Error-Based SQL Injection in ${label} (OR payload)`,
-                    description: `Injecting "1 OR 1=1--" into ${label} at ${point.action} triggered a ${errorMatch.engine} SQL error.`,
-                    recommendation: `Use parameterized queries for all database queries involving this parameter.`,
-                    evidence: truncateEvidence(errorMatch.pattern),
-                });
-            }
+        const errorMatch = findSqlErrors(orResult.body);
+        if (errorMatch && !errorFound) {
+            errorFound = true;
+            findings.push({
+                id: `sqli-error-or-${idx}-${point.name}`,
+                severity: 'critical',
+                title: `Error-Based SQL Injection in ${label} (OR payload)`,
+                description: `Injecting "1 OR 1=1--" into ${label} at ${point.action} triggered a ${errorMatch.engine} SQL error.`,
+                recommendation: `Use parameterized queries for all database queries involving this parameter.`,
+                evidence: truncateEvidence(errorMatch.pattern),
+            });
         }
     }
 

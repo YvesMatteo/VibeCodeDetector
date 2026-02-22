@@ -678,7 +678,7 @@ async function checkCvesLive(techs: Map<string, Technology>): Promise<{ findings
                     seenCves.add(cveAlias);
 
                     // Determine severity from OSV data
-                    let severity: 'critical' | 'high' | 'medium' | 'low' = 'medium';
+                    let severity: 'critical' | 'high' | 'medium' | 'low';
                     const severityScore = vuln.severity?.[0]?.score;
                     const dbSeverity = vuln.database_specific?.severity?.toLowerCase();
 
@@ -689,8 +689,8 @@ async function checkCvesLive(techs: Map<string, Technology>): Promise<{ findings
 
                     const severityDeduction =
                         severity === 'critical' ? 30 :
-                        severity === 'high' ? 20 :
-                        severity === 'medium' ? 10 : 5;
+                            severity === 'high' ? 20 :
+                                severity === 'medium' ? 10 : 5;
 
                     deductions += severityDeduction;
 
@@ -747,8 +747,8 @@ function checkCvesHardcoded(techs: Map<string, Technology>): { findings: Finding
             if (isVersionBelow(tech.version, entry.belowVersion)) {
                 const severityDeduction =
                     entry.severity === 'critical' ? 30 :
-                    entry.severity === 'high' ? 20 :
-                    entry.severity === 'medium' ? 10 : 5;
+                        entry.severity === 'high' ? 20 :
+                            entry.severity === 'medium' ? 10 : 5;
 
                 deductions += severityDeduction;
 
@@ -796,8 +796,8 @@ async function checkCves(techs: Map<string, Technology>): Promise<{ findings: Fi
             mergedFindings.push(finding);
             // Re-calculate deduction for this finding
             const d = finding.severity === 'critical' ? 30 :
-                      finding.severity === 'high' ? 20 :
-                      finding.severity === 'medium' ? 10 : 5;
+                finding.severity === 'high' ? 20 :
+                    finding.severity === 'medium' ? 10 : 5;
             mergedDeductions += d;
         }
     }
