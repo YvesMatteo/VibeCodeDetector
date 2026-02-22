@@ -293,38 +293,36 @@ export async function POST(req: NextRequest) {
         // ------------------------------------------------------------------
         const RENDERER_URL = process.env.RENDERER_URL || 'http://127.0.0.1:8080';
         const RENDERER_SECRET_KEY = process.env.RENDERER_SECRET_KEY;
-        if (!RENDERER_SECRET_KEY) {
-            console.error('RENDERER_SECRET_KEY env var is not set');
-            return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
-        }
 
         let renderedHtml: string | undefined = undefined;
         let interceptedApiCalls: string[] = [];
         let interceptedCookies: any[] = [];
 
-        try {
-            // Give the renderer up to 25 seconds
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 25000);
+        if (RENDERER_SECRET_KEY) {
+            try {
+                // Give the renderer up to 25 seconds
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 25000);
 
-            const renderRes = await fetch(`${RENDERER_URL}/render`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-renderer-key': RENDERER_SECRET_KEY
-                },
-                body: JSON.stringify({ url: targetUrl }),
-                signal: controller.signal
-            }).finally(() => clearTimeout(timeout));
+                const renderRes = await fetch(`${RENDERER_URL}/render`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-renderer-key': RENDERER_SECRET_KEY
+                    },
+                    body: JSON.stringify({ url: targetUrl }),
+                    signal: controller.signal
+                }).finally(() => clearTimeout(timeout));
 
-            if (renderRes.ok) {
-                const rData = await renderRes.json();
-                renderedHtml = rData.html;
-                interceptedApiCalls = rData.apiCalls || [];
-                interceptedCookies = rData.cookies || [];
+                if (renderRes.ok) {
+                    const rData = await renderRes.json();
+                    renderedHtml = rData.html;
+                    interceptedApiCalls = rData.apiCalls || [];
+                    interceptedCookies = rData.cookies || [];
+                }
+            } catch (e) {
+                console.error('Renderer service failed or unavailable. Falling back to static fetching.', e instanceof Error ? e.message : 'Unknown error');
             }
-        } catch (e) {
-            console.error('Renderer service failed or unavailable. Falling back to static fetching.', e instanceof Error ? e.message : 'Unknown error');
         }
 
         // Helper: Format body for scanners
