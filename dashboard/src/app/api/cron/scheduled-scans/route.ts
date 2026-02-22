@@ -23,6 +23,8 @@ function getServiceClient() {
 
 export const maxDuration = 300; // 5 min max for Vercel Pro
 
+// Note: Using GET because Vercel Cron only supports GET requests.
+// The Bearer token check prevents accidental triggering by prefetchers/crawlers.
 export async function GET(req: NextRequest) {
     // Verify cron secret — must be a non-empty string
     const authHeader = req.headers.get('authorization');

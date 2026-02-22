@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             secret,
             enabled: true,
         })
-        .select()
+        .select('id, project_id, url, events, enabled, created_at')
         .single();
 
     if (error) {
@@ -100,7 +100,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to create webhook' }, { status: 500 });
     }
 
-    return NextResponse.json(data, { status: 201 });
+    // Return the webhook data + secret as a separate one-time field
+    return NextResponse.json({ ...(data as any), secret }, { status: 201 });
 }
 
 // DELETE /api/integrations/webhooks?id=xxx

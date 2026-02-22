@@ -1,37 +1,28 @@
-# Goal
+# Project Prompt
 
-Build a **Domain Hijacking Scanner** — the 31st scanner in the CheckVibe security audit suite. This edge function detects domain-level takeover risks including expiring registrations, missing registrar locks, dangling nameservers, lame delegations, typosquatting, and zone transfer exposure.
-
-## Context
-
-- **Existing suite**: 30 Deno Edge Function scanners in `supabase/functions/`
-- **Related scanner**: `dns-scanner` already covers email security (SPF/DMARC/DKIM), CAA, DNSSEC, and subdomain takeover via CT logs + dangling CNAMEs. The new scanner focuses on **domain-level** hijacking, not subdomains.
-- **Shared utilities**: `_shared/types.ts` (Finding, ScannerResponse), `_shared/security.ts` (validateTargetUrl, validateScannerAuth, getCorsHeaders)
-- **Scan route**: `dashboard/src/app/api/scan/route.ts` — wires all scanners with 45s timeout, weighted scoring, NDJSON streaming
-- **Frontend config**: `dashboard/src/lib/audit-data.ts` (CURRENT_SCANNER_KEYS), `dashboard/src/components/dashboard/scanner-accordion.tsx` (icons, names, order)
+## Goal
+Fix all remaining security findings from the 6-agent security audit. The immediate/critical items (PAT masking, CSRF, rate limiting, timing-safe secrets, renderer default-secret, badge IDOR, handle_new_user defaults) were already shipped. This pass addresses every remaining CRITICAL, HIGH, and MEDIUM finding.
 
 ## Requirements
-
-- **Scanner key**: `domain_hijacking`
-- **Edge function name**: `domain-hijacking-scanner`
-- **Weight**: `0.03` (same tier as `dns_email`)
-- **Always runs** (not conditional on any project config)
-- **No external API keys required** — uses only RDAP (free, standardized) and Google DNS-over-HTTPS
-- **6 checks** (all run in parallel via `Promise.allSettled`):
-  1. **Domain Registration via RDAP** — expiration date, registrar lock statuses, recent registrar changes
-  2. **Nameserver Integrity** — dangling NS records (NXDOMAIN), lame delegation (NS doesn't serve zone)
-  3. **Nameserver Diversity** — single-provider risk, minimum 2 NS requirement
-  4. **Typosquatting Detection** — top 15 mutations (omission, homoglyphs, TLD swap) checked via DNS
-  5. **Zone Transfer Exposure** — attempt AXFR to check if zone data is publicly accessible
-  6. **NS Security** — in-bailiwick glue record check, NS pointing to CNAME (RFC violation)
-- **Must not duplicate** subdomain takeover checks already in `dns-scanner`
-- **Timeouts**: 10s per RDAP lookup, 8s per DNS operation, 5s per zone transfer attempt
-- **Scoring**: Start at 100, deduct per finding severity
+- [ ] C1: Tighten CSP — remove `unsafe-inline`/`unsafe-eval`, use nonce-based script-src
+- [ ] H1: Fix CI pipeline — remove `|| true` from test/audit steps so failures are visible
+- [ ] H4: Restrict `img-src` CSP — remove `http:`, restrict `https:` to known domains
+- [ ] H5: Increase shared report `public_id` entropy from 4 bytes to 16 bytes
+- [ ] H6: Pin GitHub Actions to commit SHAs instead of mutable version tags
+- [ ] M1: Fail fast if `SCANNER_SECRET_KEY` is empty (no empty-string fallback)
+- [ ] M2: Move `@types/three` from dependencies to devDependencies
+- [ ] M5: Webhook POST response — explicitly select columns, exclude `secret` from response after creation (keep show-once pattern via separate field)
+- [ ] M7: Change cron scheduled-scans endpoint from GET to POST
+- [ ] L3: Add `WITH CHECK` clause to scans UPDATE RLS policy
+- [ ] L5: Sanitize error logging — use `e.message` instead of full error objects in scan route
 
 ## Constraints
+- Must not break existing functionality or the Vercel deployment
+- No new external libraries without good reason
+- All SQL changes must be applied to live DB via `supabase db push` or Management API
+- CSP nonce approach must work with Next.js 16 App Router
 
-- Deno runtime (Edge Function) — no Node.js APIs
-- 45s max execution time (enforced by scan route)
-- Must use shared auth/CORS/validation from `_shared/security.ts`
-- Response must conform to `ScannerResponse` interface from `_shared/types.ts`
-- No new env vars required (RDAP and Google DNS are free public APIs)
+## Success Criteria
+- [ ] All requirements above are implemented
+- [ ] `npx tsc --noEmit` passes cleanly
+- [ ] Changes committed and pushed to main

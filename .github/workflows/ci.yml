@@ -14,9 +14,9 @@ jobs:
         working-directory: dashboard
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -25,7 +25,8 @@ jobs:
       - run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Type check
         run: npm run type-check
@@ -34,7 +35,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --run 2>/dev/null || true
+        run: npm test -- --run
 
       - name: Build
         run: npm run build

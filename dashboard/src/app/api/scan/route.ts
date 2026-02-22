@@ -234,7 +234,11 @@ export async function POST(req: NextRequest) {
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const scannerSecretKey = process.env.SCANNER_SECRET_KEY || '';
+        const scannerSecretKey = process.env.SCANNER_SECRET_KEY;
+        if (!scannerSecretKey) {
+            console.error('SCANNER_SECRET_KEY env var is not set');
+            return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+        }
 
         // For API key auth, use anon key for edge function calls (scanner-key handles auth there)
         let accessToken: string | undefined;
@@ -320,7 +324,7 @@ export async function POST(req: NextRequest) {
                 interceptedCookies = rData.cookies || [];
             }
         } catch (e) {
-            console.error('Renderer service failed or unavailable. Falling back to static fetching.', e);
+            console.error('Renderer service failed or unavailable. Falling back to static fetching.', e instanceof Error ? e.message : 'Unknown error');
         }
 
         // Helper: Format body for scanners

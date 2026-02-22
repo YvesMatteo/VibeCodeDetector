@@ -61,8 +61,8 @@ export async function POST(
       return NextResponse.json({ publicId: scan.public_id, url: `/report/${scan.public_id}` });
     }
 
-    // Generate a short unique ID (8 chars hex)
-    const publicId = crypto.randomBytes(4).toString('hex');
+    // Generate a unique ID with 128 bits of entropy (32 hex chars)
+    const publicId = crypto.randomBytes(16).toString('hex');
 
     const svc = getServiceClient();
     const { error: updateError } = await svc
