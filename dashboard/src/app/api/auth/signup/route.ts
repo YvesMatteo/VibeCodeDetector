@@ -3,10 +3,19 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getResend } from '@/lib/resend';
 import { confirmEmailTemplate } from '@/lib/email-templates';
 import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
     const csrfError = checkCsrf(req);
     if (csrfError) return csrfError;
+
+    // Rate limit: 5 signups per minute per IP
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+        ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
+    const rl = await checkRateLimit(`signup:${ip}`, 5, 60);
+    if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
 
     let email: string;
     let password: string;

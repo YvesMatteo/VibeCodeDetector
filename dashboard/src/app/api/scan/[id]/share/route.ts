@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getServiceClient } from '@/lib/api-keys';
+import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 export async function POST(
@@ -9,6 +11,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
 
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
@@ -20,6 +25,12 @@ export async function POST(
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit: 10 share operations per minute per user
+    const rl = await checkRateLimit(`share:${user.id}`, 10, 60);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 
     // Only subscribers can share reports
@@ -76,6 +87,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
 
     const supabase = await createClient();

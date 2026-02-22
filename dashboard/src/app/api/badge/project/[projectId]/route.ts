@@ -24,31 +24,7 @@ function getLabel(score: number): string {
     return 'F';
 }
 
-export async function GET(
-    _req: Request,
-    { params }: { params: Promise<{ projectId: string }> },
-) {
-    const { projectId } = await params;
-
-    if (!/^[0-9a-f-]{36}$/i.test(projectId)) {
-        return new NextResponse('Not found', { status: 404 });
-    }
-
-    const supabase = getSupabaseAdmin();
-
-    // Get the latest completed scan for this project
-    const { data: scan } = await supabase
-        .from('scans')
-        .select('overall_score')
-        .eq('project_id', projectId)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single();
-
-    if (!scan) {
-        // No scans yet — show a "no data" badge
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20" role="img" aria-label="CheckVibe: no data">
+const NO_DATA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20" role="img" aria-label="CheckVibe: no data">
   <title>CheckVibe: no data</title>
   <linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
   <clipPath id="r"><rect width="160" height="20" rx="3" fill="#fff"/></clipPath>
@@ -64,10 +40,44 @@ export async function GET(
     <text x="120" y="13">no data</text>
   </g>
 </svg>`;
-        return new NextResponse(svg, {
-            status: 200,
-            headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=600, s-maxage=600' },
-        });
+
+const SVG_HEADERS = { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=600, s-maxage=600' };
+
+export async function GET(
+    _req: Request,
+    { params }: { params: Promise<{ projectId: string }> },
+) {
+    const { projectId } = await params;
+
+    if (!/^[0-9a-f-]{36}$/i.test(projectId)) {
+        return new NextResponse(NO_DATA_SVG, { status: 200, headers: SVG_HEADERS });
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // Verify the project exists and has badge_enabled = true (opt-in)
+    const { data: project } = await supabase
+        .from('projects')
+        .select('id, badge_enabled')
+        .eq('id', projectId)
+        .single();
+
+    if (!project || !project.badge_enabled) {
+        return new NextResponse(NO_DATA_SVG, { status: 200, headers: SVG_HEADERS });
+    }
+
+    // Get the latest completed scan for this project
+    const { data: scan } = await supabase
+        .from('scans')
+        .select('overall_score')
+        .eq('project_id', projectId)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single();
+
+    if (!scan) {
+        return new NextResponse(NO_DATA_SVG, { status: 200, headers: SVG_HEADERS });
     }
 
     const score = scan.overall_score ?? 0;

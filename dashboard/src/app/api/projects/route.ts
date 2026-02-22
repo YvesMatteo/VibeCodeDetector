@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
-import { encrypt, decrypt } from '@/lib/encryption';
+import { encrypt } from '@/lib/encryption';
 
 export async function GET() {
     try {
@@ -59,8 +59,9 @@ export async function GET() {
             }
             return {
                 ...project,
-                // Decrypt supabase_pat for client display (handles legacy plaintext gracefully)
-                supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
+                // Never send decrypted PAT to the client — only expose a boolean flag
+                supabase_pat: undefined,
+                has_supabase_pat: !!project.supabase_pat,
                 latestScore: latestScan?.overall_score ?? null,
                 lastAuditDate: latestScan?.completed_at ?? null,
                 issueCount,

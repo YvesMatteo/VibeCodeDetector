@@ -33,7 +33,7 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
                     github_repo: project.github_repo,
                     backend_type: project.backend_type,
                     backend_url: project.backend_url,
-                    supabase_pat: project.supabase_pat,
+                    has_supabase_pat: !!project.supabase_pat,
                 }}
             />
         </div>

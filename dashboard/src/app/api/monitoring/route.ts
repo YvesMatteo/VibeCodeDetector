@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { computeNextRun } from '@/lib/schedule-utils';
+import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // GET /api/monitoring?projectId=xxx — get schedule + alerts for a project
 export async function GET(req: NextRequest) {
@@ -24,9 +26,18 @@ export async function GET(req: NextRequest) {
 
 // POST /api/monitoring — create/update schedule or alert
 export async function POST(req: NextRequest) {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Rate limit: 20 monitoring writes per minute per user
+    const rl = await checkRateLimit(`monitoring:${user.id}`, 20, 60);
+    if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
 
     const body = await req.json();
     const { projectId, type } = body;
@@ -66,7 +77,10 @@ export async function POST(req: NextRequest) {
             .select()
             .single();
 
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error) {
+            console.error('Monitoring schedule upsert error:', error);
+            return NextResponse.json({ error: 'Failed to save schedule' }, { status: 500 });
+        }
         return NextResponse.json(data);
     }
 
@@ -94,7 +108,10 @@ export async function POST(req: NextRequest) {
             .select()
             .single();
 
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error) {
+            console.error('Monitoring alert upsert error:', error);
+            return NextResponse.json({ error: 'Failed to save alert rule' }, { status: 500 });
+        }
         return NextResponse.json(data);
     }
 
@@ -103,9 +120,18 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/monitoring?id=xxx&type=schedule|alert
 export async function DELETE(req: NextRequest) {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Rate limit: 20 monitoring deletes per minute per user
+    const rl = await checkRateLimit(`monitoring-del:${user.id}`, 20, 60);
+    if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
 
     const id = req.nextUrl.searchParams.get('id');
     const type = req.nextUrl.searchParams.get('type');
@@ -124,6 +150,9 @@ export async function DELETE(req: NextRequest) {
         .eq('id', id)
         .eq('user_id', user.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+        console.error('Monitoring delete error:', error);
+        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
 }

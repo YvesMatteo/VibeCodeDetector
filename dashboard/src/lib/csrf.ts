@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+/**
+ * Timing-safe string comparison to prevent timing attacks on secret values.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 /**
  * CSRF protection via origin validation.
@@ -12,7 +21,7 @@ export function checkCsrf(req: NextRequest): NextResponse | null {
 
   // Cron service auth is server-to-server — CSRF doesn't apply
   const cronSecret = req.headers.get('x-cron-secret');
-  if (cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) return null;
+  if (cronSecret && process.env.CRON_SECRET && timingSafeEqual(cronSecret, process.env.CRON_SECRET)) return null;
 
   const origin = req.headers.get('origin');
   const host = req.headers.get('host') || '';

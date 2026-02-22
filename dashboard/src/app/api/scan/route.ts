@@ -288,7 +288,11 @@ export async function POST(req: NextRequest) {
         // Pre-rendering with Headless Browser (SPA Support)
         // ------------------------------------------------------------------
         const RENDERER_URL = process.env.RENDERER_URL || 'http://127.0.0.1:8080';
-        const RENDERER_SECRET_KEY = process.env.RENDERER_SECRET_KEY || 'default-secret';
+        const RENDERER_SECRET_KEY = process.env.RENDERER_SECRET_KEY;
+        if (!RENDERER_SECRET_KEY) {
+            console.error('RENDERER_SECRET_KEY env var is not set');
+            return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+        }
 
         let renderedHtml: string | undefined = undefined;
         let interceptedApiCalls: string[] = [];

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { hashApiKey, getServiceClient, type Scope } from './api-keys';
 import { checkAllRateLimits } from './rate-limit';
+import crypto from 'crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,7 +40,9 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
   // ── Cron service auth (internal scheduled scans) ────────────────────
   const cronSecret = req.headers.get('x-cron-secret');
   const cronUserId = req.headers.get('x-cron-user-id');
-  if (cronSecret && cronUserId && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) {
+  if (cronSecret && cronUserId && process.env.CRON_SECRET
+      && cronSecret.length === process.env.CRON_SECRET.length
+      && crypto.timingSafeEqual(Buffer.from(cronSecret), Buffer.from(process.env.CRON_SECRET))) {
     const supabase = getServiceClient();
     const { data: profile } = await supabase
       .from('profiles')

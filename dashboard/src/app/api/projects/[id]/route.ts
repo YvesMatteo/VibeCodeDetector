@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateTargetUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
-import { encrypt, decrypt } from '@/lib/encryption';
+import { encrypt } from '@/lib/encryption';
 
 export async function GET(
     _req: NextRequest,
@@ -27,13 +27,14 @@ export async function GET(
             return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
 
-        // Decrypt supabase_pat for client display (handles legacy plaintext gracefully)
-        const decryptedProject = {
+        // Never send decrypted PAT to the client — only expose a boolean flag
+        const safeProject = {
             ...project,
-            supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
+            supabase_pat: undefined,
+            has_supabase_pat: !!project.supabase_pat,
         };
 
-        return NextResponse.json({ project: decryptedProject });
+        return NextResponse.json({ project: safeProject });
     } catch (error) {
         console.error('Get project error:', error);
         return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });
@@ -97,6 +98,7 @@ export async function PATCH(
             const rawPAT = body.supabasePAT?.trim() || null;
             updates.supabase_pat = rawPAT ? encrypt(rawPAT) : null;
         }
+        if (body.badgeEnabled !== undefined) updates.badge_enabled = !!body.badgeEnabled;
 
         const { data: project, error: updateError } = await supabase
             .from('projects')
@@ -114,13 +116,14 @@ export async function PATCH(
             return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
         }
 
-        // Decrypt supabase_pat for client display
-        const decryptedProject = {
+        // Never send decrypted PAT to the client
+        const safeProject = {
             ...project,
-            supabase_pat: project.supabase_pat ? decrypt(project.supabase_pat) : null,
+            supabase_pat: undefined,
+            has_supabase_pat: !!project.supabase_pat,
         };
 
-        return NextResponse.json({ project: decryptedProject });
+        return NextResponse.json({ project: safeProject });
     } catch (error) {
         console.error('Update project error:', error);
         return NextResponse.json({ error: 'An internal error occurred' }, { status: 500 });

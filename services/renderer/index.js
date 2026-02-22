@@ -2,7 +2,11 @@ const fastify = require('fastify')({ logger: true });
 const { chromium } = require('playwright');
 
 const PORT = process.env.PORT || 8080;
-const AUTH_KEY = process.env.RENDERER_SECRET_KEY || 'default-secret';
+const AUTH_KEY = process.env.RENDERER_SECRET_KEY;
+if (!AUTH_KEY) {
+    console.error('FATAL: RENDERER_SECRET_KEY env var is not set');
+    process.exit(1);
+}
 
 fastify.post('/render', async (request, reply) => {
     const authHeader = request.headers['x-renderer-key'];

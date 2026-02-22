@@ -37,7 +37,7 @@ interface ProjectSettingsFormProps {
         github_repo: string | null;
         backend_type: string | null;
         backend_url: string | null;
-        supabase_pat: string | null;
+        has_supabase_pat?: boolean;
     };
 }
 
@@ -51,7 +51,8 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
         (initialData.backend_type as 'none' | 'supabase' | 'firebase' | 'convex') || 'none'
     );
     const [backendUrl, setBackendUrl] = useState(initialData.backend_url || '');
-    const [supabasePAT, setSupabasePAT] = useState(initialData.supabase_pat || '');
+    const [supabasePAT, setSupabasePAT] = useState('');
+    const [patTouched, setPatTouched] = useState(false);
     const [saving, setSaving] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -80,7 +81,8 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                     githubRepo: githubRepo.trim() || null,
                     backendType,
                     backendUrl: backendUrl.trim() || null,
-                    supabasePAT: supabasePAT.trim() || null,
+                    // Only send PAT when user explicitly typed a new value
+                    ...(patTouched ? { supabasePAT: supabasePAT.trim() || null } : {}),
                 }),
             });
 
@@ -172,6 +174,7 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                         setBackendType(v as 'none' | 'supabase' | 'firebase' | 'convex');
                                         setBackendUrl('');
                                         setSupabasePAT('');
+                                        setPatTouched(true);
                                     }}
                                     options={BACKEND_OPTIONS}
                                 />
@@ -195,8 +198,8 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                                         <Input
                                             type="password"
                                             value={supabasePAT}
-                                            onChange={(e) => setSupabasePAT(e.target.value)}
-                                            placeholder="sbp_..."
+                                            onChange={(e) => { setSupabasePAT(e.target.value); setPatTouched(true); }}
+                                            placeholder={initialData.has_supabase_pat ? '••••••••  (saved — type to replace)' : 'sbp_...'}
                                             className="bg-white/[0.03] border-white/[0.08] text-white font-mono placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                         />
                                     </div>
