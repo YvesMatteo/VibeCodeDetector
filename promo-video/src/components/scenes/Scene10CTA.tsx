@@ -87,7 +87,7 @@ export const Scene10CTA: React.FC = () => {
                             color: "#000",
                         }}
                     >
-                        checkvibe.online
+                        checkvibe.dev
                     </div>
                 </div>
             </ScaleIn>
