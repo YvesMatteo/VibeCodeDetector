@@ -364,9 +364,9 @@ export default function CreditsPage() {
                                                 size="lg"
                                                 className={`w-full ${plan.highlighted
                                                     ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                                    : 'bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white'
+                                                    : 'bg-white/10 hover:bg-white/20 text-white border-0'
                                                     }`}
-                                                variant={plan.highlighted ? 'default' : 'outline'}
+                                                variant={plan.highlighted ? 'default' : 'secondary'}
                                                 onClick={() => handleSubscribe(plan.id)}
                                                 disabled={loading !== null}
                                             >
@@ -473,9 +473,9 @@ export default function CreditsPage() {
                                         size="lg"
                                         className={`w-full ${plan.highlighted
                                             ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                            : 'bg-transparent border-white/[0.08] hover:bg-white/[0.04] text-white'
+                                            : 'bg-white/10 hover:bg-white/20 text-white border-0'
                                             }`}
-                                        variant={plan.highlighted ? 'default' : 'outline'}
+                                        variant={plan.highlighted ? 'default' : 'secondary'}
                                         onClick={() => handleSubscribe(plan.id)}
                                         disabled={loading !== null}
                                     >
