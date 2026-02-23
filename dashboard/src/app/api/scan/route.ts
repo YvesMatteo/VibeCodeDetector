@@ -704,9 +704,11 @@ export async function POST(req: NextRequest) {
                     domain_hijacking: 0.03, // Domain hijacking & registration
                 };
 
-                // Use FIXED denominator so skipped/errored scanners don't inflate the score.
-                const FIXED_TOTAL_WEIGHT = Object.values(SCANNER_WEIGHTS).reduce((a, b) => a + b, 0);
+                // Only include scanners that actually ran in the denominator.
+                // Skipped/errored/conditional scanners are excluded so they
+                // don't drag the score down as if they scored 0.
                 let weightedSum = 0;
+                let activeWeight = 0;
 
                 for (const [key, result] of Object.entries(results)) {
                     if (typeof result !== 'object' || result === null) continue;
@@ -714,12 +716,13 @@ export async function POST(req: NextRequest) {
                     if (r.error || typeof r.score !== 'number') continue;
                     if (r.skipped) continue;
 
-                    const weight = SCANNER_WEIGHTS[key] ?? 0.05;
+                    const weight = SCANNER_WEIGHTS[key] ?? 0.02;
                     weightedSum += r.score * weight;
+                    activeWeight += weight;
                 }
 
-                const overallScore = FIXED_TOTAL_WEIGHT > 0
-                    ? Math.round(weightedSum / FIXED_TOTAL_WEIGHT)
+                const overallScore = activeWeight > 0
+                    ? Math.round(weightedSum / activeWeight)
                     : 0;
 
                 // ------------------------------------------------------------------
