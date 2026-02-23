@@ -222,8 +222,8 @@ export default function CreditsPage() {
                     >
                         Annual
                         <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${billing === 'annual'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-emerald-500/10 text-emerald-400'
+                            ? 'bg-sky-500/20 text-sky-400'
+                            : 'bg-sky-500/10 text-sky-400'
                             }`}>
                             -30%
                         </span>
@@ -277,7 +277,7 @@ export default function CreditsPage() {
                                                     </Badge>
                                                 )}
                                                 {isCurrent && (
-                                                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 px-2 py-0.5 text-[10px]">
+                                                    <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/20 px-2 py-0.5 text-[10px]">
                                                         Current
                                                     </Badge>
                                                 )}
@@ -321,7 +321,7 @@ export default function CreditsPage() {
                                         <td key={planKey} className="p-4 text-center">
                                             {typeof value === 'boolean' ? (
                                                 value ? (
-                                                    <CheckCircle className="h-4 w-4 text-emerald-400 mx-auto" />
+                                                    <CheckCircle className="h-4 w-4 text-sky-400 mx-auto" />
                                                 ) : (
                                                     <Minus className="h-4 w-4 text-zinc-700 mx-auto" />
                                                 )
@@ -410,7 +410,7 @@ export default function CreditsPage() {
                             )}
                             {isCurrent && (
                                 <div className="absolute -top-3 right-4 z-20">
-                                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 px-3 py-1">
+                                    <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/20 px-3 py-1">
                                         Current
                                     </Badge>
                                 </div>

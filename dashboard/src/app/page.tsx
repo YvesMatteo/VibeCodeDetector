@@ -133,6 +133,7 @@ export default function HomePage() {
           <div className="hidden md:flex items-center gap-8 text-[15px] font-medium text-zinc-400">
             <a href="#slide-features" className="hover:text-white transition-colors">Features</a>
             <a href="#slide-pricing" className="hover:text-white transition-colors">Pricing</a>
+            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
             {!isLoggedIn && <Link href="/login" className="hover:text-white transition-colors">Login</Link>}
           </div>
           <Button asChild className="hidden md:inline-flex bg-white text-black hover:bg-zinc-200 rounded-full px-6 py-2.5 text-[15px] font-medium transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
@@ -154,6 +155,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-1 p-6 pt-12">
             <a href="#slide-features" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Features</a>
             <a href="#slide-pricing" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Pricing</a>
+            <Link href="/blog" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Blog</Link>
             {!isLoggedIn && <Link href="/login" onClick={() => setMobileNavOpen(false)} className="py-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b border-white/5">Login</Link>}
             <div className="mt-4">
               <Button asChild className="w-full bg-white text-black hover:bg-zinc-200 rounded-full font-medium">
@@ -194,7 +196,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                 className="block"
               >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
               </motion.span>
             </span>
           </h1>
@@ -344,12 +346,12 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto relative z-10 w-full">
           <div className="text-center mb-10 sm:mb-14">
-            <Badge variant="secondary" className="mb-4 bg-[#749CFF]/10 border-[#749CFF]/20 text-[#749CFF]">
+            <Badge variant="secondary" className="mb-4 bg-sky-500/10 border-sky-500/20 text-sky-400">
               Built for Your Stack
             </Badge>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Scans the Tools{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">You Actually Use</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
               Supabase, Firebase, Vercel, Netlify, GitHub — 30 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
@@ -374,7 +376,7 @@ export default function HomePage() {
               Pricing
             </Badge>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Transparent</span> Pricing
+              Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Transparent</span> Pricing
             </h2>
             <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-6 sm:mb-8">
               Flexible plans for every team size. Cancel anytime.
@@ -491,13 +493,13 @@ export default function HomePage() {
         className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
       >
         {/* Gradient orbs — hidden on small mobile for GPU savings */}
-        <div className="hidden sm:block absolute w-64 h-64 top-1/4 left-1/4 bg-[#497EE9]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
-        <div className="hidden sm:block absolute w-48 h-48 bottom-1/4 right-1/4 bg-[#749CFF]/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        <div className="hidden sm:block absolute w-64 h-64 top-1/4 left-1/4 bg-sky-500/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
+        <div className="hidden sm:block absolute w-48 h-48 bottom-1/4 right-1/4 bg-sky-400/10 blur-[100px] rounded-full pointer-events-none" aria-hidden="true" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="glass-card shadow-cluely-card rounded-2xl p-6 sm:p-12 bg-white/[0.02] border-white/10">
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow">Ship Vulnerabilities</span>
+              Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
               30 scanners. One click. Know exactly what to fix before you deploy.

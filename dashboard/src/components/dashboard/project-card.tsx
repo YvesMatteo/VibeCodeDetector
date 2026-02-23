@@ -65,7 +65,7 @@ export function ProjectCard({ id, name, url, faviconUrl, plan, issueCount = 0, s
 
                 {/* Bottom Badges */}
                 <div className="mt-auto flex items-center gap-2">
-                    <Badge className="bg-[#24b47e]/10 text-[#24b47e] hover:bg-[#24b47e]/20 border-0 font-semibold h-5 text-[9px] uppercase tracking-wider px-1.5 rounded-sm">
+                    <Badge className="bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border-0 font-semibold h-5 text-[9px] uppercase tracking-wider px-1.5 rounded-sm">
                         ACTIVE
                     </Badge>
                     <Badge className="bg-white/5 text-zinc-400 hover:bg-white/10 border-0 font-semibold h-5 text-[9px] uppercase tracking-wider px-1.5 rounded-sm">

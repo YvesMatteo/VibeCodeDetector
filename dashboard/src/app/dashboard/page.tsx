@@ -112,23 +112,20 @@ export default async function DashboardPage() {
             <PageHeader
                 title="Projects"
                 description={usageStats}
-            >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
-                    <div className="flex items-center gap-3">
+                actions={
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
                             <input
                                 type="text"
                                 placeholder="Search for a project"
-                                className="h-8 w-64 rounded-md bg-[#1c1c1c] border border-white/10 pl-9 pr-3 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50"
+                                className="h-8 w-40 sm:w-64 rounded-md bg-[#1c1c1c] border border-white/10 pl-9 pr-3 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50"
                             />
                         </div>
-                        <Button variant="outline" className="h-8 bg-[#1c1c1c] border-white/10 text-xs text-zinc-300 hover:bg-white/5 hover:text-white px-3">
+                        <Button variant="outline" className="hidden sm:flex h-8 bg-[#1c1c1c] border-white/10 text-xs text-zinc-300 hover:bg-white/5 hover:text-white px-3">
                             Status <ChevronDown className="ml-1.5 h-3 w-3" />
                         </Button>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1 bg-[#1c1c1c] border border-white/10 rounded-md p-0.5">
+                        <div className="hidden sm:flex items-center gap-1 bg-[#1c1c1c] border border-white/10 rounded-md p-0.5">
                             <button className="p-1 rounded bg-white/10 text-zinc-300">
                                 <LayoutGrid className="h-3.5 w-3.5" />
                             </button>
@@ -136,15 +133,15 @@ export default async function DashboardPage() {
                                 <List className="h-3.5 w-3.5" />
                             </button>
                         </div>
-                        <Button asChild className="bg-[#24b47e] text-white hover:bg-[#20a373] border-0 font-medium shadow-none h-8 text-xs rounded-md px-3">
+                        <Button asChild className="bg-sky-500 text-white hover:bg-sky-400 border-0 font-medium shadow-none h-8 text-xs rounded-md px-3 ml-1 sm:ml-0">
                             <Link href="/dashboard/projects/new">
                                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                                 New project
                             </Link>
                         </Button>
                     </div>
-                </div>
-            </PageHeader>
+                }
+            />
 
             {/* Content */}
             <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">

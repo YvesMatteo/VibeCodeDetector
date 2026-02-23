@@ -33,7 +33,7 @@ const sections = [
                     </div>
                     <p className="text-sm text-zinc-500 mb-3">Trigger a new security scan on a URL. Requires <code className="text-zinc-400 text-xs">scan:write</code> scope.</p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl -X POST https://checkvibe.dev/api/scan \\
+                        {`curl -X POST https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -45,7 +45,7 @@ const sections = [
                 <div className="text-sm text-zinc-400">
                     <p className="font-medium text-zinc-300 mb-1.5">Response</p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-zinc-400 font-mono overflow-x-auto">
-{`{
+                        {`{
   "scanId": "uuid",
   "status": "processing",
   "url": "https://example.com"
@@ -67,14 +67,14 @@ const sections = [
                     </div>
                     <p className="text-sm text-zinc-500 mb-3">Fetch results for a specific scan. Requires <code className="text-zinc-400 text-xs">scan:read</code> scope.</p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl https://checkvibe.dev/api/scan/SCAN_ID \\
+                        {`curl https://checkvibe.dev/api/scan/SCAN_ID \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
                     </pre>
                 </div>
                 <div className="text-sm text-zinc-400">
                     <p className="font-medium text-zinc-300 mb-1.5">Response (completed scan)</p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-zinc-400 font-mono overflow-x-auto">
-{`{
+                        {`{
   "id": "uuid",
   "url": "https://example.com",
   "status": "completed",
@@ -102,7 +102,7 @@ const sections = [
                     </div>
                     <p className="text-sm text-zinc-500 mb-3">List all scans for the authenticated user. Requires <code className="text-zinc-400 text-xs">scan:read</code> scope.</p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`curl https://checkvibe.dev/api/scan \\
+                        {`curl https://checkvibe.dev/api/scan \\
   -H "Authorization: Bearer cvd_live_YOUR_KEY"`}
                     </pre>
                 </div>
@@ -122,7 +122,7 @@ const sections = [
                         Add to <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
                     </p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-{`{
+                        {`{
   "mcpServers": {
     "checkvibe": {
       "command": "npx",
@@ -362,7 +362,7 @@ function Section({ id, title, content }: { id: string; title: string; content: R
 
 export default function DocsPage() {
     return (
-        <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
             <div className="mb-10">
                 <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                     API Documentation

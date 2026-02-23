@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'; // Assuming Button is available
 
 export const mainNav = [
     { name: 'Projects', href: '/dashboard', icon: FolderKanban },
-    { name: 'API Keys', href: '/dashboard/api-keys', icon: Key },
+    { name: 'API Keys/MCP Server', href: '/dashboard/api-keys', icon: Key },
     { name: 'Plans', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -32,7 +32,7 @@ export const resourceLinks = [
 ];
 
 export const connectLinks = [
-    { name: 'Support', href: 'mailto:support@checkvibe.dev', icon: Mail, external: true },
+    { name: 'Support', href: '/dashboard/support', icon: Mail, external: false },
 ];
 
 interface SidebarProps {

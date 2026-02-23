@@ -107,7 +107,7 @@ const typeLabels: Record<string, string> = {
 
 export default function ChangelogPage() {
     return (
-        <div className="p-4 md:p-8 max-w-3xl">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
             <div className="mb-10">
                 <h1 className="text-2xl md:text-3xl font-heading font-medium tracking-tight text-white">
                     Changelog
@@ -125,11 +125,10 @@ export default function ChangelogPage() {
                     {changelog.map((release, i) => (
                         <div key={release.version} className="relative pl-8">
                             {/* Timeline dot */}
-                            <div className={`absolute left-0 top-[7px] h-[11px] w-[11px] rounded-full border-2 ${
-                                i === 0
+                            <div className={`absolute left-0 top-[7px] h-[11px] w-[11px] rounded-full border-2 ${i === 0
                                     ? 'bg-white border-white'
                                     : 'bg-zinc-900 border-zinc-700'
-                            }`} />
+                                }`} />
 
                             {/* Header */}
                             <div className="flex flex-wrap items-center gap-2 mb-3">
