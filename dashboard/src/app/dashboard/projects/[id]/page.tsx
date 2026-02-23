@@ -136,6 +136,39 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
 
     return (
         <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full space-y-6">
+            {/* Centralized CTA for Issues - Moved to top for mobile visibility */}
+            {latestScan && (
+                (issues && issues.total > 0) ? (
+                    <div className="rounded-xl border border-red-500/10 bg-red-500/[0.02] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 shrink-0">
+                                <Shield className="h-5 w-5 text-red-500" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-white">Security Vulnerabilities Found</p>
+                                <p className="text-xs text-zinc-500 mt-0.5">Please review the detailed analysis in the Report tab to see exact issues and fixes.</p>
+                            </div>
+                        </div>
+                        <Button asChild variant="outline" className="w-full sm:w-auto shrink-0 bg-transparent border-white/10 hover:bg-white/5 h-9 text-xs">
+                            <Link href={`/dashboard/projects/${id}/report`}>
+                                View Full Report
+                                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                            </Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.02] p-5 flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
+                            <Shield className="h-5 w-5 text-emerald-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-emerald-400">No issues detected</p>
+                            <p className="text-xs text-zinc-500 mt-0.5">Your project is in good shape. Keep monitoring for new issues.</p>
+                        </div>
+                    </div>
+                )
+            )}
+
             {/* Status cards row - Supabase style */}
             {latestScan ? (
                 <>
@@ -233,36 +266,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                         </div>
                     </div>
 
-                    {/* Centralized CTA for Issues */}
-                    {(issues && issues.total > 0) ? (
-                        <div className="rounded-xl border border-red-500/10 bg-red-500/[0.02] p-5 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
-                                    <Shield className="h-5 w-5 text-red-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-white">Security Vulnerabilities Found</p>
-                                    <p className="text-xs text-zinc-500 mt-0.5">Please review the detailed analysis in the Report tab to see exact issues and fixes.</p>
-                                </div>
-                            </div>
-                            <Button asChild variant="outline" className="shrink-0 bg-transparent border-white/10 hover:bg-white/5 h-9 text-xs">
-                                <Link href={`/dashboard/projects/${id}/report`}>
-                                    View Full Report
-                                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                                </Link>
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.02] p-5 flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-500/10">
-                                <Shield className="h-5 w-5 text-emerald-400" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-emerald-400">No issues detected</p>
-                                <p className="text-xs text-zinc-500 mt-0.5">Your project is in good shape. Keep monitoring for new issues.</p>
-                            </div>
-                        </div>
-                    )}
+
                 </>
             ) : (
                 /* Empty state */
