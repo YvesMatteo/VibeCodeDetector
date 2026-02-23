@@ -67,7 +67,7 @@ export default async function ProjectLayout({
                             <div className="flex items-center gap-3 min-w-0">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={project.favicon_url || `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+                                    src={project.favicon_url || `/api/favicon?domain=${hostname}&sz=64`}
                                     alt=""
                                     className="h-8 w-8 rounded-md object-contain shrink-0 p-1 bg-zinc-900/50 border border-white/10"
                                 />

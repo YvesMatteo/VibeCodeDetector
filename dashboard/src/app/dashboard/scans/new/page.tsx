@@ -214,7 +214,7 @@ export default function NewScanPage() {
                                     <div className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted shrink-0 overflow-hidden">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
-                                            src={`https://www.google.com/s2/favicons?domain=${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}&sz=64`}
+                                            src={`/api/favicon?domain=${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}&sz=64`}
                                             alt="Favicon"
                                             className="h-6 w-6 object-contain"
                                         />

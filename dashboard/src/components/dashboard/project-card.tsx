@@ -42,7 +42,7 @@ export function ProjectCard({ id, name, url, faviconUrl, issueCount = 0, severit
     const cacheBuster = lastAuditDate ? `?v=${new Date(lastAuditDate).getTime()}` : '';
     const faviconSrc = faviconUrl
         ? `${faviconUrl}${faviconUrl.includes('?') ? '&' : '?'}v=${lastAuditDate ? new Date(lastAuditDate).getTime() : '0'}`
-        : `https://www.google.com/s2/favicons?domain=${hostname}&sz=64${cacheBuster ? `&_=${new Date(lastAuditDate!).getTime()}` : ''}`;
+        : `/api/favicon?domain=${hostname}&sz=64${cacheBuster ? `&_=${new Date(lastAuditDate!).getTime()}` : ''}`;
 
     return (
         <Link href={`/dashboard/projects/${id}`} className="group block h-full">
