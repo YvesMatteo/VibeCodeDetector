@@ -10,10 +10,13 @@ node_modules/
 dist/
 build/
 .next/
+out/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS files
 .DS_Store
@@ -22,13 +25,14 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Vercel
 .vercel
-.env*.local
 
 # Supabase temp files
 supabase/.temp/
 
-# Large binary files
+# Large binary / media files
 *.zip
 *.dmg
 *.mov
@@ -36,3 +40,30 @@ supabase/.temp/
 *.app/
 hf_*.jpeg
 hf_*.png
+
+# Screenshots
+Screenshot *.png
+Screenshot *.jpg
+
+# Planning / session docs (keep in local, not in repo)
+IMPLEMENTATION_PLAN.md
+PROMPT.md
+SESSION_SUMMARY.md
+SCANNER_ANALYSIS.md
+LAUNCH_AUDIT.md
+PRODUCT_SPEC.md
+Market_Research*.md
+
+# Competitor analysis exports
+checkvibe-*.md
+
+# Temp scripts
+create_composite_logo*.py
+
+# Root logo files (originals live in dashboard/public/)
+/logo.png
+/logo-white-bg.png
+
+# Local dev playgrounds
+animation-playground/
+mcp-server/
