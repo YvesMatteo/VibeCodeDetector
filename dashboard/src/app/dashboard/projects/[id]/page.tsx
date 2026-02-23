@@ -16,6 +16,7 @@ import {
 import { processAuditData } from '@/lib/audit-data';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
+import { Button } from '@/components/ui/button';
 
 function getScoreColor(score: number | null): string {
     if (score === null) return 'text-zinc-500';
@@ -153,9 +154,8 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                                 </span>
                                 <span className="text-zinc-600 text-sm mb-1">/100</span>
                                 {scoreDelta !== null && scoreDelta !== 0 && (
-                                    <span className={`flex items-center text-xs font-medium mb-1 ml-auto ${
-                                        scoreDelta > 0 ? 'text-emerald-400' : 'text-red-400'
-                                    }`}>
+                                    <span className={`flex items-center text-xs font-medium mb-1 ml-auto ${scoreDelta > 0 ? 'text-emerald-400' : 'text-red-400'
+                                        }`}>
                                         {scoreDelta > 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
                                         {scoreDelta > 0 ? '+' : ''}{scoreDelta}
                                     </span>
@@ -216,10 +216,10 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
 
                     </div>
 
-                    {/* Two column: Score trend + Project config */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Single column: Score trend */}
+                    <div className="grid grid-cols-1 gap-4">
                         {/* Score Trend */}
-                        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-medium text-white">Score Trend</h3>
                                 <Link
@@ -231,98 +231,34 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                             </div>
                             <ScoreChart data={chartData} height={220} />
                         </div>
-
-                        {/* Project Configuration */}
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-medium text-white">Project Configuration</h3>
-                                <Link
-                                    href={`/dashboard/projects/${id}/settings`}
-                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                                >
-                                    Edit
-                                </Link>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-1">Target URL</p>
-                                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1 break-all">
-                                        {hostname} <ExternalLink className="h-3 w-3 shrink-0" />
-                                    </a>
-                                </div>
-                                {project.github_repo && (
-                                    <div>
-                                        <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-1">GitHub</p>
-                                        <a
-                                            href={`https://github.com/${project.github_repo}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm text-zinc-300 hover:text-white flex items-center gap-1.5"
-                                        >
-                                            <GitBranch className="h-3.5 w-3.5 text-zinc-500" />
-                                            {project.github_repo}
-                                        </a>
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-1">Backend</p>
-                                    <p className="text-sm text-zinc-300 flex items-center gap-1.5">
-                                        <Server className="h-3.5 w-3.5 text-zinc-500" />
-                                        {project.backend_type ? project.backend_type.charAt(0).toUpperCase() + project.backend_type.slice(1) : 'Not configured'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-1">Total Scans</p>
-                                    <p className="text-sm text-zinc-300">{recentScans?.length ?? 0}</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Top Findings */}
-                    {topFindings.length > 0 && (
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-medium text-white">Critical & High Findings</h3>
-                                <Link
-                                    href={`/dashboard/projects/${id}/report`}
-                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1"
-                                >
-                                    View full report <ArrowRight className="h-3 w-3" />
+                    {/* Centralized CTA for Issues */}
+                    {(issues && issues.total > 0) ? (
+                        <div className="rounded-xl border border-sky-500/10 bg-sky-500/[0.02] p-5 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                    <Shield className="h-5 w-5 text-sky-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-white">Security Vulnerabilities Found</p>
+                                    <p className="text-xs text-zinc-500 mt-0.5">Please review the detailed analysis in the Report tab to see exact issues and fixes.</p>
+                                </div>
+                            </div>
+                            <Button asChild variant="outline" className="shrink-0 bg-transparent border-white/10 hover:bg-white/5 h-9 text-xs">
+                                <Link href={`/dashboard/projects/${id}/report`}>
+                                    View Full Report
+                                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                                 </Link>
-                            </div>
-                            <div className="space-y-2">
-                                {topFindings.slice(0, 8).map((f, i) => (
-                                    <div key={i} className="flex items-start gap-3 py-2 border-b border-white/[0.04] last:border-0">
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase shrink-0 mt-0.5 ${
-                                            f.severity === 'critical'
-                                                ? 'bg-red-500/15 text-red-400'
-                                                : 'bg-orange-500/15 text-orange-400'
-                                        }`}>
-                                            {f.severity}
-                                        </span>
-                                        <div className="min-w-0">
-                                            <p className="text-sm text-zinc-200 break-words">{f.finding}</p>
-                                            <p className="text-xs text-zinc-600">{f.scanner}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {topFindings.length > 8 && (
-                                    <p className="text-xs text-zinc-500 pt-2">
-                                        +{topFindings.length - 8} more findings
-                                    </p>
-                                )}
-                            </div>
+                            </Button>
                         </div>
-                    )}
-
-                    {topFindings.length === 0 && (
+                    ) : (
                         <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.02] p-5 flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-emerald-500/10">
                                 <Shield className="h-5 w-5 text-emerald-400" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-emerald-400">No critical or high severity findings</p>
+                                <p className="text-sm font-medium text-emerald-400">No issues detected</p>
                                 <p className="text-xs text-zinc-500 mt-0.5">Your project is in good shape. Keep monitoring for new issues.</p>
                             </div>
                         </div>

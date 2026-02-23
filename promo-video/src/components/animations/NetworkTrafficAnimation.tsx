@@ -25,7 +25,7 @@ export const NetworkTrafficAnimation: React.FC = () => {
     );
 };
 
-const SatelliteNode: React.FC<{ index: number; total: number }> = ({ index, total }) => {
+const SatelliteNode = ({ index, total }: { index: number; total: number }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig(); // Access fps here
 
@@ -101,7 +101,7 @@ const TrafficFlow: React.FC = () => {
 };
 
 
-const Packet: React.FC<{ startFrame: number, angle: number, isThreat: boolean }> = ({ startFrame, angle, isThreat }) => {
+const Packet = ({ startFrame, angle, isThreat }: { startFrame: number, angle: number, isThreat: boolean }) => {
     const frame = useCurrentFrame();
     const radius = 200;
     const xStart = radius * Math.cos((angle * Math.PI) / 180);

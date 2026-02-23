@@ -139,6 +139,7 @@ async function probeWithUA(url: string, userAgent: string, method = "GET"): Prom
 // Main handler
 // ---------------------------------------------------------------------------
 
+// @ts-ignore
 Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") {
         return new Response(null, { headers: getCorsHeaders(req) });

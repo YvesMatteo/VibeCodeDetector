@@ -796,6 +796,7 @@ async function testNoSqlInjection(
 // Main handler
 // ---------------------------------------------------------------------------
 
+// @ts-ignore
 Deno.serve(async (req: Request) => {
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: getCorsHeaders(req) });

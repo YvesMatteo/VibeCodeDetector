@@ -172,17 +172,8 @@ export default function HomePage() {
       >
 
 
-        <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-inner shadow-white/5"
-          >
-            <span className="flex h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-            <span className="text-xs font-medium text-sky-200 tracking-wide uppercase">Now Live</span>
-          </motion.div>
+        <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center gap-4 sm:gap-6 w-full flex-1 justify-center -mt-10 sm:-mt-16">
+
 
           {/* H1 Typography */}
           <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-1 w-full">
@@ -190,7 +181,7 @@ export default function HomePage() {
               <motion.span
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
                 className="block"
               >
                 The <span className="italic text-white/50">#1 Fullstack</span> security scanner
@@ -200,7 +191,7 @@ export default function HomePage() {
               <motion.span
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                 className="block"
               >
                 for <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#749CFF] via-[#A5B4FC] to-[#749CFF] animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
@@ -212,7 +203,7 @@ export default function HomePage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
             30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
@@ -222,7 +213,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
             <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
@@ -241,7 +232,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 sm:gap-8 w-full max-w-4xl mt-2"
           >
             {stats.map((stat, i) => (
@@ -264,7 +255,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+            transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
             className="relative w-full max-w-4xl group mt-2"
             style={isTouch ? undefined : { perspective: 800 }}
             aria-hidden="true"

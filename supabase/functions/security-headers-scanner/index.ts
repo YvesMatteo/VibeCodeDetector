@@ -73,6 +73,7 @@ function parseCookie(cookieStr: string): { name: string; flags: string } {
     return { name, flags };
 }
 
+// @ts-ignore
 Deno.serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
