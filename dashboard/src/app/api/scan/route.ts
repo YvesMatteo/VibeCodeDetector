@@ -770,8 +770,31 @@ export async function POST(req: NextRequest) {
                     }
                 }
 
-                // Update project favicon (fire-and-forget)
+                // Update project stats (fire-and-forget)
                 if (resolvedProjectId) {
+                    try {
+                        const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0 };
+                        for (const val of Object.values(results)) {
+                            const r = val as Record<string, any>;
+                            if (!r || !Array.isArray(r.findings)) continue;
+                            for (const f of r.findings) {
+                                const sev = (f.severity || 'info').toLowerCase();
+                                if (sev in counts) (counts as any)[sev]++;
+                                counts.total++;
+                            }
+                        }
+                        const svc = getServiceClient();
+                        void svc.from('projects').update({
+                            total_findings: counts.total,
+                            critical_count: counts.critical,
+                            high_count: counts.high,
+                            medium_count: counts.medium,
+                            low_count: counts.low,
+                            info_count: counts.info,
+                            last_score: overallScore,
+                        }).eq('id', resolvedProjectId!);
+                    } catch { /* non-critical */ }
+
                     fetchFaviconUrl(targetUrl).then(faviconUrl => {
                         if (faviconUrl) {
                             const svc = getServiceClient();
