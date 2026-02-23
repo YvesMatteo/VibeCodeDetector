@@ -1,38 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const FALLBACK_ICON = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAKRJREFUWEft' +
+    'ljEOgCAQBOf/j7a2tlZWGAke3B4LRRRjYcJVLMPs3cEB/TiA/fkZYAWyDN8yCTPbAPgBOEr6pnZK' +
+    'ALd09ZVkwh0ASZO0pz8nQCLZAbimu2RdPAAcJUUBymV+BHhK2hUDuKSrz+EZIGOV6wBc09U3JWAE' +
+    'yDJ8S8QA8lau3oBzuoaPYASyDF8BMYB8la+Ac7o+fAsm/A/wf8EKsAIjwA1DCy0hPuLVqgAAAABJ' +
+    'RU5ErkJggg==',
+    'base64'
+);
+
 export async function GET(req: NextRequest) {
     const domain = req.nextUrl.searchParams.get('domain');
     if (!domain) {
         return NextResponse.json({ error: 'Missing domain' }, { status: 400 });
     }
 
-    // Sanitize domain — only allow valid hostnames
     if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
         return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
     }
 
     const sz = req.nextUrl.searchParams.get('sz') || '64';
+    const headers = {
+        'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+    };
 
+    // Try Google's favicon service first (most reliable for known domains)
     try {
-        const res = await fetch(
-            `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${sz}`,
-            { next: { revalidate: 86400 } } // cache 24h
-        );
-
-        if (!res.ok) {
-            return new NextResponse(null, { status: 502 });
-        }
-
-        const buffer = await res.arrayBuffer();
-        const contentType = res.headers.get('content-type') || 'image/png';
-
-        return new NextResponse(buffer, {
-            headers: {
-                'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-            },
+        const googleUrl = `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${encodeURIComponent(domain)}&size=${sz}`;
+        const res = await fetch(googleUrl, {
+            signal: AbortSignal.timeout(5000),
         });
-    } catch {
-        return new NextResponse(null, { status: 502 });
-    }
+        if (res.ok) {
+            const buffer = await res.arrayBuffer();
+            // Google returns a tiny default globe icon when it doesn't know the site —
+            // check if it's a real favicon (> 200 bytes usually means real)
+            if (buffer.byteLength > 200) {
+                return new NextResponse(buffer, {
+                    headers: {
+                        ...headers,
+                        'Content-Type': res.headers.get('content-type') || 'image/png',
+                    },
+                });
+            }
+        }
+    } catch { /* fall through */ }
+
+    // Try fetching /favicon.ico directly from the domain
+    try {
+        const res = await fetch(`https://${domain}/favicon.ico`, {
+            signal: AbortSignal.timeout(5000),
+            redirect: 'follow',
+        });
+        if (res.ok) {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('image') || ct.includes('icon') || ct.includes('octet-stream')) {
+                const buffer = await res.arrayBuffer();
+                if (buffer.byteLength > 0) {
+                    return new NextResponse(buffer, {
+                        headers: {
+                            ...headers,
+                            'Content-Type': ct.includes('icon') ? 'image/x-icon' : ct,
+                        },
+                    });
+                }
+            }
+        }
+    } catch { /* fall through */ }
+
+    // Return a default globe icon
+    return new NextResponse(FALLBACK_ICON, {
+        headers: {
+            ...headers,
+            'Content-Type': 'image/png',
+        },
+    });
 }
