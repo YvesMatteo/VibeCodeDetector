@@ -5,10 +5,18 @@ import { submitSupportTicket } from '@/app/actions/support';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CustomSelect } from '@/components/ui/custom-select';
+
+const ISSUE_OPTIONS = [
+    { value: 'bug', label: 'Report a Bug' },
+    { value: 'feedback', label: 'Feature Request / Feedback' },
+    { value: 'question', label: 'General Question' },
+];
 
 export function SupportForm() {
     const [pending, setPending] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [issueType, setIssueType] = useState<string>('');
 
     async function handleSubmit(formData: FormData) {
         setPending(true);
@@ -38,17 +46,15 @@ export function SupportForm() {
 
             <div className="space-y-2">
                 <Label htmlFor="type" className="text-zinc-300">Issue Type</Label>
-                <select
-                    name="type"
+                <input type="hidden" name="type" value={issueType} required />
+                <CustomSelect
                     id="type"
-                    required
-                    className="flex h-10 w-full rounded-md border border-white/10 bg-[#1c1c1c] px-3 py-2 text-sm text-zinc-200 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    <option value="" disabled selected>Select an issue type...</option>
-                    <option value="bug">Report a Bug</option>
-                    <option value="feedback">Feature Request / Feedback</option>
-                    <option value="question">General Question</option>
-                </select>
+                    value={issueType}
+                    onChange={setIssueType}
+                    options={ISSUE_OPTIONS}
+                    placeholder="Select an issue type..."
+                    className="w-full"
+                />
             </div>
 
             <div className="space-y-2">

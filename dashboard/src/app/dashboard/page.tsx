@@ -6,8 +6,12 @@ import { createClient } from '@/lib/supabase/server';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { PageHeader } from '@/components/dashboard/page-header';
+import { ProjectSearch } from '@/components/dashboard/project-search';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+    const params = await searchParams;
+    const query = params.q?.toLowerCase() || '';
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -36,9 +40,14 @@ export default async function DashboardPage() {
 
     const projectList = projects || [];
 
+    // Filter projects if a search term exists
+    const filteredProjects = query
+        ? projectList.filter(p => p.name.toLowerCase().includes(query) || p.url.toLowerCase().includes(query))
+        : projectList;
+
     // For each project, get the latest scan with severity breakdown
     const projectsWithScans = await Promise.all(
-        projectList.map(async (project) => {
+        filteredProjects.map(async (project) => {
             const { data: latestScan } = await supabase
                 .from('scans')
                 .select('id, overall_score, completed_at, results')
@@ -114,25 +123,7 @@ export default async function DashboardPage() {
                 description={usageStats}
                 actions={
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-                            <input
-                                type="text"
-                                placeholder="Search for a project"
-                                className="h-8 w-40 sm:w-64 rounded-md bg-[#1c1c1c] border border-white/10 pl-9 pr-3 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50"
-                            />
-                        </div>
-                        <Button variant="outline" className="hidden sm:flex h-8 bg-[#1c1c1c] border-white/10 text-xs text-zinc-300 hover:bg-white/5 hover:text-white px-3">
-                            Status <ChevronDown className="ml-1.5 h-3 w-3" />
-                        </Button>
-                        <div className="hidden sm:flex items-center gap-1 bg-[#1c1c1c] border border-white/10 rounded-md p-0.5">
-                            <button className="p-1 rounded bg-white/10 text-zinc-300">
-                                <LayoutGrid className="h-3.5 w-3.5" />
-                            </button>
-                            <button className="p-1 rounded text-zinc-500 hover:text-zinc-300">
-                                <List className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
+                        <ProjectSearch />
                         <Button asChild className="bg-sky-500 text-white hover:bg-sky-400 border-0 font-medium shadow-none h-8 text-xs rounded-md px-3 ml-1 sm:ml-0">
                             <Link href="/dashboard/projects/new">
                                 <Plus className="mr-1.5 h-3.5 w-3.5" />
