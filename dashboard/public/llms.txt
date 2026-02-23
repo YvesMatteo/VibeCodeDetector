@@ -1,0 +1,55 @@
+# CheckVibe
+
+> AI-powered website security scanner with 30+ automated checks.
+
+CheckVibe scans websites for security vulnerabilities in under 60 seconds. It runs 30 security scanners in parallel to detect issues before attackers do.
+
+## What It Does
+
+CheckVibe is a SaaS security scanning platform for web developers, indie hackers, and teams who ship fast. Enter a URL, click scan, and get a comprehensive security audit covering:
+
+- SQL injection detection
+- Cross-site scripting (XSS) detection
+- Exposed API key scanning (50+ providers)
+- Security header analysis (CSP, HSTS, X-Frame-Options)
+- SSL/TLS certificate and cipher auditing
+- CORS misconfiguration detection
+- CSRF vulnerability testing
+- Cookie security analysis
+- DNS configuration checks (DNSSEC, SPF, DKIM, DMARC)
+- Open redirect detection
+- File upload vulnerability scanning
+- DDoS protection analysis (WAF, CDN, rate limiting)
+- Domain hijacking risk assessment
+- Dependency vulnerability scanning (npm CVEs)
+- GitHub secret leak detection
+- Backend-specific security checks (Supabase RLS, Firebase rules, Convex)
+- Hosting provider audits (Vercel, Netlify, Cloudflare, Railway)
+- AI/vibe coding detection and security pattern analysis
+- Audit logging and monitoring assessment
+- Mobile API security checks
+
+## Pricing
+
+- Free: 1 project, 3 scans/month, issue overview (blurred details)
+- Starter ($19/month): 1 project, 5 scans/month, full scan suite, scan history
+- Pro ($39/month): 3 projects, 20 scans/month, all features
+- Max ($79/month): 10 projects, 50 scans/month, all features, priority support
+
+Annual billing saves 30%.
+
+## Who It's For
+
+- Solo developers and indie hackers shipping side projects
+- Small teams building SaaS products
+- Agencies auditing client websites
+- Anyone who vibe codes with AI and wants to verify security
+- Developers who need continuous security monitoring without hiring a pentester
+
+## Links
+
+- Website: https://checkvibe.dev
+- Blog: https://checkvibe.dev/blog
+- Sign Up: https://checkvibe.dev/signup
+- RSS Feed: https://checkvibe.dev/feed.xml
+- Full Documentation: https://checkvibe.dev/llms-full.txt

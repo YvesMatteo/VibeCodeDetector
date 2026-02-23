@@ -511,6 +511,48 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* FAQ Section */}
+        <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 relative z-10">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-12 text-white">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-4">
+            {[
+              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 30+ automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
+              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 30 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
+              { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' },
+              { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
+              { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
+            ].map(({ q, a }) => (
+              <details key={q} className="group rounded-xl border border-white/[0.06] bg-white/[0.01] overflow-hidden">
+                <summary className="flex items-center justify-between px-6 py-4 cursor-pointer text-[15px] font-medium text-zinc-200 hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span className="ml-4 text-zinc-600 group-open:rotate-45 transition-transform text-xl">+</span>
+                </summary>
+                <div className="px-6 pb-4 text-sm text-zinc-400 leading-relaxed">
+                  {a}
+                </div>
+              </details>
+            ))}
+          </div>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: [
+                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 30+ automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
+                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 30 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
+                  { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' } },
+                  { '@type': 'Question', name: 'What vulnerabilities does CheckVibe detect?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' } },
+                  { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },
+                ],
+              }),
+            }}
+          />
+        </div>
+
         {/* Footer */}
         <footer className="w-full pt-12 sm:pt-16 pb-8 relative z-10 safe-bottom mt-12 sm:mt-16">
           <div className="max-w-7xl mx-auto">
@@ -519,6 +561,7 @@ export default function HomePage() {
                 <Image src="/logo-composite.png" alt="CheckVibe Logo" width={120} height={24} className="w-auto h-6 object-contain" />
               </div>
               <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-zinc-400">
+                <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
                 <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
                 <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
                 <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>

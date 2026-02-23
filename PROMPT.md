@@ -1,28 +1,44 @@
-# Project Prompt
+# Goal
 
-## Goal
-Fix all remaining security findings from the 6-agent security audit. The immediate/critical items (PAT masking, CSRF, rate limiting, timing-safe secrets, renderer default-secret, badge IDOR, handle_new_user defaults) were already shipped. This pass addresses every remaining CRITICAL, HIGH, and MEDIUM finding.
+Add SEO infrastructure, a blog system, and LLM-readable content to CheckVibe (checkvibe.dev) so the site gets indexed by Google, ranks for security-scanning keywords, and gets recommended by AI assistants.
+
+## Context
+
+- **Stack**: Next.js 16 (App Router) + Tailwind CSS 4 + Supabase + Vercel
+- **Dashboard dir**: `dashboard/` — all code lives here
+- **Current SEO**: robots.ts, sitemap.ts (6 static URLs), OG images, JSON-LD SoftwareApplication schema, basic meta tags
+- **No blog exists** — no MDX deps, no content files, no RSS
+- **No LLM files** — no llms.txt, no .well-known/ai-plugin.json
+- **Public pages**: `/`, `/login`, `/signup`, `/privacy`, `/terms`, `/cookies`, `/report/[publicId]`
+- **Key files**: `src/app/layout.tsx`, `src/app/sitemap.ts`, `src/app/robots.ts`, `next.config.ts`, `package.json`
 
 ## Requirements
-- [x] C1: Tighten CSP — removed `unsafe-eval` from script-src, restricted img-src (nonce-based deferred)
-- [x] H1: Fix CI pipeline — removed `|| true` from test/audit steps
-- [x] H4: Restrict `img-src` CSP — removed `http:`, restricted to known domains
-- [x] H5: Increase shared report `public_id` entropy from 4 bytes to 16 bytes
-- [x] H6: Pin GitHub Actions to commit SHAs
-- [x] M1: Fail fast if `SCANNER_SECRET_KEY` is empty
-- [x] M2: Move `@types/three` from dependencies to devDependencies
-- [x] M5: Webhook POST response — explicit column select, secret as separate one-time field
-- [x] M7: Cron stays GET (Vercel limitation) — documented with comment
-- [x] L3: Add `WITH CHECK` clause to scans UPDATE RLS policy
-- [x] L5: Sanitize error logging — use `e.message` in scan route
 
-## Constraints
-- Must not break existing functionality or the Vercel deployment
-- No new external libraries without good reason
-- All SQL changes must be applied to live DB via `supabase db push` or Management API
-- CSP nonce approach must work with Next.js 16 App Router
+### SEO Fundamentals
+- Expand sitemap to include blog posts dynamically
+- Add FAQ structured data (JSON-LD) to homepage
+- Improve meta descriptions per page (not just global)
+- Add canonical URLs
 
-## Success Criteria
-- [x] All requirements above are implemented
-- [x] `npx tsc --noEmit` passes cleanly
-- [x] Changes committed and pushed to main (b4b2961)
+### Blog System
+- File-based MDX blog at `/blog` and `/blog/[slug]`
+- Blog index page with card grid (dark theme, matches site)
+- Blog post page with reading time, author, date
+- Frontmatter: title, description, date, author, tags, image
+- RSS feed at `/feed.xml`
+- Blog posts auto-added to sitemap
+- SEO metadata per post (OG, description, title)
+- Ship with 5 seed articles targeting keywords: "website security scanner", "how to find XSS vulnerabilities", "API key leak detection", "vibe coding security", "OWASP top 10 checklist"
+
+### LLM Visibility (AI-Readable Content)
+- `/llms.txt` — plain-text summary of what CheckVibe is, features, pricing (follows llms.txt spec)
+- `/llms-full.txt` — detailed markdown version with all features + blog content
+- Every blog post also served as raw markdown at `/blog/[slug].md`
+- Allow AI crawlers in robots.txt (GPTBot, ChatGPT-User, Claude-Web, etc.)
+
+### Technical
+- Use `next-mdx-remote` for MDX rendering
+- Blog content as `.mdx` files in `dashboard/content/blog/` directory
+- No CMS — all content is git-managed markdown
+- Dark theme matching existing site design
+- Mobile responsive

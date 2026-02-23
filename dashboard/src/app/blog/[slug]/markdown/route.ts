@@ -6,11 +6,8 @@ export async function GET(
     { params }: { params: Promise<{ slug: string }> }
 ) {
     const { slug } = await params;
-
-    // Strip .md extension if present in the slug
-    const cleanSlug = slug.replace(/\.md$/, '');
-    const post = getPostBySlug(cleanSlug);
-    const markdown = getRawMarkdown(cleanSlug);
+    const post = getPostBySlug(slug);
+    const markdown = getRawMarkdown(slug);
 
     if (!post || !markdown) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
