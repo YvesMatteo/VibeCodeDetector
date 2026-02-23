@@ -57,7 +57,7 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background md:flex">
             {/* Mobile Header */}
             <header className="fixed top-0 left-0 right-0 z-40 h-12 safe-top bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
@@ -95,8 +95,8 @@ export default function DashboardLayout({
                 </SheetContent>
             </Sheet>
 
-            {/* Desktop Sidebar - Fixed Hover Expand */}
-            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 h-screen">
+            {/* Desktop Sidebar - Sticky Flex Item */}
+            <aside className="hidden md:block sticky top-0 h-screen shrink-0 z-50 overflow-visible transition-[width] duration-300">
                 <Sidebar
                     userEmail={userEmail}
                     userPlan={userPlan}
@@ -105,8 +105,8 @@ export default function DashboardLayout({
                 />
             </aside>
 
-            {/* Main Content - Padded to match collapsed width (70px) */}
-            <main className="md:pl-[70px] pt-12 md:pt-0 relative min-h-dvh safe-bottom transition-[padding] duration-300">
+            {/* Main Content - Flex remaining space */}
+            <main className="flex-1 min-w-0 pt-12 md:pt-0 relative min-h-dvh safe-bottom transition-all duration-300">
                 <SWRProvider>
                     <div className="animate-fade-in-up">
                         {children}
