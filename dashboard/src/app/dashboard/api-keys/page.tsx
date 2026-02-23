@@ -307,8 +307,8 @@ export default function ApiKeysPage() {
                                     <div className="flex items-center gap-3">
                                         <Terminal className="h-4 w-4 text-zinc-400" />
                                         <div>
-                                            <CardTitle className="text-white text-sm font-medium">Use with Claude Code (MCP)</CardTitle>
-                                            <CardDescription className="text-zinc-500 text-xs">Let coding agents run security scans</CardDescription>
+                                            <CardTitle className="text-white text-sm font-medium">Use with AI Coding Agents (MCP)</CardTitle>
+                                            <CardDescription className="text-zinc-500 text-xs">Works with Claude Code, Cursor, and Antigravity</CardDescription>
                                         </div>
                                     </div>
                                     {mcpOpen ? <ChevronUp className="h-4 w-4 text-zinc-500" /> : <ChevronDown className="h-4 w-4 text-zinc-500" />}
@@ -316,12 +316,13 @@ export default function ApiKeysPage() {
                             </CardHeader>
                             {mcpOpen && (
                                 <CardContent>
-                                    <div className="space-y-3">
-                                        <p className="text-xs text-zinc-500">
-                                            Add to your <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
-                                        </p>
-                                        <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
-                                            {`{
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-xs text-zinc-500 mb-2">
+                                                <span className="text-zinc-300 font-medium">Claude Code</span> — add to <code className="text-zinc-400">.mcp.json</code> in your project root:
+                                            </p>
+                                            <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                                                {`{
   "mcpServers": {
     "checkvibe": {
       "command": "npx",
@@ -332,7 +333,14 @@ export default function ApiKeysPage() {
     }
   }
 }`}
-                                        </pre>
+                                            </pre>
+                                        </div>
+                                        <p className="text-xs text-zinc-500">
+                                            <span className="text-zinc-300 font-medium">Cursor</span> — same config in <code className="text-zinc-400">.cursor/mcp.json</code>
+                                        </p>
+                                        <p className="text-xs text-zinc-500">
+                                            <span className="text-zinc-300 font-medium">Antigravity</span> — same config in <code className="text-zinc-400">~/.gemini/antigravity/mcp_config.json</code>
+                                        </p>
                                         <div className="flex items-center gap-2 text-xs text-zinc-500">
                                             <Terminal className="h-3.5 w-3.5" />
                                             <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>

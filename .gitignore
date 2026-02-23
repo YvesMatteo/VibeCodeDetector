@@ -66,4 +66,7 @@ create_composite_logo*.py
 
 # Local dev playgrounds
 animation-playground/
-mcp-server/
+
+# MCP server build artifacts (source is tracked)
+mcp-server/build/
+mcp-server/node_modules/

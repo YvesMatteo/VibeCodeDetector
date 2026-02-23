@@ -111,15 +111,18 @@ const sections = [
     },
     {
         id: 'mcp',
-        title: 'MCP Server (Claude Code)',
+        title: 'MCP Server (AI Coding Agents)',
         content: (
-            <div className="space-y-4">
+            <div className="space-y-5">
                 <p className="text-sm text-zinc-400">
-                    Use CheckVibe as an MCP server to let AI coding agents run security scans during development.
+                    Use CheckVibe as an MCP server to let AI coding agents run security scans during development. Works with Claude Code, Cursor, and Antigravity.
                 </p>
+
+                {/* Claude Code */}
                 <div>
+                    <p className="text-xs font-medium text-zinc-300 mb-2">Claude Code</p>
                     <p className="text-xs text-zinc-500 mb-2">
-                        Add to <code className="text-zinc-400">.claude/settings.json</code> or <code className="text-zinc-400">claude_desktop_config.json</code>:
+                        Add to your project&apos;s <code className="text-zinc-400">.mcp.json</code> file:
                     </p>
                     <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
                         {`{
@@ -135,6 +138,49 @@ const sections = [
 }`}
                     </pre>
                 </div>
+
+                {/* Cursor */}
+                <div>
+                    <p className="text-xs font-medium text-zinc-300 mb-2">Cursor</p>
+                    <p className="text-xs text-zinc-500 mb-2">
+                        Add to <code className="text-zinc-400">.cursor/mcp.json</code> in your project root:
+                    </p>
+                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                        {`{
+  "mcpServers": {
+    "checkvibe": {
+      "command": "npx",
+      "args": ["-y", "@checkvibe/mcp-server"],
+      "env": {
+        "CHECKVIBE_API_KEY": "cvd_live_YOUR_KEY"
+      }
+    }
+  }
+}`}
+                    </pre>
+                </div>
+
+                {/* Antigravity */}
+                <div>
+                    <p className="text-xs font-medium text-zinc-300 mb-2">Antigravity</p>
+                    <p className="text-xs text-zinc-500 mb-2">
+                        Add to <code className="text-zinc-400">~/.gemini/antigravity/mcp_config.json</code>:
+                    </p>
+                    <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
+                        {`{
+  "mcpServers": {
+    "checkvibe": {
+      "command": "npx",
+      "args": ["-y", "@checkvibe/mcp-server"],
+      "env": {
+        "CHECKVIBE_API_KEY": "cvd_live_YOUR_KEY"
+      }
+    }
+  }
+}`}
+                    </pre>
+                </div>
+
                 <div className="text-sm text-zinc-400">
                     <p className="font-medium text-zinc-300 mb-1.5">Available Tools</p>
                     <div className="space-y-2">
@@ -144,11 +190,11 @@ const sections = [
                         </div>
                         <div className="flex items-start gap-2">
                             <code className="text-xs text-zinc-300 bg-white/[0.04] px-1.5 py-0.5 rounded shrink-0">get_scan_results</code>
-                            <span className="text-xs text-zinc-500">Fetch results for a completed scan</span>
+                            <span className="text-xs text-zinc-500">Fetch detailed results for a completed scan</span>
                         </div>
                         <div className="flex items-start gap-2">
                             <code className="text-xs text-zinc-300 bg-white/[0.04] px-1.5 py-0.5 rounded shrink-0">list_scans</code>
-                            <span className="text-xs text-zinc-500">List all scans for the authenticated user</span>
+                            <span className="text-xs text-zinc-500">List recent scans with status and scores</span>
                         </div>
                     </div>
                 </div>

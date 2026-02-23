@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "checkvibe": {
+      "command": "node",
+      "args": ["mcp-server/build/index.js"],
+      "env": {
+        "CHECKVIBE_API_KEY": ""
+      }
+    }
+  }
+}
