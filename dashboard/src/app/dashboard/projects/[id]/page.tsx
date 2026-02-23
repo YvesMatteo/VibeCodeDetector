@@ -235,10 +235,10 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
 
                     {/* Centralized CTA for Issues */}
                     {(issues && issues.total > 0) ? (
-                        <div className="rounded-xl border border-sky-500/10 bg-sky-500/[0.02] p-5 flex items-center justify-between">
+                        <div className="rounded-xl border border-red-500/10 bg-red-500/[0.02] p-5 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20">
-                                    <Shield className="h-5 w-5 text-sky-400" />
+                                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                                    <Shield className="h-5 w-5 text-red-500" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-white">Security Vulnerabilities Found</p>
