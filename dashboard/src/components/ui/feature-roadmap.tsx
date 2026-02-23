@@ -131,45 +131,6 @@ const roadmapSteps = [
                 </div>
             </div>
         ),
-        extraContent: (
-            <div className="mt-8 p-4 rounded-xl border border-sky-500/20 bg-sky-500/5 max-w-sm w-full">
-                <div className="flex items-center gap-2 mb-3">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-                    </span>
-                    <span className="text-[11px] font-mono font-medium text-sky-400 uppercase tracking-wider">
-                        Native MCP Server Support
-                    </span>
-                </div>
-                <p className="text-xs text-zinc-300 mb-4 leading-relaxed text-left">
-                    Run CheckVibe directly from your favorite AI code editor using the standard Model Context Protocol.
-                </p>
-                <div className="flex items-center gap-4">
-                    {/* Claude Logo Stand-in */}
-                    <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-5 h-5 rounded overflow-hidden bg-[#D97757] flex items-center justify-center">
-                            <span className="text-white font-serif text-[10px] font-bold leading-none select-none">C</span>
-                        </div>
-                        <span className="text-xs font-medium text-zinc-200">Claude</span>
-                    </div>
-                    {/* Cursor Logo Stand-in */}
-                    <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-5 h-5 rounded overflow-hidden bg-white flex items-center justify-center p-1">
-                            <div className="w-0 h-0 border-l-[4px] border-l-transparent border-t-[8px] border-t-black border-r-[4px] border-r-transparent transform -rotate-45 ml-0.5 mt-0.5"></div>
-                        </div>
-                        <span className="text-xs font-medium text-zinc-200">Cursor</span>
-                    </div>
-                    {/* Antigravity Logo Stand-in */}
-                    <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-5 h-5 rounded overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <div className="w-2.5 h-2.5 border-2 border-white rounded-full border-t-transparent animate-spin duration-3000"></div>
-                        </div>
-                        <span className="text-xs font-medium text-zinc-200">Antigravity</span>
-                    </div>
-                </div>
-            </div>
-        )
     }
 ];
 
@@ -210,7 +171,6 @@ export function FeatureRoadmap() {
                                         <p className="text-sm text-zinc-400 leading-relaxed max-w-sm">
                                             {step.description}
                                         </p>
-                                        {'extraContent' in step && step.extraContent}
                                     </div>
                                 </div>
 
