@@ -126,27 +126,7 @@ export default function TermsPage() {
               </li>
             </ul>
 
-            <h3 className="text-lg font-medium text-white mt-5 mb-2">5.1 Refund Policy</h3>
-            <p>
-              We offer a full refund within 14 days of your initial subscription purchase if you are
-              not satisfied with the service. After this 14-day period, refunds are not provided for
-              partial billing periods. To request a refund, contact us at{' '}
-              <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
-                support@checkvibe.dev
-              </a>.
-            </p>
 
-            <h3 className="text-lg font-medium text-white mt-5 mb-2">5.2 EU Right of Withdrawal</h3>
-            <p>
-              If you are located in the European Union, you have the right to withdraw from your
-              subscription within 14 days of purchase without giving any reason, in accordance with
-              the EU Consumer Rights Directive. To exercise this right, notify us in writing at{' '}
-              <a href="mailto:support@checkvibe.dev" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
-                support@checkvibe.dev
-              </a>. We will process your refund within 14 days of receiving your withdrawal notice.
-              By using the service during the withdrawal period, you acknowledge that you may lose your
-              right of withdrawal once the service has been fully performed.
-            </p>
           </section>
 
           <section>
