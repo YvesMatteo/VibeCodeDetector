@@ -1,0 +1,92 @@
+---
+title: "The Complete Guide to Automated Website Security Scanning"
+description: "Learn how automated security scanners find vulnerabilities in your website before attackers do. Covers SQL injection, XSS, exposed API keys, and 27 more checks."
+date: "2026-02-20"
+author: "CheckVibe Team"
+tags: ["security", "scanning", "guide", "vulnerabilities"]
+image: "/images/blog/security-scanner-guide.png"
+---
+
+Every website deployed to the internet faces a constant barrage of automated attacks. Bots scan for open ports, probe for SQL injection, and test for misconfigured headers — 24 hours a day, 7 days a week. If you're not scanning your own site first, attackers will do it for you.
+
+## What Is Automated Security Scanning?
+
+Automated security scanning is the process of using software tools to systematically check a website or web application for known vulnerabilities. Unlike manual penetration testing, automated scanners can run in minutes and cover dozens of attack vectors simultaneously.
+
+A modern scanner checks for things like:
+
+- **Injection flaws** — SQL injection, XSS, command injection
+- **Configuration issues** — missing security headers, permissive CORS, weak SSL/TLS
+- **Exposed secrets** — API keys, database credentials, tokens visible in source code or network requests
+- **Dependency vulnerabilities** — known CVEs in JavaScript packages, frameworks, and libraries
+- **Authentication weaknesses** — broken auth flows, session mismanagement, CSRF gaps
+
+## Why Manual Testing Isn't Enough
+
+Manual penetration testing is valuable but it has limitations. A human tester might spend days reviewing a single application. They bring expertise and creativity, but they can't run 30 different security checks in under a minute.
+
+Automated scanning complements manual testing by providing:
+
+1. **Speed** — scan an entire site in under 60 seconds
+2. **Consistency** — every scan runs the same checks, every time
+3. **Coverage** — test attack vectors that a manual tester might overlook
+4. **Frequency** — scan after every deployment, not once a quarter
+
+## The 30 Checks Every Website Needs
+
+At CheckVibe, we built our scanner suite around the most common and most dangerous vulnerability categories. Here's what a comprehensive scan covers:
+
+### Infrastructure & Configuration
+- **Security Headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- **SSL/TLS** — certificate validity, protocol version, cipher strength
+- **DNS** — DNSSEC, SPF, DKIM, DMARC configuration
+- **CORS** — overly permissive cross-origin policies
+- **Cookie Security** — Secure, HttpOnly, SameSite flags
+
+### Application Security
+- **SQL Injection** — error-based, time-based, and blind SQLi detection
+- **Cross-Site Scripting (XSS)** — reflected, stored, and DOM-based XSS
+- **CSRF** — missing or weak cross-site request forgery protection
+- **Open Redirects** — URL redirect vulnerabilities that enable phishing
+- **File Upload** — unrestricted upload endpoints
+
+### Secrets & Exposure
+- **API Key Detection** — exposed keys for AWS, Stripe, Supabase, Firebase, and dozens more
+- **GitHub Secrets** — leaked credentials in public repositories
+- **Tech Stack Detection** — identifies frameworks, libraries, and versions
+
+### Backend-Specific
+- **Supabase** — RLS policies, exposed service keys, public table access
+- **Firebase** — security rules, exposed config, unauthenticated access
+- **Hosting Provider** — Vercel, Netlify, Cloudflare, Railway-specific misconfigurations
+
+### Advanced
+- **DDoS Protection** — WAF presence, CDN configuration, rate limiting
+- **Domain Hijacking** — DNS takeover risks, expired registrations
+- **Vibe Coding Detection** — AI-generated code patterns that introduce vulnerabilities
+
+## How to Start Scanning Your Site
+
+Getting started with automated security scanning takes less than a minute:
+
+1. **Enter your URL** — point the scanner at your production site
+2. **Run the scan** — all 30 checks execute in parallel
+3. **Review findings** — each issue comes with severity, description, and fix guidance
+4. **Fix and rescan** — verify your fixes with another scan
+
+The key is to make scanning a habit, not a one-time event. The best teams scan after every deployment and set up alerts for new critical findings.
+
+## Building Security Into Your Workflow
+
+Automated scanning is most effective when it's integrated into your development workflow:
+
+- **Pre-deployment scans** — catch issues before they reach production
+- **Scheduled scans** — run daily or weekly audits automatically
+- **CI/CD integration** — add security checks to your GitHub Actions pipeline
+- **Webhook alerts** — get notified in Slack or Discord when new vulnerabilities appear
+
+Security isn't a feature you ship once. It's a practice you maintain continuously. Automated scanning makes that practice sustainable, even for solo developers and small teams.
+
+---
+
+*Ready to scan your site? [Try CheckVibe free](https://checkvibe.dev/signup) — 3 scans per month, no credit card required.*

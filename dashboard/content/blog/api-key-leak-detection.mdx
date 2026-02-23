@@ -1,0 +1,108 @@
+---
+title: "API Key Leak Detection: Stop Exposing Secrets in Your Frontend"
+description: "Your API keys might be visible to anyone with a browser. Learn how keys leak through source code, network requests, and git history — and how to detect them automatically."
+date: "2026-02-15"
+author: "CheckVibe Team"
+tags: ["api-keys", "secrets", "security", "best-practices"]
+image: "/images/blog/api-key-detection.png"
+---
+
+One of the most common security issues we find when scanning websites isn't a sophisticated vulnerability — it's plain-text API keys sitting in publicly accessible JavaScript bundles. It happens more often than you'd think, and the consequences can be severe.
+
+## How API Keys End Up in Your Frontend
+
+### Hardcoded in Source Code
+
+The most obvious leak: a developer puts an API key directly in a JavaScript file, environment variables get bundled by webpack or Vite, and suddenly your secret key is visible to anyone who opens DevTools.
+
+```javascript
+// This ends up in your production bundle
+const stripe = new Stripe('sk_live_abc123...');
+const supabase = createClient(url, 'eyJhbGciOiJIUzI1NiIs...');
+```
+
+Environment variables prefixed with `NEXT_PUBLIC_`, `VITE_`, or `REACT_APP_` are intentionally included in client-side bundles. But developers sometimes put secret keys there by mistake.
+
+### Visible in Network Requests
+
+Even if keys aren't in the source code, they might be sent in HTTP headers or URL parameters that anyone can see in the Network tab:
+
+- Authorization headers with service-role keys
+- API endpoints with keys as query parameters
+- Webhook URLs containing authentication tokens
+
+### Committed to Git History
+
+A key that was in the codebase for even one commit lives in git history forever — unless you rewrite history. Public GitHub repositories are constantly scanned by bots looking for AWS keys, database credentials, and payment processor secrets.
+
+### Leaked Through Error Messages
+
+Stack traces, debug output, and verbose error messages can expose configuration details including API keys, database connection strings, and internal URLs.
+
+## What Attackers Do With Leaked Keys
+
+The impact depends on the key type and permissions:
+
+- **Stripe secret keys** — create charges, issue refunds, access customer data
+- **Supabase service_role keys** — bypass Row Level Security, read/write all data
+- **AWS keys** — spin up resources (crypto mining), access S3 buckets, delete infrastructure
+- **Firebase admin keys** — read/write entire database, manage users
+- **SendGrid/Resend keys** — send emails as your domain (phishing campaigns)
+- **GitHub tokens** — access private repositories, push malicious code
+
+In many cases, attackers have automated systems that exploit leaked keys within minutes of exposure.
+
+## Detection Techniques
+
+### Pattern Matching
+
+Most API keys follow recognizable patterns:
+
+| Provider | Pattern |
+|----------|---------|
+| Stripe | `sk_live_`, `sk_test_`, `rk_live_` |
+| Supabase | `eyJhbGciOiJIUzI1NiIs...` (JWT) |
+| AWS | `AKIA[A-Z0-9]{16}` |
+| GitHub | `ghp_`, `gho_`, `ghs_`, `ghu_` |
+| Twilio | `SK[a-z0-9]{32}` |
+| SendGrid | `SG.[a-zA-Z0-9_-]{22}.[a-zA-Z0-9_-]{43}` |
+
+CheckVibe's API key scanner matches against 50+ known key patterns across all major providers.
+
+### Entropy Analysis
+
+Not all secrets follow known patterns. High-entropy strings (random-looking character sequences) in source code or configuration files often indicate secrets. Entropy analysis flags strings that are statistically likely to be keys or tokens.
+
+### Network Traffic Analysis
+
+Scanning HTTP requests and responses for authentication tokens, bearer headers, and keys passed as parameters catches secrets that don't appear in static source code.
+
+## Best Practices for Key Management
+
+**Use environment variables** — never hardcode keys. Keep them in `.env` files that are gitignored.
+
+**Separate public and secret keys** — understand which keys are safe for the client (Supabase anon key, Stripe publishable key) and which must stay server-side.
+
+**Use server-side API routes** — proxy sensitive API calls through your backend so secret keys never reach the browser.
+
+**Rotate keys regularly** — if a key leaks, you want the exposure window to be as small as possible. Rotate quarterly at minimum.
+
+**Enable key restrictions** — most providers let you restrict keys by IP, domain, or API scope. Use these restrictions.
+
+**Scan continuously** — run automated scans after every deployment. A key that wasn't there yesterday might be there today.
+
+## How CheckVibe Detects Leaked Keys
+
+CheckVibe scans multiple surfaces simultaneously:
+
+1. **Page source** — HTML source code and inline scripts
+2. **JavaScript bundles** — fetches and parses all loaded JS files
+3. **Network requests** — monitors API calls for exposed tokens
+4. **Meta tags and configs** — checks for keys in page metadata and configuration objects
+5. **GitHub integration** — scans your repository for committed secrets
+
+Each detected key is classified by provider, severity, and exposure type, with specific instructions for rotating and securing the key.
+
+---
+
+*Don't let API keys be your weakest link. [Scan your site with CheckVibe](https://checkvibe.dev/signup) and find exposed secrets in seconds.*

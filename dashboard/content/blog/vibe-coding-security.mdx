@@ -1,0 +1,115 @@
+---
+title: "Vibe Coding and Security: Why AI-Generated Code Needs Auditing"
+description: "AI coding assistants like Cursor, Copilot, and Claude can ship features fast — but they also introduce security blind spots. Here's what to watch for and how to audit vibe-coded apps."
+date: "2026-02-12"
+author: "CheckVibe Team"
+tags: ["vibe-coding", "ai", "security", "cursor", "copilot"]
+image: "/images/blog/vibe-coding-security.png"
+---
+
+"Vibe coding" — the practice of building software primarily through AI assistants — has exploded in popularity. Developers describe their intent in natural language and let tools like Cursor, GitHub Copilot, Windsurf, or Claude write the implementation. It's fast, it's fun, and it lets you ship features in hours instead of days.
+
+But there's a catch: AI-generated code often prioritizes getting things to work over getting things secure.
+
+## The Security Blind Spots of AI Code
+
+### Overly Permissive Defaults
+
+AI assistants tend to generate code that works on the first try. That often means:
+
+- CORS set to `*` (allow all origins)
+- No rate limiting on API routes
+- Permissive CSP headers or none at all
+- Database queries without parameterization
+- Authentication checks that are incomplete
+
+The code works — but it's wide open.
+
+### Copy-Paste Patterns From Training Data
+
+AI models learn from public code, which includes plenty of insecure examples. Common patterns that get reproduced:
+
+- Using `eval()` for dynamic behavior
+- Storing secrets in client-side code
+- SQL string concatenation instead of prepared statements
+- Missing input validation on server endpoints
+- `dangerouslySetInnerHTML` without sanitization
+
+### Missing Security Layers
+
+When you describe a feature to an AI assistant, you typically describe the happy path: "create a form that saves data to the database." You rarely say "also add CSRF protection, rate limiting, input validation, error handling, and audit logging."
+
+AI assistants do what you ask. They rarely add security measures you didn't request.
+
+### Supabase and Firebase Misconfigurations
+
+Vibe-coded apps frequently use Backend-as-a-Service platforms. AI assistants often:
+
+- Skip Row Level Security (RLS) policies in Supabase
+- Leave Firebase security rules in test mode
+- Expose service-role keys in client-side code
+- Create overly permissive database policies
+
+## Real-World Examples
+
+These are patterns we see regularly when scanning vibe-coded applications:
+
+**Exposed Supabase service key** — the AI was asked to "set up Supabase" and used the service_role key instead of the anon key in the client initialization.
+
+**No authentication on API routes** — the AI built CRUD endpoints but didn't add auth middleware because the prompt didn't mention it.
+
+**SQL injection in search** — the AI built a search feature using string interpolation instead of parameterized queries because the prompt said "make it simple."
+
+**Unrestricted file uploads** — the AI implemented file upload without validating file types, sizes, or destinations.
+
+**Missing CSRF tokens** — form submissions go directly to API routes without any CSRF protection.
+
+## How to Audit Vibe-Coded Apps
+
+### Automated Scanning
+
+The fastest way to catch common issues is to run an automated security scan. A comprehensive scan covers:
+
+- **30+ vulnerability categories** in under a minute
+- **Infrastructure config** — headers, SSL, DNS, cookies
+- **Application security** — XSS, SQLi, CSRF, open redirects
+- **Secrets exposure** — API keys in source code and bundles
+- **Backend security** — Supabase RLS, Firebase rules
+- **Dependency vulnerabilities** — known CVEs in your packages
+
+### Security Review Checklist for Vibe-Coded Apps
+
+Before deploying any vibe-coded feature, check these:
+
+1. **Authentication** — is every API route protected? Can unauthenticated users access data they shouldn't?
+2. **Authorization** — can User A access User B's data? Are RLS policies in place?
+3. **Input validation** — are all inputs validated on the server side?
+4. **Secrets** — are any API keys or tokens exposed in client-side code?
+5. **CORS** — is it restricted to your domain, or open to `*`?
+6. **Headers** — are security headers (CSP, HSTS, X-Frame-Options) configured?
+7. **Dependencies** — are there known vulnerabilities in your package.json?
+8. **Error handling** — do errors expose stack traces or internal details?
+
+### Make Scanning a Habit
+
+The biggest risk with vibe coding is speed. You ship so fast that security review gets skipped. The fix is to make scanning automatic:
+
+- Scan after every deployment
+- Set up daily scheduled scans
+- Add scan checks to your CI/CD pipeline
+- Get alerts when new critical issues appear
+
+## CheckVibe's Vibe Coding Detection
+
+CheckVibe includes a dedicated vibe coding detector that identifies AI-generated code patterns and flags the security issues they commonly introduce. It uses AI analysis to:
+
+- Detect AI-generated code patterns in your source
+- Identify common AI security anti-patterns
+- Flag missing security layers that AI assistants typically skip
+- Prioritize findings specific to rapid-development workflows
+
+The goal isn't to discourage vibe coding — it's to make it safe. Ship fast, scan faster.
+
+---
+
+*Building with AI? Make sure it's secure. [Scan your vibe-coded app](https://checkvibe.dev/signup) with CheckVibe and catch what the AI missed.*

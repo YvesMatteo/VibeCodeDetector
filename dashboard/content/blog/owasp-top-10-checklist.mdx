@@ -1,0 +1,152 @@
+---
+title: "OWASP Top 10 Checklist for 2025: Is Your Web App Vulnerable?"
+description: "A practical walkthrough of the OWASP Top 10 security risks with actionable checks for each one. Use this checklist to audit your web application's security posture."
+date: "2026-02-08"
+author: "CheckVibe Team"
+tags: ["owasp", "security", "checklist", "web-security"]
+image: "/images/blog/owasp-checklist.png"
+---
+
+The OWASP Top 10 is the industry-standard reference for the most critical web application security risks. Whether you're building a SaaS product, an e-commerce site, or an internal tool, these ten categories cover the vulnerabilities most likely to get you breached.
+
+Here's a practical checklist you can use to audit your application against each one.
+
+## A01: Broken Access Control
+
+Access control failures are the number one web application security risk. They happen when users can act outside their intended permissions.
+
+**What to check:**
+- Can users access other users' data by changing an ID in the URL?
+- Are API endpoints checking authentication AND authorization?
+- Can users escalate their role or permissions?
+- Are admin functions accessible to regular users?
+- Do you enforce server-side access control (not just hiding UI elements)?
+
+**How CheckVibe helps:** Our auth scanner tests for missing authentication on endpoints, IDOR patterns, and privilege escalation paths.
+
+## A02: Cryptographic Failures
+
+Previously called "Sensitive Data Exposure," this category covers failures in cryptography that lead to data exposure.
+
+**What to check:**
+- Is data transmitted over HTTPS with a valid certificate?
+- Are TLS versions current (TLS 1.2+ only)?
+- Are passwords hashed with strong algorithms (bcrypt, scrypt, argon2)?
+- Are API keys and secrets stored securely (not in source code)?
+- Is HSTS enabled to prevent protocol downgrade?
+
+**How CheckVibe helps:** The SSL/TLS scanner checks certificate validity, protocol versions, and cipher strength. The API key scanner detects exposed secrets.
+
+## A03: Injection
+
+Injection flaws — SQL injection, XSS, command injection — occur when untrusted data is sent to an interpreter without validation.
+
+**What to check:**
+- Are all database queries parameterized?
+- Is user input sanitized before rendering in HTML?
+- Are command-line calls using safe APIs (not string concatenation)?
+- Is there a Content Security Policy blocking inline scripts?
+- Are ORM/query builders used instead of raw SQL?
+
+**How CheckVibe helps:** Dedicated SQL injection and XSS scanners test with hundreds of payload variations across all input vectors.
+
+## A04: Insecure Design
+
+This is about fundamental design flaws, not implementation bugs. No amount of code fixing can address a design that's insecure by nature.
+
+**What to check:**
+- Is there threat modeling for critical features?
+- Are security requirements defined before development?
+- Do business logic flows have abuse-case testing?
+- Are rate limits in place for sensitive operations (login, password reset)?
+- Is there defense in depth (multiple security layers)?
+
+**How CheckVibe helps:** The DDoS/rate-limit scanner checks for rate limiting and WAF presence. The CSRF scanner verifies anti-forgery protections.
+
+## A05: Security Misconfiguration
+
+The most common issue we find in scans. Default configurations, unnecessary features, and missing hardening.
+
+**What to check:**
+- Are security headers configured (CSP, HSTS, X-Frame-Options)?
+- Is directory listing disabled?
+- Are default credentials changed?
+- Are error messages generic (not exposing stack traces)?
+- Are unnecessary HTTP methods disabled?
+- Are CORS policies restrictive?
+
+**How CheckVibe helps:** The security headers scanner checks all major headers. The CORS scanner tests for overly permissive policies. The tech scanner identifies exposed version information.
+
+## A06: Vulnerable and Outdated Components
+
+Using components with known vulnerabilities is one of the easiest attack vectors.
+
+**What to check:**
+- Are all npm/pip/gem dependencies up to date?
+- Are there known CVEs in your dependency tree?
+- Is the framework version current and supported?
+- Are unused dependencies removed?
+- Do you have automated dependency scanning in CI/CD?
+
+**How CheckVibe helps:** The dependency scanner checks your package.json against known vulnerability databases and flags outdated packages.
+
+## A07: Identification and Authentication Failures
+
+Weaknesses in authentication mechanisms that allow attackers to compromise passwords, keys, or session tokens.
+
+**What to check:**
+- Is multi-factor authentication available?
+- Are passwords enforced with minimum complexity?
+- Are session tokens rotated after login?
+- Is there brute force protection (account lockout, rate limiting)?
+- Are session cookies marked Secure, HttpOnly, SameSite?
+
+**How CheckVibe helps:** The auth scanner tests login flows, the cookie scanner checks session security flags, and the CSRF scanner verifies token implementation.
+
+## A08: Software and Data Integrity Failures
+
+Failures related to code and infrastructure that don't protect against integrity violations — like insecure CI/CD pipelines or auto-update mechanisms.
+
+**What to check:**
+- Are dependencies verified with lock files and checksums?
+- Is the CI/CD pipeline secured against unauthorized changes?
+- Are subresource integrity (SRI) hashes used for external scripts?
+- Are code reviews required before merging?
+
+**How CheckVibe helps:** The security headers scanner checks for SRI usage and the GitHub security scanner audits your repository configuration.
+
+## A09: Security Logging and Monitoring Failures
+
+Without logging and monitoring, breaches go undetected. Most breaches are discovered by external parties, not the victim.
+
+**What to check:**
+- Are login attempts logged (successes and failures)?
+- Are access control failures logged?
+- Is there alerting for suspicious patterns?
+- Are logs stored securely and tamper-proof?
+- Is there an incident response plan?
+
+**How CheckVibe helps:** The audit logging scanner checks for monitoring infrastructure and logging practices.
+
+## A10: Server-Side Request Forgery (SSRF)
+
+SSRF occurs when a web application fetches a remote resource without validating the user-supplied URL, allowing attackers to access internal services.
+
+**What to check:**
+- Do URL inputs validate against internal IP ranges?
+- Are webhook URLs restricted to public addresses?
+- Is DNS rebinding mitigated?
+- Are cloud metadata endpoints blocked (169.254.169.254)?
+- Is there an allowlist for external service URLs?
+
+**How CheckVibe helps:** The redirect scanner tests for open redirect and SSRF patterns, and the security headers scanner verifies proper configuration.
+
+## Run the Full Checklist Automatically
+
+Going through this checklist manually for every deployment isn't realistic. That's why automated scanning exists — to run all these checks consistently, quickly, and repeatedly.
+
+CheckVibe covers all 10 OWASP categories across its 30 scanner suite. One scan, under a minute, and you get a complete picture of where your application stands.
+
+---
+
+*Check your app against the OWASP Top 10 in 60 seconds. [Start scanning with CheckVibe](https://checkvibe.dev/signup) — free to try, no credit card required.*
