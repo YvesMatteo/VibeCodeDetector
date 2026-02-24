@@ -125,7 +125,7 @@ export default function NewProjectPage() {
                         <span>New Project</span>
                     </div>
                 }
-                description="Set up a project to run recurring security audits"
+                description="Set up a project to monitor your app's security"
             />
 
             <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto w-full">
@@ -142,7 +142,7 @@ export default function NewProjectPage() {
                         <div>
                             <h3 className="text-white font-medium text-sm mb-0.5">Upgrade to add projects</h3>
                             <p className="text-zinc-400 text-[13px]">
-                                Starter includes 1 project and 5 scans. Pro unlocks 3 projects.
+                                Starter includes 1 project and 5 checks. Pro unlocks 3 projects.
                             </p>
                         </div>
                         <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-400 text-white border-0 shrink-0">
@@ -173,7 +173,7 @@ export default function NewProjectPage() {
                                         Project Details
                                     </CardTitle>
                                     <CardDescription className="text-zinc-400">
-                                        Name your project and enter the URL to audit
+                                        Name your project and enter the URL to monitor
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
@@ -247,7 +247,7 @@ export default function NewProjectPage() {
                                         <span className="text-xs font-normal text-zinc-500">(optional)</span>
                                     </CardTitle>
                                     <CardDescription className="text-zinc-400">
-                                        Link your repo to scan for leaked secrets and dependency vulnerabilities
+                                        Link your repo to check for leaked secrets and dependency vulnerabilities
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>

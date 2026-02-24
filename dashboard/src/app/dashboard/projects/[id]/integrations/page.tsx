@@ -50,6 +50,24 @@ interface VercelDeployment {
     created_at: string;
 }
 
+interface NetlifyIntegration {
+    id: string;
+    project_id: string;
+    enabled: boolean;
+    last_deployment_at: string | null;
+    last_scan_id: string | null;
+    created_at: string;
+}
+
+interface NetlifyDeployment {
+    id: string;
+    netlify_deployment_id: string;
+    deployment_url: string | null;
+    scan_id: string | null;
+    result_score: number | null;
+    created_at: string;
+}
+
 export default function IntegrationsPage() {
     const params = useParams<{ id: string }>();
     const projectId = params.id;
@@ -72,13 +90,21 @@ export default function IntegrationsPage() {
     const [vercelSecret, setVercelSecret] = useState<string | null>(null);
     const [vercelWebhookUrl, setVercelWebhookUrl] = useState<string | null>(null);
 
+    // Netlify integration state
+    const [netlifyIntegration, setNetlifyIntegration] = useState<NetlifyIntegration | null>(null);
+    const [netlifyDeployments, setNetlifyDeployments] = useState<NetlifyDeployment[]>([]);
+    const [netlifyLoading, setNetlifyLoading] = useState(false);
+    const [netlifySecret, setNetlifySecret] = useState<string | null>(null);
+    const [netlifyWebhookUrl, setNetlifyWebhookUrl] = useState<string | null>(null);
+
     useEffect(() => {
         async function load() {
             try {
-                const [whRes, projRes, vercelRes] = await Promise.all([
+                const [whRes, projRes, vercelRes, netlifyRes] = await Promise.all([
                     fetch(`/api/integrations/webhooks?projectId=${projectId}`),
                     fetch(`/api/projects/${projectId}`),
                     fetch(`/api/integrations/vercel?projectId=${projectId}`),
+                    fetch(`/api/integrations/netlify?projectId=${projectId}`),
                 ]);
                 const whData = await whRes.json();
                 setWebhooks(Array.isArray(whData) ? whData : []);
@@ -92,6 +118,12 @@ export default function IntegrationsPage() {
                     const vercelData = await vercelRes.json();
                     setVercelIntegration(vercelData.integration || null);
                     setVercelDeployments(vercelData.deployments || []);
+                }
+
+                if (netlifyRes.ok) {
+                    const netlifyData = await netlifyRes.json();
+                    setNetlifyIntegration(netlifyData.integration || null);
+                    setNetlifyDeployments(netlifyData.deployments || []);
                 }
             } catch {
                 setError('Failed to load data. Please try again.');
@@ -177,6 +209,51 @@ export default function IntegrationsPage() {
             toast.error('Failed to remove Vercel integration');
         } finally {
             setVercelLoading(false);
+        }
+    }
+
+    async function enableNetlify() {
+        setNetlifyLoading(true);
+        try {
+            const res = await fetch('/api/integrations/netlify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setNetlifyIntegration({
+                id: data.id,
+                project_id: data.project_id,
+                enabled: true,
+                last_deployment_at: null,
+                last_scan_id: null,
+                created_at: data.created_at,
+            });
+            setNetlifySecret(data.webhook_secret);
+            setNetlifyWebhookUrl(data.webhook_url);
+            toast.success('Netlify deploy hook enabled');
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to enable Netlify integration');
+        } finally {
+            setNetlifyLoading(false);
+        }
+    }
+
+    async function disableNetlify() {
+        setNetlifyLoading(true);
+        try {
+            const res = await fetch(`/api/integrations/netlify?projectId=${projectId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed');
+            setNetlifyIntegration(null);
+            setNetlifyDeployments([]);
+            setNetlifySecret(null);
+            setNetlifyWebhookUrl(null);
+            toast.success('Netlify deploy hook removed');
+        } catch {
+            toast.error('Failed to remove Netlify integration');
+        } finally {
+            setNetlifyLoading(false);
         }
     }
 
@@ -319,7 +396,7 @@ jobs:
                     </div>
                     <div>
                         <h3 className="text-sm font-medium text-white">GitHub Actions</h3>
-                        <p className="text-xs text-zinc-500">Run security audits in your CI/CD pipeline</p>
+                        <p className="text-xs text-zinc-500">Run security checks in your CI/CD pipeline</p>
                     </div>
                 </div>
 
@@ -346,7 +423,7 @@ jobs:
                         </div>
                         <div>
                             <h3 className="text-sm font-medium text-white">Vercel Deploy Hook</h3>
-                            <p className="text-xs text-zinc-500">Auto-scan on every Vercel deployment</p>
+                            <p className="text-xs text-zinc-500">Auto-check on every Vercel deployment</p>
                         </div>
                     </div>
                     {vercelIntegration ? (
@@ -456,7 +533,124 @@ jobs:
                 )}
 
                 {!vercelIntegration && (
-                    <p className="text-xs text-zinc-500">Enable to automatically run a security scan after every Vercel deployment succeeds.</p>
+                    <p className="text-xs text-zinc-500">Enable to automatically run a security check after every Vercel deployment succeeds.</p>
+                )}
+            </div>
+
+            {/* Netlify Deploy Hook */}
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-teal-500/10">
+                            <GitBranch className="h-4 w-4 text-teal-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-medium text-white">Netlify Deploy Hook</h3>
+                            <p className="text-xs text-zinc-500">Auto-check on every Netlify deployment</p>
+                        </div>
+                    </div>
+                    {netlifyIntegration ? (
+                        <button
+                            onClick={disableNetlify}
+                            disabled={netlifyLoading}
+                            className="text-xs text-zinc-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-md hover:bg-red-500/5"
+                        >
+                            {netlifyLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Remove'}
+                        </button>
+                    ) : (
+                        <Button
+                            size="sm"
+                            onClick={enableNetlify}
+                            disabled={netlifyLoading}
+                            className="bg-teal-500 hover:bg-teal-400 text-white text-xs"
+                        >
+                            {netlifyLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Enable'}
+                        </Button>
+                    )}
+                </div>
+
+                {/* Show secret once after creation */}
+                {netlifySecret && netlifyWebhookUrl && (
+                    <div className="mb-4 p-4 rounded-lg border border-amber-500/20 bg-amber-500/[0.03] space-y-3">
+                        <p className="text-xs font-medium text-amber-400">Setup instructions (shown once)</p>
+                        <div>
+                            <label className="text-[11px] text-zinc-500 block mb-1">1. Webhook URL</label>
+                            <div className="flex items-center gap-2">
+                                <code className="text-xs text-zinc-300 bg-black/30 px-2 py-1 rounded break-all flex-1">{netlifyWebhookUrl}</code>
+                                <button
+                                    onClick={() => copyToClipboard(netlifyWebhookUrl, 'ntlf-url')}
+                                    className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                                >
+                                    {copiedId === 'ntlf-url' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-[11px] text-zinc-500 block mb-1">2. Signing Secret</label>
+                            <div className="flex items-center gap-2">
+                                <code className="text-xs text-zinc-300 bg-black/30 px-2 py-1 rounded break-all flex-1">{netlifySecret}</code>
+                                <button
+                                    onClick={() => copyToClipboard(netlifySecret, 'ntlf-secret')}
+                                    className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                                >
+                                    {copiedId === 'ntlf-secret' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                            Go to your Netlify site &rarr; Site settings &rarr; Notifications &rarr; Outgoing webhooks &rarr; Deploy succeeded &rarr; paste the URL above. Set the secret in the webhook config.
+                        </p>
+                        <button onClick={() => { setNetlifySecret(null); setNetlifyWebhookUrl(null); }} className="text-xs text-zinc-500 hover:text-zinc-300">
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+
+                {netlifyIntegration && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <span className="inline-flex items-center gap-1 text-emerald-400">
+                                <Check className="h-3 w-3" /> Active
+                            </span>
+                            {netlifyIntegration.last_deployment_at && (
+                                <span>
+                                    &middot; Last deploy: {new Date(netlifyIntegration.last_deployment_at).toLocaleDateString()}
+                                </span>
+                            )}
+                        </div>
+
+                        {netlifyDeployments.length > 0 && (
+                            <div>
+                                <h4 className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Recent Deployments</h4>
+                                <div className="space-y-2">
+                                    {netlifyDeployments.map((dep) => (
+                                        <div key={dep.id} className="flex items-center justify-between p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] text-xs">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                {dep.deployment_url && (
+                                                    <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 truncate flex items-center gap-1">
+                                                        <ExternalLink className="h-3 w-3 shrink-0" />
+                                                        <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {dep.result_score !== null && (
+                                                    <span className={`font-semibold tabular-nums ${dep.result_score >= 80 ? 'text-emerald-400' : dep.result_score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                        {dep.result_score}
+                                                    </span>
+                                                )}
+                                                <span className="text-zinc-600">{new Date(dep.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {!netlifyIntegration && (
+                    <p className="text-xs text-zinc-500">Enable to automatically run a security check after every Netlify deployment succeeds.</p>
                 )}
             </div>
 
@@ -586,7 +780,7 @@ jobs:
                             Slack & Discord
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">Coming Soon</span>
                         </h3>
-                        <p className="text-xs text-zinc-500">Send scan results directly to your team channels</p>
+                        <p className="text-xs text-zinc-500">Send check results directly to your team channels</p>
                     </div>
                 </div>
             </div>

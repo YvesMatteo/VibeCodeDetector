@@ -74,10 +74,10 @@ export default function LoginPage() {
 
                 <div className="relative flex-1 flex flex-col justify-center max-w-md">
                     <h1 className="font-heading text-[42px] xl:text-[48px] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                        Security scanning for modern web apps
+                        Security monitoring for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        35 automated scanners. One comprehensive report. Ship with confidence.
+                        35 automated security checks. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 

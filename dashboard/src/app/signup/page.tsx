@@ -148,10 +148,10 @@ function SignupPageInner() {
 
                 <div className="relative flex-1 flex flex-col justify-center max-w-md">
                     <h1 className="font-heading text-[42px] xl:text-[48px] leading-[1.1] tracking-[-0.03em] text-white mb-5">
-                        Security scanning for modern web apps
+                        Security monitoring for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        35 automated scanners. One comprehensive report. Ship with confidence.
+                        35 automated security checks. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 
@@ -172,7 +172,7 @@ function SignupPageInner() {
                     <div className="animate-fade-in-up">
                         <div className="mb-8">
                             <h2 className="text-2xl font-semibold text-white tracking-tight mb-2">Create an account</h2>
-                            <p className="text-zinc-500 text-sm">Start scanning your websites in minutes</p>
+                            <p className="text-zinc-500 text-sm">Start monitoring your websites in minutes</p>
                         </div>
 
                         <div className="space-y-5">

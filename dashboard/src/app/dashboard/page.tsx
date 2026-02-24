@@ -45,6 +45,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         ? projectList.filter(p => p.name.toLowerCase().includes(query) || p.url.toLowerCase().includes(query))
         : projectList;
 
+    // Fetch monitoring schedules for all projects
+    const projectIds = filteredProjects.map(p => p.id);
+    const { data: schedules } = projectIds.length > 0
+        ? await supabase
+            .from('scheduled_scans' as any)
+            .select('project_id, frequency, enabled')
+            .in('project_id', projectIds)
+            .eq('user_id', user.id)
+            .eq('enabled', true)
+        : { data: [] };
+
+    const scheduleMap = new Map<string, string>();
+    if (schedules) {
+        for (const s of schedules as any[]) {
+            scheduleMap.set(s.project_id, s.frequency);
+        }
+    }
+
     // For each project, get the latest scan with severity breakdown
     const projectsWithScans = await Promise.all(
         filteredProjects.map(async (project) => {
@@ -82,6 +100,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 lastAuditDate: latestScan?.completed_at ?? null,
                 issueCount,
                 severity,
+                monitoringFrequency: scheduleMap.get(project.id) || null,
             };
         })
     );
@@ -90,7 +109,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="flex items-center gap-4 mt-1">
             <span className="text-[13px] text-zinc-500">
                 <span className="text-zinc-300 font-medium tabular-nums">{planScansUsed}</span>
-                <span className="text-zinc-600">/{planScansLimit}</span> scans
+                <span className="text-zinc-600">/{planScansLimit}</span> checks
             </span>
             <span className="text-zinc-700">·</span>
             <span className="text-[13px] text-zinc-500">
@@ -143,7 +162,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         </div>
                         <h2 className="text-sm font-medium text-zinc-200 mb-1.5">No projects yet</h2>
                         <p className="text-zinc-500 text-[13px] mb-6 max-w-sm mx-auto">
-                            Create your first project to start running security audits.
+                            Create your first project to start monitoring your app.
                         </p>
                         <Button asChild className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700 hover:text-white border border-white/[0.06] font-medium shadow-sm transition-all text-xs h-9">
                             <Link href="/dashboard/projects/new">
@@ -167,6 +186,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                 lastAuditDate={project.lastAuditDate}
                                 plan={plan}
                                 backendType={project.backend_type}
+                                monitoringFrequency={project.monitoringFrequency}
                             />
                         ))}
                     </div>

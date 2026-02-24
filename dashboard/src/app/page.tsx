@@ -31,7 +31,7 @@ const pricingTiers = [
     priceMonthly: 0,
     priceAnnualPerMonth: 0,
     description: 'Try it out',
-    features: ['1 project', '3 scans/month', 'Issue overview', 'Blurred details'],
+    features: ['1 project', 'Weekly monitoring', 'Issue overview', 'Blurred details'],
     cta: 'Get Started Free',
     highlighted: false,
     isFree: true,
@@ -41,7 +41,7 @@ const pricingTiers = [
     priceMonthly: 19,
     priceAnnualPerMonth: 13.30,
     description: 'For solo makers',
-    features: ['1 project', '5 scans/month', 'Full scan suite', 'Scan history'],
+    features: ['1 project', 'Daily monitoring', '35 security checks', 'Full history'],
     cta: 'Get Started',
     highlighted: true,
     badgeText: 'Most Popular',
@@ -51,7 +51,7 @@ const pricingTiers = [
     priceMonthly: 39,
     priceAnnualPerMonth: 27.30,
     description: 'For growing projects',
-    features: ['3 projects', '20 scans/month', 'Full scan suite', 'Priority support'],
+    features: ['3 projects', 'Daily monitoring', '35 security checks', 'Priority support'],
     cta: 'Get Started',
     highlighted: false,
   },
@@ -60,7 +60,7 @@ const pricingTiers = [
     priceMonthly: 79,
     priceAnnualPerMonth: 55.30,
     description: 'For teams & agencies',
-    features: ['10 projects', '75 scans/month', 'Full scan suite', 'Dedicated support'],
+    features: ['10 projects', 'Every 6h monitoring', '35 security checks', 'Dedicated support'],
     cta: 'Get Started',
     highlighted: true,
     badgeText: 'Best Value',
@@ -69,10 +69,10 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '35', label: 'Security Scanners' },
+  { value: '35', label: 'Security Checks' },
   { value: '100+', label: 'API Key Patterns' },
-  { value: '150+', label: 'Security Checks' },
-  { value: '<30s', label: 'Average Scan Time' },
+  { value: '150+', label: 'Rules Monitored' },
+  { value: '<30s', label: 'Average Check Time' },
 ];
 
 
@@ -212,7 +212,7 @@ export default function HomePage() {
                 transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut', delay: isTouch ? 0 : 0.1 }}
                 className="block"
               >
-                The <span className="italic text-white/50">#1 Fullstack</span> security scanner
+                <span className="italic text-white/50">Always-on</span> security monitoring
               </motion.span>
             </span>
             <span className="block overflow-hidden">
@@ -222,7 +222,7 @@ export default function HomePage() {
                 transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut', delay: isTouch ? 0.05 : 0.2 }}
                 className="block"
               >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> apps
               </motion.span>
             </span>
           </h1>
@@ -234,7 +234,7 @@ export default function HomePage() {
             transition={{ delay: isTouch ? 0.1 : 0.3, duration: isTouch ? 0.3 : 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
-            35 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
+            35 security checks. Always watching. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -246,7 +246,7 @@ export default function HomePage() {
           >
             <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] [@media(hover:hover)]:hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
+                {isLoggedIn ? 'Dashboard' : 'Start Monitoring'}
               </Link>
             </Button>
             <div className="flex items-center gap-4 text-sm font-medium text-white/90">
@@ -386,7 +386,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Supabase, Firebase, Vercel, Netlify, GitHub — 35 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
+              Supabase, Firebase, Vercel, Netlify, GitHub — 35 security checks purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
             </p>
           </div>
 
@@ -588,11 +588,11 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              35 scanners. One click. Know exactly what to fix before you deploy.
+              35 security checks. Always monitoring. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
-                {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
+                {isLoggedIn ? 'Dashboard' : 'Start Monitoring'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -606,11 +606,11 @@ export default function HomePage() {
           </h2>
           <div className="space-y-4">
             {[
-              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
-              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
-              { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' },
+              { q: 'What is CheckVibe?', a: 'CheckVibe is an always-on security monitoring platform that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — continuously, on every deploy.' },
+              { q: 'How does monitoring work?', a: 'CheckVibe runs 35 security checks on a schedule that matches your plan — from weekly (Free) to every 6 hours (Max). You get email alerts when issues appear, and deploy hooks trigger checks automatically on every deployment.' },
+              { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project with weekly monitoring and an issue overview. Paid plans start at $19/month for daily monitoring, full details, history, and more projects.' },
               { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
-              { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 35 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
+              { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing continuous, automated monitoring. Run 35 checks on every deployment — something manual testing can\'t match for frequency and speed.' },
             ].map(({ q, a }) => (
               <details key={q} className="group rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
                 <summary className="flex items-center justify-between px-6 py-5 cursor-pointer text-[15px] sm:text-base font-semibold text-white [@media(hover:hover)]:hover:text-sky-400 transition-colors list-none [&::-webkit-details-marker]:hidden">
@@ -630,11 +630,11 @@ export default function HomePage() {
                 '@context': 'https://schema.org',
                 '@type': 'FAQPage',
                 mainEntity: [
-                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
-                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
-                  { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' } },
+                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an always-on security monitoring platform that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — continuously, on every deploy.' } },
+                  { '@type': 'Question', name: 'How does monitoring work?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 35 security checks on a schedule that matches your plan — from weekly (Free) to every 6 hours (Max). You get email alerts when issues appear, and deploy hooks trigger checks automatically on every deployment.' } },
+                  { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project with weekly monitoring and an issue overview. Paid plans start at $19/month for daily monitoring, full details, history, and more projects.' } },
                   { '@type': 'Question', name: 'What vulnerabilities does CheckVibe detect?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' } },
-                  { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 35 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },
+                  { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing continuous, automated monitoring. Run 35 checks on every deployment — something manual testing can\'t match for frequency and speed.' } },
                 ],
               }),
             }}

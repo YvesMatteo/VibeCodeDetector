@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "CheckVibe - AI Website Scanner";
+export const alt = "CheckVibe - Always-On Security Monitoring";
 export const size = {
   width: 1200,
   height: 630,
@@ -92,7 +92,7 @@ export default async function Image() {
             marginBottom: "40px",
           }}
         >
-          AI-Powered Website Scanner
+          Always-On Security Monitoring
         </div>
 
         {/* Feature pills */}

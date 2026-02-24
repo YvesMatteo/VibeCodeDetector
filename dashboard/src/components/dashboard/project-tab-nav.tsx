@@ -16,7 +16,7 @@ const tabs = [
     { name: 'Overview', href: '', icon: LayoutDashboard },
     { name: 'Report', href: '/report', icon: FileSearch },
     { name: 'History', href: '/history', icon: History },
-    { name: 'Monitoring', href: '/monitoring', icon: Bell },
+    { name: 'Schedule & Alerts', href: '/monitoring', icon: Bell },
     { name: 'Integrations', href: '/integrations', icon: Puzzle },
     { name: 'Settings', href: '/settings', icon: Settings },
 ];

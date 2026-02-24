@@ -18,7 +18,7 @@ const pricingPlans = [
         description: 'Try it out',
         domains: 1,
         scans: 3,
-        features: ['1 project', '3 scans/month', 'Issue overview', 'Blurred finding details'],
+        features: ['1 project', 'Weekly monitoring', 'Issue overview', 'Blurred finding details'],
         highlighted: false,
         isFree: true,
     },
@@ -30,7 +30,7 @@ const pricingPlans = [
         description: 'For solo makers',
         domains: 1,
         scans: 5,
-        features: ['1 project', '5 scans/month', 'Full scan suite', 'PDF export'],
+        features: ['1 project', 'Daily monitoring', '35 security checks', 'PDF export'],
         highlighted: false,
     },
     {
@@ -41,7 +41,7 @@ const pricingPlans = [
         description: 'For growing projects',
         domains: 3,
         scans: 20,
-        features: ['3 projects', '20 scans/month', 'Full scan suite', 'Priority support'],
+        features: ['3 projects', 'Daily monitoring', '35 security checks', 'Priority support'],
         highlighted: false,
     },
     {
@@ -52,16 +52,16 @@ const pricingPlans = [
         description: 'For teams & agencies',
         domains: 10,
         scans: 75,
-        features: ['10 projects', '75 scans/month', 'Full scan suite', 'Dedicated support'],
+        features: ['10 projects', 'Every 6h monitoring', '35 security checks', 'Dedicated support'],
         highlighted: false,
     },
 ];
 
 const comparisonFeatures = [
     { name: 'Projects', free: '1', starter: '1', pro: '3', max: '10' },
-    { name: 'Scans per month', free: '3', starter: '5', pro: '20', max: '75' },
+    { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', max: 'Every 6h' },
     { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
-    { name: 'Full scan suite (35 scanners)', free: true, starter: true, pro: true, max: true },
+    { name: '35 security checks', free: true, starter: true, pro: true, max: true },
     { name: 'PDF export', free: false, starter: true, pro: true, max: true },
     { name: 'AI fix suggestions', free: false, starter: true, pro: true, max: true },
     { name: 'API access', free: false, starter: false, pro: true, max: true },
@@ -241,7 +241,7 @@ export default function CreditsPage() {
                                 Current plan: <span className="capitalize">{currentPlan === 'none' ? 'Free' : currentPlan}</span>
                             </p>
                             <p className="text-sm text-zinc-500">
-                                {scansUsed}/{scansLimit} scans used &middot; {domainsUsed}/{domainsLimit} projects
+                                {scansUsed}/{scansLimit} checks used &middot; {domainsUsed}/{domainsLimit} projects
                             </p>
                         </div>
                     </div>

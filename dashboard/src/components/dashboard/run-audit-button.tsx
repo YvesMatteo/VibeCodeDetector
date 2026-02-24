@@ -190,8 +190,8 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {progressPct < 100
                             ? scannerCount
-                                ? `Scanning... ${scannerCount}`
-                                : `Scanning... ${progressPct}%`
+                                ? `Checking... ${scannerCount}`
+                                : `Checking... ${progressPct}%`
                             : 'Done'}
                     </>
                 ) : (

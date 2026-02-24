@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/api-auth';
 import { dispatchWebhooks } from '@/lib/webhook-dispatch';
+import { dispatchAlerts } from '@/lib/alert-dispatch';
 import { getServiceClient } from '@/lib/api-keys';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
@@ -789,6 +790,49 @@ export async function POST(req: NextRequest) {
                         overallScore,
                         results,
                     }).catch(() => { });
+                }
+
+                // Dispatch alert emails (fire-and-forget)
+                if (resolvedProjectId && scanId) {
+                    (async () => {
+                        try {
+                            const svc = getServiceClient();
+                            const [projectRes, prevScanRes] = await Promise.all([
+                                svc.from('projects').select('name, url').eq('id', resolvedProjectId!).single(),
+                                svc.from('scans')
+                                    .select('overall_score')
+                                    .eq('project_id', resolvedProjectId!)
+                                    .eq('status', 'completed')
+                                    .neq('id', scanId!)
+                                    .order('completed_at', { ascending: false })
+                                    .limit(1)
+                                    .maybeSingle(),
+                            ]);
+
+                            const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+                            for (const val of Object.values(results)) {
+                                const r = val as Record<string, any>;
+                                if (!r || !Array.isArray(r.findings)) continue;
+                                for (const f of r.findings) {
+                                    const sev = (f.severity || '').toLowerCase();
+                                    if (sev === 'critical') counts.critical++;
+                                    else if (sev === 'high') counts.high++;
+                                    else if (sev === 'medium') counts.medium++;
+                                    else if (sev === 'low') counts.low++;
+                                }
+                            }
+
+                            await dispatchAlerts({
+                                projectId: resolvedProjectId!,
+                                projectName: projectRes.data?.name || 'Unknown project',
+                                projectUrl: projectRes.data?.url || targetUrl,
+                                scanId: scanId!,
+                                currentScore: overallScore,
+                                previousScore: prevScanRes.data?.overall_score ?? null,
+                                issues: counts,
+                            });
+                        } catch { /* non-critical */ }
+                    })();
                 }
 
                 // Update Vercel deployment score if this scan was triggered by a deploy hook (fire-and-forget)

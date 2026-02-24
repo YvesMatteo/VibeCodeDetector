@@ -24,7 +24,7 @@ export function ScanDiffBanner({ diff, previousScanDate }: ScanDiffBannerProps) 
     return (
         <Card className="bg-zinc-900/40 border-white/5 mb-8">
             <CardContent className="py-4">
-                <p className="text-xs text-zinc-500 mb-3">Since last scan ({formatDate(previousScanDate)})</p>
+                <p className="text-xs text-zinc-500 mb-3">Since last check ({formatDate(previousScanDate)})</p>
                 <div className="flex flex-wrap items-center gap-5">
                     {resolvedIssues.length > 0 && (
                         <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function ScanDiffBanner({ diff, previousScanDate }: ScanDiffBannerProps) 
                         </div>
                     )}
                     {!hasChanges && (
-                        <span className="text-xs text-zinc-500">No changes detected since last scan.</span>
+                        <span className="text-xs text-zinc-500">No changes detected since last check.</span>
                     )}
                 </div>
             </CardContent>

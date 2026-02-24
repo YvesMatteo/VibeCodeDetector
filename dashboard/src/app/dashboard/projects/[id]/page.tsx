@@ -12,11 +12,19 @@ import {
     TrendingUp,
     TrendingDown,
     Minus,
+    Activity,
 } from 'lucide-react';
 import { processAuditData } from '@/lib/audit-data';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
 import { Button } from '@/components/ui/button';
+
+const FREQUENCY_LABELS: Record<string, string> = {
+    every_6h: 'Every 6 hours',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+};
 
 function getScoreColor(score: number | null): string {
     if (score === null) return 'text-zinc-500';
@@ -82,6 +90,14 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
         .single();
 
     if (!project) redirect('/dashboard');
+
+    // Get monitoring schedule
+    const { data: schedule } = await supabase
+        .from('scheduled_scans' as any)
+        .select('id, frequency, enabled, next_run_at, hour_utc')
+        .eq('project_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
     // Get recent scans for chart + overview
     const { data: recentScans } = await supabase
@@ -205,7 +221,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                         {/* Last Scan */}
                         <div className="flex-1 p-5 md:p-6 lg:p-8">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Last Scan</span>
+                                <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Last Check</span>
                                 <div className="p-1.5 rounded-lg bg-sky-500/10 border border-sky-500/20">
                                     <Clock className="h-4 w-4 text-sky-400" />
                                 </div>
@@ -244,6 +260,31 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                                         <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 font-medium">{issues.low} low</span>
                                     )}
                                 </div>
+                            )}
+                        </div>
+
+                        {/* Monitoring Status */}
+                        <div className="flex-1 p-5 md:p-6 lg:p-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Monitoring</span>
+                                <div className={`p-1.5 rounded-lg ${schedule?.enabled ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-zinc-500/10 border border-zinc-500/20'}`}>
+                                    <Activity className={`h-4 w-4 ${schedule?.enabled ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                                </div>
+                            </div>
+                            <p className="text-3xl font-bold tracking-tight text-white">
+                                {schedule?.enabled ? FREQUENCY_LABELS[schedule.frequency] || schedule.frequency : schedule ? 'Paused' : 'Off'}
+                            </p>
+                            {schedule?.enabled && schedule.next_run_at && (
+                                <p className="text-xs text-zinc-500 mt-2">
+                                    Next check: {new Date(schedule.next_run_at).toLocaleDateString('en-US', {
+                                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                                    })}
+                                </p>
+                            )}
+                            {!schedule && (
+                                <Link href={`/dashboard/projects/${id}/monitoring`} className="text-xs text-sky-400 hover:text-sky-300 mt-2 inline-block">
+                                    Set up monitoring →
+                                </Link>
                             )}
                         </div>
                     </div>

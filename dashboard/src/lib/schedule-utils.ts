@@ -17,7 +17,14 @@ export function computeNextRun(
     next.setUTCMinutes(0, 0, 0);
     next.setUTCHours(hourUtc);
 
-    if (frequency === 'daily') {
+    if (frequency === 'every_6h') {
+        // Next 6-hour boundary: 0, 6, 12, 18 UTC
+        const h = now.getUTCHours();
+        const nextBoundary = (Math.floor(h / 6) + 1) * 6;
+        next.setUTCHours(nextBoundary % 24);
+        if (nextBoundary >= 24) next.setUTCDate(next.getUTCDate() + 1);
+        return next.toISOString();
+    } else if (frequency === 'daily') {
         // If the computed time is in the past (or now), advance to tomorrow
         if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
     } else if (frequency === 'weekly') {

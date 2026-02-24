@@ -20,9 +20,9 @@ const PLANS: Record<string, {
     scans: number;
     name: string
 }> = {
-    starter: { productId: 'prod_Tww4QtoLP4LGh4', priceMonthly: 'price_1Sz2CgLRbxIsl4HLE7jp6ecZ', priceAnnual: 'price_1T1G35LRbxIsl4HLq1Geq4Ov', domains: 1, scans: 5, name: 'Starter' },
-    pro: { productId: 'prod_Tww4j1OR1ONDTJ', priceMonthly: 'price_1Sz2CjLRbxIsl4HLbs2LEaw0', priceAnnual: 'price_1T1G36LRbxIsl4HLcxaSjnej', domains: 3, scans: 20, name: 'Pro' },
-    max: { productId: 'prod_Tww4oXvwj9PmsN', priceMonthly: 'price_1T1G99LRbxIsl4HLzT5TNktI', priceAnnual: 'price_1T1G99LRbxIsl4HLfsEV74xC', domains: 10, scans: 75, name: 'Max' },
+    starter: { productId: 'prod_Tww4QtoLP4LGh4', priceMonthly: 'price_1Sz2CgLRbxIsl4HLE7jp6ecZ', priceAnnual: 'price_1T1G35LRbxIsl4HLq1Geq4Ov', domains: 1, scans: 30, name: 'Starter' },
+    pro: { productId: 'prod_Tww4j1OR1ONDTJ', priceMonthly: 'price_1Sz2CjLRbxIsl4HLbs2LEaw0', priceAnnual: 'price_1T1G36LRbxIsl4HLcxaSjnej', domains: 3, scans: 155, name: 'Pro' },
+    max: { productId: 'prod_Tww4oXvwj9PmsN', priceMonthly: 'price_1T1G99LRbxIsl4HLzT5TNktI', priceAnnual: 'price_1T1G99LRbxIsl4HLfsEV74xC', domains: 10, scans: 3000, name: 'Max' },
 };
 
 export async function POST(req: NextRequest) {

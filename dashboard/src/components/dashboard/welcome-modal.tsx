@@ -60,7 +60,7 @@ export function WelcomeModal() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">Run an audit</p>
-                            <p className="text-xs text-zinc-500">35 scanners check your site for vulnerabilities in under a minute.</p>
+                            <p className="text-xs text-zinc-500">35 security checks find vulnerabilities in under a minute.</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -69,7 +69,7 @@ export function WelcomeModal() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-white">Fix and track</p>
-                            <p className="text-xs text-zinc-500">Get AI-powered fix suggestions. Re-scan to verify improvements.</p>
+                            <p className="text-xs text-zinc-500">Get AI-powered fix suggestions. Re-check to verify improvements.</p>
                         </div>
                     </div>
                 </div>

@@ -35,9 +35,17 @@ interface ProjectCardProps {
     lastAuditDate?: string | null;
     plan?: string;
     backendType?: string | null;
+    monitoringFrequency?: string | null;
 }
 
-export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issueCount = 0, severity, lastAuditDate, backendType }: ProjectCardProps) {
+const FREQ_LABELS: Record<string, string> = {
+    every_6h: 'Every 6h',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+};
+
+export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issueCount = 0, severity, lastAuditDate, backendType, monitoringFrequency }: ProjectCardProps) {
     const [imgError, setImgError] = useState(false);
     const hostname = (() => {
         try { return new URL(url).hostname; } catch { return url; }
@@ -112,6 +120,11 @@ export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issu
                     <Badge className="bg-white/5 text-zinc-400 hover:bg-white/10 border-0 font-semibold h-5 text-[9px] uppercase tracking-wider px-1.5 rounded-sm">
                         {plan === 'none' || !plan ? 'FREE' : plan.toUpperCase()}
                     </Badge>
+                    {monitoringFrequency && (
+                        <Badge className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-0 font-semibold h-5 text-[9px] uppercase tracking-wider px-1.5 rounded-sm ml-auto">
+                            {FREQ_LABELS[monitoringFrequency] || monitoringFrequency}
+                        </Badge>
+                    )}
                 </div>
             </div>
         </Link>

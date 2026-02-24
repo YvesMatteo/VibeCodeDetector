@@ -34,6 +34,7 @@ interface AlertRule {
 }
 
 const FREQUENCIES = [
+    { value: 'every_6h', label: 'Every 6h' },
     { value: 'daily', label: 'Daily' },
     { value: 'weekly', label: 'Weekly' },
     { value: 'monthly', label: 'Monthly' },
@@ -189,8 +190,8 @@ export default function MonitoringPage() {
                         <Clock className="h-4 w-4 text-sky-400" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-medium text-white">Scheduled Scans</h3>
-                        <p className="text-xs text-zinc-500">Automatically run security audits on a recurring schedule</p>
+                        <h3 className="text-sm font-medium text-white">Monitoring Schedule</h3>
+                        <p className="text-xs text-zinc-500">Automatically run security checks on a recurring schedule</p>
                     </div>
                     <label className="ml-auto flex items-center gap-2 cursor-pointer">
                         <input
@@ -254,7 +255,7 @@ export default function MonitoringPage() {
 
                         {nextRun && (
                             <p className="text-xs text-zinc-500">
-                                Next scan: {new Date(nextRun).toLocaleString()}
+                                Next check: {new Date(nextRun).toLocaleString()}
                             </p>
                         )}
                     </div>

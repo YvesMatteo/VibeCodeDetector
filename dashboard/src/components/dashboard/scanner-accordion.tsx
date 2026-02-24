@@ -112,7 +112,7 @@ const scannerIcons: Record<string, any> = {
 };
 
 const scannerNames: Record<string, string> = {
-    security: 'Security Scanner',
+    security: 'Security Headers',
     api_keys: 'API Key Detector',
     legal: 'Legal Compliance',
     threat_intelligence: 'Threat Intelligence',
@@ -143,7 +143,7 @@ const scannerNames: Record<string, string> = {
     audit_logging: 'Audit Logging & Monitoring',
     mobile_api: 'Mobile API Rate Limiting',
     domain_hijacking: 'Domain Hijacking Detection',
-    debug_endpoints: 'Debug Endpoints Scanner',
+    debug_endpoints: 'Debug Endpoints',
 };
 
 interface DismissCallback {
@@ -858,7 +858,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                         <Icon className="h-4 w-4 text-red-400 shrink-0" />
                                         <div>
                                             <h3 className="text-sm font-semibold text-red-400">{scannerNames[key as keyof typeof scannerNames] || key}</h3>
-                                            <p className="text-[11px] text-red-400/70">Scan Failed</p>
+                                            <p className="text-[11px] text-red-400/70">Check Failed</p>
                                         </div>
                                     </div>
                                     <div className="mt-3">

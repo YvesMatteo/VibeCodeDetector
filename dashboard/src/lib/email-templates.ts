@@ -41,7 +41,7 @@ ${content}
 &copy; ${new Date().getFullYear()} ${BRAND.name}. All rights reserved.
 </p>
 <p style="margin:8px 0 0;font-size:12px;color:#3F3F46;">
-Security scanning for modern web apps.
+Always-on security monitoring for modern web apps.
 </p>
 </td></tr>
 
@@ -110,6 +110,97 @@ This link will expire in 24 hours. If you didn&rsquo;t request a password reset,
 Button not working? Copy and paste this link:<br/>
 <a href="${resetUrl}" style="color:#71717A;">${resetUrl}</a>
 </p>
+`),
+    };
+}
+
+export function scoreDropAlertTemplate(opts: {
+    projectName: string;
+    previousScore: number;
+    currentScore: number;
+    drop: number;
+    dashboardUrl: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `Score drop alert: ${opts.projectName} (-${opts.drop} points)`,
+        html: layout(`
+<h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:${BRAND.color};letter-spacing:-0.02em;">
+Security score dropped
+</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${BRAND.mutedText};">
+Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> dropped from <strong style="color:${BRAND.color};">${opts.previousScore}</strong> to <strong style="color:#EF4444;">${opts.currentScore}</strong> (${opts.drop} point decrease).
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr>
+<td style="background-color:rgba(239,68,68,0.1);border-radius:8px;padding:16px;text-align:center;">
+<span style="font-size:32px;font-weight:700;color:#EF4444;">${opts.currentScore}</span>
+<span style="font-size:14px;color:${BRAND.mutedText};display:block;margin-top:4px;">Current score</span>
+</td>
+</tr>
+</table>
+
+${button('View Dashboard', opts.dashboardUrl)}
+`),
+    };
+}
+
+export function newCriticalAlertTemplate(opts: {
+    projectName: string;
+    criticalCount: number;
+    currentScore: number;
+    dashboardUrl: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `Critical findings: ${opts.projectName} (${opts.criticalCount} new)`,
+        html: layout(`
+<h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:${BRAND.color};letter-spacing:-0.02em;">
+New critical findings detected
+</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${BRAND.mutedText};">
+Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> has <strong style="color:#EF4444;">${opts.criticalCount} critical</strong> security ${opts.criticalCount === 1 ? 'finding' : 'findings'} that need immediate attention.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr>
+<td style="background-color:rgba(239,68,68,0.1);border-radius:8px;padding:16px;text-align:center;">
+<span style="font-size:32px;font-weight:700;color:#EF4444;">${opts.criticalCount}</span>
+<span style="font-size:14px;color:${BRAND.mutedText};display:block;margin-top:4px;">Critical findings</span>
+</td>
+</tr>
+</table>
+
+${button('Review Findings', opts.dashboardUrl)}
+`),
+    };
+}
+
+export function scoreBelowAlertTemplate(opts: {
+    projectName: string;
+    currentScore: number;
+    threshold: number;
+    dashboardUrl: string;
+}): { subject: string; html: string } {
+    return {
+        subject: `Score below threshold: ${opts.projectName} (${opts.currentScore}/${opts.threshold})`,
+        html: layout(`
+<h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:${BRAND.color};letter-spacing:-0.02em;">
+Score below threshold
+</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${BRAND.mutedText};">
+Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> scored <strong style="color:#EF4444;">${opts.currentScore}</strong>, which is below your alert threshold of <strong style="color:${BRAND.color};">${opts.threshold}</strong>.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr>
+<td style="background-color:rgba(239,68,68,0.1);border-radius:8px;padding:16px;text-align:center;">
+<span style="font-size:32px;font-weight:700;color:#EF4444;">${opts.currentScore}</span>
+<span style="font-size:14px;color:${BRAND.mutedText};display:block;margin-top:4px;">Current score (threshold: ${opts.threshold})</span>
+</td>
+</tr>
+</table>
+
+${button('View Dashboard', opts.dashboardUrl)}
 `),
     };
 }

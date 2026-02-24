@@ -3,7 +3,7 @@ import { computeScanDiff } from './scan-diff';
 import { computeOwaspSummary } from './owasp-mapping';
 
 const scannerNames: Record<string, string> = {
-  security: 'Security Scanner',
+  security: 'Security Headers',
   api_keys: 'API Key Detector',
   legal: 'Legal Compliance',
   threat_intelligence: 'Threat Intelligence',
@@ -35,7 +35,7 @@ const scannerNames: Record<string, string> = {
   audit_logging: 'Audit Logging & Monitoring',
   mobile_api: 'Mobile API Rate Limiting',
   domain_hijacking: 'Domain Hijacking Detection',
-  debug_endpoints: 'Debug Endpoints Scanner',
+  debug_endpoints: 'Debug Endpoints',
   graphql: 'GraphQL Security',
   jwt_audit: 'JWT Audit',
   ai_llm: 'AI/LLM Security',
@@ -127,11 +127,11 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   const rating = getVibeRating(totalIssueCount);
 
   // ── Header ──────────────────────────────────────────────────────────────
-  lines.push(`# CheckVibe Security Report`);
+  lines.push(`# CheckVibe Security Check Report`);
   lines.push(`## ${domain}`);
   lines.push('');
   lines.push(`**URL:** ${url}  `);
-  lines.push(`**Scanned:** ${scanDate}  `);
+  lines.push(`**Checked:** ${scanDate}  `);
   lines.push(`**Status:** ${scan.status}  `);
   lines.push('');
 
@@ -186,7 +186,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   lines.push('');
 
   // ── Scanner Summary Table ───────────────────────────────────────────────
-  lines.push(`## Scanner Summary`);
+  lines.push(`## Check Summary`);
   lines.push('');
   lines.push(`| Scanner | Issues | Status |`);
   lines.push(`|---------|--------|--------|`);
@@ -244,7 +244,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   // ── Detailed Results Per Scanner ────────────────────────────────────────
   lines.push(`---`);
   lines.push('');
-  lines.push(`## Detailed Scanner Results`);
+  lines.push(`## Detailed Check Results`);
   lines.push('');
 
   for (const key of orderedKeys) {

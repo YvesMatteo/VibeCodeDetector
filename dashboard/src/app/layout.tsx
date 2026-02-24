@@ -26,12 +26,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website with 35 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
+  title: "CheckVibe - Always-On Security Monitoring",
+  description: "Monitor your website with 35 automated security checks. Detect exposed API keys, SQL injection, XSS, and more.",
   metadataBase: new URL("https://checkvibe.dev"),
   openGraph: {
-    title: "CheckVibe - AI Website Scanner",
-    description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
+    title: "CheckVibe - Always-On Security Monitoring",
+    description: "Monitor your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
     type: "website",
     siteName: "CheckVibe",
     url: "https://checkvibe.dev",
@@ -40,15 +40,15 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "CheckVibe - AI Website Scanner",
+        alt: "CheckVibe - Always-On Security Monitoring",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CheckVibe - AI Website Scanner",
-    description: "Scan your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
+    title: "CheckVibe - Always-On Security Monitoring",
+    description: "Monitor your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
     images: ["/twitter-image"],
   },
   robots: {
@@ -79,14 +79,14 @@ export default function RootLayout({
               name: 'CheckVibe',
               applicationCategory: 'SecurityApplication',
               operatingSystem: 'Web',
-              description: 'AI-powered website security scanner with 35 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
+              description: 'AI-powered website security monitoring with 35 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
               url: 'https://checkvibe.dev',
               offers: [
                 { '@type': 'Offer', name: 'Starter', price: '19', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
                 { '@type': 'Offer', name: 'Pro', price: '39', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
                 { '@type': 'Offer', name: 'Max', price: '79', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
               ],
-              featureList: '35 security scanners, SQL injection detection, XSS detection, API key scanning, SSL/TLS audit, CORS analysis, CSP analysis, dependency scanning',
+              featureList: '35 security monitors, SQL injection detection, XSS detection, API key monitoring, SSL/TLS audit, CORS analysis, CSP analysis, dependency monitoring',
             }),
           }}
         />
