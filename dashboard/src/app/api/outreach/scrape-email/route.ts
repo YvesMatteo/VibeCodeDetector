@@ -3,60 +3,471 @@ import { createClient } from '@/lib/supabase/server';
 
 const OWNER_EMAIL = 'vibecodedetector@gmail.com';
 
-// Pages to check for contact emails (in order of priority)
-const CONTACT_PATHS = ['', '/contact', '/about', '/team', '/support', '/impressum', '/legal'];
-
-// Patterns to ignore (noreply, generic, tracking, etc.)
+// ── Ignore patterns ──────────────────────────────────────────────────
 const IGNORE_PATTERNS = [
-    /noreply/i, /no-reply/i, /donotreply/i, /mailer-daemon/i,
-    /notifications?@/i, /newsletter@/i, /unsubscribe/i,
-    /example\.com/i, /test@/i, /sentry/i, /tracking/i,
-    /wixpress\.com/i, /mailchimp/i, /sendgrid/i,
+    /noreply/i, /no-reply/i, /no_reply/i, /donotreply/i, /mailer-daemon/i,
+    /notifications?@/i, /newsletter@/i, /unsubscribe/i, /bounce/i,
+    /example\.com/i, /test@/i, /sentry\./i, /tracking/i,
+    /wixpress\.com/i, /mailchimp/i, /sendgrid/i, /amazonaws/i,
+    /cloudflare/i, /google\.com$/i, /facebook\.com$/i, /twitter\.com$/i,
+    /github\.com$/i, /sentry\.io$/i, /intercom/i, /zendesk/i,
+    /hubspot/i, /mailgun/i, /postmark/i, /sparkpost/i,
+    /placeholder/i, /changeme/i, /yourname/i, /youremail/i,
+    /user@/i, /email@/i, /name@/i, /you@/i, /someone@/i,
 ];
 
-function extractEmails(html: string): string[] {
+const JUNK_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.css', '.js', '.woff', '.woff2', '.ttf', '.map', '.ico'];
+
+// ── Email extraction from text ───────────────────────────────────────
+function extractEmails(text: string): string[] {
     const emails = new Set<string>();
 
     // 1. mailto: links (highest confidence)
-    const mailtoRegex = /mailto:([^\s"'?&]+)/gi;
-    let match;
-    while ((match = mailtoRegex.exec(html)) !== null) {
-        const email = decodeURIComponent(match[1]).trim().toLowerCase();
-        if (email.includes('@') && !email.includes('{{')) emails.add(email);
+    for (const m of text.matchAll(/mailto:([^\s"'?&#]+)/gi)) {
+        const e = decodeURIComponent(m[1]).trim().toLowerCase();
+        if (e.includes('@') && !e.includes('{{')) emails.add(e);
     }
 
-    // 2. Email patterns in visible text and attributes
-    const emailRegex = /\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/g;
-    while ((match = emailRegex.exec(html)) !== null) {
-        const email = match[0].toLowerCase();
-        // Skip if it looks like a file extension or template variable
-        if (email.endsWith('.png') || email.endsWith('.jpg') || email.endsWith('.svg') ||
-            email.endsWith('.css') || email.endsWith('.js') || email.endsWith('.woff') ||
-            email.includes('{{') || email.includes('{%')) continue;
-        emails.add(email);
+    // 2. data-email / data-contact attributes
+    for (const m of text.matchAll(/data-(?:email|contact|mail)\s*=\s*["']([^"']+)["']/gi)) {
+        const e = m[1].trim().toLowerCase();
+        if (e.includes('@')) emails.add(e);
     }
 
-    // Filter out ignore patterns
-    return Array.from(emails).filter(email =>
-        !IGNORE_PATTERNS.some(pattern => pattern.test(email))
-    );
+    // 3. Decode obfuscated emails before regex
+    let decoded = text;
+    // HTML entities: &#64; = @, &#46; = .
+    decoded = decoded.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
+    // Common obfuscation: [at] (at) {at} [dot] (dot) {dot}
+    decoded = decoded.replace(/\s*[\[({]\s*at\s*[\])}]\s*/gi, '@');
+    decoded = decoded.replace(/\s*[\[({]\s*dot\s*[\])}]\s*/gi, '.');
+    // Space-padded: "name AT domain DOT com"
+    decoded = decoded.replace(/\s+AT\s+/g, '@');
+    decoded = decoded.replace(/\s+DOT\s+/g, '.');
+
+    // 4. Standard email regex on decoded text
+    for (const m of decoded.matchAll(/\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/g)) {
+        const e = m[0].toLowerCase();
+        if (!JUNK_EXTENSIONS.some(ext => e.endsWith(ext)) && !e.includes('{{') && !e.includes('{%')) {
+            emails.add(e);
+        }
+    }
+
+    // 5. JSON-LD structured data
+    for (const m of text.matchAll(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+        try {
+            const data = JSON.parse(m[1]);
+            const extractFromLD = (obj: any) => {
+                if (!obj || typeof obj !== 'object') return;
+                if (typeof obj.email === 'string') emails.add(obj.email.replace(/^mailto:/i, '').toLowerCase());
+                if (obj.contactPoint) {
+                    const points = Array.isArray(obj.contactPoint) ? obj.contactPoint : [obj.contactPoint];
+                    for (const cp of points) {
+                        if (typeof cp.email === 'string') emails.add(cp.email.replace(/^mailto:/i, '').toLowerCase());
+                    }
+                }
+                if (Array.isArray(obj)) obj.forEach(extractFromLD);
+                if (typeof obj === 'object') Object.values(obj).forEach(v => { if (typeof v === 'object') extractFromLD(v); });
+            };
+            extractFromLD(data);
+        } catch { /* invalid JSON-LD */ }
+    }
+
+    // 6. Meta tags: og:email, contact:email, author
+    for (const m of text.matchAll(/<meta[^>]*(?:name|property)\s*=\s*["'](?:og:email|contact:email|author)["'][^>]*content\s*=\s*["']([^"']+)["']/gi)) {
+        const e = m[1].trim().toLowerCase();
+        if (e.includes('@')) emails.add(e);
+    }
+    // Also reversed order (content before name)
+    for (const m of text.matchAll(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*(?:name|property)\s*=\s*["'](?:og:email|contact:email|author)["']/gi)) {
+        const e = m[1].trim().toLowerCase();
+        if (e.includes('@')) emails.add(e);
+    }
+
+    return Array.from(emails).filter(e => !IGNORE_PATTERNS.some(p => p.test(e)));
 }
 
-function scoreEmail(email: string): number {
+// ── Extract social links ─────────────────────────────────────────────
+function extractSocialLinks(html: string): { github?: string; twitter?: string; linkedin?: string } {
+    const links: { github?: string; twitter?: string; linkedin?: string } = {};
+
+    const githubMatch = html.match(/href\s*=\s*["'](https?:\/\/github\.com\/[a-zA-Z0-9_-]+)\/?["']/i);
+    if (githubMatch) links.github = githubMatch[1];
+
+    const twitterMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:twitter|x)\.com\/[a-zA-Z0-9_]+)\/?["']/i);
+    if (twitterMatch) links.twitter = twitterMatch[1];
+
+    const linkedinMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:www\.)?linkedin\.com\/(?:company|in)\/[a-zA-Z0-9_-]+)\/?["']/i);
+    if (linkedinMatch) links.linkedin = linkedinMatch[1];
+
+    return links;
+}
+
+// ── Score emails by relevance ────────────────────────────────────────
+function scoreEmail(email: string, source: string, domainMatch: boolean): number {
     let score = 0;
     const local = email.split('@')[0];
 
-    // Prefer personal-looking emails
-    if (/^(hi|hello|hey|info|contact|team|founders?)@/i.test(email)) score += 3;
-    if (/^[a-z]+\.[a-z]+@/i.test(local)) score += 5; // first.last pattern
-    if (/^[a-z]{2,}@/i.test(local) && local.length < 15) score += 2; // short personal name
-    if (/^(support|help|admin|billing|sales)@/i.test(email)) score += 1;
-    // Deprioritize generic
-    if (/^(privacy|legal|abuse|postmaster|webmaster)@/i.test(email)) score -= 2;
+    // Domain match bonus
+    if (domainMatch) score += 10;
+
+    // Source bonus
+    if (source === 'github') score += 8;
+    if (source === 'security.txt') score += 6;
+    if (source.includes('contact') || source.includes('about')) score += 4;
+    if (source === 'dns-soa') score += 3;
+    if (source === 'guessed') score -= 5;
+
+    // Personal email patterns
+    if (/^[a-z]+\.[a-z]+@/i.test(local)) score += 7;           // first.last
+    if (/^[a-z]+@/i.test(local) && local.length <= 10) score += 4; // short name
+    if (/^(hi|hello|hey)@/i.test(email)) score += 5;
+    if (/^(contact|team|founders?)@/i.test(email)) score += 4;
+    if (/^(info)@/i.test(email)) score += 3;
+    if (/^(support|help)@/i.test(email)) score += 1;
+    if (/^(admin|billing|sales|privacy|legal|abuse|postmaster|webmaster)@/i.test(email)) score -= 1;
 
     return score;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────
+async function fetchWithTimeout(url: string, timeoutMs = 6000): Promise<string | null> {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            },
+            signal: controller.signal,
+            redirect: 'follow',
+        });
+        clearTimeout(timer);
+        if (!res.ok) return null;
+        const text = await res.text();
+        return text.slice(0, 500_000); // cap at 500KB
+    } catch {
+        return null;
+    }
+}
+
+function getDomain(url: string): string {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+// ── Strategy A: HTML scraping (expanded paths) ───────────────────────
+const CONTACT_PATHS = [
+    '', '/contact', '/about', '/team', '/about-us', '/contact-us',
+    '/imprint', '/impressum', '/kontakt', '/legal', '/privacy',
+    '/support', '/help', '/company', '/founders', '/who-we-are',
+    '/get-in-touch', '/reach-us', '/info', '/about/team',
+    '/pages/contact', '/pages/about', '/en/contact', '/en/about',
+    '/terms', '/tos', '/datenschutz',
+];
+
+interface EmailResult {
+    email: string;
+    source: string;
+    score: number;
+}
+
+async function strategyHtmlScraping(baseUrl: string, domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+    const socialLinks: { github?: string; twitter?: string; linkedin?: string } = {};
+
+    // Fetch pages in batches of 8
+    const batchSize = 8;
+    for (let i = 0; i < CONTACT_PATHS.length; i += batchSize) {
+        const batch = CONTACT_PATHS.slice(i, i + batchSize);
+        const fetches = batch.map(async (path) => {
+            const targetUrl = new URL(path, baseUrl).toString();
+            const html = await fetchWithTimeout(targetUrl);
+            if (!html) return;
+
+            const found = extractEmails(html);
+            for (const email of found) {
+                const domainMatch = email.endsWith(`@${domain}`) || email.includes(domain.split('.')[0]);
+                results.push({ email, source: path || '/', score: scoreEmail(email, path, domainMatch) });
+            }
+
+            // Extract social links from homepage and about
+            if (path === '' || path === '/about' || path === '/about-us') {
+                Object.assign(socialLinks, extractSocialLinks(html));
+            }
+        });
+        await Promise.all(fetches);
+        // Stop early if we found domain-matching emails
+        if (results.some(r => r.email.endsWith(`@${domain}`))) break;
+    }
+
+    return results;
+}
+
+// ── Strategy B: security.txt + humans.txt ────────────────────────────
+async function strategySecurityTxt(baseUrl: string, domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+    const paths = ['/.well-known/security.txt', '/security.txt', '/humans.txt'];
+
+    await Promise.all(paths.map(async (path) => {
+        const text = await fetchWithTimeout(new URL(path, baseUrl).toString(), 4000);
+        if (!text) return;
+
+        // security.txt Contact: field
+        for (const m of text.matchAll(/^Contact:\s*mailto:(.+)$/gmi)) {
+            const email = m[1].trim().toLowerCase();
+            if (email.includes('@')) {
+                const domainMatch = email.endsWith(`@${domain}`);
+                results.push({ email, source: 'security.txt', score: scoreEmail(email, 'security.txt', domainMatch) });
+            }
+        }
+
+        // Also try general email extraction
+        for (const email of extractEmails(text)) {
+            const domainMatch = email.endsWith(`@${domain}`);
+            results.push({ email, source: path, score: scoreEmail(email, path, domainMatch) });
+        }
+    }));
+
+    return results;
+}
+
+// ── Strategy C: GitHub email extraction ──────────────────────────────
+async function strategyGitHub(baseUrl: string, domain: string): Promise<{ emails: EmailResult[]; socialLinks: { github?: string } }> {
+    const emails: EmailResult[] = [];
+    const socialLinks: { github?: string } = {};
+
+    // First find GitHub links on the site
+    const html = await fetchWithTimeout(baseUrl);
+    if (!html) return { emails, socialLinks };
+
+    const social = extractSocialLinks(html);
+    if (!social.github) return { emails, socialLinks };
+    socialLinks.github = social.github;
+
+    const githubPath = new URL(social.github).pathname.replace(/^\//, '').split('/')[0];
+    if (!githubPath) return { emails, socialLinks };
+
+    const githubToken = process.env.GITHUB_TOKEN;
+    const headers: Record<string, string> = {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'CheckVibeBot/1.0',
+    };
+    if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
+
+    // Try 1: Get email from GitHub user/org profile
+    try {
+        const profileRes = await fetchWithTimeout(`https://api.github.com/users/${githubPath}`, 5000);
+        if (profileRes) {
+            const profile = JSON.parse(profileRes);
+            if (profile.email) {
+                const email = profile.email.toLowerCase();
+                const domainMatch = email.endsWith(`@${domain}`);
+                emails.push({ email, source: 'github', score: scoreEmail(email, 'github', domainMatch) });
+            }
+            // Also check blog field for email
+            if (profile.blog && profile.blog.includes('@')) {
+                emails.push({ email: profile.blog.toLowerCase(), source: 'github', score: scoreEmail(profile.blog.toLowerCase(), 'github', false) });
+            }
+        }
+    } catch { /* skip */ }
+
+    // Try 2: Get email from recent public commits (events)
+    if (emails.length === 0) {
+        try {
+            const eventsText = await fetchWithTimeout(`https://api.github.com/users/${githubPath}/events/public?per_page=30`, 5000);
+            if (eventsText) {
+                const events = JSON.parse(eventsText);
+                const commitEmails = new Set<string>();
+                for (const event of events) {
+                    if (event.type === 'PushEvent' && event.payload?.commits) {
+                        for (const commit of event.payload.commits) {
+                            if (commit.author?.email) {
+                                const e = commit.author.email.toLowerCase();
+                                if (e.includes('@') && !e.includes('noreply') && !e.includes('users.noreply.github.com')) {
+                                    commitEmails.add(e);
+                                }
+                            }
+                        }
+                    }
+                }
+                for (const email of commitEmails) {
+                    const domainMatch = email.endsWith(`@${domain}`);
+                    emails.push({ email, source: 'github', score: scoreEmail(email, 'github', domainMatch) });
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    // Try 3: Get org members' emails
+    if (emails.length === 0) {
+        try {
+            const membersText = await fetchWithTimeout(`https://api.github.com/orgs/${githubPath}/members?per_page=5`, 5000);
+            if (membersText) {
+                const members = JSON.parse(membersText);
+                for (const member of members.slice(0, 3)) {
+                    const profileText = await fetchWithTimeout(`https://api.github.com/users/${member.login}`, 4000);
+                    if (profileText) {
+                        const profile = JSON.parse(profileText);
+                        if (profile.email) {
+                            const email = profile.email.toLowerCase();
+                            const domainMatch = email.endsWith(`@${domain}`);
+                            emails.push({ email, source: 'github', score: scoreEmail(email, 'github', domainMatch) });
+                        }
+                    }
+                }
+            }
+        } catch { /* skip */ }
+    }
+
+    return { emails, socialLinks };
+}
+
+// ── Strategy D: DNS SOA record ───────────────────────────────────────
+async function strategyDnsSoa(domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+
+    try {
+        // Use Cloudflare DoH for DNS lookup
+        const dohRes = await fetchWithTimeout(
+            `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=SOA`,
+            4000,
+        );
+        if (dohRes) {
+            // Try parsing as JSON (DoH JSON format)
+            // Cloudflare returns JSON when Accept: application/dns-json
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(
+                `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=SOA`,
+                {
+                    headers: { 'Accept': 'application/dns-json' },
+                    signal: controller.signal,
+                },
+            );
+            clearTimeout(timer);
+            if (res.ok) {
+                const data = await res.json();
+                for (const answer of data.Answer || []) {
+                    if (answer.type === 6 && answer.data) {
+                        // SOA data: "ns1.example.com. admin.example.com. serial refresh retry expire minimum"
+                        const parts = answer.data.split(/\s+/);
+                        if (parts.length >= 2) {
+                            // rname: admin.example.com. → admin@example.com
+                            const rname = parts[1].replace(/\.$/, '');
+                            const email = rname.replace(/\./, '@'); // first dot becomes @
+                            if (email.includes('@') && !IGNORE_PATTERNS.some(p => p.test(email))) {
+                                results.push({ email: email.toLowerCase(), source: 'dns-soa', score: scoreEmail(email.toLowerCase(), 'dns-soa', true) });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch { /* skip */ }
+
+    return results;
+}
+
+// ── Strategy E: Common pattern guessing ──────────────────────────────
+function strategyGuessEmails(domain: string): EmailResult[] {
+    const prefixes = ['hello', 'hi', 'hey', 'contact', 'team', 'info', 'founder', 'founders', 'support'];
+    return prefixes.map(p => ({
+        email: `${p}@${domain}`,
+        source: 'guessed',
+        score: scoreEmail(`${p}@${domain}`, 'guessed', true),
+    }));
+}
+
+// ── Strategy F: Sitemap crawl ────────────────────────────────────────
+async function strategySitemap(baseUrl: string, domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+
+    const sitemapText = await fetchWithTimeout(new URL('/sitemap.xml', baseUrl).toString(), 5000);
+    if (!sitemapText) return results;
+
+    // Extract URLs that look like contact/about pages
+    const contactPatterns = /contact|about|team|impressum|imprint|kontakt|company|who-we-are/i;
+    const urls: string[] = [];
+    for (const m of sitemapText.matchAll(/<loc>([^<]+)<\/loc>/gi)) {
+        if (contactPatterns.test(m[1])) urls.push(m[1]);
+    }
+
+    // Fetch up to 5 pages from sitemap
+    await Promise.all(urls.slice(0, 5).map(async (pageUrl) => {
+        const html = await fetchWithTimeout(pageUrl);
+        if (!html) return;
+        for (const email of extractEmails(html)) {
+            const domainMatch = email.endsWith(`@${domain}`);
+            results.push({ email, source: `sitemap:${new URL(pageUrl).pathname}`, score: scoreEmail(email, 'sitemap', domainMatch) });
+        }
+    }));
+
+    return results;
+}
+
+// ── Strategy G: Google search ────────────────────────────────────────
+async function strategyGoogleSearch(domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+
+    // Use Google Custom Search or plain search
+    const query = encodeURIComponent(`"${domain}" email contact`);
+    try {
+        const html = await fetchWithTimeout(`https://www.google.com/search?q=${query}&num=5`, 5000);
+        if (!html) return results;
+
+        for (const email of extractEmails(html)) {
+            const domainMatch = email.endsWith(`@${domain}`) || email.includes(domain.split('.')[0]);
+            if (domainMatch) {
+                results.push({ email, source: 'google', score: scoreEmail(email, 'google', domainMatch) });
+            }
+        }
+    } catch { /* skip */ }
+
+    return results;
+}
+
+// ── Strategy H: WHOIS via RDAP ───────────────────────────────────────
+async function strategyWhois(domain: string): Promise<EmailResult[]> {
+    const results: EmailResult[] = [];
+
+    try {
+        // Use RDAP (successor to WHOIS) — public, no auth needed
+        const rdapText = await fetchWithTimeout(`https://rdap.org/domain/${domain}`, 5000);
+        if (!rdapText) return results;
+
+        const rdap = JSON.parse(rdapText);
+
+        // Extract emails from vCard entities
+        const extractVcardEmails = (entities: any[]) => {
+            if (!Array.isArray(entities)) return;
+            for (const entity of entities) {
+                if (entity.vcardArray) {
+                    const vcard = entity.vcardArray[1] || [];
+                    for (const field of vcard) {
+                        if (field[0] === 'email' && typeof field[3] === 'string') {
+                            const email = field[3].toLowerCase();
+                            if (!IGNORE_PATTERNS.some(p => p.test(email))) {
+                                results.push({ email, source: 'whois', score: scoreEmail(email, 'whois', email.endsWith(`@${domain}`)) });
+                            }
+                        }
+                    }
+                }
+                // Recurse into nested entities
+                if (entity.entities) extractVcardEmails(entity.entities);
+            }
+        };
+
+        if (rdap.entities) extractVcardEmails(rdap.entities);
+    } catch { /* skip */ }
+
+    return results;
+}
+
+
+// ── Main handler ─────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -66,52 +477,91 @@ export async function POST(req: NextRequest) {
     }
 
     const { url } = await req.json();
-
     if (!url) {
         return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
     }
 
-    const allEmails = new Map<string, { email: string; source: string; score: number }>();
+    const domain = getDomain(url);
+    if (!domain) {
+        return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
 
-    // Try fetching multiple pages
-    for (const path of CONTACT_PATHS) {
-        try {
-            const targetUrl = new URL(path, url).toString();
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 8000);
+    // Run all strategies in parallel with a 14s total timeout
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 14000));
 
-            const res = await fetch(targetUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; CheckVibeBot/1.0; +https://checkvibe.dev)',
-                    'Accept': 'text/html,application/xhtml+xml',
-                },
-                signal: controller.signal,
-                redirect: 'follow',
-            });
-            clearTimeout(timeout);
+    let allResults: EmailResult[] = [];
+    let socialLinks: Record<string, string> = {};
 
-            if (!res.ok) continue;
+    try {
+        const [htmlResults, securityResults, githubData, dnsResults, sitemapResults, googleResults, whoisResults] = await Promise.race([
+            Promise.all([
+                strategyHtmlScraping(url, domain).catch(() => [] as EmailResult[]),
+                strategySecurityTxt(url, domain).catch(() => [] as EmailResult[]),
+                strategyGitHub(url, domain).catch(() => ({ emails: [] as EmailResult[], socialLinks: {} })),
+                strategyDnsSoa(domain).catch(() => [] as EmailResult[]),
+                strategySitemap(url, domain).catch(() => [] as EmailResult[]),
+                strategyGoogleSearch(domain).catch(() => [] as EmailResult[]),
+                strategyWhois(domain).catch(() => [] as EmailResult[]),
+            ]),
+            timeout.then(() => [[], [], { emails: [], socialLinks: {} }, [], [], [], []] as const),
+        ]);
 
-            const html = await res.text();
-            const found = extractEmails(html);
+        allResults = [
+            ...htmlResults,
+            ...securityResults,
+            ...(Array.isArray(githubData) ? [] : githubData.emails),
+            ...dnsResults,
+            ...sitemapResults,
+            ...googleResults,
+            ...whoisResults,
+        ];
 
-            for (const email of found) {
-                const existing = allEmails.get(email);
-                const score = scoreEmail(email);
-                if (!existing || score > existing.score) {
-                    allEmails.set(email, { email, source: path || '/', score });
-                }
-            }
-        } catch {
-            // Skip failed pages
-            continue;
+        if (!Array.isArray(githubData) && githubData.socialLinks) {
+            socialLinks = { ...socialLinks, ...githubData.socialLinks };
+        }
+    } catch {
+        // Timeout — use whatever we have
+    }
+
+    // Always add guessed emails as fallback (lower score)
+    allResults.push(...strategyGuessEmails(domain));
+
+    // Deduplicate: keep highest score per email
+    const emailMap = new Map<string, EmailResult>();
+    for (const r of allResults) {
+        const existing = emailMap.get(r.email);
+        if (!existing || r.score > existing.score) {
+            emailMap.set(r.email, r);
         }
     }
 
-    // Sort by score descending
-    const results = Array.from(allEmails.values())
-        .sort((a, b) => b.score - a.score)
-        .map(({ email, source }) => ({ email, source }));
+    // Sort by score descending, separate found vs guessed
+    const found = Array.from(emailMap.values())
+        .filter(r => r.source !== 'guessed')
+        .sort((a, b) => b.score - a.score);
 
-    return NextResponse.json({ emails: results });
+    const guessed = Array.from(emailMap.values())
+        .filter(r => r.source === 'guessed')
+        .sort((a, b) => b.score - a.score);
+
+    const results = [...found, ...guessed].map(({ email, source }) => ({ email, source }));
+
+    // Extract social links from homepage HTML (might already have from strategy)
+    if (!socialLinks.github) {
+        const html = await fetchWithTimeout(url, 3000);
+        if (html) {
+            const links = extractSocialLinks(html);
+            socialLinks = { ...socialLinks, ...links };
+        }
+    }
+
+    return NextResponse.json({
+        emails: results,
+        socialLinks,
+        strategies: {
+            total: results.length,
+            found: found.length,
+            guessed: guessed.length,
+        },
+    });
 }

@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Mail, Send, Loader2, Check, RefreshCw, Search } from 'lucide-react';
+import { Mail, Send, Loader2, Check, RefreshCw, Search, Github, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OutreachEmailModalProps {
@@ -39,6 +39,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
     const [scraping, setScraping] = useState(false);
     const [scrapedEmails, setScrapedEmails] = useState<ScrapedEmail[]>([]);
     const [scraped, setScraped] = useState(false);
+    const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
 
     const handleScrapeEmails = async () => {
         setScraping(true);
@@ -53,11 +54,16 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 return;
             }
             const data = await res.json();
-            setScrapedEmails(data.emails || []);
+            const realEmails = (data.emails || []).filter((e: ScrapedEmail) => e.source !== 'guessed');
+            const guessed = (data.emails || []).filter((e: ScrapedEmail) => e.source === 'guessed');
+            setScrapedEmails([...realEmails, ...guessed.slice(0, 3)]);
             setScraped(true);
-            if (data.emails?.length > 0) {
-                setRecipientEmail(data.emails[0].email);
-                toast.success(`Found ${data.emails.length} email${data.emails.length > 1 ? 's' : ''}`);
+            if (data.socialLinks) setSocialLinks(data.socialLinks);
+            const best = realEmails[0] || guessed[0];
+            if (best) {
+                setRecipientEmail(best.email);
+                const foundCount = realEmails.length;
+                toast.success(foundCount > 0 ? `Found ${foundCount} email${foundCount > 1 ? 's' : ''}` : `No emails found — showing guesses`);
             } else {
                 toast('No emails found on the website');
             }
@@ -132,6 +138,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
         setSent(false);
         setScrapedEmails([]);
         setScraped(false);
+        setSocialLinks({});
     };
 
     return (
@@ -218,25 +225,49 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
 
                             {/* Scraped email results */}
                             {scraped && scrapedEmails.length > 0 && (
-                                <div className="mt-2 space-y-1">
-                                    <span className="text-[11px] text-zinc-500">Found on website:</span>
+                                <div className="mt-2 space-y-1.5">
+                                    <span className="text-[11px] text-zinc-500">
+                                        {scrapedEmails.some(e => e.source !== 'guessed') ? 'Found:' : 'Best guesses:'}
+                                    </span>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {scrapedEmails.map(({ email, source }) => (
-                                            <button
-                                                key={email}
-                                                onClick={() => setRecipientEmail(email)}
-                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
-                                                    recipientEmail === email
-                                                        ? 'bg-violet-500/20 border border-violet-500/30 text-violet-300'
-                                                        : 'bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]'
-                                                }`}
-                                            >
-                                                <Mail className="h-3 w-3" />
-                                                {email}
-                                                <span className="text-zinc-600">{source}</span>
-                                            </button>
-                                        ))}
+                                        {scrapedEmails.map(({ email, source }) => {
+                                            const sourceLabel = source === 'guessed' ? 'guess'
+                                                : source === 'github' ? 'GitHub'
+                                                : source === 'security.txt' ? 'security.txt'
+                                                : source === 'dns-soa' ? 'DNS'
+                                                : source === 'whois' ? 'WHOIS'
+                                                : source === 'google' ? 'Google'
+                                                : source.startsWith('sitemap:') ? 'sitemap'
+                                                : source;
+                                            return (
+                                                <button
+                                                    key={email}
+                                                    onClick={() => setRecipientEmail(email)}
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+                                                        recipientEmail === email
+                                                            ? 'bg-violet-500/20 border border-violet-500/30 text-violet-300'
+                                                            : source === 'guessed'
+                                                                ? 'bg-white/[0.02] border border-white/[0.04] border-dashed text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
+                                                                : 'bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                                                    }`}
+                                                >
+                                                    {source === 'github' ? <Github className="h-3 w-3" /> : <Mail className="h-3 w-3" />}
+                                                    {email}
+                                                    <span className="text-zinc-600 text-[10px]">{sourceLabel}</span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
+                                    {/* Social links context */}
+                                    {Object.keys(socialLinks).length > 0 && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Globe className="h-3 w-3 text-zinc-600" />
+                                            <span className="text-[10px] text-zinc-600">Social:</span>
+                                            {socialLinks.github && <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-[10px] text-zinc-500 hover:text-white underline">{socialLinks.github.replace('https://github.com/', 'github/')}</a>}
+                                            {socialLinks.twitter && <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-[10px] text-zinc-500 hover:text-white underline">{socialLinks.twitter.replace(/https?:\/\/(twitter|x)\.com\//, '@')}</a>}
+                                            {socialLinks.linkedin && <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-[10px] text-zinc-500 hover:text-white underline">LinkedIn</a>}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {scraped && scrapedEmails.length === 0 && (
