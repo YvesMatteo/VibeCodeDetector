@@ -15,6 +15,7 @@ import {
     Mail,
     ScrollText,
     Menu,
+    Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button'; // Assuming Button is available
@@ -33,6 +34,12 @@ export const resourceLinks = [
 
 export const connectLinks = [
     { name: 'Support', href: '/dashboard/support', icon: Mail, external: false },
+];
+
+const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+
+export const adminLinks = [
+    { name: 'Bulk Outreach', href: '/dashboard/bulk-outreach', icon: Send },
 ];
 
 interface SidebarProps {
@@ -209,6 +216,22 @@ export function Sidebar({
                         <NavItem key={item.name} item={item} isExternal={item.external} />
                     ))}
                 </div>
+
+                {/* Admin (owner only) */}
+                {userEmail === OWNER_EMAIL && (
+                    <div className="space-y-0.5 mt-6">
+                        <p className={cn(
+                            "px-3 text-[9px] font-medium tracking-wider text-zinc-600 uppercase mb-1.5 opacity-0 transition-opacity duration-100",
+                            !isMobile && "group-hover:opacity-100",
+                            isMobile && "opacity-100"
+                        )}>
+                            Admin
+                        </p>
+                        {adminLinks.map((item) => (
+                            <NavItem key={item.name} item={item} />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Logout */}
