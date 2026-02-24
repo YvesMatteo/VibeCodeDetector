@@ -425,7 +425,9 @@ export default function HomePage() {
             {pricingTiers.map((tier) => (
               <div key={tier.name} className="h-full">
                 <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
-                  ? 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
+                  ? tier.name === 'Max'
+                    ? 'bg-zinc-900/60 border-emerald-400/30 shadow-[0_0_30px_-10px_rgba(52,211,153,0.2)]'
+                    : 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                   : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                   }`}>
                   {tier.highlighted && tier.badgeText && (
@@ -463,7 +465,7 @@ export default function HomePage() {
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? 'text-sky-400' : 'text-zinc-500'}`} />
+                          <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? (tier.name === 'Max' ? 'text-emerald-400' : 'text-sky-400') : 'text-zinc-500'}`} />
                           <span className="text-sm text-zinc-300">{feature}</span>
                         </li>
                       ))}
@@ -480,7 +482,9 @@ export default function HomePage() {
                     ) : (
                       <Button
                         className={`w-full ${tier.highlighted
-                          ? 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
+                          ? tier.name === 'Max'
+                            ? 'bg-emerald-500 hover:bg-emerald-400 text-white border-0 shadow-lg shadow-emerald-400/20'
+                            : 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
                           : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
                           }`}
                         variant={tier.highlighted ? 'default' : 'outline'}
@@ -521,9 +525,9 @@ export default function HomePage() {
           <SupportedTools />
 
           {/* ======================== MCP INTEGRATION ======================== */}
-          <div className="max-w-5xl mx-auto relative z-10 w-full border-t border-white/5 pt-12 mt-12 mb-20 sm:mb-28">
-            <div className="text-center mb-6 sm:mb-10">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
+          <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-heading font-medium mb-2.5 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
                 <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-500"></span>
@@ -537,8 +541,8 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
               {/* Claude */}
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white mb-1.5">Claude</h3>
@@ -546,8 +550,8 @@ export default function HomePage() {
               </div>
 
               {/* Cursor */}
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white mb-1.5">Cursor</h3>
@@ -555,8 +559,8 @@ export default function HomePage() {
               </div>
 
               {/* Antigravity */}
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white mb-1.5">Antigravity</h3>
