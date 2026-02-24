@@ -12,7 +12,12 @@ import {
 import { resolveAuth, requireScope } from '@/lib/api-auth';
 import { checkCsrf } from '@/lib/csrf';
 
-const MAX_KEYS_PER_USER = 10;
+const PLAN_KEY_LIMITS: Record<string, number> = {
+    none: 0,
+    starter: 1,
+    pro: 5,
+    max: 20,
+};
 const DEFAULT_EXPIRY_DAYS = 90;
 
 // ---------------------------------------------------------------------------
@@ -34,6 +39,23 @@ export async function POST(req: NextRequest) {
     const userId = context.userId;
 
     const supabase = getServiceClient();
+
+    // Check plan allows API key creation
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', userId)
+        .single();
+
+    const userPlan = profile?.plan || 'none';
+    const maxKeys = PLAN_KEY_LIMITS[userPlan] ?? 0;
+
+    if (maxKeys === 0) {
+        return NextResponse.json(
+            { error: 'API key access requires a paid plan. Upgrade to create API keys.' },
+            { status: 403 }
+        );
+    }
 
     const body = await req.json();
     const {
@@ -134,9 +156,9 @@ export async function POST(req: NextRequest) {
       .eq('user_id', userId)
       .is('revoked_at', null);
 
-    if ((count ?? 0) >= MAX_KEYS_PER_USER) {
+    if ((count ?? 0) >= maxKeys) {
       return NextResponse.json(
-        { error: `Maximum ${MAX_KEYS_PER_USER} active keys allowed. Revoke an existing key first.` },
+        { error: `Maximum ${maxKeys} active keys allowed on your ${userPlan} plan. Revoke an existing key first.` },
         { status: 400 }
       );
     }

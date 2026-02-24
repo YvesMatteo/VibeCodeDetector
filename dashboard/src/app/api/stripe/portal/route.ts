@@ -50,7 +50,10 @@ export async function POST(req: NextRequest) {
             ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
         ].filter(Boolean) as string[];
         const requestOrigin = req.headers.get('origin');
-        const origin = allowedOrigins.includes(requestOrigin || '') ? requestOrigin! : allowedOrigins[0]!;
+        if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        const origin = requestOrigin;
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: profile.stripe_customer_id,

@@ -226,6 +226,7 @@ export async function POST(req: Request) {
             }
         } catch (error) {
             console.error('Error deactivating plan:', error);
+            return new NextResponse('Error deactivating plan', { status: 500 });
         }
     }
 
@@ -271,6 +272,7 @@ export async function POST(req: Request) {
                 }
             } catch (error) {
                 console.error('Error restricting plan for non-active subscription:', error);
+                return new NextResponse('Error restricting plan', { status: 500 });
             }
             return new NextResponse(null, { status: 200 });
         }
@@ -297,6 +299,7 @@ export async function POST(req: Request) {
                 }
             } catch (error) {
                 console.error('Error updating plan:', error);
+                return new NextResponse('Error updating plan', { status: 500 });
             }
         }
     } else {
