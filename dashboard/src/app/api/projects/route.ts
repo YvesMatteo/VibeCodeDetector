@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { encrypt } from '@/lib/encryption';
+import { PLAN_FREQUENCY_MAP } from '@/lib/plan-config';
+import { computeNextRun, resolveAppUrl } from '@/lib/schedule-utils';
 
 export async function GET() {
     try {
@@ -28,6 +31,7 @@ export async function GET() {
         // Batch-fetch latest scan for all projects in ONE query (fixes N+1)
         const projectIds = (projects || []).map((p) => p.id);
         const latestScansMap: Record<string, any> = {};
+        const scheduleMap: Record<string, any> = {};
 
         if (projectIds.length > 0) {
             const { data: recentScans } = await supabase
@@ -41,6 +45,16 @@ export async function GET() {
                 if (scan.project_id && !latestScansMap[scan.project_id]) {
                     latestScansMap[scan.project_id] = scan;
                 }
+            }
+
+            // Fetch scheduled scans for monitoring badges
+            const { data: schedules } = await supabase
+                .from('scheduled_scans' as any)
+                .select('project_id, frequency, enabled, next_run_at')
+                .in('project_id', projectIds);
+
+            for (const s of (schedules || []) as any[]) {
+                if (s.project_id) scheduleMap[s.project_id] = s;
             }
         }
 
@@ -57,6 +71,7 @@ export async function GET() {
                     }
                 });
             }
+            const schedule = scheduleMap[project.id] ?? null;
             return {
                 ...project,
                 // Never send decrypted PAT to the client — only expose a boolean flag
@@ -65,6 +80,8 @@ export async function GET() {
                 latestScore: latestScan?.overall_score ?? null,
                 lastAuditDate: latestScan?.completed_at ?? null,
                 issueCount,
+                monitoringFrequency: schedule?.enabled ? schedule.frequency : null,
+                nextCheckAt: schedule?.enabled ? schedule.next_run_at : null,
             };
         });
 
@@ -173,6 +190,68 @@ export async function POST(req: NextRequest) {
             }
             console.error('Create project error:', insertError);
             return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
+        }
+
+        // Auto-enable monitoring: scheduled scan + default alerts + first scan
+        try {
+            const svc = createServiceClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            );
+
+            // Fetch user's plan for default frequency
+            const { data: profile } = await svc
+                .from('profiles')
+                .select('plan')
+                .eq('id', user.id)
+                .single();
+
+            const plan = profile?.plan || 'none';
+            const frequency = PLAN_FREQUENCY_MAP[plan] || 'weekly';
+            const nextRunAt = computeNextRun(frequency, 6);
+
+            // Insert scheduled scan + 2 default alert rules (fire-and-forget)
+            await Promise.allSettled([
+                svc.from('scheduled_scans' as any).insert({
+                    project_id: project.id,
+                    user_id: user.id,
+                    frequency,
+                    hour_utc: 6,
+                    enabled: true,
+                    next_run_at: nextRunAt,
+                }),
+                svc.from('alert_rules' as any).insert([
+                    {
+                        project_id: project.id,
+                        user_id: user.id,
+                        type: 'score_drop',
+                        threshold: 10,
+                        notify_email: user.email,
+                        enabled: true,
+                    },
+                    {
+                        project_id: project.id,
+                        user_id: user.id,
+                        type: 'new_critical',
+                        threshold: null,
+                        notify_email: user.email,
+                        enabled: true,
+                    },
+                ]),
+            ]);
+
+            // Trigger first scan (fire-and-forget)
+            const appUrl = resolveAppUrl();
+            fetch(`${appUrl}/api/scan`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                },
+                body: JSON.stringify({ projectId: project.id }),
+            }).catch(() => { /* non-critical */ });
+        } catch {
+            // Non-critical — project was still created successfully
         }
 
         return NextResponse.json({ project }, { status: 201 });

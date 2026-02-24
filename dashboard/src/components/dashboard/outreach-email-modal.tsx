@@ -78,8 +78,9 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 body: JSON.stringify({ scanResults, projectUrl, issueCount, severityBreakdown }),
             });
             if (!res.ok) {
-                const err = await res.json();
-                toast.error(err.error || 'Failed to generate email');
+                const err = await res.json().catch(() => ({}));
+                toast.error(err.error || `Failed to generate email (${res.status})`);
+                console.error('Generate email error:', err);
                 return;
             }
             const data = await res.json();

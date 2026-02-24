@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
 
 export async function POST(req: NextRequest) {
     const supabase = await createClient();
@@ -24,7 +25,6 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Build a summary of findings for the prompt
     const findingsSummary = Object.entries(scanResults as Record<string, any>)
@@ -71,19 +71,31 @@ Subject line on line 1
 (blank line)
 Email body`;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const emailText = result.response.text();
+    // Try each model with fallback
+    let lastError = '';
+    for (const modelName of MODELS) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent(prompt);
+            const emailText = result.response.text();
 
-        // Parse subject and body
-        const lines = emailText.trim().split('\n');
-        let subject = lines[0].replace(/^Subject:\s*/i, '').trim();
-        const bodyStart = lines.findIndex((l, i) => i > 0 && l.trim() !== '') ;
-        const body = lines.slice(bodyStart).join('\n').trim();
+            // Parse subject and body
+            const lines = emailText.trim().split('\n');
+            const subject = lines[0].replace(/^Subject:\s*/i, '').trim();
+            const bodyStart = lines.findIndex((l, i) => i > 0 && l.trim() !== '');
+            const body = lines.slice(bodyStart).join('\n').trim();
 
-        return NextResponse.json({ subject, body, raw: emailText });
-    } catch (err: any) {
-        console.error('Gemini API error:', err);
-        return NextResponse.json({ error: 'Failed to generate email' }, { status: 500 });
+            return NextResponse.json({ subject, body, raw: emailText, model: modelName });
+        } catch (err: any) {
+            lastError = err?.message || String(err);
+            console.error(`Gemini ${modelName} error:`, lastError);
+            // Try next model
+            continue;
+        }
     }
+
+    return NextResponse.json(
+        { error: `All Gemini models failed. Last error: ${lastError}` },
+        { status: 500 },
+    );
 }
