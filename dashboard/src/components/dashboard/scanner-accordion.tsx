@@ -549,11 +549,11 @@ function FreePlanUpgradeCard() {
         <div className="mt-4 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
             <div className="flex items-center gap-2 mb-1.5">
                 <Lock className="h-4 w-4 text-zinc-400" />
-                <span className="text-sm font-medium text-white">Subscribe to see what the issues are</span>
+                <span className="text-sm font-medium text-white">Unlock full analysis</span>
             </div>
-            <p className="text-xs text-zinc-500 mb-3">Get the details, recommendations, and AI fix prompts to resolve every finding.</p>
+            <p className="text-xs text-zinc-500 mb-3">See detailed findings, actionable recommendations, and 1-click AI fixes.</p>
             <Button size="sm" asChild className="bg-white hover:bg-zinc-200 text-black border-0 text-xs px-5 font-medium">
-                <Link href="/dashboard/credits">View Plans</Link>
+                <Link href="/dashboard/credits">Upgrade Plan</Link>
             </Button>
         </div>
     );

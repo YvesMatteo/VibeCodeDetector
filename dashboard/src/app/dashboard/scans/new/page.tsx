@@ -169,9 +169,9 @@ export default function NewScanPage() {
                     <CardContent>
                         {errorCode === 'PLAN_REQUIRED' && (
                             <div className="mb-4 p-5 rounded-xl border border-sky-400/20 bg-sky-400/5">
-                                <h3 className="text-white font-medium mb-1">Choose a plan to run scans</h3>
+                                <h3 className="text-white font-medium mb-1">Upgrade to run scans</h3>
                                 <p className="text-zinc-400 text-sm mb-3">
-                                    Start with Starter for 5 scans/month, or go Pro for 20 scans and API access.
+                                    Starter includes 5 scans. Pro unlocks 20 scans and API access.
                                 </p>
                                 <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-400 text-white border-0">
                                     <Link href="/dashboard/credits">View Plans</Link>
@@ -182,7 +182,7 @@ export default function NewScanPage() {
                             <div className="mb-4 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
                                 <h3 className="text-white font-medium mb-1">Scan limit reached</h3>
                                 <p className="text-zinc-400 text-sm mb-3">
-                                    Upgrade to get more scans — Pro gives you 20/month, Max gives you 75.
+                                    Upgrade to Pro for 20 scans, or Max for 75.
                                 </p>
                                 <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
                                     <Link href="/dashboard/credits">Upgrade Plan</Link>
@@ -191,9 +191,9 @@ export default function NewScanPage() {
                         )}
                         {errorCode === 'DOMAIN_LIMIT_REACHED' && (
                             <div className="mb-4 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
-                                <h3 className="text-white font-medium mb-1">Domain limit reached</h3>
+                                <h3 className="text-white font-medium mb-1">Project limit reached</h3>
                                 <p className="text-zinc-400 text-sm mb-3">
-                                    Upgrade for more projects — Pro gives you 3, Max gives you 10.
+                                    Upgrade to Pro for 3 projects, or Max for 10.
                                 </p>
                                 <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
                                     <Link href="/dashboard/credits">Upgrade Plan</Link>

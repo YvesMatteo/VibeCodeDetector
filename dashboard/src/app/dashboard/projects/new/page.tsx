@@ -140,9 +140,9 @@ export default function NewProjectPage() {
                 {errorCode === 'PLAN_REQUIRED' && (
                     <div className="mb-8 p-4 rounded-xl border border-sky-500/20 bg-sky-500/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                         <div>
-                            <h3 className="text-white font-medium text-sm mb-0.5">Upgrade required</h3>
+                            <h3 className="text-white font-medium text-sm mb-0.5">Upgrade to add projects</h3>
                             <p className="text-zinc-400 text-[13px]">
-                                Start with Starter for 1 project and 5 scans/month, or go Pro for 3 projects and 20 scans.
+                                Starter includes 1 project and 5 scans. Pro unlocks 3 projects.
                             </p>
                         </div>
                         <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-400 text-white border-0 shrink-0">
@@ -154,7 +154,7 @@ export default function NewProjectPage() {
                     <div className="mb-6 p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
                         <h3 className="text-white font-medium mb-1">Project limit reached</h3>
                         <p className="text-zinc-400 text-sm mb-3">
-                            Upgrade to get more projects — Pro gives you 3, Max gives you 10.
+                            Upgrade to Pro for 3 projects, or Max for 10.
                         </p>
                         <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-0">
                             <Link href="/dashboard/credits">Upgrade Plan</Link>
