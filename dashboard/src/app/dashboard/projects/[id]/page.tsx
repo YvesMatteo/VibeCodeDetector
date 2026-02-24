@@ -172,29 +172,29 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             {/* Status cards row - Supabase style */}
             {latestScan ? (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-white/[0.06]">
                         {/* Security Score */}
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1 p-5 md:p-6 lg:p-8 shrink-0">
+                            <div className="flex items-center justify-between mb-4">
                                 <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Security Score</span>
                                 <div className={`p-1.5 rounded-lg ${getScoreBg(score)}`}>
-                                    <Shield className={`h-3.5 w-3.5 ${getScoreColor(score)}`} />
+                                    <Shield className={`h-4 w-4 ${getScoreColor(score)}`} />
                                 </div>
                             </div>
                             <div className="flex items-end gap-2">
-                                <span className={`text-3xl font-bold tracking-tight ${getScoreColor(score)}`}>
+                                <span className={`text-4xl font-bold tracking-tight ${getScoreColor(score)}`}>
                                     {score ?? '—'}
                                 </span>
-                                <span className="text-zinc-600 text-sm mb-1">/100</span>
+                                <span className="text-zinc-600 text-sm mb-1.5">/100</span>
                                 {scoreDelta !== null && scoreDelta !== 0 && (
-                                    <span className={`flex items-center text-xs font-medium mb-1 ml-auto ${scoreDelta > 0 ? 'text-emerald-400' : 'text-red-400'
+                                    <span className={`flex items-center text-xs font-medium mb-1.5 ml-auto ${scoreDelta > 0 ? 'text-emerald-400' : 'text-red-400'
                                         }`}>
                                         {scoreDelta > 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
                                         {scoreDelta > 0 ? '+' : ''}{scoreDelta}
                                     </span>
                                 )}
                                 {scoreDelta === 0 && (
-                                    <span className="flex items-center text-xs font-medium text-zinc-500 mb-1 ml-auto">
+                                    <span className="flex items-center text-xs font-medium text-zinc-500 mb-1.5 ml-auto">
                                         <Minus className="h-3 w-3 mr-0.5" />
                                         No change
                                     </span>
@@ -203,17 +203,17 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                         </div>
 
                         {/* Last Scan */}
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1 p-5 md:p-6 lg:p-8">
+                            <div className="flex items-center justify-between mb-4">
                                 <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Last Scan</span>
                                 <div className="p-1.5 rounded-lg bg-sky-500/10 border border-sky-500/20">
-                                    <Clock className="h-3.5 w-3.5 text-sky-400" />
+                                    <Clock className="h-4 w-4 text-sky-400" />
                                 </div>
                             </div>
-                            <p className="text-2xl font-bold tracking-tight text-white">
+                            <p className="text-3xl font-bold tracking-tight text-white">
                                 {timeAgo(latestScan.completed_at || latestScan.created_at)}
                             </p>
-                            <p className="text-xs text-zinc-500 mt-1">
+                            <p className="text-xs text-zinc-500 mt-2">
                                 {new Date(latestScan.completed_at || latestScan.created_at).toLocaleDateString('en-US', {
                                     month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
                                 })}
@@ -221,32 +221,31 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                         </div>
 
                         {/* Issues Found */}
-                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                            <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1 p-5 md:p-6 lg:p-8">
+                            <div className="flex items-center justify-between mb-4">
                                 <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Issues Found</span>
                                 <div className={`p-1.5 rounded-lg ${issues && issues.total > 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'}`}>
-                                    <AlertTriangle className={`h-3.5 w-3.5 ${issues && issues.total > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
+                                    <AlertTriangle className={`h-4 w-4 ${issues && issues.total > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
                                 </div>
                             </div>
                             <p className="text-3xl font-bold tracking-tight text-white">{issues?.total ?? 0}</p>
                             {issues && issues.total > 0 && (
                                 <div className="flex gap-2 mt-2">
                                     {issues.critical > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">{issues.critical} critical</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">{issues.critical} critical</span>
                                     )}
                                     {issues.high > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400 font-medium">{issues.high} high</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 font-medium">{issues.high} high</span>
                                     )}
                                     {issues.medium > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">{issues.medium} med</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">{issues.medium} med</span>
                                     )}
                                     {issues.low > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-400 font-medium">{issues.low} low</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 font-medium">{issues.low} low</span>
                                     )}
                                 </div>
                             )}
                         </div>
-
                     </div>
 
                     {/* Single column: Score trend */}
