@@ -20,6 +20,19 @@ export async function submitSupportTicket(formData: FormData) {
         return { error: 'Please fill out all required fields.' };
     }
 
+    // Rate limit: max 1 ticket per 2 minutes per user
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: recentTickets } = await supabase
+        .from('support_tickets')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('created_at', twoMinutesAgo)
+        .limit(1);
+
+    if (recentTickets && recentTickets.length > 0) {
+        return { error: 'Please wait a couple of minutes before submitting another ticket.' };
+    }
+
     const { error } = await supabase
         .from('support_tickets')
         .insert({

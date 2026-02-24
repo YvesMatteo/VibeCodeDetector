@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { submitSupportTicket } from '@/app/actions/support';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,13 @@ export function SupportForm() {
     const [pending, setPending] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [issueType, setIssueType] = useState<string>('');
+    const [cooldown, setCooldown] = useState(0);
+
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [cooldown]);
 
     async function handleSubmit(formData: FormData) {
         setPending(true);
@@ -28,9 +35,9 @@ export function SupportForm() {
             setMessage({ type: 'error', text: result.error });
         } else if (result?.success) {
             setMessage({ type: 'success', text: 'Your ticket has been submitted successfully. We will get back to you soon.' });
-            // Reset form
             const form = document.getElementById('support-form') as HTMLFormElement;
             if (form) form.reset();
+            setCooldown(120); // 2-minute cooldown after successful submission
         }
 
         setPending(false);
@@ -81,10 +88,10 @@ export function SupportForm() {
 
             <Button
                 type="submit"
-                disabled={pending}
+                disabled={pending || cooldown > 0}
                 className="w-full bg-sky-500 hover:bg-sky-400 text-white border-0"
             >
-                {pending ? 'Submitting...' : 'Submit Ticket'}
+                {pending ? 'Submitting...' : cooldown > 0 ? `Wait ${Math.floor(cooldown / 60)}:${String(cooldown % 60).padStart(2, '0')}` : 'Submit Ticket'}
             </Button>
         </form>
     );
