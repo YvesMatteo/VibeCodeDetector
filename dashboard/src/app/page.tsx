@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import * as motion from 'framer-motion/client';
 import { useMotionValue, useSpring } from 'framer-motion';
+import { CountUp } from '@/components/ui/count-up';
 
 import {
   Sheet,

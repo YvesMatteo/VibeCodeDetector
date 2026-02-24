@@ -43,6 +43,7 @@ import {
     Upload,
     Activity,
     Smartphone,
+    Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -104,7 +105,7 @@ export default function NewScanPage() {
                 },
                 body: JSON.stringify({
                     url,
-                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'],
+                    scanTypes: ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'vibe_match', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api', 'debug_endpoints', 'domain_hijacking'],
                     ...(githubRepo.trim() ? { githubRepo: githubRepo.trim() } : {}),
                     backendType,
                     ...(backendUrl.trim() ? { backendUrl: backendUrl.trim() } : {}),
@@ -398,6 +399,7 @@ export default function NewScanPage() {
                                 { icon: Upload, name: 'File Upload Security', description: 'Upload form validation, file type restrictions', color: 'text-purple-400' },
                                 { icon: Activity, name: 'Audit Logging', description: 'Monitoring, logging, and observability checks', color: 'text-cyan-400' },
                                 { icon: Smartphone, name: 'Mobile API', description: 'Mobile API rate limiting and security headers', color: 'text-green-400' },
+                                { icon: Eye, name: 'Debug Endpoints', description: 'Exposed debug, dev, and admin endpoints in production', color: 'text-purple-500' },
                             ].map((check) => (
                                 <div
                                     key={check.name}

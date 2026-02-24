@@ -64,11 +64,10 @@ const DEBUG_PROBES: DebugProbe[] = [
     { path: "/__debug", label: "Debug panel" },
 
     // ── Admin / Management ─────────────────────────────────────────
-    { path: "/admin", label: "Admin panel" },
-    { path: "/_admin", label: "Admin panel" },
-    { path: "/api/admin", label: "Admin API" },
     { path: "/adminer", label: "Adminer DB tool", bodyPatterns: [/Adminer/i, /adminer\.css/i] },
     { path: "/phpmyadmin", label: "phpMyAdmin", bodyPatterns: [/phpMyAdmin/i] },
+    { path: "/phpmyadmin/", label: "phpMyAdmin", bodyPatterns: [/phpMyAdmin/i] },
+    { path: "/pma", label: "phpMyAdmin (alias)", bodyPatterns: [/phpMyAdmin/i] },
 
     // ── Env / Config disclosure ────────────────────────────────────
     { path: "/.env", label: ".env file", bodyPatterns: [/DB_PASSWORD|DATABASE_URL|SECRET_KEY|API_KEY|SUPABASE|STRIPE/i] },
@@ -114,6 +113,35 @@ const DEBUG_PROBES: DebugProbe[] = [
     { path: "/api/query", label: "Query API" },
     { path: "/_sql", label: "SQL endpoint" },
 
+    // ── WordPress specific ──────────────────────────────────────────
+    { path: "/wp-config.php.bak", label: "WordPress config backup", bodyPatterns: [/DB_NAME|DB_USER|DB_PASSWORD|AUTH_KEY/i] },
+    { path: "/wp-config.php~", label: "WordPress config backup", bodyPatterns: [/DB_NAME|DB_USER|DB_PASSWORD|AUTH_KEY/i] },
+    { path: "/wp-json/wp/v2/users", label: "WordPress user enumeration", bodyPatterns: [/"id":\d+.*"name"/i] },
+
+    // ── Docker / Kubernetes ─────────────────────────────────────────
+    { path: "/docker-compose.yml", label: "Docker Compose config", bodyPatterns: [/services:|volumes:|networks:|version:/i] },
+    { path: "/Dockerfile", label: "Dockerfile", bodyPatterns: [/^FROM\s|^RUN\s|^COPY\s|^EXPOSE\s/mi] },
+    { path: "/.docker/config.json", label: "Docker config", bodyPatterns: [/auths|credHelpers/i] },
+
+    // ── Node.js specific ────────────────────────────────────────────
+    { path: "/package.json", label: "package.json", bodyPatterns: [/"dependencies"|"devDependencies"|"scripts"/i] },
+    { path: "/npm-debug.log", label: "npm debug log", bodyPatterns: [/npm ERR|npm WARN|npm info/i] },
+    { path: "/yarn-error.log", label: "Yarn error log", bodyPatterns: [/yarn error|Arguments:|PATH:/i] },
+
+    // ── CI/CD exposure ──────────────────────────────────────────────
+    { path: "/.github/workflows", label: "GitHub Actions workflows" },
+    { path: "/.gitlab-ci.yml", label: "GitLab CI config", bodyPatterns: [/stages:|script:|image:/i] },
+    { path: "/Jenkinsfile", label: "Jenkins pipeline", bodyPatterns: [/pipeline|agent|stages|steps/i] },
+
+    // ── IDE / Editor files ──────────────────────────────────────────
+    { path: "/.vscode/settings.json", label: "VSCode settings", bodyPatterns: [/"editor\.|"files\.|"search\./i] },
+    { path: "/.idea/workspace.xml", label: "JetBrains workspace", bodyPatterns: [/<project|<component/i] },
+
+    // ── Error / Log files ───────────────────────────────────────────
+    { path: "/error.log", label: "Error log file", bodyPatterns: [/\[error\]|\[warn\]|PHP Fatal|Exception|Traceback/i] },
+    { path: "/debug.log", label: "Debug log file", bodyPatterns: [/\[debug\]|\[info\]|DEBUG|ERROR|WARN/i] },
+    { path: "/access.log", label: "Access log file", bodyPatterns: [/GET\s\/|POST\s\/|HTTP\/\d/i] },
+
     // ── Health / Status (info only — not critical) ─────────────────
     { path: "/actuator", label: "Spring Boot Actuator", bodyPatterns: [/"_links"|actuator/i] },
     { path: "/actuator/env", label: "Spring Actuator env", bodyPatterns: [/propertySources|systemProperties/i] },
@@ -133,10 +161,6 @@ const DEBUG_PROBES: DebugProbe[] = [
     { path: "/metrics", label: "Prometheus metrics", bodyPatterns: [/^# HELP|^# TYPE|process_cpu/m] },
     { path: "/api/metrics", label: "API metrics endpoint" },
 
-    // ── Test / Staging markers ─────────────────────────────────────
-    { path: "/test", label: "Test endpoint" },
-    { path: "/api/test", label: "API test endpoint" },
-    { path: "/_test", label: "Test endpoint" },
 ];
 
 /** Paths that are informational (useful to know about, not critical) */
@@ -155,8 +179,12 @@ const CRITICAL_PATHS = new Set([
     "/backup.sql", "/dump.sql", "/database.sql", "/db.sql",
     "/debug/pprof/", "/debug/vars",
     "/server-status", "/server-info",
-    "/adminer", "/phpmyadmin",
+    "/adminer", "/phpmyadmin", "/phpmyadmin/", "/pma",
     "/elmah.axd", "/trace.axd",
+    "/wp-config.php.bak", "/wp-config.php~",
+    "/docker-compose.yml", "/.docker/config.json",
+    "/error.log", "/debug.log", "/access.log",
+    "/npm-debug.log", "/yarn-error.log",
 ]);
 
 function fetchWithTimeout(
@@ -413,6 +441,30 @@ function getRecommendation(probe: DebugProbe): string {
     }
     if (probe.path.includes(".sql") || probe.path.includes("backup") || probe.path.includes("dump")) {
         return "Remove database backup files from web-accessible directories immediately. These files contain your entire database schema and data.";
+    }
+    if (probe.path.includes("wp-config")) {
+        return "Remove WordPress configuration backup files immediately. They contain database credentials and secret keys in plain text.";
+    }
+    if (probe.path.includes("docker") || probe.path.includes("Dockerfile")) {
+        return "Block access to Docker configuration files. They reveal service architecture, credentials, and deployment details.";
+    }
+    if (probe.path.includes("package.json")) {
+        return "Block access to package.json in production. It reveals all dependencies and their versions, helping attackers find known vulnerabilities.";
+    }
+    if (probe.path.includes(".log")) {
+        return "Remove log files from web-accessible directories. They can contain stack traces, IP addresses, credentials, and internal paths.";
+    }
+    if (probe.path.includes("wp-json/wp/v2/users")) {
+        return "Disable the WordPress REST API users endpoint or restrict it to authenticated users to prevent user enumeration.";
+    }
+    if (probe.path.includes(".vscode") || probe.path.includes(".idea")) {
+        return "Add IDE configuration directories to .gitignore and ensure they're not deployed to production.";
+    }
+    if (probe.path.includes("rails")) {
+        return "Ensure Rails is running in production mode. Set RAILS_ENV=production and disable the info/routes pages.";
+    }
+    if (probe.path.includes("telescope") || probe.path.includes("horizon")) {
+        return "Restrict Laravel Telescope/Horizon to authenticated admin users only, or disable them entirely in production.";
     }
     return "Remove or restrict access to this endpoint in production. Use environment-based configuration to disable development tools.";
 }

@@ -19,7 +19,7 @@ const SCANNER_NAMES = [
     'Security Headers', 'API Keys', 'SSL/TLS', 'DNS', 'CORS', 'CSRF',
     'Cookies', 'Auth', 'XSS', 'SQLi', 'Redirects', 'Legal',
     'Threat Intel', 'Tech Stack', 'DDoS', 'File Upload', 'Audit Logging', 'Mobile API',
-    'Supabase', 'Hosting', 'Dependencies', 'Scorecard',
+    'Debug Endpoints', 'Domain Hijacking', 'Supabase', 'Hosting', 'Dependencies', 'Scorecard',
 ];
 
 export function RunAuditButton({ projectId, variant = 'default', size = 'default', className }: RunAuditButtonProps) {

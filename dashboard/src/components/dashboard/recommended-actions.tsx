@@ -30,6 +30,12 @@ const scannerNames: Record<string, string> = {
     railway_hosting: 'Railway Hosting',
     convex_backend: 'Convex Backend',
     vibe_match: 'AI Detection',
+    ddos_protection: 'DDoS Protection',
+    file_upload: 'File Upload Security',
+    audit_logging: 'Audit Logging & Monitoring',
+    mobile_api: 'Mobile API Rate Limiting',
+    domain_hijacking: 'Domain Hijacking Detection',
+    debug_endpoints: 'Debug Endpoints Scanner',
 };
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };

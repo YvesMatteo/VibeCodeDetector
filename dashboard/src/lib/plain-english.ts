@@ -448,6 +448,63 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Attackers can try unlimited passwords.',
         whyItMatters: 'Without rate limiting on login, an attacker can try millions of password combinations. This is the #1 way accounts get hacked.',
     },
+    // Debug Endpoints Scanner findings
+    'exposed: phpinfo': {
+        summary: 'Your PHP configuration is visible to everyone.',
+        whyItMatters: 'phpinfo() reveals PHP version, extensions, server paths, and environment variables — everything an attacker needs for a targeted exploit.',
+    },
+    'exposed: .env': {
+        summary: 'Your secret passwords and API keys are downloadable.',
+        whyItMatters: 'The .env file contains database passwords, API keys, and secrets. Anyone can read them right now. This is the most critical finding possible.',
+    },
+    'exposed: git': {
+        summary: 'Your entire source code and history can be downloaded.',
+        whyItMatters: 'The .git directory lets attackers reconstruct your complete codebase, including any secrets ever committed.',
+    },
+    'exposed: symfony profiler': {
+        summary: 'Your debug profiler is running in production.',
+        whyItMatters: 'The Symfony Profiler exposes request details, database queries, session data, and server configuration to anyone.',
+    },
+    'exposed: spring': {
+        summary: 'Spring Boot internals are publicly accessible.',
+        whyItMatters: 'Actuator endpoints expose environment variables, heap dumps, thread dumps, and configuration — enough to fully compromise the server.',
+    },
+    'exposed: adminer': {
+        summary: 'A database admin tool is publicly accessible.',
+        whyItMatters: 'Adminer/phpMyAdmin gives full database access. Bots scan for these constantly and try default credentials.',
+    },
+    'exposed: graphiql': {
+        summary: 'Your GraphQL development IDE is public.',
+        whyItMatters: 'GraphiQL lets anyone explore and execute queries against your API, including mutations that modify data.',
+    },
+    'exposed: swagger': {
+        summary: 'Your API documentation is publicly visible.',
+        whyItMatters: 'Swagger/OpenAPI docs reveal every endpoint, parameter, and data model — a complete roadmap for attackers.',
+    },
+    'exposed: sql': {
+        summary: 'Database backup files are publicly downloadable.',
+        whyItMatters: 'SQL dump files contain your entire database schema and data — user records, passwords, everything.',
+    },
+    'exposed: debug endpoint': {
+        summary: 'A debug or development endpoint is accessible in production.',
+        whyItMatters: 'Debug endpoints expose internal application state, stack traces, and sensitive data that helps attackers understand and exploit your system.',
+    },
+    'exposed: admin': {
+        summary: 'An admin panel is publicly accessible.',
+        whyItMatters: 'Admin panels provide elevated access. Even if login is required, exposing them lets attackers brute-force credentials or exploit known vulnerabilities.',
+    },
+    'exposed: go pprof': {
+        summary: 'Go profiling data is exposed to the internet.',
+        whyItMatters: 'pprof endpoints expose CPU profiles, memory allocations, goroutines, and heap dumps — revealing internal architecture and potential DoS vectors.',
+    },
+    'exposed: metrics': {
+        summary: 'Application metrics are publicly accessible.',
+        whyItMatters: 'Prometheus metrics can reveal internal service names, error rates, request patterns, and infrastructure details useful for targeted attacks.',
+    },
+    'no debug endpoints detected': {
+        summary: 'No development endpoints found in production.',
+        whyItMatters: 'Your site is clean — no debug tools, admin panels, or config files were found accessible. This indicates good production hygiene.',
+    },
     'graphql introspection enabled': {
         summary: 'Anyone can see your entire API schema.',
         whyItMatters: 'GraphQL introspection reveals every query, mutation, and type in your API — giving attackers a complete map of your attack surface.',
