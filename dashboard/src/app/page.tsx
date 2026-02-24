@@ -249,10 +249,10 @@ export default function HomePage() {
                 {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
               </Link>
             </Button>
-            <div className="flex items-center gap-4 text-sm text-zinc-500">
-              <div className="h-px w-10 bg-white/10" />
+            <div className="flex items-center gap-4 text-sm font-medium text-white/90">
+              <div className="h-px w-10 bg-white/20" />
               <span>Free plan available</span>
-              <div className="h-px w-10 bg-white/10" />
+              <div className="h-px w-10 bg-white/20" />
             </div>
           </motion.div>
 
