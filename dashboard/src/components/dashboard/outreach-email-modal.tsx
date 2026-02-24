@@ -30,7 +30,9 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
     const [generating, setGenerating] = useState(false);
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
+    const [sendResults, setSendResults] = useState<{ email: string; success: boolean }[]>([]);
     const [recipientEmail, setRecipientEmail] = useState('');
+    const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [generated, setGenerated] = useState(false);
@@ -59,11 +61,17 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
             setScrapedEmails([...realEmails, ...guessed.slice(0, 3)]);
             setScraped(true);
             if (data.socialLinks) setSocialLinks(data.socialLinks);
-            const best = realEmails[0] || guessed[0];
-            if (best) {
-                setRecipientEmail(best.email);
-                const foundCount = realEmails.length;
-                toast.success(foundCount > 0 ? `Found ${foundCount} email${foundCount > 1 ? 's' : ''}` : `No emails found — showing guesses`);
+
+            // Auto-select: if real emails found, select all of them; otherwise pick best guess
+            if (realEmails.length > 0) {
+                const selected = new Set<string>(realEmails.map((e: ScrapedEmail) => e.email));
+                setSelectedEmails(selected);
+                setRecipientEmail(Array.from(selected).join(', '));
+                toast.success(`Found ${realEmails.length} email${realEmails.length > 1 ? 's — will send to all' : ''}`);
+            } else if (guessed.length > 0) {
+                setRecipientEmail(guessed[0].email);
+                setSelectedEmails(new Set([guessed[0].email]));
+                toast('No emails found — showing guesses');
             } else {
                 toast('No emails found on the website');
             }
@@ -105,29 +113,49 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
     };
 
     const handleSend = async () => {
-        if (!recipientEmail.trim()) {
-            toast.error('Enter a recipient email address');
+        const emails = Array.from(selectedEmails).filter(e => e.trim());
+        if (emails.length === 0) {
+            toast.error('Select at least one recipient');
             return;
         }
         setSending(true);
+        setSendResults([]);
         try {
             const res = await fetch('/api/outreach/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: recipientEmail.trim(), subject, body }),
+                body: JSON.stringify({ to: emails, subject, body }),
             });
             if (!res.ok) {
-                const err = await res.json();
+                const err = await res.json().catch(() => ({}));
                 toast.error(err.error || 'Failed to send email');
                 return;
             }
+            const data = await res.json();
+            setSendResults(data.results || []);
             setSent(true);
-            toast.success(`Email sent to ${recipientEmail}`);
+            if (data.sent > 0 && data.failed === 0) {
+                toast.success(`Sent to ${data.sent} recipient${data.sent > 1 ? 's' : ''}`);
+            } else if (data.sent > 0 && data.failed > 0) {
+                toast.success(`Sent to ${data.sent}, failed for ${data.failed}`);
+            } else {
+                toast.error(`Failed to send to all ${data.failed} recipients`);
+            }
         } catch {
             toast.error('Failed to send email');
         } finally {
             setSending(false);
         }
+    };
+
+    const toggleEmail = (email: string) => {
+        setSelectedEmails(prev => {
+            const next = new Set(prev);
+            if (next.has(email)) next.delete(email);
+            else next.add(email);
+            setRecipientEmail(Array.from(next).join(', '));
+            return next;
+        });
     };
 
     const handleReset = () => {
@@ -136,6 +164,8 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
         setBody('');
         setRecipientEmail('');
         setSent(false);
+        setSendResults([]);
+        setSelectedEmails(new Set());
         setScrapedEmails([]);
         setScraped(false);
         setSocialLinks({});
@@ -201,9 +231,13 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Recipient Email</label>
                             <div className="flex gap-2">
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={recipientEmail}
-                                    onChange={(e) => setRecipientEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setRecipientEmail(e.target.value);
+                                        const parsed = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                        setSelectedEmails(new Set(parsed));
+                                    }}
                                     placeholder="founder@example.com"
                                     className="flex-1 px-3 py-2 rounded-lg bg-black/50 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50"
                                 />
@@ -242,9 +276,9 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                                             return (
                                                 <button
                                                     key={email}
-                                                    onClick={() => setRecipientEmail(email)}
+                                                    onClick={() => toggleEmail(email)}
                                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
-                                                        recipientEmail === email
+                                                        selectedEmails.has(email)
                                                             ? 'bg-violet-500/20 border border-violet-500/30 text-violet-300'
                                                             : source === 'guessed'
                                                                 ? 'bg-white/[0.02] border border-white/[0.04] border-dashed text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
@@ -318,27 +352,46 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                             </Button>
                             <Button
                                 onClick={handleSend}
-                                disabled={sending || sent || !recipientEmail.trim()}
+                                disabled={sending || sent || selectedEmails.size === 0}
                                 className={sent ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-violet-600 hover:bg-violet-500 text-white'}
                             >
                                 {sent ? (
                                     <>
                                         <Check className="mr-2 h-4 w-4" />
-                                        Sent!
+                                        {sendResults.length > 0
+                                            ? `${sendResults.filter(r => r.success).length}/${sendResults.length} Sent`
+                                            : 'Sent!'}
                                     </>
                                 ) : sending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Sending...
+                                        Sending to {selectedEmails.size}...
                                     </>
                                 ) : (
                                     <>
                                         <Send className="mr-2 h-4 w-4" />
-                                        Send Email
+                                        {selectedEmails.size > 1
+                                            ? `Send to ${selectedEmails.size}`
+                                            : 'Send Email'}
                                     </>
                                 )}
                             </Button>
                         </div>
+
+                        {/* Send results */}
+                        {sent && sendResults.length > 1 && (
+                            <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] space-y-1">
+                                <span className="text-[11px] text-zinc-500">Send results:</span>
+                                {sendResults.map(r => (
+                                    <div key={r.email} className="flex items-center gap-2 text-xs">
+                                        {r.success
+                                            ? <Check className="h-3 w-3 text-emerald-400" />
+                                            : <span className="text-red-400 text-[10px]">FAIL</span>}
+                                        <span className={r.success ? 'text-zinc-300' : 'text-zinc-500 line-through'}>{r.email}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </DialogContent>

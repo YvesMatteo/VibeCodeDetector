@@ -18,17 +18,20 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Basic email validation
+    // Support single email string or array of emails
+    const recipients: string[] = Array.isArray(to) ? to : [to];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
-        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+    const validRecipients = recipients.filter(e => emailRegex.test(e.trim()));
+
+    if (validRecipients.length === 0) {
+        return NextResponse.json({ error: 'No valid email addresses' }, { status: 400 });
     }
 
     const gmailUser = process.env.GMAIL_USER || 'yves.matro@gmail.com';
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
     if (!gmailAppPassword) {
-        return NextResponse.json({ error: 'Gmail app password not configured. Set GMAIL_APP_PASSWORD in .env.local' }, { status: 500 });
+        return NextResponse.json({ error: 'Gmail app password not configured' }, { status: 500 });
     }
 
     const transporter = nodemailer.createTransport({
@@ -39,17 +42,26 @@ export async function POST(req: NextRequest) {
         },
     });
 
-    try {
-        await transporter.sendMail({
-            from: `"Yves from CheckVibe" <${gmailUser}>`,
-            to,
-            subject,
-            text: body,
-        });
+    // Send to each recipient individually (so one failure doesn't block others)
+    const results: { email: string; success: boolean; error?: string }[] = [];
 
-        return NextResponse.json({ success: true });
-    } catch (err: any) {
-        console.error('Email send error:', err);
-        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
-    }
+    await Promise.all(validRecipients.map(async (recipient) => {
+        try {
+            await transporter.sendMail({
+                from: `"Yves from CheckVibe" <${gmailUser}>`,
+                to: recipient.trim(),
+                subject,
+                text: body,
+            });
+            results.push({ email: recipient, success: true });
+        } catch (err: any) {
+            console.error(`Email send error to ${recipient}:`, err?.message);
+            results.push({ email: recipient, success: false, error: err?.message });
+        }
+    }));
+
+    const sent = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+
+    return NextResponse.json({ results, sent, failed });
 }
