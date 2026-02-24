@@ -42,26 +42,35 @@ export async function POST(req: NextRequest) {
     let domain = projectUrl;
     try { domain = new URL(projectUrl).hostname.replace(/^www\./, ''); } catch {}
 
+    // Build dynamic severity summary — only mention non-zero counts
+    const sevParts: string[] = [];
+    if (severityBreakdown.critical > 0) sevParts.push(`${severityBreakdown.critical} critical`);
+    if (severityBreakdown.high > 0) sevParts.push(`${severityBreakdown.high} high-severity`);
+    if (severityBreakdown.medium > 0) sevParts.push(`${severityBreakdown.medium} medium`);
+    if (severityBreakdown.low > 0) sevParts.push(`${severityBreakdown.low} low`);
+    const topSeverity = sevParts[0] || `${issueCount}`; // e.g. "3 high-severity"
+    const severitySummary = sevParts.slice(0, 2).join(' and '); // e.g. "3 high-severity and 5 medium"
+
     const prompt = `You are writing a cold outreach email for CheckVibe (checkvibe.dev), a security scanner for modern web apps.
 
 I scanned this website: ${projectUrl}
 I found ${issueCount} security issues:
-- Critical: ${severityBreakdown.critical}
-- High: ${severityBreakdown.high}
-- Medium: ${severityBreakdown.medium}
-- Low: ${severityBreakdown.low}
+${severityBreakdown.critical > 0 ? `- Critical: ${severityBreakdown.critical}` : ''}
+${severityBreakdown.high > 0 ? `- High: ${severityBreakdown.high}` : ''}
+${severityBreakdown.medium > 0 ? `- Medium: ${severityBreakdown.medium}` : ''}
+${severityBreakdown.low > 0 ? `- Low: ${severityBreakdown.low}` : ''}
 
 Here are the actual findings:
 ${findingsSummary}
 
 Write an email following this EXACT structure and tone. Match this style closely:
 
-SUBJECT LINE FORMAT: "Found ${severityBreakdown.critical} critical vulnerabilities on ${domain} — full report inside"
+SUBJECT LINE FORMAT: "Found ${topSeverity} vulnerabilities on ${domain} — full report inside"
 
 BODY STRUCTURE:
 1. "Hi there," (greeting)
 2. One sentence complimenting their product — be specific about what they do based on the URL, make it genuine
-3. "I'm building a security scanner for modern web apps (checkvibe.dev), and I ran a free scan on your site to test it. Thought you'd want to see what came up — ${issueCount} issues total, including ${severityBreakdown.critical} critical and ${severityBreakdown.high} high-severity findings."
+3. "I'm building a security scanner for modern web apps (checkvibe.dev), and I ran a free scan on your site to test it. Thought you'd want to see what came up — ${issueCount} issues total, including ${severitySummary} findings."
 4. "A few that stood out:" followed by exactly 3 bullet points (use •) picking the MOST impactful findings. Explain each in plain language showing the real-world risk (e.g. "could let an attacker access or wipe your database", "leaving it open to brute-force attacks", "meaning anyone could spoof emails from your domain"). Do NOT use technical jargon.
 5. "These are just from a surface-level URL scan. Connecting your GitHub repo or backend (Supabase, Firebase, etc.) would uncover deeper issues like leaked secrets, insecure database rules, and dependency vulnerabilities."
 6. "Happy to share the full report — no strings attached. Just reply and I'll send it over."
@@ -74,6 +83,7 @@ Founder, checkvibe.dev
 RULES:
 - Keep it under 200 words
 - Tone: developer-to-developer, helpful, NOT salesy
+- NEVER mention "0 critical" or any severity with 0 count. Only mention severities that have issues.
 - DO NOT include "Subject:" prefix on the subject line
 - Subject line on line 1, blank line, then the body
 - Use • for bullet points, not - or *`;

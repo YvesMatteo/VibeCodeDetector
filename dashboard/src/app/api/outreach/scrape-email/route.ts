@@ -7,13 +7,18 @@ const OWNER_EMAIL = 'vibecodedetector@gmail.com';
 const IGNORE_PATTERNS = [
     /noreply/i, /no-reply/i, /no_reply/i, /donotreply/i, /mailer-daemon/i,
     /notifications?@/i, /newsletter@/i, /unsubscribe/i, /bounce/i,
-    /example\.com/i, /test@/i, /sentry\./i, /tracking/i,
+    /example\./i, /exemplu\./i, /test@/i, /sentry\./i, /tracking/i,
     /wixpress\.com/i, /mailchimp/i, /sendgrid/i, /amazonaws/i,
     /cloudflare/i, /google\.com$/i, /facebook\.com$/i, /twitter\.com$/i,
     /github\.com$/i, /sentry\.io$/i, /intercom/i, /zendesk/i,
     /hubspot/i, /mailgun/i, /postmark/i, /sparkpost/i,
     /placeholder/i, /changeme/i, /yourname/i, /youremail/i,
     /user@/i, /email@/i, /name@/i, /you@/i, /someone@/i,
+    /abuse@/i, /hostmaster@/i, /postmaster@/i, /dns@/i,
+    /registrar/i, /domaincontact/i, /whoisguard/i, /privacyprotect/i,
+    /contactprivacy/i, /whoisprivacy/i, /1und1/i, /romag\.com/i,
+    /namecheap/i, /godaddy/i, /tucows/i, /enom/i, /dynadot/i,
+    /company\.com/i, /domain\.com$/i, /yourdomain/i, /sample/i,
 ];
 
 const JUNK_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.css', '.js', '.woff', '.woff2', '.ttf', '.map', '.ico'];
