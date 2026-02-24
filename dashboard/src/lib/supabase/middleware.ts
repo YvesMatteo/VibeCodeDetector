@@ -53,8 +53,8 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    // Redirect to dashboard if already logged in and on auth pages or landing page
-    if (user && (isAuthPage || isLandingPage)) {
+    // Redirect to dashboard if already logged in and on auth pages
+    if (user && isAuthPage) {
         const url = request.nextUrl.clone();
         url.pathname = '/dashboard';
         return NextResponse.redirect(url);
