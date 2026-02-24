@@ -443,6 +443,17 @@
   .shimmer-button::after {
     animation: none;
   }
+
+  /* Slow down infinite gradient-flow animation */
+  .animate-gradient-flow {
+    animation-duration: 8s;
+  }
+
+  /* Remove expensive backdrop-blur on mobile alert badges */
+  .backdrop-blur-md {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 /* Reduced Motion */

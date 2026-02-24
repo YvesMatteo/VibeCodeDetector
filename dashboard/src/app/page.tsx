@@ -367,6 +367,72 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ======================== SLIDE 3: FEATURES ======================== */}
+      <section
+        id="slide-features"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-20 sm:pb-28"
+      >
+
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
+          <div className="text-center mb-10 sm:mb-14">
+            <Badge variant="secondary" className="mb-4 bg-sky-500/10 border-sky-500/20 text-sky-400">
+              Built for Your Stack
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+              Integrate the Tools{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
+            </h2>
+            <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Supabase, Firebase, Vercel, Netlify, GitHub — 35 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
+            </p>
+          </div>
+
+
+          <SupportedTools />
+
+          {/* ======================== MCP INTEGRATION ======================== */}
+          <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
+                Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-gradient-flow">MCP Server</span> Support
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                Run CheckVibe directly from your favorite AI code editor or agent using the standard Model Context Protocol. Scan, fix, and verify without leaving your IDE.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
+              {/* Claude */}
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center">
+                  <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white">Claude</h3>
+              </div>
+
+              {/* Cursor */}
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
+                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white">Cursor</h3>
+              </div>
+
+              {/* Antigravity */}
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
+                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white">Antigravity</h3>
+              </div>
+            </div>
+          </div>
+
+          <FeatureRoadmap />
+        </div>
+      </section>
+
+
       {/* ======================== SLIDE 1.5: PRICING ======================== */}
       <section
         id="slide-pricing"
@@ -503,72 +569,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ======================== SLIDE 3: FEATURES ======================== */}
-      <section
-        id="slide-features"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-20 sm:pb-28"
-      >
-
-        <div className="max-w-7xl mx-auto relative z-10 w-full">
-          <div className="text-center mb-10 sm:mb-14">
-            <Badge variant="secondary" className="mb-4 bg-sky-500/10 border-sky-500/20 text-sky-400">
-              Built for Your Stack
-            </Badge>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
-              Integrate the Tools{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
-            </h2>
-            <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Supabase, Firebase, Vercel, Netlify, GitHub — 35 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
-            </p>
-          </div>
-
-
-          <SupportedTools />
-
-          {/* ======================== MCP INTEGRATION ======================== */}
-          <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
-                Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-gradient-flow">MCP Server</span> Support
-              </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                Run CheckVibe directly from your favorite AI code editor or agent using the standard Model Context Protocol. Scan, fix, and verify without leaving your IDE.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
-              {/* Claude */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-emerald-500/30 [@media(hover:hover)]:hover:bg-emerald-500/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center">
-                  <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
-                </div>
-                <h3 className="text-base font-medium text-white">Claude</h3>
-              </div>
-
-              {/* Cursor */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-white/30 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
-                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
-                </div>
-                <h3 className="text-base font-medium text-white">Cursor</h3>
-              </div>
-
-              {/* Antigravity */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-sky-500/30 [@media(hover:hover)]:hover:bg-sky-500/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
-                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
-                </div>
-                <h3 className="text-base font-medium text-white">Antigravity</h3>
-              </div>
-            </div>
-          </div>
-
-          <FeatureRoadmap />
-        </div>
-      </section>
-
 
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
       <section

@@ -66,9 +66,9 @@ export function SupportedTools() {
                 {tools.map((tool) => (
                     <div
                         key={tool.name}
-                        className="group relative flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_0_20px_-5px_rgba(255,255,255,0.1)] transition-all duration-300"
+                        className="group relative flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300"
                     >
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 transition-opacity duration-300 ${tool.hoverColor}`}>
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 transition-opacity duration-300`}>
                             {'image' in tool ? (
                                 <img src={tool.image} alt={`${tool.name} logo`} className="w-full h-full object-contain" />
                             ) : (

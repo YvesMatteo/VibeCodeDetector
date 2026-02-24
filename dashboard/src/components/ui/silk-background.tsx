@@ -31,50 +31,81 @@ export function SilkBackground() {
         // 2. The Geometry (A flat plane filling the screen)
         const geometry = new THREE.PlaneGeometry(2, 2);
 
-        const fragmentShader = `
+        // Mobile: simpler shader with fewer wave layers + slower drift
+        const fragmentShader = mobile ? `
             uniform float u_time;
             uniform vec2 u_resolution;
 
             void main() {
                 vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-                
+
+                float angle = -0.785;
+                float s = sin(angle);
+                float c = cos(angle);
+
+                vec2 centered = uv - 0.5;
+                vec2 p = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
+                p += 0.5;
+
+                float t = u_time * 0.05; // Half speed on mobile
+
+                // Only main fold + one secondary (skip fine metallic texture)
+                float wave = sin(p.x * 3.0 + t);
+                wave += sin(p.x * 8.0 + t * 1.5) * 0.4;
+
+                float intensity = wave * 0.5 + 0.5;
+                intensity = smoothstep(0.0, 1.0, intensity);
+
+                vec3 dark = vec3(0.00, 0.00, 0.02);
+                vec3 mid = vec3(0.05, 0.25, 0.65);
+                vec3 light = vec3(0.6, 0.85, 1.0);
+
+                vec3 col = mix(dark, mid, smoothstep(0.2, 0.5, intensity));
+                col = mix(col, light, smoothstep(0.5, 0.9, intensity));
+
+                gl_FragColor = vec4(col, 1.0);
+            }
+        ` : `
+            uniform float u_time;
+            uniform vec2 u_resolution;
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+
                 // 1. Diagonal Orientation (Prism Style)
-                // Rotate ~45 degrees to match the reference image (top-left to bottom-right)
                 float angle = -0.785; // -45 degrees
                 float s = sin(angle);
                 float c = cos(angle);
-                
+
                 vec2 centered = uv - 0.5;
                 vec2 p = vec2(centered.x * c - centered.y * s, centered.x * s + centered.y * c);
                 p += 0.5;
 
                 // 2. Linear Prism Waves
-                // Use p.x to create bands perpendicular to the rotation
                 float t = u_time * 0.1; // Slow, majestic drift
-                
-                // Main large folds (Low frequency for the "big" look)
+
+                // Main large folds
                 float wave = sin(p.x * 3.0 + t);
-                
-                // Secondary layer for the "sharp edges" within the folds
+
+                // Secondary layer for sharp edges
                 wave += sin(p.x * 8.0 + t * 1.5) * 0.4;
-                
+
                 // Third layer for fine metallic texture
                 wave += sin(p.x * 15.0 - t * 0.5) * 0.1;
 
                 // 3. Sharpness / Specular
-                // High contrast to get those bright white peaks
                 float intensity = wave * 0.5 + 0.5;
                 intensity = smoothstep(0.0, 1.0, intensity);
-                
+
                 // 4. Colors - "Prism" Blue
-                vec3 dark = vec3(0.00, 0.00, 0.02); // Deep black/blue
-                vec3 mid = vec3(0.05, 0.25, 0.65);   // Rich Blue
-                vec3 light = vec3(0.6, 0.85, 1.0);  // Bright Cyan/White
-                
+                vec3 dark = vec3(0.00, 0.00, 0.02);
+                vec3 mid = vec3(0.05, 0.25, 0.65);
+                vec3 light = vec3(0.6, 0.85, 1.0);
+
                 vec3 col = mix(dark, mid, smoothstep(0.2, 0.5, intensity));
                 col = mix(col, light, smoothstep(0.5, 0.9, intensity));
-                
-                // Add the characteristic "shine" or "glint" 
+
+                // Add the characteristic "shine" or "glint"
                 float glint = smoothstep(0.95, 1.0, intensity);
                 col += vec3(glint * 0.5);
 
