@@ -90,14 +90,23 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
         if (!scraped) handleScrapeEmails();
 
         try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 120000);
             const res = await fetch('/api/outreach/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scanResults, projectUrl, issueCount, severityBreakdown }),
+                signal: controller.signal,
             });
+            clearTimeout(timeout);
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                toast.error(err.error || `Failed to generate email (${res.status})`);
+                const msg = err.error || '';
+                if (msg.includes('429') || msg.includes('quota')) {
+                    toast.error('Gemini rate limit hit. Wait a minute and try again.');
+                } else {
+                    toast.error(msg || `Failed to generate email (${res.status})`);
+                }
                 console.error('Generate email error:', err);
                 return;
             }

@@ -3,7 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const OWNER_EMAIL = 'vibecodedetector@gmail.com';
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
+const MAX_RETRIES = 1; // Keep low — Vercel Hobby has 60s function timeout
+
+function parseRetryDelay(errMsg: string): number {
+    const match = errMsg.match(/retry in ([\d.]+)s/i);
+    const delay = match ? Math.ceil(parseFloat(match[1])) * 1000 : 35000;
+    return Math.min(delay, 40000); // Cap at 40s to stay within Vercel's 60s timeout
+}
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function POST(req: NextRequest) {
     const supabase = await createClient();
@@ -88,26 +97,36 @@ RULES:
 - Subject line on line 1, blank line, then the body
 - Use • for bullet points, not - or *`;
 
-    // Try each model with fallback
+    // Try each model with fallback + retry on 429
     let lastError = '';
     for (const modelName of MODELS) {
-        try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent(prompt);
-            const emailText = result.response.text();
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent(prompt);
+                const emailText = result.response.text();
 
-            // Parse subject and body
-            const lines = emailText.trim().split('\n');
-            const subject = lines[0].replace(/^Subject:\s*/i, '').trim();
-            const bodyStart = lines.findIndex((l, i) => i > 0 && l.trim() !== '');
-            const body = lines.slice(bodyStart).join('\n').trim();
+                // Parse subject and body
+                const lines = emailText.trim().split('\n');
+                const subject = lines[0].replace(/^Subject:\s*/i, '').trim();
+                const bodyStart = lines.findIndex((l, i) => i > 0 && l.trim() !== '');
+                const body = lines.slice(bodyStart).join('\n').trim();
 
-            return NextResponse.json({ subject, body, raw: emailText, model: modelName });
-        } catch (err: any) {
-            lastError = err?.message || String(err);
-            console.error(`Gemini ${modelName} error:`, lastError);
-            // Try next model
-            continue;
+                return NextResponse.json({ subject, body, raw: emailText, model: modelName });
+            } catch (err: any) {
+                lastError = err?.message || String(err);
+                const is429 = lastError.includes('429') || lastError.includes('quota') || lastError.includes('Too Many Requests');
+
+                if (is429 && attempt < MAX_RETRIES) {
+                    const delay = parseRetryDelay(lastError);
+                    console.log(`Gemini ${modelName} rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+                    await sleep(delay);
+                    continue;
+                }
+
+                console.error(`Gemini ${modelName} error (attempt ${attempt}):`, lastError);
+                break; // move to next model
+            }
         }
     }
 
