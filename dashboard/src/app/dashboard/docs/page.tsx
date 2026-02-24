@@ -254,7 +254,7 @@ const sections = [
         content: (
             <div className="space-y-4">
                 <p className="text-sm text-zinc-400">
-                    CheckVibe runs 31 security scanners in parallel. Each scan completes in under 45 seconds.
+                    CheckVibe runs 35 security scanners in parallel. Each scan completes in under 45 seconds.
                 </p>
                 <div className="space-y-3">
                     {[

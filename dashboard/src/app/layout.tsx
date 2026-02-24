@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "CheckVibe - AI Website Scanner",
-  description: "Scan your website with 31 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
+  description: "Scan your website with 35 automated security scanners. Detect exposed API keys, SQL injection, XSS, and more.",
   metadataBase: new URL("https://checkvibe.dev"),
   openGraph: {
     title: "CheckVibe - AI Website Scanner",
@@ -79,14 +79,14 @@ export default function RootLayout({
               name: 'CheckVibe',
               applicationCategory: 'SecurityApplication',
               operatingSystem: 'Web',
-              description: 'AI-powered website security scanner with 31 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
+              description: 'AI-powered website security scanner with 35 automated checks for vulnerabilities, exposed API keys, SQL injection, XSS, and more.',
               url: 'https://checkvibe.dev',
               offers: [
                 { '@type': 'Offer', name: 'Starter', price: '19', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
                 { '@type': 'Offer', name: 'Pro', price: '39', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
                 { '@type': 'Offer', name: 'Max', price: '79', priceCurrency: 'USD', url: 'https://checkvibe.dev/#pricing' },
               ],
-              featureList: '31 security scanners, SQL injection detection, XSS detection, API key scanning, SSL/TLS audit, CORS analysis, CSP analysis, dependency scanning',
+              featureList: '35 security scanners, SQL injection detection, XSS detection, API key scanning, SSL/TLS audit, CORS analysis, CSP analysis, dependency scanning',
             }),
           }}
         />

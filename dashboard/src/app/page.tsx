@@ -69,7 +69,7 @@ const pricingTiers = [
 ];
 
 const stats = [
-  { value: '31', label: 'Security Scanners' },
+  { value: '35', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
   { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
@@ -234,7 +234,7 @@ export default function HomePage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
-            31 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
+            35 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -513,7 +513,7 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Supabase, Firebase, Vercel, Netlify, GitHub — 31 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
+              Supabase, Firebase, Vercel, Netlify, GitHub — 35 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
             </p>
           </div>
 
@@ -585,7 +585,7 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              31 scanners. One click. Know exactly what to fix before you deploy.
+              35 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
@@ -603,8 +603,8 @@ export default function HomePage() {
           </h2>
           <div className="space-y-4">
             {[
-              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 31 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
-              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 31 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
+              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
+              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
               { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' },
               { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
               { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
@@ -627,8 +627,8 @@ export default function HomePage() {
                 '@context': 'https://schema.org',
                 '@type': 'FAQPage',
                 mainEntity: [
-                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 31 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
-                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 31 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
+                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 35 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
+                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
                   { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' } },
                   { '@type': 'Question', name: 'What vulnerabilities does CheckVibe detect?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' } },
                   { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },

@@ -82,7 +82,7 @@ const changelog = [
         date: 'February 2026',
         title: 'Initial Release',
         changes: [
-            { type: 'added', text: '31 security scanners covering OWASP top 10 and infrastructure' },
+            { type: 'added', text: '35 security scanners covering OWASP top 10 and infrastructure' },
             { type: 'added', text: 'Stripe billing with Starter, Pro, and Max plans' },
             { type: 'added', text: 'Supabase auth with SSR cookie management' },
             { type: 'added', text: 'Landing page with pricing and feature overview' },

@@ -77,7 +77,7 @@ export default function LoginPage() {
                         Security scanning for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        31 automated scanners. One comprehensive report. Ship with confidence.
+                        35 automated scanners. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 

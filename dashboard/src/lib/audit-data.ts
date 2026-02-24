@@ -1,7 +1,7 @@
 /** Shared audit data types and processing — importable from both server and client components */
 
 /**
- * All scanner result keys expected in the current version (v8, 34 scanners).
+ * All scanner result keys expected in the current version (v9, 35 scanners).
  * Even conditional scanners appear in results (as `skipped: true`).
  * Used to detect stale scan results from older versions.
  */
