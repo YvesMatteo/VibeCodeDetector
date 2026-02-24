@@ -324,6 +324,7 @@ export default function HomePage() {
                 <motion.div
                   animate={{ top: ['0%', '100%', '0%'] }}
                   transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, ease: 'linear' }}
+                  style={{ willChange: 'top' }}
                   className="absolute left-0 right-0 h-[2px] bg-sky-400/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
                 >
                   <div className="absolute right-2 sm:right-4 -top-3 bg-sky-400 text-[9px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-sky-400/30 whitespace-nowrap">SCANNING</div>
@@ -342,6 +343,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: isTouch ? 10 : 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
+                  style={{ willChange: 'opacity, transform' }}
                   className="absolute top-[16px] min-[400px]:top-[20px] sm:top-[50px] right-2 min-[400px]:right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[120px] min-[400px]:max-w-[180px] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
@@ -354,6 +356,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: isTouch ? 10 : 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
                   transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
+                  style={{ willChange: 'opacity, transform' }}
                   className="absolute top-[45px] min-[400px]:top-[55px] sm:top-[140px] md:top-[200px] right-2 min-[400px]:right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[120px] min-[400px]:max-w-[180px] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 shrink-0" />

@@ -70,7 +70,7 @@ const comparisonFeatures = [
 ];
 
 export default function CreditsPage() {
-    const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+    const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -302,6 +302,47 @@ export default function CreditsPage() {
                                                     </div>
                                                 )}
                                             </div>
+
+                                            <div className="mt-4 w-full">
+                                                {'isFree' in plan && plan.isFree ? (
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-[120px] bg-transparent border-white/[0.06] text-zinc-600 hover:bg-white/[0.02]"
+                                                        variant="outline"
+                                                        disabled
+                                                    >
+                                                        {isCurrent ? 'Current Plan' : 'Free'}
+                                                    </Button>
+                                                ) : isCurrent ? (
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-[120px] bg-transparent border-white/[0.06] text-zinc-600 hover:bg-white/[0.02]"
+                                                        variant="outline"
+                                                        disabled
+                                                    >
+                                                        Current Plan
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        size="sm"
+                                                        className={`w-[120px] ${plan.highlighted
+                                                            ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
+                                                            : 'bg-white/10 hover:bg-white/20 text-white border-0'
+                                                            }`}
+                                                        variant={plan.highlighted ? 'default' : 'secondary'}
+                                                        onClick={() => handleSubscribe(plan.id)}
+                                                        disabled={loading !== null}
+                                                    >
+                                                        {loading === plan.id ? (
+                                                            <span className="flex items-center justify-center">
+                                                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                            </span>
+                                                        ) : (
+                                                            'Get Plan'
+                                                        )}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </th>
                                 );
@@ -334,57 +375,7 @@ export default function CreditsPage() {
                             </tr>
                         ))}
                     </tbody>
-                    <tfoot>
-                        <tr className="border-t border-white/[0.06]">
-                            <td className="p-5" />
-                            {pricingPlans.map((plan) => {
-                                const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
-                                return (
-                                    <td key={plan.id} className="p-5 text-center">
-                                        {'isFree' in plan && plan.isFree ? (
-                                            <Button
-                                                size="lg"
-                                                className="w-full bg-transparent border-white/[0.06] text-zinc-600"
-                                                variant="outline"
-                                                disabled
-                                            >
-                                                {isCurrent ? 'Current Plan' : 'Free'}
-                                            </Button>
-                                        ) : isCurrent ? (
-                                            <Button
-                                                size="lg"
-                                                className="w-full bg-transparent border-white/[0.06] text-zinc-600"
-                                                variant="outline"
-                                                disabled
-                                            >
-                                                Current Plan
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                size="lg"
-                                                className={`w-full ${plan.highlighted
-                                                    ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                                    : 'bg-white/10 hover:bg-white/20 text-white border-0'
-                                                    }`}
-                                                variant={plan.highlighted ? 'default' : 'secondary'}
-                                                onClick={() => handleSubscribe(plan.id)}
-                                                disabled={loading !== null}
-                                            >
-                                                {loading === plan.id ? (
-                                                    <span className="flex items-center gap-2">
-                                                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                        Processing...
-                                                    </span>
-                                                ) : (
-                                                    'Subscribe'
-                                                )}
-                                            </Button>
-                                        )}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    </tfoot>
+
                 </table>
             </div>
 
@@ -439,6 +430,47 @@ export default function CreditsPage() {
                                         </>
                                     )}
                                 </div>
+
+                                <div className="mt-6 w-full">
+                                    {'isFree' in plan && plan.isFree ? (
+                                        <Button
+                                            size="lg"
+                                            className="w-full bg-transparent border-white/[0.06] text-zinc-600"
+                                            variant="outline"
+                                            disabled
+                                        >
+                                            {isCurrent ? 'Current Plan' : 'Free'}
+                                        </Button>
+                                    ) : isCurrent ? (
+                                        <Button
+                                            size="lg"
+                                            className="w-full bg-transparent border-white/[0.06] text-zinc-600"
+                                            variant="outline"
+                                            disabled
+                                        >
+                                            Current Plan
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="lg"
+                                            className={`w-full ${plan.highlighted
+                                                ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
+                                                : 'bg-white/10 hover:bg-white/20 text-white border-0'
+                                                }`}
+                                            variant={plan.highlighted ? 'default' : 'secondary'}
+                                            onClick={() => handleSubscribe(plan.id)}
+                                            disabled={loading !== null}
+                                        >
+                                            {loading === plan.id ? (
+                                                <span className="flex items-center justify-center">
+                                                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                </span>
+                                            ) : (
+                                                'Get Plan'
+                                            )}
+                                        </Button>
+                                    )}
+                                </div>
                             </CardHeader>
                             <CardContent className="flex-1 flex flex-col">
                                 <ul className="space-y-3.5 mb-8 flex-1 px-1">
@@ -449,46 +481,6 @@ export default function CreditsPage() {
                                         </li>
                                     ))}
                                 </ul>
-
-                                {'isFree' in plan && plan.isFree ? (
-                                    <Button
-                                        size="lg"
-                                        className="w-full bg-transparent border-white/[0.06] text-zinc-600"
-                                        variant="outline"
-                                        disabled
-                                    >
-                                        {isCurrent ? 'Current Plan' : 'Free'}
-                                    </Button>
-                                ) : isCurrent ? (
-                                    <Button
-                                        size="lg"
-                                        className="w-full bg-transparent border-white/[0.06] text-zinc-600"
-                                        variant="outline"
-                                        disabled
-                                    >
-                                        Current Plan
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        size="lg"
-                                        className={`w-full ${plan.highlighted
-                                            ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                            : 'bg-white/10 hover:bg-white/20 text-white border-0'
-                                            }`}
-                                        variant={plan.highlighted ? 'default' : 'secondary'}
-                                        onClick={() => handleSubscribe(plan.id)}
-                                        disabled={loading !== null}
-                                    >
-                                        {loading === plan.id ? (
-                                            <span className="flex items-center gap-2">
-                                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                Processing...
-                                            </span>
-                                        ) : (
-                                            'Subscribe'
-                                        )}
-                                    </Button>
-                                )}
                             </CardContent>
                         </Card>
                     );
