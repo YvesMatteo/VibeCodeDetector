@@ -97,7 +97,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
         .select('id, frequency, enabled, next_run_at, hour_utc')
         .eq('project_id', id)
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as { data: { id: string; frequency: string; enabled: boolean; next_run_at: string | null; hour_utc: number } | null };
 
     // Get recent scans for chart + overview
     const { data: recentScans } = await supabase
