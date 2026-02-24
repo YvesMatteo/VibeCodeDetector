@@ -367,7 +367,7 @@ export default function HomePage() {
       {/* ======================== SLIDE 1.5: PRICING ======================== */}
       <section
         id="slide-pricing"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16 pb-20 sm:pb-28"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-20 sm:pb-28"
       >
 
         <div className="max-w-7xl mx-auto relative z-10 w-full">
@@ -412,8 +412,8 @@ export default function HomePage() {
               >
                 Annual
                 <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${billing === 'annual'
-                  ? 'bg-sky-500/20 text-sky-400'
-                  : 'bg-sky-500/10 text-sky-400'
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-emerald-500/10 text-emerald-400'
                   }`}>
                   -30%
                 </span>
@@ -528,10 +528,6 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
             <div className="text-center mb-6 sm:mb-8">
               <h2 className="text-lg sm:text-xl lg:text-2xl font-heading font-medium mb-2.5 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
-                <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-500"></span>
-                </span>
                 Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-gradient-flow">MCP Server</span> Support
               </h2>
               <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -545,8 +541,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-base font-medium text-white mb-1.5">Claude</h3>
-                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Use CheckVibe with Claude Desktop</p>
+                <h3 className="text-base font-medium text-white">Claude</h3>
               </div>
 
               {/* Cursor */}
@@ -554,8 +549,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-base font-medium text-white mb-1.5">Cursor</h3>
-                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Scan from the Cursor Editor</p>
+                <h3 className="text-base font-medium text-white">Cursor</h3>
               </div>
 
               {/* Antigravity */}
@@ -563,8 +557,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-base font-medium text-white mb-1.5">Antigravity</h3>
-                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Powered by Google Gemini</p>
+                <h3 className="text-base font-medium text-white">Antigravity</h3>
               </div>
             </div>
           </div>
@@ -613,12 +606,12 @@ export default function HomePage() {
               { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
               { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
             ].map(({ q, a }) => (
-              <details key={q} className="group rounded-xl border border-white/[0.06] bg-white/[0.01] overflow-hidden">
-                <summary className="flex items-center justify-between px-6 py-4 cursor-pointer text-[15px] font-medium text-zinc-200 hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <details key={q} className="group rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer text-[15px] sm:text-base font-semibold text-white hover:text-sky-400 transition-colors list-none [&::-webkit-details-marker]:hidden">
                   {q}
-                  <span className="ml-4 text-zinc-600 group-open:rotate-45 transition-transform text-xl">+</span>
+                  <span className="ml-4 text-zinc-500 group-open:rotate-45 transition-transform text-xl flex shrink-0">+</span>
                 </summary>
-                <div className="px-6 pb-4 text-sm text-zinc-400 leading-relaxed">
+                <div className="px-6 pb-5 text-sm sm:text-[15px] text-zinc-300 leading-relaxed">
                   {a}
                 </div>
               </details>
