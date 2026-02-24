@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Mail, Send, Loader2, Check, RefreshCw } from 'lucide-react';
+import { Mail, Send, Loader2, Check, RefreshCw, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OutreachEmailModalProps {
@@ -18,6 +18,11 @@ interface OutreachEmailModalProps {
     projectUrl: string;
     issueCount: number;
     severityBreakdown: { critical: number; high: number; medium: number; low: number };
+}
+
+interface ScrapedEmail {
+    email: string;
+    source: string;
 }
 
 export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severityBreakdown }: OutreachEmailModalProps) {
@@ -29,6 +34,39 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [generated, setGenerated] = useState(false);
+
+    // Email scraping state
+    const [scraping, setScraping] = useState(false);
+    const [scrapedEmails, setScrapedEmails] = useState<ScrapedEmail[]>([]);
+    const [scraped, setScraped] = useState(false);
+
+    const handleScrapeEmails = async () => {
+        setScraping(true);
+        try {
+            const res = await fetch('/api/outreach/scrape-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: projectUrl }),
+            });
+            if (!res.ok) {
+                toast.error('Failed to scan for emails');
+                return;
+            }
+            const data = await res.json();
+            setScrapedEmails(data.emails || []);
+            setScraped(true);
+            if (data.emails?.length > 0) {
+                setRecipientEmail(data.emails[0].email);
+                toast.success(`Found ${data.emails.length} email${data.emails.length > 1 ? 's' : ''}`);
+            } else {
+                toast('No emails found on the website');
+            }
+        } catch {
+            toast.error('Failed to scan for emails');
+        } finally {
+            setScraping(false);
+        }
+    };
 
     const handleGenerate = async () => {
         setGenerating(true);
@@ -87,6 +125,8 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
         setBody('');
         setRecipientEmail('');
         setSent(false);
+        setScrapedEmails([]);
+        setScraped(false);
     };
 
     return (
@@ -123,7 +163,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 </div>
 
                 {!generated ? (
-                    <div className="mt-4 flex justify-center">
+                    <div className="mt-4 flex flex-col items-center gap-3">
                         <Button
                             onClick={handleGenerate}
                             disabled={generating}
@@ -144,16 +184,59 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                     </div>
                 ) : (
                     <div className="mt-4 space-y-4">
-                        {/* Recipient */}
+                        {/* Recipient with auto-detect */}
                         <div>
                             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Recipient Email</label>
-                            <input
-                                type="email"
-                                value={recipientEmail}
-                                onChange={(e) => setRecipientEmail(e.target.value)}
-                                placeholder="founder@example.com"
-                                className="w-full px-3 py-2 rounded-lg bg-black/50 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="email"
+                                    value={recipientEmail}
+                                    onChange={(e) => setRecipientEmail(e.target.value)}
+                                    placeholder="founder@example.com"
+                                    className="flex-1 px-3 py-2 rounded-lg bg-black/50 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50"
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={handleScrapeEmails}
+                                    disabled={scraping}
+                                    className="shrink-0 border-white/10 text-zinc-400 hover:text-white hover:bg-white/5"
+                                    title="Auto-detect email from website"
+                                >
+                                    {scraping ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Search className="h-4 w-4" />
+                                    )}
+                                    <span className="ml-1.5 text-xs">Detect</span>
+                                </Button>
+                            </div>
+
+                            {/* Scraped email results */}
+                            {scraped && scrapedEmails.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                    <span className="text-[11px] text-zinc-500">Found on website:</span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {scrapedEmails.map(({ email, source }) => (
+                                            <button
+                                                key={email}
+                                                onClick={() => setRecipientEmail(email)}
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+                                                    recipientEmail === email
+                                                        ? 'bg-violet-500/20 border border-violet-500/30 text-violet-300'
+                                                        : 'bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                                                }`}
+                                            >
+                                                <Mail className="h-3 w-3" />
+                                                {email}
+                                                <span className="text-zinc-600">{source}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {scraped && scrapedEmails.length === 0 && (
+                                <p className="mt-1.5 text-[11px] text-zinc-600">No emails found on the website. Enter one manually.</p>
+                            )}
                         </div>
 
                         {/* Subject */}

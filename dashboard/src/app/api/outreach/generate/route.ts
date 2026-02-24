@@ -56,7 +56,12 @@ Write a concise, friendly, non-threatening cold email to the founder/developer o
 3. Give 2-3 specific examples of the most important findings (use plain language, not technical jargon)
 4. Mention that these are just the surface-level checks — connecting their backend (Supabase, Firebase, Convex) and GitHub repository would reveal much deeper vulnerabilities like leaked secrets, insecure database rules, dependency CVEs, and more
 5. Include a soft CTA to check out their free report at checkvibe.dev or reply to discuss
-6. Sign off as "Yves from CheckVibe"
+6. End the email with exactly this sign-off (on its own lines):
+
+Kind regards,
+Yves Romano
+Founder of checkvibe.dev
+
 7. Keep it under 200 words
 8. Tone: helpful, not salesy. Like a fellow developer looking out for them.
 9. DO NOT use subject line prefix. Just write the subject on the first line, then a blank line, then the body.

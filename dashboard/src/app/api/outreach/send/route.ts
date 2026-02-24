@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    const gmailUser = process.env.GMAIL_USER || OWNER_EMAIL;
+    const gmailUser = process.env.GMAIL_USER || 'yves.matro@gmail.com';
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
     if (!gmailAppPassword) {
