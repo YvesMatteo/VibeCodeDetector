@@ -363,7 +363,7 @@ export default function NewScanPage() {
                     <CardHeader>
                         <CardTitle className="text-white">What&apos;s Included</CardTitle>
                         <CardDescription className="text-zinc-400">
-                            Every scan runs up to 30 checks automatically
+                            Every scan runs up to 35 checks automatically
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

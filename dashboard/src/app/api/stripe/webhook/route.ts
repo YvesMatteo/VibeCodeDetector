@@ -194,6 +194,7 @@ export async function POST(req: Request) {
                 }
             } catch (error) {
                 console.error('Error handling payment failure:', error);
+                return new NextResponse('Error handling payment failure', { status: 500 });
             }
         }
     }
