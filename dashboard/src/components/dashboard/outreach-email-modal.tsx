@@ -71,6 +71,10 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
     const handleGenerate = async () => {
         setGenerating(true);
         setSent(false);
+
+        // Run email scraping in parallel with generation
+        if (!scraped) handleScrapeEmails();
+
         try {
             const res = await fetch('/api/outreach/generate', {
                 method: 'POST',
