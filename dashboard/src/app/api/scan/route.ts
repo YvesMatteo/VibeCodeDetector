@@ -671,11 +671,14 @@ export async function POST(req: NextRequest) {
                     new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
                 ]);
 
-                // ── Penalty-based scoring ─────────────────────────────────
-                // Start at 100, deduct points per actual finding by severity.
-                // Only scanners that ran AND produced findings affect the score.
-                // Scanners that ran but found nothing (score 100, no findings)
-                // are ignored — they don't inflate the score as "perfect".
+                // ── Exponential-decay scoring ────────────────────────────
+                // Accumulate penalty points per finding, then convert to a
+                // 0-100 score using exponential decay: score = 100 * e^(-penalty/k).
+                // This means early findings drop the score noticeably, but
+                // additional findings have diminishing impact — the score
+                // approaches 0 asymptotically instead of hitting it linearly.
+                // k = 80 → a site needs ~55 penalty points to drop below 50,
+                //           ~185 to drop below 10.
                 const SEVERITY_PENALTY: Record<string, number> = {
                     critical: 15,
                     high: 8,
@@ -683,6 +686,7 @@ export async function POST(req: NextRequest) {
                     low: 1.5,
                     info: 0,
                 };
+                const DECAY_CONSTANT = 80; // higher = slower decay
 
                 let totalPenalty = 0;
                 let scannersWithFindings = 0;
@@ -693,7 +697,6 @@ export async function POST(req: NextRequest) {
                     if (r.error || r.skipped) continue;
                     if (!Array.isArray(r.findings) || r.findings.length === 0) continue;
 
-                    // Only count scanners that actually found something
                     scannersWithFindings++;
                     for (const f of r.findings) {
                         const sev = (f.severity || 'info').toLowerCase();
@@ -701,7 +704,9 @@ export async function POST(req: NextRequest) {
                     }
                 }
 
-                const overallScore = Math.max(0, Math.min(100, Math.round(100 - totalPenalty)));
+                // Exponential decay: score drops fast at first, slows near bottom
+                const rawScore = 100 * Math.exp(-totalPenalty / DECAY_CONSTANT);
+                const overallScore = Math.min(100, Math.round(totalPenalty === 0 ? 100 : Math.max(5, rawScore)));
 
                 // ------------------------------------------------------------------
                 // Final update: mark scan as completed with results & score.
