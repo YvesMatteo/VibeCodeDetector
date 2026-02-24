@@ -122,7 +122,6 @@ function scoreEmail(email: string, source: string, domainMatch: boolean): number
     if (source === 'security.txt') score += 6;
     if (source.includes('contact') || source.includes('about')) score += 4;
     if (source === 'dns-soa') score += 3;
-    if (source === 'guessed') score -= 5;
 
     // Personal email patterns
     if (/^[a-z]+\.[a-z]+@/i.test(local)) score += 7;           // first.last
@@ -376,15 +375,7 @@ async function strategyDnsSoa(domain: string): Promise<EmailResult[]> {
     return results;
 }
 
-// ── Strategy E: Common pattern guessing ──────────────────────────────
-function strategyGuessEmails(domain: string): EmailResult[] {
-    const prefixes = ['hello', 'hi', 'hey', 'contact', 'team', 'info', 'founder', 'founders', 'support'];
-    return prefixes.map(p => ({
-        email: `${p}@${domain}`,
-        source: 'guessed',
-        score: scoreEmail(`${p}@${domain}`, 'guessed', true),
-    }));
-}
+// ── Strategy E removed: no more guessing ─────────────────────────────
 
 // ── Strategy F: Sitemap crawl ────────────────────────────────────────
 async function strategySitemap(baseUrl: string, domain: string): Promise<EmailResult[]> {
@@ -528,9 +519,6 @@ export async function POST(req: NextRequest) {
         // Timeout — use whatever we have
     }
 
-    // Always add guessed emails as fallback (lower score)
-    allResults.push(...strategyGuessEmails(domain));
-
     // Deduplicate: keep highest score per email
     const emailMap = new Map<string, EmailResult>();
     for (const r of allResults) {
@@ -540,16 +528,11 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // Sort by score descending, separate found vs guessed
+    // Sort by score descending
     const found = Array.from(emailMap.values())
-        .filter(r => r.source !== 'guessed')
         .sort((a, b) => b.score - a.score);
 
-    const guessed = Array.from(emailMap.values())
-        .filter(r => r.source === 'guessed')
-        .sort((a, b) => b.score - a.score);
-
-    const results = [...found, ...guessed].map(({ email, source }) => ({ email, source }));
+    const results = found.map(({ email, source }) => ({ email, source }));
 
     // Extract social links from homepage HTML (might already have from strategy)
     if (!socialLinks.github) {
@@ -566,7 +549,6 @@ export async function POST(req: NextRequest) {
         strategies: {
             total: results.length,
             found: found.length,
-            guessed: guessed.length,
         },
     });
 }
