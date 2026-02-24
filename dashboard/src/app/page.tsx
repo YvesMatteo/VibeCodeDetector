@@ -547,8 +547,8 @@ export default function HomePage() {
 
               {/* Cursor */}
               <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <img src="/images/tools/cursor.svg" alt="Cursor Editor" className="w-full h-full object-contain" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
+                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white mb-1.5">Cursor</h3>
                 <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Scan from the Cursor Editor</p>

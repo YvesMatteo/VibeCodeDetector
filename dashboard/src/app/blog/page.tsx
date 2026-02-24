@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { getAllPosts } from '@/lib/blog';
 import { PostCard } from '@/components/blog/post-card';
+import { SilkBackground } from '@/components/ui/silk-background';
 
 export const metadata: Metadata = {
     title: 'Blog | CheckVibe',
@@ -22,10 +23,12 @@ export default function BlogIndex() {
     const posts = getAllPosts();
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-[#0E0E10] overflow-x-hidden relative">
+            <SilkBackground />
+
             {/* Header */}
-            <div className="border-b border-white/[0.06]">
-                <div className="max-w-5xl mx-auto px-4 md:px-8 py-16 md:py-24">
+            <div className="relative z-10 border-b border-white/[0.06] bg-white/[0.01] backdrop-blur-xl">
+                <div className="max-w-5xl mx-auto px-4 md:px-8 py-20 md:py-32">
                     <Link
                         href="/"
                         className="inline-flex items-center text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors mb-6"
@@ -33,17 +36,17 @@ export default function BlogIndex() {
                         <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                         Home
                     </Link>
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
-                        Blog
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-medium tracking-tight text-white mb-6">
+                        Latest <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Insights</span>
                     </h1>
-                    <p className="text-lg text-zinc-400 max-w-2xl">
-                        Security insights, vulnerability guides, and best practices for developers who ship fast and want to stay safe.
+                    <p className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+                        Security research, vulnerability guides, and best practices for developers who ship fast and want to stay secure.
                     </p>
                 </div>
             </div>
 
             {/* Posts grid */}
-            <div className="max-w-5xl mx-auto px-4 md:px-8 py-12">
+            <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 py-16 md:py-24">
                 {posts.length === 0 ? (
                     <p className="text-zinc-500 text-center py-20">No posts yet. Check back soon.</p>
                 ) : (
