@@ -34,7 +34,11 @@ const scannerNames: Record<string, string> = {
   file_upload: 'File Upload Security',
   audit_logging: 'Audit Logging & Monitoring',
   mobile_api: 'Mobile API Rate Limiting',
+  domain_hijacking: 'Domain Hijacking Detection',
   debug_endpoints: 'Debug Endpoints Scanner',
+  graphql: 'GraphQL Security',
+  jwt_audit: 'JWT Audit',
+  ai_llm: 'AI/LLM Security',
 };
 
 const SCANNER_ORDER: string[] = [
