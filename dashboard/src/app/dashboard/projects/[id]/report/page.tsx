@@ -6,6 +6,7 @@ import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-w
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ExportButton } from '@/components/dashboard/export-button';
 import { ShareButton } from '@/components/dashboard/share-button';
+import { OutreachEmailModal } from '@/components/dashboard/outreach-email-modal';
 import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
 
@@ -85,6 +86,15 @@ export default async function ProjectReportPage(props: { params: Promise<{ id: s
                         <AIFixPrompt url={project.url} findings={auditData!.allFindings} techStack={auditData!.techStack} userPlan={userPlan} />
                         <ExportButton scanId={latestScan.id} userPlan={userPlan} />
                         {userPlan !== 'none' && <ShareButton scanId={latestScan.id} initialPublicId={latestScan.public_id} />}
+                        {/* Temporary outreach feature — owner only */}
+                        {user.email === 'vibecodedetector@gmail.com' && (
+                            <OutreachEmailModal
+                                scanResults={latestScan.results as Record<string, any>}
+                                projectUrl={project.url}
+                                issueCount={auditData!.issueCount}
+                                severityBreakdown={auditData!.totalFindings}
+                            />
+                        )}
                     </div>
 
                     {missingScanners.length > 0 && (
