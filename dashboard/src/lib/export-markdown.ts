@@ -33,6 +33,7 @@ const scannerNames: Record<string, string> = {
   file_upload: 'File Upload Security',
   audit_logging: 'Audit Logging & Monitoring',
   mobile_api: 'Mobile API Rate Limiting',
+  debug_endpoints: 'Debug Endpoints Scanner',
 };
 
 const SCANNER_ORDER: string[] = [
@@ -48,6 +49,7 @@ const SCANNER_ORDER: string[] = [
   'dependencies',
   'xss',
   'dns_email',
+  'debug_endpoints',
   'vercel_hosting',
   'netlify_hosting',
   'cloudflare_hosting',

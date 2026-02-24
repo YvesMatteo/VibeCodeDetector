@@ -107,6 +107,7 @@ const scannerIcons: Record<string, any> = {
     audit_logging: FileText,
     mobile_api: Smartphone,
     domain_hijacking: Anchor,
+    debug_endpoints: Eye,
 };
 
 const scannerNames: Record<string, string> = {
@@ -141,6 +142,7 @@ const scannerNames: Record<string, string> = {
     audit_logging: 'Audit Logging & Monitoring',
     mobile_api: 'Mobile API Rate Limiting',
     domain_hijacking: 'Domain Hijacking Detection',
+    debug_endpoints: 'Debug Endpoints Scanner',
 };
 
 interface DismissCallback {
@@ -732,6 +734,7 @@ const SCANNER_ORDER: string[] = [
     'xss',
     'dns_email',
     'domain_hijacking',
+    'debug_endpoints',
     'vercel_hosting',
     'netlify_hosting',
     'cloudflare_hosting',

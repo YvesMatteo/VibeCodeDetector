@@ -9,7 +9,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
 import type { Json } from '@/lib/supabase/database.types';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api', 'debug_endpoints'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -611,6 +611,14 @@ export async function POST(req: NextRequest) {
                 .catch(err => { results.domain_hijacking = { error: err.message, score: 0 }; })
         ));
 
+        // 32. Debug Endpoints Scanner (always runs)
+        scannerPromises.push(trackedScanner('debug_endpoints', () =>
+            fetchWithTimeout(`${supabaseUrl}/functions/v1/debug-endpoints-scanner`, {
+                method: 'POST', headers: scannerHeaders, body: buildScannerBody(),
+            }).then(res => res.json()).then(data => { results.debug_endpoints = data; })
+                .catch(err => { results.debug_endpoints = { error: err.message, score: 0 }; })
+        ));
+
         // ------------------------------------------------------------------
         // Create the scan row with status 'running' BEFORE launching scanners
         // so the client can subscribe to real-time progress updates via the scanId.
@@ -702,6 +710,7 @@ export async function POST(req: NextRequest) {
                     audit_logging: 0.01,  // Monitoring & audit readiness
                     mobile_api: 0.03,     // Mobile API rate limiting
                     domain_hijacking: 0.03, // Domain hijacking & registration
+                    debug_endpoints: 0.05, // Exposed debug/dev endpoints
                 };
 
                 // Only include scanners that actually ran in the denominator.
