@@ -222,7 +222,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                 className="block"
               >
-                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
+                for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
               </motion.span>
             </span>
           </h1>
