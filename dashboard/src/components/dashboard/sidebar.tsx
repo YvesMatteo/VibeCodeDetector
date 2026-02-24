@@ -129,7 +129,7 @@ export function Sidebar({
         >
             {/* Logo Section */}
             <div className="h-16 flex items-center shrink-0 px-2">
-                <Link href="/" className="flex items-center px-2.5 w-full overflow-hidden hover:opacity-80 transition-opacity">
+                <a href="https://checkvibe.dev" className="flex items-center px-2.5 w-full overflow-hidden hover:opacity-80 transition-opacity">
                     <div className="w-[24px] flex justify-center shrink-0">
                         <Image src="/logo-icon.png" alt="Icon" width={20} height={20} className="w-5 h-5 object-contain" />
                     </div>
@@ -142,7 +142,7 @@ export function Sidebar({
                             CheckVibe
                         </h1>
                     </div>
-                </Link>
+                </a>
             </div>
 
             {/* User Profile */}
