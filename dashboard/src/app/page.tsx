@@ -148,10 +148,10 @@ export default function HomePage() {
       {/* Navigation */}
       <nav aria-label="Main navigation" className="fixed top-4 w-full z-50 flex justify-center pointer-events-none px-4">
         <motion.div
-          initial={{ y: -100, opacity: 0 }}
+          initial={{ y: isTouch ? -20 : -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center gap-4 sm:gap-8 shadow-2xl pointer-events-auto transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+          transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut' }}
+          className="bg-[#1C1C1E]/80 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center gap-4 sm:gap-8 shadow-2xl pointer-events-auto transition-all duration-300 [@media(hover:hover)]:hover:border-white/20 [@media(hover:hover)]:hover:scale-[1.01]"
         >
           <div className="flex items-center gap-2 pr-5 border-r border-white/10">
             <Image src="/logo-composite.png" alt="CheckVibe Logo" width={140} height={28} className="w-auto h-7 object-contain" />
@@ -207,9 +207,9 @@ export default function HomePage() {
           <h1 className="font-heading text-[26px] leading-[1.08] min-[400px]:text-[32px] sm:text-[48px] md:text-[64px] tracking-[-0.02em] text-white flex flex-col items-center gap-0 sm:gap-1 w-full">
             <span className="block overflow-hidden">
               <motion.span
-                initial={{ y: 100 }}
+                initial={{ y: isTouch ? 30 : 100 }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut', delay: isTouch ? 0 : 0.1 }}
                 className="block"
               >
                 The <span className="italic text-white/50">#1 Fullstack</span> security scanner
@@ -217,9 +217,9 @@ export default function HomePage() {
             </span>
             <span className="block overflow-hidden">
               <motion.span
-                initial={{ y: 100 }}
+                initial={{ y: isTouch ? 30 : 100 }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut', delay: isTouch ? 0.05 : 0.2 }}
                 className="block"
               >
                 for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> Websites
@@ -229,9 +229,9 @@ export default function HomePage() {
 
           {/* Subtext */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: isTouch ? 10 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: isTouch ? 0.1 : 0.3, duration: isTouch ? 0.3 : 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
             35 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
@@ -239,12 +239,12 @@ export default function HomePage() {
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: isTouch ? 10 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
+            transition={{ delay: isTouch ? 0.15 : 0.4, duration: isTouch ? 0.3 : 0.5 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
-            <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-transform text-base font-semibold border-0">
+            <Button size="lg" asChild className="h-12 px-6 sm:px-8 rounded-xl bg-gradient-to-b from-white to-zinc-200 text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] [@media(hover:hover)]:hover:scale-[1.02] transition-transform text-base font-semibold border-0">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
                 {isLoggedIn ? 'Dashboard' : 'Start Scanning'}
               </Link>
@@ -258,9 +258,9 @@ export default function HomePage() {
 
           {/* Stats row */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: isTouch ? 10 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            transition={{ delay: isTouch ? 0.2 : 0.5, duration: isTouch ? 0.3 : 0.5 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 sm:gap-8 w-full max-w-4xl mt-2"
           >
             {stats.map((stat, i) => (
@@ -281,9 +281,9 @@ export default function HomePage() {
 
           {/* Terminal card — compact */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: isTouch ? 0.98 : 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
+            transition={{ delay: isTouch ? 0.25 : 0.6, duration: isTouch ? 0.4 : 0.8, ease: 'easeOut' }}
             className="relative w-full max-w-4xl group mt-2"
             style={isTouch ? undefined : { perspective: 800 }}
             aria-hidden="true"
@@ -320,25 +320,28 @@ export default function HomePage() {
                   <div className="flex gap-2 sm:gap-4"><span className="text-zinc-600">09</span> <span className="text-sky-400">export</span> <span className="text-sky-400">const</span> <span className="text-cyan-200">config</span> = {'{'} <span className="text-green-300">&quot;cors&quot;</span>: <span className="text-orange-300">false</span> {'}'};</div>
                 </div>
 
-                {/* Scanning Beam */}
+                {/* Scanning Beam — slower cycle on mobile to save GPU */}
                 <motion.div
                   animate={{ top: ['0%', '100%', '0%'] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, ease: 'linear' }}
                   className="absolute left-0 right-0 h-[2px] bg-sky-400/50 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] z-20 overflow-visible"
                 >
                   <div className="absolute right-2 sm:right-4 -top-3 bg-sky-400 text-[9px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded font-mono font-medium tracking-wide shadow-lg shadow-sky-400/30 whitespace-nowrap">SCANNING</div>
                 </motion.div>
 
-                <motion.div
-                  animate={{ top: ['-10%', '90%', '-10%'] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                  className="absolute left-0 right-0 h-16 bg-gradient-to-b from-sky-400/10 to-transparent z-10 pointer-events-none"
-                />
+                {/* Beam glow — hidden on mobile for GPU savings */}
+                {!isTouch && (
+                  <motion.div
+                    animate={{ top: ['-10%', '90%', '-10%'] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="absolute left-0 right-0 h-16 bg-gradient-to-b from-sky-400/10 to-transparent z-10 pointer-events-none"
+                  />
+                )}
 
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: isTouch ? 10 : 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
+                  transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
                   className="absolute top-[16px] min-[400px]:top-[20px] sm:top-[50px] right-2 min-[400px]:right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[120px] min-[400px]:max-w-[180px] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
@@ -348,9 +351,9 @@ export default function HomePage() {
                 </motion.div>
 
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: isTouch ? 10 : 20 }}
                   animate={{ opacity: [0, 1, 1, 0, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
+                  transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
                   className="absolute top-[45px] min-[400px]:top-[55px] sm:top-[140px] md:top-[200px] right-2 min-[400px]:right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[120px] min-[400px]:max-w-[180px] sm:max-w-none"
                 >
                   <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 shrink-0" />
@@ -428,7 +431,7 @@ export default function HomePage() {
                   ? tier.name === 'Max'
                     ? 'bg-zinc-900/60 border-emerald-400/30 shadow-[0_0_30px_-10px_rgba(52,211,153,0.2)]'
                     : 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
-                  : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                  : 'bg-zinc-900/40 border-white/5 [@media(hover:hover)]:hover:border-white/10'
                   }`}>
                   {tier.highlighted && tier.badgeText && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
@@ -527,7 +530,7 @@ export default function HomePage() {
           {/* ======================== MCP INTEGRATION ======================== */}
           <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
             <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-heading font-medium mb-2.5 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
                 Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-gradient-flow">MCP Server</span> Support
               </h2>
               <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -537,24 +540,24 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
               {/* Claude */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-emerald-500/30 [@media(hover:hover)]:hover:bg-emerald-500/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center">
                   <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white">Claude</h3>
               </div>
 
               {/* Cursor */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-white/30 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white">Cursor</h3>
               </div>
 
               {/* Antigravity */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 [@media(hover:hover)]:hover:border-sky-500/30 [@media(hover:hover)]:hover:bg-sky-500/5 [@media(hover:hover)]:hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-base font-medium text-white">Antigravity</h3>
@@ -604,10 +607,10 @@ export default function HomePage() {
               { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
               { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' },
               { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
-              { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
+              { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 35 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
             ].map(({ q, a }) => (
               <details key={q} className="group rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
-                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer text-[15px] sm:text-base font-semibold text-white hover:text-sky-400 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer text-[15px] sm:text-base font-semibold text-white [@media(hover:hover)]:hover:text-sky-400 transition-colors list-none [&::-webkit-details-marker]:hidden">
                   {q}
                   <span className="ml-4 text-zinc-500 group-open:rotate-45 transition-transform text-xl flex shrink-0">+</span>
                 </summary>
@@ -628,7 +631,7 @@ export default function HomePage() {
                   { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 35 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
                   { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' } },
                   { '@type': 'Question', name: 'What vulnerabilities does CheckVibe detect?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' } },
-                  { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },
+                  { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 35 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },
                 ],
               }),
             }}
