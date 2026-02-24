@@ -10,7 +10,8 @@ const ScannerAccordion = dynamic(
     () => import('@/components/dashboard/scanner-accordion').then(m => m.ScannerAccordion),
     { ssr: false, loading: () => <div className="animate-pulse space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-white/[0.03]" />)}</div> }
 );
-import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, CheckCircle2, AlertTriangle as TriangleAlert, Minus } from 'lucide-react';
+import { computeOwaspSummary, OWASP_TOP_10 } from '@/lib/owasp-mapping';
 import type { ScanDiff } from '@/lib/scan-diff';
 import { buildFingerprint, DISMISSAL_REASONS, type Dismissal, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 import type { AuditReportData, ScanResultItem } from '@/lib/audit-data';
@@ -325,6 +326,48 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                     ))}
                 </div>
             )}
+
+            {/* OWASP Top 10 Coverage */}
+            {(() => {
+                const owaspSummary = computeOwaspSummary(data.results);
+                const testedCount = owaspSummary.filter(s => s.tested).length;
+                return (
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">OWASP Top 10 Coverage</h4>
+                            <span className="text-[11px] text-zinc-600">{testedCount}/10 categories tested</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                            {owaspSummary.map(({ category, findingCount, tested }) => (
+                                <div
+                                    key={category.id}
+                                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors ${
+                                        !tested
+                                            ? 'bg-white/[0.01] border-white/[0.04] opacity-50'
+                                            : findingCount === 0
+                                            ? 'bg-emerald-500/[0.03] border-emerald-500/10'
+                                            : 'bg-amber-500/[0.03] border-amber-500/10'
+                                    }`}
+                                    title={`${category.name}: ${!tested ? 'Not tested' : findingCount === 0 ? 'Pass' : `${findingCount} findings`}`}
+                                >
+                                    {!tested ? (
+                                        <Minus className="h-4 w-4 text-zinc-600" />
+                                    ) : findingCount === 0 ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                    ) : (
+                                        <TriangleAlert className="h-4 w-4 text-amber-400" />
+                                    )}
+                                    <span className="text-[11px] font-mono font-semibold text-zinc-300">{category.id}</span>
+                                    <span className="text-[10px] text-zinc-500 text-center leading-tight">{category.shortName}</span>
+                                    {tested && findingCount > 0 && (
+                                        <span className="text-[10px] font-medium text-amber-400">{findingCount}</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Detailed Results by Scanner */}
             <ScannerAccordion

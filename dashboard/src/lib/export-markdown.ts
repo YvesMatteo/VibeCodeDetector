@@ -1,5 +1,6 @@
 // Full markdown report generator for scan exports
 import { computeScanDiff } from './scan-diff';
+import { computeOwaspSummary } from './owasp-mapping';
 
 const scannerNames: Record<string, string> = {
   security: 'Security Scanner',
@@ -196,6 +197,18 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
       const issueCount = r.findings?.filter((f: any) => f.severity?.toLowerCase() !== 'info').length ?? 0;
       lines.push(`| ${name} | ${issueCount} | OK |`);
     }
+  }
+  lines.push('');
+
+  // ── OWASP Top 10 Coverage ─────────────────────────────────────────────
+  const owaspSummary = computeOwaspSummary(results);
+  lines.push(`## OWASP Top 10:2021 Coverage`);
+  lines.push('');
+  lines.push(`| Category | Name | Issues | Status |`);
+  lines.push(`|----------|------|--------|--------|`);
+  for (const { category, findingCount, tested } of owaspSummary) {
+    const status = !tested ? '⚪ Not tested' : findingCount === 0 ? '✅ Pass' : `⚠️ ${findingCount} finding${findingCount > 1 ? 's' : ''}`;
+    lines.push(`| ${category.code} | ${category.shortName} | ${tested ? findingCount : '—'} | ${status} |`);
   }
   lines.push('');
 

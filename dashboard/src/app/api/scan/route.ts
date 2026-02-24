@@ -791,6 +791,16 @@ export async function POST(req: NextRequest) {
                     }).catch(() => { });
                 }
 
+                // Update Vercel deployment score if this scan was triggered by a deploy hook (fire-and-forget)
+                if (scanId) {
+                    try {
+                        const svc = getServiceClient();
+                        void svc.from('vercel_deployments' as any)
+                            .update({ result_score: overallScore })
+                            .eq('scan_id', scanId);
+                    } catch { /* non-critical */ }
+                }
+
                 // Audit log (fire-and-forget)
                 logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 200 });
 

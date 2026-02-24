@@ -51,6 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getPlainEnglish } from '@/lib/plain-english';
 import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
+import { getOwaspCategories } from '@/lib/owasp-mapping';
 import { toast } from 'sonner';
 
 function getIssueCountColor(count: number) {
@@ -363,12 +364,17 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
             <div className="flex items-start gap-3">
                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${styles.color}`} />
                 <div className="flex-1">
-                    {/* Title + severity badge — always visible */}
+                    {/* Title + severity badge + OWASP badges — always visible */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h4 className="font-medium">{finding.title}</h4>
                         <Badge variant="outline" className={`text-xs capitalize shrink-0 ${styles.bg} ${styles.color} border-0`}>
                             {finding.severity}
                         </Badge>
+                        {scannerKey && getOwaspCategories(scannerKey).map(owasp => (
+                            <span key={owasp.id} className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-zinc-400" title={owasp.name}>
+                                {owasp.code}
+                            </span>
+                        ))}
                         {canDismiss && !showDismiss && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowDismiss(true); }}

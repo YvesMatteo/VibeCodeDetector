@@ -13,6 +13,8 @@ import {
     Code2,
     MessageSquare,
     Shield,
+    Triangle,
+    ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -25,6 +27,26 @@ interface WebhookEntry {
     secret?: string;
     last_triggered_at: string | null;
     last_status: number | null;
+    created_at: string;
+}
+
+interface VercelIntegration {
+    id: string;
+    project_id: string;
+    enabled: boolean;
+    last_deployment_at: string | null;
+    last_scan_id: string | null;
+    created_at: string;
+}
+
+interface VercelDeployment {
+    id: string;
+    vercel_deployment_id: string;
+    deployment_url: string | null;
+    git_branch: string | null;
+    git_commit_sha: string | null;
+    scan_id: string | null;
+    result_score: number | null;
     created_at: string;
 }
 
@@ -43,12 +65,20 @@ export default function IntegrationsPage() {
     const [badgeEnabled, setBadgeEnabled] = useState(false);
     const [badgeToggling, setBadgeToggling] = useState(false);
 
+    // Vercel integration state
+    const [vercelIntegration, setVercelIntegration] = useState<VercelIntegration | null>(null);
+    const [vercelDeployments, setVercelDeployments] = useState<VercelDeployment[]>([]);
+    const [vercelLoading, setVercelLoading] = useState(false);
+    const [vercelSecret, setVercelSecret] = useState<string | null>(null);
+    const [vercelWebhookUrl, setVercelWebhookUrl] = useState<string | null>(null);
+
     useEffect(() => {
         async function load() {
             try {
-                const [whRes, projRes] = await Promise.all([
+                const [whRes, projRes, vercelRes] = await Promise.all([
                     fetch(`/api/integrations/webhooks?projectId=${projectId}`),
                     fetch(`/api/projects/${projectId}`),
+                    fetch(`/api/integrations/vercel?projectId=${projectId}`),
                 ]);
                 const whData = await whRes.json();
                 setWebhooks(Array.isArray(whData) ? whData : []);
@@ -56,6 +86,12 @@ export default function IntegrationsPage() {
                 if (projRes.ok) {
                     const projData = await projRes.json();
                     setBadgeEnabled(!!projData.project?.badge_enabled);
+                }
+
+                if (vercelRes.ok) {
+                    const vercelData = await vercelRes.json();
+                    setVercelIntegration(vercelData.integration || null);
+                    setVercelDeployments(vercelData.deployments || []);
                 }
             } catch {
                 setError('Failed to load data. Please try again.');
@@ -96,6 +132,51 @@ export default function IntegrationsPage() {
             toast.success('Webhook deleted');
         } catch {
             toast.error('Failed to delete webhook');
+        }
+    }
+
+    async function enableVercel() {
+        setVercelLoading(true);
+        try {
+            const res = await fetch('/api/integrations/vercel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setVercelIntegration({
+                id: data.id,
+                project_id: data.project_id,
+                enabled: true,
+                last_deployment_at: null,
+                last_scan_id: null,
+                created_at: data.created_at,
+            });
+            setVercelSecret(data.webhook_secret);
+            setVercelWebhookUrl(data.webhook_url);
+            toast.success('Vercel deploy hook enabled');
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to enable Vercel integration');
+        } finally {
+            setVercelLoading(false);
+        }
+    }
+
+    async function disableVercel() {
+        setVercelLoading(true);
+        try {
+            const res = await fetch(`/api/integrations/vercel?projectId=${projectId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed');
+            setVercelIntegration(null);
+            setVercelDeployments([]);
+            setVercelSecret(null);
+            setVercelWebhookUrl(null);
+            toast.success('Vercel deploy hook removed');
+        } catch {
+            toast.error('Failed to remove Vercel integration');
+        } finally {
+            setVercelLoading(false);
         }
     }
 
@@ -254,6 +335,129 @@ jobs:
                 <p className="text-[11px] text-zinc-600">
                     Add your API key as <code className="text-zinc-500">CHECKVIBE_API_KEY</code> in GitHub Secrets
                 </p>
+            </div>
+
+            {/* Vercel Deploy Hook */}
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-white/[0.05]">
+                            <Triangle className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-medium text-white">Vercel Deploy Hook</h3>
+                            <p className="text-xs text-zinc-500">Auto-scan on every Vercel deployment</p>
+                        </div>
+                    </div>
+                    {vercelIntegration ? (
+                        <button
+                            onClick={disableVercel}
+                            disabled={vercelLoading}
+                            className="text-xs text-zinc-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-md hover:bg-red-500/5"
+                        >
+                            {vercelLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Remove'}
+                        </button>
+                    ) : (
+                        <Button
+                            size="sm"
+                            onClick={enableVercel}
+                            disabled={vercelLoading}
+                            className="bg-white hover:bg-zinc-200 text-black text-xs"
+                        >
+                            {vercelLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Enable'}
+                        </Button>
+                    )}
+                </div>
+
+                {/* Show secret once after creation */}
+                {vercelSecret && vercelWebhookUrl && (
+                    <div className="mb-4 p-4 rounded-lg border border-amber-500/20 bg-amber-500/[0.03] space-y-3">
+                        <p className="text-xs font-medium text-amber-400">Setup instructions (shown once)</p>
+                        <div>
+                            <label className="text-[11px] text-zinc-500 block mb-1">1. Webhook URL</label>
+                            <div className="flex items-center gap-2">
+                                <code className="text-xs text-zinc-300 bg-black/30 px-2 py-1 rounded break-all flex-1">{vercelWebhookUrl}</code>
+                                <button
+                                    onClick={() => copyToClipboard(vercelWebhookUrl, 'vcel-url')}
+                                    className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                                >
+                                    {copiedId === 'vcel-url' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-[11px] text-zinc-500 block mb-1">2. Signing Secret</label>
+                            <div className="flex items-center gap-2">
+                                <code className="text-xs text-zinc-300 bg-black/30 px-2 py-1 rounded break-all flex-1">{vercelSecret}</code>
+                                <button
+                                    onClick={() => copyToClipboard(vercelSecret, 'vcel-secret')}
+                                    className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                                >
+                                    {copiedId === 'vcel-secret' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                            Go to your Vercel project &rarr; Settings &rarr; Webhooks &rarr; paste the URL and secret above.
+                        </p>
+                        <button onClick={() => { setVercelSecret(null); setVercelWebhookUrl(null); }} className="text-xs text-zinc-500 hover:text-zinc-300">
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+
+                {vercelIntegration && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <span className="inline-flex items-center gap-1 text-emerald-400">
+                                <Check className="h-3 w-3" /> Active
+                            </span>
+                            {vercelIntegration.last_deployment_at && (
+                                <span>
+                                    &middot; Last deploy: {new Date(vercelIntegration.last_deployment_at).toLocaleDateString()}
+                                </span>
+                            )}
+                        </div>
+
+                        {vercelDeployments.length > 0 && (
+                            <div>
+                                <h4 className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Recent Deployments</h4>
+                                <div className="space-y-2">
+                                    {vercelDeployments.map((dep) => (
+                                        <div key={dep.id} className="flex items-center justify-between p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] text-xs">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                {dep.deployment_url && (
+                                                    <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 truncate flex items-center gap-1">
+                                                        <ExternalLink className="h-3 w-3 shrink-0" />
+                                                        <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
+                                                    </a>
+                                                )}
+                                                {dep.git_branch && (
+                                                    <span className="text-zinc-600 shrink-0">{dep.git_branch}</span>
+                                                )}
+                                                {dep.git_commit_sha && (
+                                                    <code className="text-zinc-600 font-mono">{dep.git_commit_sha.slice(0, 7)}</code>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {dep.result_score !== null && (
+                                                    <span className={`font-semibold tabular-nums ${dep.result_score >= 80 ? 'text-emerald-400' : dep.result_score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                        {dep.result_score}
+                                                    </span>
+                                                )}
+                                                <span className="text-zinc-600">{new Date(dep.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {!vercelIntegration && (
+                    <p className="text-xs text-zinc-500">Enable to automatically run a security scan after every Vercel deployment succeeds.</p>
+                )}
             </div>
 
             {/* Webhooks */}
