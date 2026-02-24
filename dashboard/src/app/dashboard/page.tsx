@@ -166,6 +166,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                 severity={project.severity}
                                 lastAuditDate={project.lastAuditDate}
                                 plan={plan}
+                                backendType={project.backend_type}
                             />
                         ))}
                     </div>

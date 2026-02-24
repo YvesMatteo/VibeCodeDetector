@@ -46,9 +46,10 @@ interface PromptNotification {
 interface GoogleSignInButtonProps {
     onError?: (msg: string) => void;
     text?: 'continue_with' | 'signin_with' | 'signup_with';
+    redirectTo?: string;
 }
 
-export function GoogleSignInButton({ onError, text = 'continue_with' }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ onError, text = 'continue_with', redirectTo }: GoogleSignInButtonProps) {
     const buttonRef = useRef<HTMLDivElement>(null);
     const [gisReady, setGisReady] = useState(false);
     const [signingIn, setSigningIn] = useState(false);
@@ -95,7 +96,7 @@ export function GoogleSignInButton({ onError, text = 'continue_with' }: GoogleSi
                     setSigningIn(false);
                     onError?.('Could not sign in with Google. Please try again.');
                 } else {
-                    window.location.href = '/dashboard';
+                    window.location.href = redirectTo || '/dashboard';
                 }
             },
             auto_select: false,
@@ -117,10 +118,13 @@ export function GoogleSignInButton({ onError, text = 'continue_with' }: GoogleSi
     // Fallback: use standard OAuth redirect when GIS not available
     async function handleOAuthFallback() {
         setSigningIn(true);
+        const callbackUrl = redirectTo
+            ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+            : `${window.location.origin}/auth/callback`;
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: callbackUrl,
                 queryParams: { prompt: 'select_account' },
             },
         });

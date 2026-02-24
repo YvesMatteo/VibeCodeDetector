@@ -13,13 +13,12 @@ import {
 import * as motion from 'framer-motion/client';
 import { useMotionValue, useSpring } from 'framer-motion';
 
-import { CountUp } from '@/components/ui/count-up';
 import {
   Sheet,
   SheetContent,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useState, useEffect, useCallback, type MouseEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, type MouseEvent } from 'react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { createClient } from '@/lib/supabase/client';
 import { SilkBackground } from '@/components/ui/silk-background';
@@ -43,7 +42,8 @@ const pricingTiers = [
     description: 'For solo makers',
     features: ['1 project', '5 scans/month', 'Full scan suite', 'Scan history'],
     cta: 'Get Started',
-    highlighted: false,
+    highlighted: true,
+    badgeText: 'Most Popular',
   },
   {
     name: 'Pro',
@@ -52,7 +52,7 @@ const pricingTiers = [
     description: 'For growing projects',
     features: ['3 projects', '20 scans/month', 'Full scan suite', 'Priority support'],
     cta: 'Get Started',
-    highlighted: true,
+    highlighted: false,
   },
   {
     name: 'Max',
@@ -61,12 +61,14 @@ const pricingTiers = [
     description: 'For teams & agencies',
     features: ['10 projects', '75 scans/month', 'Full scan suite', 'Dedicated support'],
     cta: 'Get Started',
-    highlighted: false,
+    highlighted: true,
+    badgeText: 'Best Value',
+    badgeColor: 'bg-purple-500',
   },
 ];
 
 const stats = [
-  { value: '30', label: 'Security Scanners' },
+  { value: '31', label: 'Security Scanners' },
   { value: '100+', label: 'API Key Patterns' },
   { value: '150+', label: 'Security Checks' },
   { value: '<30s', label: 'Average Scan Time' },
@@ -111,6 +113,29 @@ export default function HomePage() {
     cardRotateX.set(0);
     cardRotateY.set(0);
   }, [cardRotateX, cardRotateY]);
+
+  // Sliding pill refs
+  const toggleRef = useRef<HTMLDivElement>(null);
+  const monthlyRef = useRef<HTMLButtonElement>(null);
+  const annualRef = useRef<HTMLButtonElement>(null);
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
+
+  const updatePill = useCallback(() => {
+    const activeRef = billing === 'monthly' ? monthlyRef : annualRef;
+    const container = toggleRef.current;
+    if (activeRef.current && container) {
+      const containerRect = container.getBoundingClientRect();
+      const activeRect = activeRef.current.getBoundingClientRect();
+      setPillStyle({
+        left: activeRect.left - containerRect.left,
+        width: activeRect.width,
+      });
+    }
+  }, [billing]);
+
+  useEffect(() => {
+    updatePill();
+  }, [updatePill]);
 
   // No scroll-triggered animations — everything visible immediately
 
@@ -208,7 +233,7 @@ export default function HomePage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2"
           >
-            30 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
+            31 security scanners. One click. Exposed API keys, SQL injection, XSS, and more.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -341,43 +366,53 @@ export default function HomePage() {
       {/* ======================== SLIDE 1.5: PRICING ======================== */}
       <section
         id="slide-pricing"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16 pb-20 sm:pb-28"
       >
 
         <div className="max-w-7xl mx-auto relative z-10 w-full">
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-6 sm:mb-8">
             <Badge variant="secondary" className="mb-4 bg-sky-400/10 border-sky-400/20 text-sky-300">
               Pricing
             </Badge>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
               Simple, <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Transparent</span> Pricing
             </h2>
-            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-6 sm:mb-8">
+            <p className="text-sm sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-4 sm:mb-6">
               Flexible plans for every team size. Cancel anytime.
             </p>
 
             {/* Billing Toggle */}
-            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+            <div
+              ref={toggleRef}
+              className="relative inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.01] p-1"
+            >
+              {/* Sliding pill */}
+              <div
+                className="absolute top-1 rounded-full bg-white transition-all duration-300 ease-out"
+                style={{ left: pillStyle.left, width: pillStyle.width, height: 'calc(100% - 8px)' }}
+              />
               <button
+                ref={monthlyRef}
                 onClick={() => setBilling('monthly')}
-                className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all ${billing === 'monthly'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${billing === 'monthly'
+                  ? 'text-zinc-900'
+                  : 'text-zinc-500 hover:text-white'
                   }`}
               >
                 Monthly
               </button>
               <button
+                ref={annualRef}
                 onClick={() => setBilling('annual')}
-                className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${billing === 'annual'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors duration-300 flex items-center gap-1.5 sm:gap-2 ${billing === 'annual'
+                  ? 'text-zinc-900'
+                  : 'text-zinc-500 hover:text-white'
                   }`}
               >
                 Annual
-                <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${billing === 'annual'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-green-500/10 text-green-400'
+                <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full transition-colors duration-300 ${billing === 'annual'
+                  ? 'bg-sky-500/20 text-sky-400'
+                  : 'bg-sky-500/10 text-sky-400'
                   }`}>
                   -30%
                 </span>
@@ -392,10 +427,10 @@ export default function HomePage() {
                   ? 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                   : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                   }`}>
-                  {tier.highlighted && (
+                  {tier.highlighted && tier.badgeText && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div className="bg-sky-500 text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider">
-                        Most Popular
+                      <div className={`${tier.badgeColor || 'bg-sky-500'} text-[10px] font-bold px-3 py-1 rounded-full text-white shadow-lg uppercase tracking-wider whitespace-nowrap`}>
+                        {tier.badgeText}
                       </div>
                     </div>
                   )}
@@ -412,7 +447,7 @@ export default function HomePage() {
                             <span className="text-zinc-500 text-sm font-normal">/mo</span>
                           </div>
                           <span className="text-zinc-500 text-sm line-through mt-1">{formatPrice(tier.priceMonthly!, currency)}/mo</span>
-                          <span className="text-zinc-500 text-xs mt-1">billed annually</span>
+                          <span className="text-zinc-500 text-xs mt-1">Billed as {formatPrice(tier.priceAnnualPerMonth! * 12, currency)}/year</span>
                         </div>
                       ) : (
                         <div className="flex items-baseline gap-1">
@@ -464,7 +499,7 @@ export default function HomePage() {
       {/* ======================== SLIDE 3: FEATURES ======================== */}
       <section
         id="slide-features"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-20 sm:pb-28"
       >
 
         <div className="max-w-7xl mx-auto relative z-10 w-full">
@@ -477,64 +512,59 @@ export default function HomePage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">You Actually Use</span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Supabase, Firebase, Vercel, Netlify, GitHub — 30 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
+              Supabase, Firebase, Vercel, Netlify, GitHub — 31 scanners purpose-built for the modern vibe-coded stack. Connect your repo and get results in seconds.
             </p>
           </div>
 
 
           <SupportedTools />
+
+          {/* ======================== MCP INTEGRATION ======================== */}
+          <div className="max-w-5xl mx-auto relative z-10 w-full border-t border-white/5 pt-12 mt-12 mb-20 sm:mb-28">
+            <div className="text-center mb-6 sm:mb-10">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
+                <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-purple-500"></span>
+                </span>
+                Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 animate-gradient-flow">MCP Server</span> Support
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                Run CheckVibe directly from your favorite AI code editor or agent using the standard Model Context Protocol. Scan, fix, and verify without leaving your IDE.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
+              {/* Claude */}
+              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white mb-1.5">Claude</h3>
+                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Use CheckVibe with Claude Desktop</p>
+              </div>
+
+              {/* Cursor */}
+              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <img src="/images/tools/cursor.svg" alt="Cursor Editor" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white mb-1.5">Cursor</h3>
+                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Scan from the Cursor Editor</p>
+              </div>
+
+              {/* Antigravity */}
+              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <img src="/images/tools/antigravity.svg" alt="Google Antigravity" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-base font-medium text-white mb-1.5">Antigravity</h3>
+                <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Powered by Google Gemini</p>
+              </div>
+            </div>
+          </div>
+
           <FeatureRoadmap />
-        </div>
-      </section>
-
-      {/* ======================== SLIDE 3.5: MCP INTEGRATION ======================== */}
-      {/* This section belongs visually together with Features, functioning as a sub-section extension */}
-      <section
-        id="slide-mcp-integration"
-        className="relative z-10 px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28"
-      >
-        <div className="max-w-5xl mx-auto relative z-10 w-full border-t border-white/5 pt-12 mt-12">
-          <div className="text-center mb-6 sm:mb-10">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
-              <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-purple-500"></span>
-              </span>
-              Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 animate-gradient-flow">MCP Server</span> Support
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Run CheckVibe directly from your favorite AI code editor or agent using the standard Model Context Protocol. Scan, fix, and verify without leaving your IDE.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
-            {/* Claude */}
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
-              </div>
-              <h3 className="text-base font-medium text-white mb-1.5">Claude</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Use CheckVibe with Claude Desktop</p>
-            </div>
-
-            {/* Cursor */}
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/30 hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <img src="/images/tools/cursor.svg" alt="Cursor Editor" className="w-full h-full object-contain" />
-              </div>
-              <h3 className="text-base font-medium text-white mb-1.5">Cursor</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Scan from the Cursor Editor</p>
-            </div>
-
-            {/* Antigravity */}
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-1 transition-all duration-300 shadow-xl group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <img src="/images/tools/antigravity.svg" alt="Google Antigravity" className="w-full h-full object-contain" />
-              </div>
-              <h3 className="text-base font-medium text-white mb-1.5">Antigravity</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-500 text-center">Powered by Google Gemini</p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -554,7 +584,7 @@ export default function HomePage() {
               Don&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Ship Vulnerabilities</span>
             </h2>
             <p className="text-base sm:text-xl text-zinc-400 mb-8">
-              30 scanners. One click. Know exactly what to fix before you deploy.
+              31 scanners. One click. Know exactly what to fix before you deploy.
             </p>
             <Button size="lg" asChild className="text-base sm:text-lg px-6 sm:px-10 py-5 sm:py-6 shimmer-button bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 border-0 glow-on-hover text-white">
               <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
@@ -572,8 +602,8 @@ export default function HomePage() {
           </h2>
           <div className="space-y-4">
             {[
-              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 30+ automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
-              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 30 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
+              { q: 'What is CheckVibe?', a: 'CheckVibe is an AI-powered website security scanner that runs 31 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' },
+              { q: 'How many scanners does CheckVibe have?', a: 'CheckVibe runs 31 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' },
               { q: 'Is CheckVibe free to use?', a: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' },
               { q: 'What vulnerabilities does CheckVibe detect?', a: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' },
               { q: 'How does CheckVibe compare to manual penetration testing?', a: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' },
@@ -596,8 +626,8 @@ export default function HomePage() {
                 '@context': 'https://schema.org',
                 '@type': 'FAQPage',
                 mainEntity: [
-                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 30+ automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
-                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 30 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
+                  { '@type': 'Question', name: 'What is CheckVibe?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe is an AI-powered website security scanner that runs 31 automated checks on your site to detect vulnerabilities like SQL injection, XSS, exposed API keys, misconfigured headers, and more — all in under 60 seconds.' } },
+                  { '@type': 'Question', name: 'How many scanners does CheckVibe have?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe runs 31 security scanners in parallel, covering infrastructure security, application vulnerabilities, secrets exposure, backend-specific checks (Supabase, Firebase, Convex), and hosting provider configurations.' } },
                   { '@type': 'Question', name: 'Is CheckVibe free to use?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — the free plan includes 1 project and 3 scans per month with an issue overview. Paid plans start at $19/month for full scan details, history, and more projects.' } },
                   { '@type': 'Question', name: 'What vulnerabilities does CheckVibe detect?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe detects SQL injection, cross-site scripting (XSS), exposed API keys, CORS misconfigurations, missing security headers, weak SSL/TLS, CSRF vulnerabilities, open redirects, dependency CVEs, DNS issues, and more.' } },
                   { '@type': 'Question', name: 'How does CheckVibe compare to manual penetration testing?', acceptedAnswer: { '@type': 'Answer', text: 'CheckVibe complements manual pentesting by providing fast, consistent, and affordable automated scanning. Run 30 checks in under a minute after every deployment — something manual testing can\'t match for frequency and speed.' } },

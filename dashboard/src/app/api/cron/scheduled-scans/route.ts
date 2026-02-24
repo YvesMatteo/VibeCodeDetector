@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
             const { data: usageResult } = await supabase
                 .rpc('increment_scan_usage', { p_user_id: project.user_id });
 
-            if (usageResult?.[0] && !usageResult[0].success && usageResult[0].plan_scans_limit > 0) {
+            if (usageResult?.[0] && !usageResult[0].success) {
                 results.push({ projectId: project.id, status: 'skipped', error: 'Scan limit reached' });
                 // Still update next_run_at so we don't keep retrying
                 await updateSchedule(supabase, schedule);
@@ -100,16 +100,16 @@ export async function GET(req: NextRequest) {
                 }
             }
 
-            // Trigger scan via internal fetch to our own /api/scan endpoint
             const appUrl = resolveAppUrl();
 
+            // Trigger scan via internal fetch — the cron secret authenticates
+            // the request. The user is resolved from projectId in api-auth.ts,
+            // NOT from a user-supplied header (prevents impersonation).
             const scanRes = await fetch(`${appUrl}/api/scan`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Use the cron secret as an internal service auth
                     'x-cron-secret': cronSecret,
-                    'x-cron-user-id': project.user_id,
                 },
                 body: JSON.stringify(scanBody),
             });

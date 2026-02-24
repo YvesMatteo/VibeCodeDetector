@@ -33,6 +33,7 @@ export default function IntegrationsPage() {
     const projectId = params.id;
 
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [webhooks, setWebhooks] = useState<WebhookEntry[]>([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newUrl, setNewUrl] = useState('');
@@ -57,7 +58,7 @@ export default function IntegrationsPage() {
                     setBadgeEnabled(!!projData.project?.badge_enabled);
                 }
             } catch {
-                // ignore
+                setError('Failed to load data. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -166,6 +167,22 @@ jobs:
         return (
             <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <p className="text-sm text-red-400">{error}</p>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
+                    className="text-xs"
+                >
+                    Retry
+                </Button>
             </div>
         );
     }

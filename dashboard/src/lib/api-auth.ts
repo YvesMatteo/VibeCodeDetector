@@ -38,23 +38,60 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
     ?? '0.0.0.0';
 
   // ── Cron service auth (internal scheduled scans) ────────────────────
+  // The cron secret authenticates the request as a trusted internal service.
+  // The user ID comes from the request body's projectId lookup, NOT from headers,
+  // to prevent user impersonation via header injection.
   const cronSecret = req.headers.get('x-cron-secret');
-  const cronUserId = req.headers.get('x-cron-user-id');
-  if (cronSecret && cronUserId && process.env.CRON_SECRET
+  if (cronSecret && process.env.CRON_SECRET && process.env.CRON_SECRET.length >= 16
       && cronSecret.length === process.env.CRON_SECRET.length
       && crypto.timingSafeEqual(Buffer.from(cronSecret), Buffer.from(process.env.CRON_SECRET))) {
+    // Cron requests must include a projectId in the body. We look up the owner
+    // from the database to avoid trusting any user-supplied user ID.
+    let body: Record<string, any>;
+    try {
+      body = await req.clone().json();
+    } catch {
+      return {
+        context: null,
+        error: NextResponse.json({ error: 'Invalid request body' }, { status: 400 }),
+      };
+    }
+
+    const projectId = body?.projectId;
+    if (!projectId || typeof projectId !== 'string') {
+      return {
+        context: null,
+        error: NextResponse.json({ error: 'Cron requests must include a projectId' }, { status: 400 }),
+      };
+    }
+
     const supabase = getServiceClient();
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError || !project?.user_id) {
+      return {
+        context: null,
+        error: NextResponse.json({ error: 'Project not found' }, { status: 404 }),
+      };
+    }
+
+    const resolvedUserId = project.user_id;
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('plan, plan_scans_used, plan_scans_limit, plan_domains, allowed_domains')
-      .eq('id', cronUserId)
+      .eq('id', resolvedUserId)
       .single();
 
     return {
       context: {
-        userId: cronUserId,
+        userId: resolvedUserId,
         keyId: '__cron__',
-        scopes: ['scan:read', 'scan:write', 'keys:read', 'keys:manage'] as Scope[],
+        scopes: ['scan:read', 'scan:write'] as Scope[],
         plan: profile?.plan ?? 'none',
         planScansUsed: profile?.plan_scans_used ?? 0,
         planScansLimit: profile?.plan_scans_limit ?? 0,

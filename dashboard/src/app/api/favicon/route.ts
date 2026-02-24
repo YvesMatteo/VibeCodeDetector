@@ -19,6 +19,14 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
     }
 
+    // Block internal/private hostnames to prevent SSRF
+    const lowerDomain = domain.toLowerCase();
+    if (lowerDomain === 'localhost' || lowerDomain.endsWith('.local') || lowerDomain.endsWith('.internal') ||
+        lowerDomain.endsWith('.corp') || lowerDomain.endsWith('.home') || lowerDomain.endsWith('.lan') ||
+        /^(10|127|172\.(1[6-9]|2[0-9]|3[01])|192\.168)\./.test(domain)) {
+        return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
+    }
+
     const sz = req.nextUrl.searchParams.get('sz') || '64';
     const headers = {
         'Cache-Control': 'public, max-age=86400, s-maxage=86400',

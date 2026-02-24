@@ -61,7 +61,7 @@ const comparisonFeatures = [
     { name: 'Projects', free: '1', starter: '1', pro: '3', max: '10' },
     { name: 'Scans per month', free: '3', starter: '5', pro: '20', max: '75' },
     { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
-    { name: 'Full scan suite (30 scanners)', free: true, starter: true, pro: true, max: true },
+    { name: 'Full scan suite (31 scanners)', free: true, starter: true, pro: true, max: true },
     { name: 'PDF export', free: false, starter: true, pro: true, max: true },
     { name: 'AI fix suggestions', free: false, starter: true, pro: true, max: true },
     { name: 'API access', free: false, starter: false, pro: true, max: true },

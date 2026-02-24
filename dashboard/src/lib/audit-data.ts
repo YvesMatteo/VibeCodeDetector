@@ -1,7 +1,7 @@
 /** Shared audit data types and processing — importable from both server and client components */
 
 /**
- * All scanner result keys expected in the current version (v7, 30 scanners).
+ * All scanner result keys expected in the current version (v8, 34 scanners).
  * Even conditional scanners appear in results (as `skipped: true`).
  * Used to detect stale scan results from older versions.
  */
@@ -14,6 +14,7 @@ export const CURRENT_SCANNER_KEYS = [
     'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting',
     'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api',
     'domain_hijacking', 'debug_endpoints',
+    'graphql', 'jwt_audit', 'ai_llm',
 ] as const;
 
 const SCANNER_DISPLAY_NAMES: Record<string, string> = {
@@ -28,6 +29,9 @@ const SCANNER_DISPLAY_NAMES: Record<string, string> = {
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
     domain_hijacking: 'Domain Hijacking',
     debug_endpoints: 'Debug Endpoints',
+    graphql: 'GraphQL',
+    jwt_audit: 'JWT Audit',
+    ai_llm: 'AI/LLM',
 };
 
 /**

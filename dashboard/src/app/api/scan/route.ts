@@ -206,15 +206,11 @@ export async function POST(req: NextRequest) {
         }
 
         if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
-            const hasNoPlan = usageResult[0].plan_scans_limit === 0;
-            // Free users can scan — results are blurred, details gated behind subscription
-            if (!hasNoPlan) {
-                logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
-                return NextResponse.json({
-                    error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
-                    code: 'SCAN_LIMIT_REACHED',
-                }, { status: 402 });
-            }
+            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
+            return NextResponse.json({
+                error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
+                code: 'SCAN_LIMIT_REACHED',
+            }, { status: 402 });
         }
 
         // ==========================================
@@ -676,41 +672,41 @@ export async function POST(req: NextRequest) {
 
                 // Calculate Overall Score using weighted average (weights sum to 1.0)
                 const SCANNER_WEIGHTS: Record<string, number> = {
-                    security: 0.08,       // Security headers — broad impact
-                    sqli: 0.07,           // SQL injection — critical vulnerability
-                    xss: 0.07,            // XSS — critical vulnerability
-                    ssl_tls: 0.06,        // TLS — foundational
-                    api_keys: 0.06,       // Exposed keys — high impact
-                    cors: 0.04,           // CORS misconfiguration
-                    csrf: 0.04,           // CSRF protection
-                    cookies: 0.04,        // Cookie security
-                    auth: 0.04,           // Authentication flow
-                    supabase_backend: 0.04, // Supabase misconfig
-                    firebase_backend: 0.04, // Firebase misconfig
-                    convex_backend: 0.04, // Convex misconfig
-                    supabase_mgmt: 0.04,  // Supabase deep lint
-                    open_redirect: 0.03,  // Open redirects
-                    github_secrets: 0.03, // Leaked secrets in repo
-                    github_security: 0.03, // Dependabot/CodeQL/secret scanning
-                    dependencies: 0.03,   // Known CVEs in deps
-                    dns_email: 0.03,      // SPF/DMARC/DKIM
-                    threat_intelligence: 0.03, // Threat feeds
-                    tech_stack: 0.03,     // Tech fingerprint & CVEs
-                    vercel_hosting: 0.02, // Vercel platform checks
-                    netlify_hosting: 0.02, // Netlify platform checks
-                    cloudflare_hosting: 0.02, // Cloudflare Pages checks
-                    railway_hosting: 0.02, // Railway platform checks
-                    scorecard: 0.02,      // OpenSSF supply chain score
-                    graphql: 0.05,        // GraphQL security
-                    jwt_audit: 0.05,      // JWT deep audit
-                    ai_llm: 0.04,         // AI endpoint tests
-                    legal: 0.00,          // Legal compliance
-                    ddos_protection: 0.04, // DDoS/WAF protection
-                    file_upload: 0.03,    // File upload security
-                    audit_logging: 0.01,  // Monitoring & audit readiness
-                    mobile_api: 0.03,     // Mobile API rate limiting
-                    domain_hijacking: 0.03, // Domain hijacking & registration
-                    debug_endpoints: 0.05, // Exposed debug/dev endpoints
+                    security: 0.065,
+                    sqli: 0.055,
+                    xss: 0.055,
+                    ssl_tls: 0.050,
+                    api_keys: 0.050,
+                    ddos_protection: 0.040,
+                    cors: 0.035,
+                    csrf: 0.035,
+                    cookies: 0.035,
+                    auth: 0.035,
+                    supabase_backend: 0.035,
+                    firebase_backend: 0.035,
+                    convex_backend: 0.035,
+                    supabase_mgmt: 0.035,
+                    graphql: 0.035,
+                    jwt_audit: 0.035,
+                    debug_endpoints: 0.035,
+                    ai_llm: 0.030,
+                    open_redirect: 0.025,
+                    github_secrets: 0.025,
+                    github_security: 0.025,
+                    dependencies: 0.025,
+                    dns_email: 0.025,
+                    threat_intelligence: 0.025,
+                    tech_stack: 0.020,
+                    file_upload: 0.020,
+                    mobile_api: 0.020,
+                    domain_hijacking: 0.020,
+                    vercel_hosting: 0.015,
+                    netlify_hosting: 0.015,
+                    cloudflare_hosting: 0.015,
+                    railway_hosting: 0.015,
+                    scorecard: 0.015,
+                    audit_logging: 0.010,
+                    legal: 0.005,
                 };
 
                 // Only include scanners that actually ran in the denominator.

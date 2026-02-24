@@ -102,7 +102,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                                     </span>
                                 </div>
                                 <Link
-                                    href={`/dashboard/projects/${params.id}/history/${scan.id}`}
+                                    href={`/dashboard/projects/${params.id}/report?scanId=${scan.id}`}
                                     className="flex-1 group"
                                 >
                                     <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-colors">

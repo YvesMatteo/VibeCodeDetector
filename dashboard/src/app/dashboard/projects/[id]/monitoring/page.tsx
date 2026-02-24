@@ -53,6 +53,7 @@ export default function MonitoringPage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Schedule state
     const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -94,7 +95,7 @@ export default function MonitoringPage() {
                     setAlerts(alertMap);
                 }
             } catch {
-                // ignore
+                setError('Failed to load monitoring data. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -159,6 +160,22 @@ export default function MonitoringPage() {
         return (
             <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <p className="text-sm text-red-400">{error}</p>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
+                    className="text-xs"
+                >
+                    Retry
+                </Button>
             </div>
         );
     }

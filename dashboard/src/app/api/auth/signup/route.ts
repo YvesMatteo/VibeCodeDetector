@@ -19,10 +19,12 @@ export async function POST(req: NextRequest) {
 
     let email: string;
     let password: string;
+    let plan: string | undefined;
     try {
         const body = await req.json();
         email = body.email?.trim().toLowerCase();
         password = body.password;
+        plan = body.plan;
     } catch {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
@@ -38,13 +40,24 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient();
 
     // Generate signup link (creates user + generates confirmation token)
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.checkvibe.dev';
+    // Validate origin against allowlist to prevent open redirect
+    const ALLOWED_ORIGINS = [
+        process.env.NEXT_PUBLIC_SITE_URL,
+        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+    ].filter(Boolean) as string[];
+    const rawOrigin = req.headers.get('origin');
+    const origin = (rawOrigin && ALLOWED_ORIGINS.includes(rawOrigin)) ? rawOrigin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.checkvibe.dev');
+    // If a plan parameter was provided, include it as a redirect target after auth
+    const VALID_PLANS = ['starter', 'pro', 'max'];
+    const redirectPath = plan && VALID_PLANS.includes(plan)
+        ? `/auth/callback?next=${encodeURIComponent(`/dashboard/credits?plan=${plan}`)}`
+        : '/auth/callback';
     const { data, error } = await supabase.auth.admin.generateLink({
         type: 'signup',
         email,
         password,
         options: {
-            redirectTo: `${origin}/auth/callback`,
+            redirectTo: `${origin}${redirectPath}`,
         },
     });
 

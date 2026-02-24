@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import Image from 'next/image';
 import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 export default function SignupPage() {
+    const searchParams = useSearchParams();
+    const planParam = searchParams.get('plan');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -54,7 +57,7 @@ export default function SignupPage() {
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password, plan: planParam || undefined }),
             });
 
             const data = await res.json();
@@ -140,7 +143,7 @@ export default function SignupPage() {
                         Security scanning for modern web apps
                     </h1>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        30 automated scanners. One comprehensive report. Ship with confidence.
+                        31 automated scanners. One comprehensive report. Ship with confidence.
                     </p>
                 </div>
 
@@ -174,6 +177,7 @@ export default function SignupPage() {
                             <GoogleSignInButton
                                 onError={(msg) => setError(msg)}
                                 text="signup_with"
+                                redirectTo={planParam ? `/dashboard/credits?plan=${planParam}` : undefined}
                             />
 
                             <div className="flex items-center gap-3">

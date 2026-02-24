@@ -32,7 +32,13 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient();
 
     // Generate recovery link for the user
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.checkvibe.dev';
+    // Validate origin against allowlist to prevent open redirect
+    const ALLOWED_ORIGINS = [
+        process.env.NEXT_PUBLIC_SITE_URL,
+        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+    ].filter(Boolean) as string[];
+    const rawOrigin = req.headers.get('origin');
+    const origin = (rawOrigin && ALLOWED_ORIGINS.includes(rawOrigin)) ? rawOrigin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.checkvibe.dev');
     const { data, error } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email,

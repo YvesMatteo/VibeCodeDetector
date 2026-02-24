@@ -15,6 +15,7 @@ import {
     Plus,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { SWRProvider } from '@/lib/swr-config';
 import { Sidebar } from '@/components/dashboard/sidebar';
 
@@ -44,6 +45,15 @@ export default function DashboardLayout({
             }
         }
         loadUser();
+    }, []);
+
+    // Handle checkout success redirect (?success=true)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'true') {
+            toast.success('Subscription activated! You are all set.');
+            window.history.replaceState({}, '', window.location.pathname);
+        }
     }, []);
 
     const initials = userEmail

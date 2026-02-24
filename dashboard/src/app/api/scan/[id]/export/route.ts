@@ -261,16 +261,47 @@ async function markdownToPdf(markdown: string, domain: string, date: string): Pr
 
   const pageObjectIds: number[] = [];
 
-  for (const page of pages) {
+  for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+    const page = pages[pageIdx];
     if (page.length === 0) continue;
 
-    // Build content stream
-    let stream = 'BT\n';
+    // Build content stream — dark theme background
+    let stream = '';
+    // Dark background rectangle covering the full page
+    stream += '0.039 0.039 0.063 rg\n'; // #0A0A10
+    stream += '0 0 595 842 re\nf\n';
+
+    // Header accent line on first page
+    if (pageIdx === 0) {
+      stream += '0.231 0.510 0.965 rg\n'; // sky-500
+      stream += '50 785 495 2 re\nf\n';
+    }
+
+    // Footer: page number
+    stream += 'BT\n';
+    stream += '0.4 0.4 0.4 rg\n';
+    stream += '/F1 8 Tf\n';
+    stream += `280 20 Td\n`;
+    stream += `(Page ${pageIdx + 1}) Tj\n`;
+    stream += 'ET\n';
+
+    // Page content
+    stream += 'BT\n';
     for (const pl of page) {
       const font = pl.bold ? '/F2' : '/F1';
       const escaped = pdfEscape(pl.text);
-      if (pl.color) stream += `${pl.color} rg\n`;
-      else stream += '0 0 0 rg\n';
+      if (pl.color) {
+        stream += `${pl.color} rg\n`;
+      } else if (pl.bold && pl.size >= 14) {
+        // Headings: sky-blue accent
+        stream += '0.337 0.651 0.969 rg\n'; // sky-400
+      } else if (pl.bold) {
+        // Sub-headings: white
+        stream += '0.95 0.95 0.95 rg\n';
+      } else {
+        // Body text: light gray
+        stream += '0.75 0.75 0.78 rg\n';
+      }
       stream += `${font} ${pl.size} Tf\n`;
       stream += `${LEFT_MARGIN + pl.indent} ${pl.y} Td\n`;
       stream += `(${escaped}) Tj\n`;
