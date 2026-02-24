@@ -9,7 +9,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
 import type { Json } from '@/lib/supabase/database.types';
 
-const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api', 'debug_endpoints'] as const;
+const VALID_SCAN_TYPES = ['security', 'api_keys', 'legal', 'threat_intelligence', 'sqli', 'tech_stack', 'github_secrets', 'cors', 'csrf', 'cookies', 'auth', 'supabase_backend', 'firebase_backend', 'convex_backend', 'dependencies', 'ssl_tls', 'dns_email', 'xss', 'open_redirect', 'scorecard', 'github_security', 'supabase_mgmt', 'graphql', 'jwt_audit', 'ai_llm', 'vercel_hosting', 'netlify_hosting', 'cloudflare_hosting', 'railway_hosting', 'ddos_protection', 'file_upload', 'audit_logging', 'mobile_api', 'domain_hijacking', 'debug_endpoints'] as const;
 
 export async function GET(req: NextRequest) {
     try {
@@ -670,66 +670,37 @@ export async function POST(req: NextRequest) {
                     new Promise(resolve => setTimeout(resolve, OVERALL_TIMEOUT_MS)),
                 ]);
 
-                // Calculate Overall Score using weighted average (weights sum to 1.0)
-                // Weights sum to 1.000 (35 scanners)
-                const SCANNER_WEIGHTS: Record<string, number> = {
-                    security: 0.060,       // Security headers — broad impact
-                    sqli: 0.050,           // SQL injection — critical
-                    xss: 0.050,            // XSS — critical
-                    ssl_tls: 0.045,        // TLS — foundational
-                    api_keys: 0.045,       // Exposed keys — high impact
-                    ddos_protection: 0.035, // DDoS/WAF protection
-                    cors: 0.030,           // CORS misconfiguration
-                    csrf: 0.030,           // CSRF protection
-                    cookies: 0.030,        // Cookie security
-                    auth: 0.030,           // Authentication flow
-                    supabase_backend: 0.030, // Supabase misconfig
-                    firebase_backend: 0.030, // Firebase misconfig
-                    convex_backend: 0.030, // Convex misconfig
-                    supabase_mgmt: 0.030,  // Supabase deep lint
-                    graphql: 0.030,        // GraphQL security
-                    jwt_audit: 0.030,      // JWT deep audit
-                    debug_endpoints: 0.030, // Exposed debug/dev endpoints
-                    ai_llm: 0.025,         // AI endpoint tests
-                    open_redirect: 0.025,  // Open redirects
-                    github_secrets: 0.025, // Leaked secrets in repo
-                    github_security: 0.025, // Dependabot/CodeQL
-                    dependencies: 0.025,   // Known CVEs in deps
-                    dns_email: 0.020,      // SPF/DMARC/DKIM
-                    threat_intelligence: 0.020, // Threat feeds
-                    tech_stack: 0.020,     // Tech fingerprint & CVEs
-                    file_upload: 0.020,    // File upload security
-                    mobile_api: 0.020,     // Mobile API rate limiting
-                    domain_hijacking: 0.020, // Domain hijacking
-                    vercel_hosting: 0.010, // Vercel platform checks
-                    netlify_hosting: 0.010, // Netlify platform checks
-                    cloudflare_hosting: 0.010, // Cloudflare Pages checks
-                    railway_hosting: 0.010, // Railway platform checks
-                    scorecard: 0.010,      // OpenSSF supply chain score
-                    audit_logging: 0.010,  // Monitoring & audit readiness
-                    legal: 0.005,          // Legal compliance
+                // ── Penalty-based scoring ─────────────────────────────────
+                // Start at 100, deduct points per actual finding by severity.
+                // Only scanners that ran AND produced findings affect the score.
+                // Scanners that ran but found nothing (score 100, no findings)
+                // are ignored — they don't inflate the score as "perfect".
+                const SEVERITY_PENALTY: Record<string, number> = {
+                    critical: 15,
+                    high: 8,
+                    medium: 4,
+                    low: 1.5,
+                    info: 0,
                 };
 
-                // Only include scanners that actually ran in the denominator.
-                // Skipped/errored/conditional scanners are excluded so they
-                // don't drag the score down as if they scored 0.
-                let weightedSum = 0;
-                let activeWeight = 0;
+                let totalPenalty = 0;
+                let scannersWithFindings = 0;
 
-                for (const [key, result] of Object.entries(results)) {
+                for (const [, result] of Object.entries(results)) {
                     if (typeof result !== 'object' || result === null) continue;
                     const r = result as Record<string, any>;
-                    if (r.error || typeof r.score !== 'number') continue;
-                    if (r.skipped) continue;
+                    if (r.error || r.skipped) continue;
+                    if (!Array.isArray(r.findings) || r.findings.length === 0) continue;
 
-                    const weight = SCANNER_WEIGHTS[key] ?? 0.02;
-                    weightedSum += r.score * weight;
-                    activeWeight += weight;
+                    // Only count scanners that actually found something
+                    scannersWithFindings++;
+                    for (const f of r.findings) {
+                        const sev = (f.severity || 'info').toLowerCase();
+                        totalPenalty += SEVERITY_PENALTY[sev] ?? 0;
+                    }
                 }
 
-                const overallScore = activeWeight > 0
-                    ? Math.round(weightedSum / activeWeight)
-                    : 0;
+                const overallScore = Math.max(0, Math.min(100, Math.round(100 - totalPenalty)));
 
                 // ------------------------------------------------------------------
                 // Final update: mark scan as completed with results & score.
