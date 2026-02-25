@@ -95,7 +95,9 @@ RULES:
 - NEVER mention "0 critical" or any severity with 0 count. Only mention severities that have issues.
 - DO NOT include "Subject:" prefix on the subject line
 - Subject line on line 1, blank line, then the body
-- Use • for bullet points, not - or *`;
+- Use • for bullet points, not - or *
+- Do NOT add any unsubscribe text or footer — that is handled separately
+- The subject line must feel personal, not like a mass campaign. Avoid ALL CAPS words and exclamation marks.`;
 
     // Try each model with fallback + retry on 429
     let lastError = '';

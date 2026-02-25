@@ -431,7 +431,7 @@ export default function BulkOutreachPage() {
                     break;
                 }
             }
-            if (i < initial.length - 1 && !abortRef.current) await sleep(2000);
+            if (i < initial.length - 1 && !abortRef.current) await sleep(8000);
         }
 
         setRunning(false);
@@ -457,7 +457,7 @@ export default function BulkOutreachPage() {
             } catch (err: any) {
                 if (err?.message === 'QUOTA_EXHAUSTED') break;
             }
-            await sleep(2000);
+            await sleep(8000);
         }
 
         setRunning(false);
