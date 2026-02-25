@@ -184,7 +184,7 @@ export default function BulkOutreachPage() {
             .eq('batch_id', bId)
             .order('created_at', { ascending: true });
         if (!data) return;
-        setEntries(data.map((row: any) => ({
+        const loaded: UrlEntry[] = data.map((row: any) => ({
             id: row.id,
             url: row.url,
             domain: row.domain,
@@ -195,7 +195,9 @@ export default function BulkOutreachPage() {
             sentCount: row.sent_count || 0,
             failedCount: row.failed_count || 0,
             scanResults: row.scan_results,
-        })));
+        }));
+        setEntries(loaded);
+        entriesRef.current = loaded;
         setView('batch');
     }
 
@@ -414,6 +416,7 @@ export default function BulkOutreachPage() {
             scanResults: null,
         }));
         setEntries(initial);
+        entriesRef.current = initial; // sync ref immediately so processEntry can read it
 
         // Process sequentially
         for (let i = 0; i < initial.length; i++) {
