@@ -61,21 +61,11 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
             setScraped(true);
             if (data.socialLinks) setSocialLinks(data.socialLinks);
 
-            const realEmails = emails.filter((e: ScrapedEmail) => e.source !== 'pattern');
-            const patternEmails = emails.filter((e: ScrapedEmail) => e.source === 'pattern');
-
-            if (realEmails.length > 0) {
-                const selected = new Set<string>(realEmails.map((e: ScrapedEmail) => e.email));
+            if (emails.length > 0) {
+                const selected = new Set<string>(emails.map((e: ScrapedEmail) => e.email));
                 setSelectedEmails(selected);
                 setRecipientEmail(Array.from(selected).join(', '));
-                toast.success(`Found ${realEmails.length} email${realEmails.length > 1 ? 's — will send to all' : ''}`);
-            } else if (patternEmails.length > 0) {
-                // Auto-select first 3 common patterns
-                const top = patternEmails.slice(0, 3);
-                const selected = new Set<string>(top.map((e: ScrapedEmail) => e.email));
-                setSelectedEmails(selected);
-                setRecipientEmail(Array.from(selected).join(', '));
-                toast('No emails found — using common patterns (MX verified)');
+                toast.success(`Found ${emails.length} email${emails.length > 1 ? 's — will send to all' : ''}`);
             } else {
                 toast('No emails found on the website');
             }
@@ -273,13 +263,10 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                             {/* Scraped email results */}
                             {scraped && scrapedEmails.length > 0 && (
                                 <div className="mt-2 space-y-1.5">
-                                    <span className="text-[11px] text-zinc-500">
-                                        {scrapedEmails.some(e => e.source !== 'pattern') ? 'Found:' : 'MX-verified patterns:'}
-                                    </span>
+                                    <span className="text-[11px] text-zinc-500">Found:</span>
                                     <div className="flex flex-wrap gap-1.5">
                                         {scrapedEmails.map(({ email, source }) => {
-                                            const sourceLabel = source === 'pattern' ? 'MX'
-                                                : source === 'github' ? 'GitHub'
+                                            const sourceLabel = source === 'github' ? 'GitHub'
                                                 : source === 'security.txt' ? 'security.txt'
                                                 : source === 'dns-soa' ? 'DNS'
                                                 : source === 'whois' ? 'WHOIS'
@@ -293,9 +280,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
                                                         selectedEmails.has(email)
                                                             ? 'bg-violet-500/20 border border-violet-500/30 text-violet-300'
-                                                            : source === 'pattern'
-                                                                ? 'bg-white/[0.02] border border-dashed border-white/[0.08] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
-                                                                : 'bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                                                            : 'bg-white/[0.04] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]'
                                                     }`}
                                                 >
                                                     {source === 'github' ? <Github className="h-3 w-3" /> : <Mail className="h-3 w-3" />}

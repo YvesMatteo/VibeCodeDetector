@@ -375,40 +375,7 @@ async function strategyDnsSoa(domain: string): Promise<EmailResult[]> {
     return results;
 }
 
-// ── Strategy E: MX-verified common patterns (fallback) ───────────────
-async function strategyMxPatterns(domain: string): Promise<EmailResult[]> {
-    const results: EmailResult[] = [];
-
-    // Check if domain has MX records (can actually receive email)
-    try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(
-            `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=MX`,
-            { headers: { 'Accept': 'application/dns-json' }, signal: controller.signal },
-        );
-        clearTimeout(timer);
-        if (!res.ok) return results;
-
-        const data = await res.json();
-        const hasMx = (data.Answer || []).some((a: any) => a.type === 15);
-        if (!hasMx) return results; // no MX records — domain can't receive email
-    } catch {
-        return results;
-    }
-
-    // Domain has MX — add common patterns with low score
-    const prefixes = ['hello', 'hi', 'hey', 'contact', 'team', 'info', 'founder', 'founders', 'support'];
-    for (const p of prefixes) {
-        results.push({
-            email: `${p}@${domain}`,
-            source: 'pattern',
-            score: scoreEmail(`${p}@${domain}`, 'pattern', true) - 3,
-        });
-    }
-
-    return results;
-}
+// ── Strategy E: removed ──────────────────────────────────────────────
 
 // ── Strategy F: Sitemap crawl ────────────────────────────────────────
 async function strategySitemap(baseUrl: string, domain: string): Promise<EmailResult[]> {
@@ -550,12 +517,6 @@ export async function POST(req: NextRequest) {
         }
     } catch {
         // Timeout — use whatever we have
-    }
-
-    // If no real emails found, fall back to MX-verified common patterns
-    if (allResults.length === 0) {
-        const patterns = await strategyMxPatterns(domain).catch(() => [] as EmailResult[]);
-        allResults.push(...patterns);
     }
 
     // Deduplicate: keep highest score per email
