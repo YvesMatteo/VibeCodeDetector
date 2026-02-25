@@ -357,9 +357,9 @@ export default function BulkOutreachPage() {
 
             if (abortRef.current) return;
 
-            // 3. Send
+            // 3. Send to first (best) email only
             updateEntry(idx, { status: 'sending' });
-            const sendResult = await sendEmail(emails, generated.subject, generated.body);
+            const sendResult = await sendEmail([emails[0]], generated.subject, generated.body);
             updateEntry(idx, { status: 'done', sentCount: sendResult.sent, failedCount: sendResult.failed });
         } catch (err: any) {
             const msg = err?.message || 'Unknown error';

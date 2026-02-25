@@ -42,14 +42,39 @@ export async function POST(req: NextRequest) {
         },
     });
 
-    // Send to each recipient individually (so one failure doesn't block others)
     const results: { email: string; success: boolean; error?: string }[] = [];
 
-    await Promise.all(validRecipients.map(async (recipient) => {
+    // Send to FIRST recipient, check if it works before sending to others
+    const first = validRecipients[0].trim();
+    try {
+        await transporter.sendMail({
+            from: `"Yves from CheckVibe" <${gmailUser}>`,
+            to: first,
+            subject,
+            text: body,
+        });
+        results.push({ email: first, success: true });
+    } catch (err: any) {
+        const msg = err?.message || '';
+        console.error(`Email send error to ${first}:`, msg);
+        results.push({ email: first, success: false, error: msg });
+
+        // If first email failed, don't try the rest — the address is likely invalid
+        return NextResponse.json({
+            results,
+            sent: 0,
+            failed: 1,
+            skipped: validRecipients.length - 1,
+        });
+    }
+
+    // First succeeded — send to remaining recipients sequentially
+    for (let i = 1; i < validRecipients.length; i++) {
+        const recipient = validRecipients[i].trim();
         try {
             await transporter.sendMail({
                 from: `"Yves from CheckVibe" <${gmailUser}>`,
-                to: recipient.trim(),
+                to: recipient,
                 subject,
                 text: body,
             });
@@ -58,7 +83,7 @@ export async function POST(req: NextRequest) {
             console.error(`Email send error to ${recipient}:`, err?.message);
             results.push({ email: recipient, success: false, error: err?.message });
         }
-    }));
+    }
 
     const sent = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
