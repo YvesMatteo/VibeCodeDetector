@@ -131,23 +131,24 @@ export default function BulkOutreachPage() {
             .select('id, created_at')
             .order('created_at', { ascending: false })
             .limit(30);
-        if (!data || data.length === 0) { setBatches([]); return; }
+        const rows = data as any[] | null;
+        if (!rows || rows.length === 0) { setBatches([]); return; }
 
         // Load entry counts for each batch
-        const batchIds = data.map((b: any) => b.id);
+        const batchIds = rows.map((b: any) => b.id);
         const { data: allEntries } = await supabase
             .from('outreach_entries' as any)
             .select('batch_id, status, sent_count')
             .in('batch_id', batchIds);
 
         const entryMap = new Map<string, any[]>();
-        for (const e of (allEntries || [])) {
+        for (const e of (allEntries as any[] || [])) {
             const arr = entryMap.get(e.batch_id) || [];
             arr.push(e);
             entryMap.set(e.batch_id, arr);
         }
 
-        setBatches(data.map((b: any) => {
+        setBatches(rows.map((b: any) => {
             const ents = entryMap.get(b.id) || [];
             return {
                 id: b.id,
@@ -169,7 +170,7 @@ export default function BulkOutreachPage() {
             .order('created_at', { ascending: false });
         if (!data) return;
         const map = new Map<string, string>();
-        for (const row of data) {
+        for (const row of data as any[]) {
             if (!map.has(row.domain)) map.set(row.domain, row.created_at);
         }
         setContactedDomains(map);
