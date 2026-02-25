@@ -124,7 +124,7 @@ export default function BulkOutreachPage() {
     }
 
     // ── Scrape emails ──
-    async function scrapeEmails(url: string): Promise<{ found: string[]; guessed: string[] }> {
+    async function scrapeEmails(url: string): Promise<string[]> {
         const res = await fetch('/api/outreach/scrape-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -132,26 +132,40 @@ export default function BulkOutreachPage() {
         });
         if (!res.ok) throw new Error('Email scrape failed');
         const data = await res.json();
-        const found = (data.emails || []).filter((e: any) => e.source !== 'guessed').map((e: any) => e.email);
-        const guessed = (data.emails || []).filter((e: any) => e.source === 'guessed').map((e: any) => e.email);
-        return { found, guessed };
+        return (data.emails || []).map((e: any) => e.email);
     }
 
-    // ── Generate outreach email ──
+    // ── Generate outreach email (with retry on 429) ──
     async function generateEmail(scanResults: Record<string, any>, projectUrl: string) {
         const audit = processAuditData(scanResults as any);
-        const res = await fetch('/api/outreach/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                scanResults,
-                projectUrl,
-                issueCount: audit.issueCount,
-                severityBreakdown: audit.totalFindings,
-            }),
-        });
-        if (!res.ok) throw new Error('Email generation failed');
-        return res.json() as Promise<{ subject: string; body: string }>;
+        const payload = {
+            scanResults,
+            projectUrl,
+            issueCount: audit.issueCount,
+            severityBreakdown: audit.totalFindings,
+        };
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const res = await fetch('/api/outreach/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (res.ok) return res.json() as Promise<{ subject: string; body: string }>;
+
+            const err = await res.json().catch(() => ({}));
+            const msg = err.error || '';
+            const is429 = res.status === 429 || msg.includes('429') || msg.includes('quota') || msg.includes('rate limit');
+
+            if (is429 && attempt < 2) {
+                await sleep(15000 * (attempt + 1)); // 15s, then 30s
+                continue;
+            }
+
+            throw new Error(msg || `Email generation failed (${res.status})`);
+        }
+        throw new Error('Email generation failed after retries');
     }
 
     // ── Send email ──
@@ -198,18 +212,14 @@ export default function BulkOutreachPage() {
 
                 // 2. Scrape emails + Generate email in parallel
                 updateEntry(i, { status: 'finding_contacts' });
-                const [emailData, generated] = await Promise.all([
+                const [emails, generated] = await Promise.all([
                     scrapeEmails(urls[i]),
-                    generateEmail(scanData.results, urls[i]).then(r => {
-                        // Update status to generating briefly (already finding contacts)
-                        return r;
-                    }),
+                    generateEmail(scanData.results, urls[i]),
                 ]);
 
-                const realEmails = emailData.found;
-                updateEntry(i, { emails: realEmails });
+                updateEntry(i, { emails });
 
-                if (realEmails.length === 0) {
+                if (emails.length === 0) {
                     updateEntry(i, { status: 'skipped', error: 'No real emails found' });
                     await sleep(500);
                     continue;
@@ -219,7 +229,7 @@ export default function BulkOutreachPage() {
 
                 // 3. Send
                 updateEntry(i, { status: 'sending' });
-                const sendResult = await sendEmail(realEmails, generated.subject, generated.body);
+                const sendResult = await sendEmail(emails, generated.subject, generated.body);
                 updateEntry(i, { status: 'done', sentCount: sendResult.sent, failedCount: sendResult.failed });
 
             } catch (err: any) {
