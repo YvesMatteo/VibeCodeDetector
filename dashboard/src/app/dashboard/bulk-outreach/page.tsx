@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     Loader2, Play, Square, CheckCircle, XCircle, AlertTriangle,
-    Mail, RotateCcw, Clock, ChevronDown, ChevronRight, Trash2,
+    Mail, RotateCcw, Clock, ChevronDown, ChevronRight, Trash2, X,
 } from 'lucide-react';
 
 const OWNER_EMAIL = 'vibecodedetector@gmail.com';
@@ -496,6 +496,26 @@ export default function BulkOutreachPage() {
         setInput('');
     }
 
+    function removeUrl(urlToRemove: string) {
+        const urls = input.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+        const remaining = urls.filter(raw => {
+            const normalized = normalizeUrl(raw);
+            return normalized !== urlToRemove;
+        });
+        setInput(remaining.join(', '));
+    }
+
+    function removeContacted() {
+        const urls = input.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+        const remaining = urls.filter(raw => {
+            const normalized = normalizeUrl(raw);
+            if (!normalized) return true;
+            const d = getDomain(normalized);
+            return !contactedDomains.has(d);
+        });
+        setInput(remaining.join(', '));
+    }
+
     // ── Derived state ──
     const doneCount = entries.filter(e => e.status === 'done').length;
     const errorCount = entries.filter(e => e.status === 'error').length;
@@ -585,20 +605,49 @@ export default function BulkOutreachPage() {
                         className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50 font-mono"
                     />
 
-                    {/* Duplicate warnings */}
+                    {/* URL chips with remove buttons */}
+                    {parsedUrls.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {parsedUrls.map((url) => {
+                                const d = getDomain(url);
+                                const isContacted = contactedDomains.has(d);
+                                return (
+                                    <span
+                                        key={url}
+                                        className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded text-xs font-mono ${
+                                            isContacted
+                                                ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                                                : 'bg-white/[0.04] text-zinc-300 border border-white/[0.08]'
+                                        }`}
+                                    >
+                                        {d || url.replace(/^https?:\/\//, '')}
+                                        <button
+                                            onClick={() => removeUrl(url)}
+                                            className="ml-0.5 p-0.5 rounded hover:bg-white/10 transition-colors"
+                                            title="Remove"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Duplicate warning + remove all contacted button */}
                     {duplicates.size > 0 && (
                         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-                            <div className="flex items-center gap-2 text-amber-400 text-xs font-medium mb-1.5">
-                                <AlertTriangle className="h-3.5 w-3.5" />
-                                {duplicates.size} URL{duplicates.size > 1 ? 's' : ''} already contacted
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                                {Array.from(duplicates.entries()).map(([domain, date]) => (
-                                    <span key={domain} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-[11px] text-amber-300">
-                                        {domain}
-                                        <span className="text-amber-500/60">{formatDate(date)}</span>
-                                    </span>
-                                ))}
+                            <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-2 text-amber-400 text-xs font-medium">
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    {duplicates.size} URL{duplicates.size > 1 ? 's' : ''} already contacted
+                                </div>
+                                <button
+                                    onClick={removeContacted}
+                                    className="text-[11px] text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2"
+                                >
+                                    Remove all contacted
+                                </button>
                             </div>
                         </div>
                     )}
