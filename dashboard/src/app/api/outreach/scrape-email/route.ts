@@ -136,7 +136,7 @@ function scoreEmail(email: string, source: string, domainMatch: boolean): number
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
-async function fetchWithTimeout(url: string, timeoutMs = 6000): Promise<string | null> {
+async function fetchWithTimeout(url: string, timeoutMs = 10000): Promise<string | null> {
     try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -165,11 +165,8 @@ function getDomain(url: string): string {
 // ── Strategy A: HTML scraping (expanded paths) ───────────────────────
 const CONTACT_PATHS = [
     '', '/contact', '/about', '/team', '/about-us', '/contact-us',
-    '/imprint', '/impressum', '/kontakt', '/legal', '/privacy',
-    '/support', '/help', '/company', '/founders', '/who-we-are',
-    '/get-in-touch', '/reach-us', '/info', '/about/team',
-    '/pages/contact', '/pages/about', '/en/contact', '/en/about',
-    '/terms', '/tos', '/datenschutz',
+    '/imprint', '/impressum', '/legal', '/privacy',
+    '/support', '/company', '/founders',
 ];
 
 interface EmailResult {
@@ -180,32 +177,19 @@ interface EmailResult {
 
 async function strategyHtmlScraping(baseUrl: string, domain: string): Promise<EmailResult[]> {
     const results: EmailResult[] = [];
-    const socialLinks: { github?: string; twitter?: string; linkedin?: string } = {};
 
-    // Fetch pages in batches of 8
-    const batchSize = 8;
-    for (let i = 0; i < CONTACT_PATHS.length; i += batchSize) {
-        const batch = CONTACT_PATHS.slice(i, i + batchSize);
-        const fetches = batch.map(async (path) => {
-            const targetUrl = new URL(path, baseUrl).toString();
-            const html = await fetchWithTimeout(targetUrl);
-            if (!html) return;
+    // Fetch all pages in parallel
+    await Promise.all(CONTACT_PATHS.map(async (path) => {
+        const targetUrl = new URL(path, baseUrl).toString();
+        const html = await fetchWithTimeout(targetUrl);
+        if (!html) return;
 
-            const found = extractEmails(html);
-            for (const email of found) {
-                const domainMatch = email.endsWith(`@${domain}`) || email.includes(domain.split('.')[0]);
-                results.push({ email, source: path || '/', score: scoreEmail(email, path, domainMatch) });
-            }
-
-            // Extract social links from homepage and about
-            if (path === '' || path === '/about' || path === '/about-us') {
-                Object.assign(socialLinks, extractSocialLinks(html));
-            }
-        });
-        await Promise.all(fetches);
-        // Stop early if we found domain-matching emails
-        if (results.some(r => r.email.endsWith(`@${domain}`))) break;
-    }
+        const found = extractEmails(html);
+        for (const email of found) {
+            const domainMatch = email.endsWith(`@${domain}`) || email.includes(domain.split('.')[0]);
+            results.push({ email, source: path || '/', score: scoreEmail(email, path, domainMatch) });
+        }
+    }));
 
     return results;
 }
@@ -482,42 +466,47 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
-    // Run all strategies in parallel with a 14s total timeout
-    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 14000));
-
+    // Run all strategies in parallel — each has its own timeout, collect whatever finishes
     let allResults: EmailResult[] = [];
     let socialLinks: Record<string, string> = {};
 
-    try {
-        const [htmlResults, securityResults, githubData, dnsResults, sitemapResults, googleResults, whoisResults] = await Promise.race([
-            Promise.all([
-                strategyHtmlScraping(url, domain).catch(() => [] as EmailResult[]),
-                strategySecurityTxt(url, domain).catch(() => [] as EmailResult[]),
-                strategyGitHub(url, domain).catch(() => ({ emails: [] as EmailResult[], socialLinks: {} })),
-                strategyDnsSoa(domain).catch(() => [] as EmailResult[]),
-                strategySitemap(url, domain).catch(() => [] as EmailResult[]),
-                strategyGoogleSearch(domain).catch(() => [] as EmailResult[]),
-                strategyWhois(domain).catch(() => [] as EmailResult[]),
-            ]),
-            timeout.then(() => [[], [], { emails: [], socialLinks: {} }, [], [], [], []] as const),
-        ]);
+    // Use Promise.allSettled so no single failure kills the whole batch
+    const [htmlResult, securityResult, githubResult, dnsResult, sitemapResult, googleResult, whoisResult] = await Promise.allSettled([
+        strategyHtmlScraping(url, domain),
+        strategySecurityTxt(url, domain),
+        strategyGitHub(url, domain),
+        strategyDnsSoa(domain),
+        strategySitemap(url, domain),
+        strategyGoogleSearch(domain),
+        strategyWhois(domain),
+    ]);
 
-        allResults = [
-            ...htmlResults,
-            ...securityResults,
-            ...(Array.isArray(githubData) ? [] : githubData.emails),
-            ...dnsResults,
-            ...sitemapResults,
-            ...googleResults,
-            ...whoisResults,
-        ];
+    const collect = (r: PromiseSettledResult<EmailResult[]>) => r.status === 'fulfilled' ? r.value : [];
+    allResults = [
+        ...collect(htmlResult),
+        ...collect(securityResult),
+        ...(githubResult.status === 'fulfilled' ? githubResult.value.emails : []),
+        ...collect(dnsResult),
+        ...collect(sitemapResult),
+        ...collect(googleResult),
+        ...collect(whoisResult),
+    ];
 
-        if (!Array.isArray(githubData) && githubData.socialLinks) {
-            socialLinks = { ...socialLinks, ...githubData.socialLinks };
-        }
-    } catch {
-        // Timeout — use whatever we have
+    if (githubResult.status === 'fulfilled' && githubResult.value.socialLinks) {
+        socialLinks = { ...socialLinks, ...githubResult.value.socialLinks };
     }
+
+    // Log strategy results for debugging
+    const strategyLog: Record<string, number> = {
+        html: collect(htmlResult).length,
+        security: collect(securityResult).length,
+        github: githubResult.status === 'fulfilled' ? githubResult.value.emails.length : 0,
+        dns: collect(dnsResult).length,
+        sitemap: collect(sitemapResult).length,
+        google: collect(googleResult).length,
+        whois: collect(whoisResult).length,
+    };
+    console.log(`[scrape-email] ${domain}: strategies=${JSON.stringify(strategyLog)}, total=${allResults.length}`);
 
     // Deduplicate: keep highest score per email
     const emailMap = new Map<string, EmailResult>();

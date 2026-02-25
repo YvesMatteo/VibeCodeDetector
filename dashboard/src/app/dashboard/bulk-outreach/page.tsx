@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { processAuditData } from '@/lib/audit-data';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ interface UrlEntry {
     sentCount: number;
     failedCount: number;
     scanResults: Record<string, any> | null;
+    emailSubject: string | null;
+    emailBody: string | null;
 }
 
 interface BatchSummary {
@@ -86,6 +88,7 @@ export default function BulkOutreachPage() {
     const [showHistory, setShowHistory] = useState(false);
     const [contactedDomains, setContactedDomains] = useState<Map<string, string>>(new Map());
     const [duplicates, setDuplicates] = useState<Map<string, string>>(new Map());
+    const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
     const abortRef = useRef(false);
     const entriesRef = useRef<UrlEntry[]>([]);
     const supabase = createClient();
@@ -195,6 +198,8 @@ export default function BulkOutreachPage() {
             sentCount: row.sent_count || 0,
             failedCount: row.failed_count || 0,
             scanResults: row.scan_results,
+            emailSubject: row.email_subject || null,
+            emailBody: row.email_body || null,
         }));
         setEntries(loaded);
         entriesRef.current = loaded;
@@ -227,6 +232,8 @@ export default function BulkOutreachPage() {
                 if (patch.sentCount !== undefined) dbPatch.sent_count = patch.sentCount;
                 if (patch.failedCount !== undefined) dbPatch.failed_count = patch.failedCount;
                 if (patch.scanResults !== undefined) dbPatch.scan_results = patch.scanResults;
+                if (patch.emailSubject !== undefined) dbPatch.email_subject = patch.emailSubject;
+                if (patch.emailBody !== undefined) dbPatch.email_body = patch.emailBody;
                 supabase.from('outreach_entries' as any).update(dbPatch).eq('id', entry.id).then();
             }
             return next;
@@ -348,7 +355,7 @@ export default function BulkOutreachPage() {
                 scrapeEmails(entry.url),
                 generateEmail(scanData.results, entry.url),
             ]);
-            updateEntry(idx, { emails });
+            updateEntry(idx, { emails, emailSubject: generated.subject, emailBody: generated.body });
 
             if (emails.length === 0) {
                 updateEntry(idx, { status: 'skipped', error: 'No emails found' });
@@ -414,6 +421,8 @@ export default function BulkOutreachPage() {
             sentCount: 0,
             failedCount: 0,
             scanResults: null,
+            emailSubject: null,
+            emailBody: null,
         }));
         setEntries(initial);
         entriesRef.current = initial; // sync ref immediately so processEntry can read it
@@ -675,62 +684,124 @@ export default function BulkOutreachPage() {
                                 </thead>
                                 <tbody>
                                     {entries.map((entry, i) => (
-                                        <tr key={entry.id || i} className="border-b border-white/[0.04] last:border-0">
-                                            <td className="px-4 py-2.5 text-zinc-600 tabular-nums">{i + 1}</td>
-                                            <td className="px-4 py-2.5 text-white truncate max-w-[300px] font-mono text-xs">
-                                                <span>{entry.url.replace(/^https?:\/\//, '')}</span>
-                                                {contactedDomains.has(entry.domain) && entry.status !== 'done' && (
-                                                    <span className="ml-1.5 text-[10px] text-amber-500" title={`Previously contacted ${formatDate(contactedDomains.get(entry.domain)!)}`}>
-                                                        (contacted)
+                                        <React.Fragment key={entry.id || i}>
+                                            <tr
+                                                className={`border-b border-white/[0.04] last:border-0 cursor-pointer transition-colors ${expandedIdx === i ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
+                                                onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
+                                            >
+                                                <td className="px-4 py-2.5 text-zinc-600 tabular-nums">{i + 1}</td>
+                                                <td className="px-4 py-2.5 text-white truncate max-w-[300px] font-mono text-xs">
+                                                    <span className="flex items-center gap-1">
+                                                        {expandedIdx === i ? <ChevronDown className="h-3 w-3 text-zinc-500 shrink-0" /> : <ChevronRight className="h-3 w-3 text-zinc-500 shrink-0" />}
+                                                        {entry.url.replace(/^https?:\/\//, '')}
                                                     </span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-2.5 text-center tabular-nums">
-                                                {entry.score !== null ? (
-                                                    <span className={entry.score >= 70 ? 'text-emerald-400' : entry.score >= 40 ? 'text-amber-400' : 'text-red-400'}>
-                                                        {entry.score}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-zinc-700">&mdash;</span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                {entry.emails.length > 0 ? (
-                                                    <span className="text-zinc-300 flex items-center gap-1">
-                                                        <Mail className="h-3 w-3 text-zinc-500" />
-                                                        {entry.emails.length}
-                                                    </span>
-                                                ) : entry.status === 'skipped' ? (
-                                                    <span className="text-zinc-600 text-xs">none found</span>
-                                                ) : (
-                                                    <span className="text-zinc-700">&mdash;</span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                <StatusBadge status={entry.status} />
-                                                {entry.error && entry.status === 'error' && (
-                                                    <p className="text-[10px] text-red-400/60 mt-0.5 truncate max-w-[180px]">{entry.error}</p>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-2.5 text-center tabular-nums">
-                                                {entry.sentCount > 0 ? (
-                                                    <span className="text-emerald-400">{entry.sentCount}</span>
-                                                ) : (
-                                                    <span className="text-zinc-700">&mdash;</span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-2.5 text-center">
-                                                {entry.status === 'error' && !running && (
-                                                    <button
-                                                        onClick={() => retrySingle(i)}
-                                                        className="text-zinc-600 hover:text-amber-400 transition-colors"
-                                                        title="Retry this URL"
-                                                    >
-                                                        <RotateCcw className="h-3.5 w-3.5" />
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
+                                                    {contactedDomains.has(entry.domain) && entry.status !== 'done' && (
+                                                        <span className="ml-4 text-[10px] text-amber-500" title={`Previously contacted ${formatDate(contactedDomains.get(entry.domain)!)}`}>
+                                                            (contacted)
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-center tabular-nums">
+                                                    {entry.score !== null ? (
+                                                        <span className={entry.score >= 70 ? 'text-emerald-400' : entry.score >= 40 ? 'text-amber-400' : 'text-red-400'}>
+                                                            {entry.score}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-zinc-700">&mdash;</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    {entry.emails.length > 0 ? (
+                                                        <span className="text-zinc-300 flex items-center gap-1">
+                                                            <Mail className="h-3 w-3 text-zinc-500" />
+                                                            {entry.emails.length}
+                                                        </span>
+                                                    ) : entry.status === 'skipped' ? (
+                                                        <span className="text-zinc-600 text-xs">none found</span>
+                                                    ) : (
+                                                        <span className="text-zinc-700">&mdash;</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <StatusBadge status={entry.status} />
+                                                    {entry.error && entry.status === 'error' && (
+                                                        <p className="text-[10px] text-red-400/60 mt-0.5 truncate max-w-[180px]">{entry.error}</p>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-center tabular-nums">
+                                                    {entry.sentCount > 0 ? (
+                                                        <span className="text-emerald-400">{entry.sentCount}</span>
+                                                    ) : (
+                                                        <span className="text-zinc-700">&mdash;</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-center">
+                                                    {entry.status === 'error' && !running && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); retrySingle(i); }}
+                                                            className="text-zinc-600 hover:text-amber-400 transition-colors"
+                                                            title="Retry this URL"
+                                                        >
+                                                            <RotateCcw className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            {expandedIdx === i && (
+                                                <tr className="border-b border-white/[0.04]">
+                                                    <td colSpan={7} className="px-6 py-4 bg-white/[0.015]">
+                                                        <div className="space-y-3 max-w-2xl">
+                                                            {/* Sent to */}
+                                                            {entry.emails.length > 0 && (
+                                                                <div>
+                                                                    <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-1">
+                                                                        {entry.sentCount > 0 ? 'Sent to' : 'Found emails'}
+                                                                    </p>
+                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                        {entry.emails.map((email, ei) => (
+                                                                            <span
+                                                                                key={ei}
+                                                                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono ${
+                                                                                    ei === 0 && entry.sentCount > 0
+                                                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                                                        : 'bg-white/[0.04] text-zinc-400 border border-white/[0.06]'
+                                                                                }`}
+                                                                            >
+                                                                                {ei === 0 && entry.sentCount > 0 && <CheckCircle className="h-3 w-3 mr-1" />}
+                                                                                {email}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Subject */}
+                                                            {entry.emailSubject && (
+                                                                <div>
+                                                                    <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-1">Subject</p>
+                                                                    <p className="text-sm text-white">{entry.emailSubject}</p>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Body */}
+                                                            {entry.emailBody && (
+                                                                <div>
+                                                                    <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-1">Email body</p>
+                                                                    <pre className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed bg-white/[0.02] rounded-lg border border-white/[0.06] p-3 max-h-64 overflow-y-auto">
+                                                                        {entry.emailBody}
+                                                                    </pre>
+                                                                </div>
+                                                            )}
+
+                                                            {/* No email generated yet */}
+                                                            {!entry.emailSubject && !entry.emailBody && entry.emails.length === 0 && (
+                                                                <p className="text-xs text-zinc-600">No email was generated for this entry.</p>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
