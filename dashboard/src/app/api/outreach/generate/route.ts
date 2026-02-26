@@ -14,6 +14,51 @@ function parseRetryDelay(errMsg: string): number {
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+/** Fetch homepage and extract title + meta description + h1 for company context */
+async function scrapeCompanyContext(url: string): Promise<string> {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,*/*',
+            },
+            signal: controller.signal,
+            redirect: 'follow',
+        });
+        clearTimeout(timer);
+        if (!res.ok) return '';
+        const html = (await res.text()).slice(0, 200_000);
+
+        const parts: string[] = [];
+
+        // Title
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (titleMatch) parts.push(`Page title: "${titleMatch[1].trim()}"`);
+
+        // Meta description
+        const descMatch = html.match(/<meta[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([^"']+)["']/i)
+            || html.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']description["']/i);
+        if (descMatch) parts.push(`Description: "${descMatch[1].trim()}"`);
+
+        // OG description (fallback)
+        if (!descMatch) {
+            const ogMatch = html.match(/<meta[^>]*property\s*=\s*["']og:description["'][^>]*content\s*=\s*["']([^"']+)["']/i)
+                || html.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*property\s*=\s*["']og:description["']/i);
+            if (ogMatch) parts.push(`Description: "${ogMatch[1].trim()}"`);
+        }
+
+        // First h1
+        const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+        if (h1Match) parts.push(`Main heading: "${h1Match[1].trim()}"`);
+
+        return parts.join('\n');
+    } catch {
+        return '';
+    }
+}
+
 export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -34,6 +79,9 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Fetch company context from homepage (title, description, h1)
+    const companyContext = await scrapeCompanyContext(projectUrl);
 
     // Build a summary of findings for the prompt
     const findingsSummary = Object.entries(scanResults as Record<string, any>)
@@ -63,6 +111,7 @@ export async function POST(req: NextRequest) {
     const prompt = `You are writing a cold outreach email for CheckVibe (checkvibe.dev), a security scanner for modern web apps.
 
 I scanned this website: ${projectUrl}
+${companyContext ? `\nHere is what their website says about themselves:\n${companyContext}\n` : ''}
 I found ${issueCount} security issues:
 ${severityBreakdown.critical > 0 ? `- Critical: ${severityBreakdown.critical}` : ''}
 ${severityBreakdown.high > 0 ? `- High: ${severityBreakdown.high}` : ''}
@@ -78,7 +127,7 @@ SUBJECT LINE FORMAT: "Found ${topSeverity} vulnerabilities on ${domain} — full
 
 BODY STRUCTURE:
 1. "Hi there," (greeting)
-2. One sentence complimenting their product — be specific about what they do based on the URL, make it genuine
+2. One sentence complimenting their product — use the website info above (title, description, heading) to understand what they actually do, and compliment something specific about their product. Do NOT guess or make things up — only reference what the website says.
 3. "I'm building a security scanner for modern web apps (checkvibe.dev), and I ran a free scan on your site to test it. Thought you'd want to see what came up — ${issueCount} issues total, including ${severitySummary} findings."
 4. "A few that stood out:" followed by exactly 3 bullet points (use •) picking the MOST impactful findings. Explain each in plain language showing the real-world risk (e.g. "could let an attacker access or wipe your database", "leaving it open to brute-force attacks", "meaning anyone could spoof emails from your domain"). Do NOT use technical jargon.
 5. "These are just from a surface-level URL scan. Connecting your GitHub repo or backend (Supabase, Firebase, etc.) would uncover deeper issues like leaked secrets, insecure database rules, and dependency vulnerabilities."
