@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/format-date';
 
 interface Schedule {
     id: string;
@@ -96,7 +97,7 @@ export default function MonitoringPage() {
                     setAlerts(alertMap);
                 }
             } catch {
-                setError('Failed to load monitoring data. Please try again.');
+                setError('Failed to load monitoring settings. Please refresh the page.');
             } finally {
                 setLoading(false);
             }
@@ -125,7 +126,7 @@ export default function MonitoringPage() {
             setNextRun(data.next_run_at);
             toast.success('Schedule saved');
         } catch (e: any) {
-            toast.error(e.message || 'Failed to save schedule');
+            toast.error(e.message || 'Failed to save scan schedule. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -151,7 +152,7 @@ export default function MonitoringPage() {
             if (!res.ok) throw new Error(data.error);
             toast.success('Alert rule saved');
         } catch (e: any) {
-            toast.error(e.message || 'Failed to save alert');
+            toast.error(e.message || 'Failed to save alert rule. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -255,7 +256,7 @@ export default function MonitoringPage() {
 
                         {nextRun && (
                             <p className="text-xs text-zinc-500">
-                                Next check: {new Date(nextRun).toLocaleString()}
+                                Next check: {formatDate(nextRun, 'datetime')}
                             </p>
                         )}
                     </div>

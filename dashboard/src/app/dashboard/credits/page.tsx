@@ -147,8 +147,8 @@ export default function CreditsPage() {
             if (url) window.location.href = url;
         } catch (err) {
             console.error('Subscribe error:', err);
-            toast.error('Something went wrong. Please try again.');
-            setError('Something went wrong. Please try again.');
+            toast.error('Checkout failed. Please refresh and try again.');
+            setError('Checkout failed. Please refresh and try again.');
         } finally {
             setLoading(null);
         }
@@ -175,8 +175,8 @@ export default function CreditsPage() {
             if (url) window.location.href = url;
         } catch (err) {
             console.error('Portal error:', err);
-            toast.error('Something went wrong. Please try again.');
-            setError('Something went wrong. Please try again.');
+            toast.error('Failed to open subscription portal. Please refresh and try again.');
+            setError('Failed to open subscription portal. Please refresh and try again.');
         } finally {
             setPortalLoading(false);
         }

@@ -29,7 +29,7 @@ export function ManageSubscriptionButton() {
             if (url) window.location.href = url;
         } catch (err) {
             console.error('Portal error:', err);
-            setError('Something went wrong. Please try again.');
+            setError('Failed to update subscription. Please refresh and try again.');
         } finally {
             setLoading(false);
         }

@@ -52,7 +52,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 body: JSON.stringify({ url: projectUrl }),
             });
             if (!res.ok) {
-                toast.error('Failed to scan for emails');
+                toast.error('Failed to find contact emails on the website. Please try again.');
                 return;
             }
             const data = await res.json();
@@ -70,7 +70,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 toast('No emails found on the website');
             }
         } catch {
-            toast.error('Failed to scan for emails');
+            toast.error('Failed to find contact emails. Please check the URL and try again.');
         } finally {
             setScraping(false);
         }
@@ -109,7 +109,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
             setBody(data.body);
             setGenerated(true);
         } catch {
-            toast.error('Failed to generate email');
+            toast.error('Failed to generate outreach email. Please try again.');
         } finally {
             setGenerating(false);
         }
@@ -131,7 +131,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                toast.error(err.error || 'Failed to send email');
+                toast.error(err.error || 'Failed to send outreach email. Please verify recipients and try again.');
                 return;
             }
             const data = await res.json();
@@ -145,7 +145,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                 toast.error(`Failed to send to all ${data.failed} recipients`);
             }
         } catch {
-            toast.error('Failed to send email');
+            toast.error('Failed to send outreach email. Please check your connection and try again.');
         } finally {
             setSending(false);
         }

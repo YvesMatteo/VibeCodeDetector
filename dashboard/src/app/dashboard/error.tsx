@@ -22,9 +22,9 @@ export default function Error({
                 <AlertTriangle className="h-10 w-10" />
             </div>
             <div className="space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight">Something went wrong!</h2>
+                <h2 className="text-2xl font-bold tracking-tight">An unexpected error occurred</h2>
                 <p className="text-muted-foreground max-w-[500px]">
-                    An unexpected error occurred while loading this page.
+                    An unexpected error occurred while loading this page. Please refresh the page or try again.
                 </p>
             </div>
             <div className="flex gap-2 mt-4">

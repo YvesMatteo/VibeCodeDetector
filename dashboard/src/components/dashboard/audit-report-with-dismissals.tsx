@@ -60,7 +60,7 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
             if (!res.ok) {
                 // Revert: remove the optimistic dismissal
                 setDismissals(prev => prev.filter(d => d.id !== optimisticId));
-                toast.error('Failed to dismiss finding');
+                toast.error('Failed to dismiss finding. Please try again.');
                 console.error('Failed to dismiss finding:', await res.text());
                 return;
             }
@@ -70,7 +70,7 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
         } catch (err) {
             // Revert: remove the optimistic dismissal
             setDismissals(prev => prev.filter(d => d.id !== optimisticId));
-            toast.error('Failed to dismiss finding');
+            toast.error('Failed to dismiss finding. Please check your connection and try again.');
             console.error('Failed to dismiss finding:', err);
         }
     }, [projectId, scanId]);
@@ -94,7 +94,7 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
                 if (removed) {
                     setDismissals(prev => [...prev, removed!]);
                 }
-                toast.error('Failed to restore finding');
+                toast.error('Failed to restore finding. Please try again.');
                 console.error('Failed to restore finding:', await res.text());
                 return;
             }
@@ -103,7 +103,7 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
             if (removed) {
                 setDismissals(prev => [...prev, removed!]);
             }
-            toast.error('Failed to restore finding');
+            toast.error('Failed to restore finding. Please check your connection and try again.');
             console.error('Failed to restore finding:', err);
         }
     }, []);

@@ -88,13 +88,13 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || 'Failed to save');
+                throw new Error(data.error || 'Failed to save project settings');
             }
 
             toast.success('Settings saved');
             router.refresh();
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'An error occurred');
+            toast.error(err instanceof Error ? err.message : 'Failed to save project settings. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -109,10 +109,10 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                 router.push('/dashboard');
             } else {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to delete project');
+                toast.error(data.error || 'Failed to delete project. Please try again.');
             }
         } catch {
-            toast.error('Failed to delete project');
+            toast.error('Failed to delete project. Please check your connection and try again.');
         } finally {
             setDeleting(false);
         }

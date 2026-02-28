@@ -31,7 +31,7 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
             const res = await fetch(`/api/scan/${scanId}/share`, { method: 'POST' });
             const data = await res.json();
             if (!res.ok) {
-                toast.error(data.error || 'Failed to create public link');
+                toast.error(data.error || 'Failed to create public link. Please try again.');
                 return;
             }
             setPublicId(data.publicId);
@@ -40,7 +40,7 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
             toast.success('Public link created and copied to clipboard');
             setShowLink(true);
         } catch {
-            toast.error('Failed to create public link');
+            toast.error('Failed to create public link. Please check your connection and try again.');
         } finally {
             setLoading(false);
         }
@@ -56,7 +56,7 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
                 toast.success('Public link removed');
             }
         } catch {
-            toast.error('Failed to remove public link');
+            toast.error('Failed to remove public link. Please try again.');
         } finally {
             setLoading(false);
         }
