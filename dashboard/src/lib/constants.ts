@@ -47,6 +47,18 @@ export const PLAN = {
 
 export type Plan = (typeof PLAN)[keyof typeof PLAN];
 
+/**
+ * Owner email used for admin-gated features (server-side routes).
+ * Reads OWNER_EMAIL env var at runtime; falls back to support address.
+ */
+export const OWNER_EMAIL = process.env.OWNER_EMAIL || 'support@checkvibe.dev';
+
+/**
+ * Owner email for client-side components (must use NEXT_PUBLIC_ prefix).
+ * Reads NEXT_PUBLIC_OWNER_EMAIL env var; falls back to support address.
+ */
+export const OWNER_EMAIL_CLIENT = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'support@checkvibe.dev';
+
 /** Plan limits */
 export const PLAN_LIMITS: Record<string, { domains: number; scans: number; projects: number; apiKeys: number }> = {
   none: { domains: 0, scans: 0, projects: 0, apiKeys: 0 },

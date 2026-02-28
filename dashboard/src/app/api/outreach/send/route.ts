@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import nodemailer from 'nodemailer';
-
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'vibecodedetector@gmail.com';
+import { OWNER_EMAIL } from '@/lib/constants';
 
 /** Convert plain text body to a clean HTML email with footer */
 function buildHtml(body: string, recipientEmail: string): string {

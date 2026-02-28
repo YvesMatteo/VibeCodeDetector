@@ -15,16 +15,10 @@ import { computeOwaspSummary, OWASP_TOP_10 } from '@/lib/owasp-mapping';
 import type { ScanDiff } from '@/lib/scan-diff';
 import { buildFingerprint, DISMISSAL_REASONS, type Dismissal, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 import type { AuditReportData, ScanResultItem } from '@/lib/audit-data';
+import { getIssueCountColorMuted as getIssueCountColor } from '@/lib/severity-utils';
 
 export type { AuditReportData } from '@/lib/audit-data';
 export { processAuditData } from '@/lib/audit-data';
-
-function getIssueCountColor(count: number) {
-    if (count === 0) return 'text-emerald-400';
-    if (count <= 5) return 'text-white';
-    if (count <= 15) return 'text-white';
-    return 'text-white';
-}
 
 /** Compute adjusted counts by subtracting dismissed fingerprints */
 function computeAdjustedCounts(

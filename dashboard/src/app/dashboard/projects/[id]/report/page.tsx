@@ -9,6 +9,7 @@ import { ShareButton } from '@/components/dashboard/share-button';
 import { OutreachEmailModal } from '@/components/dashboard/outreach-email-modal';
 import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
+import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
 
 export default async function ProjectReportPage(props: { params: Promise<{ id: string }> }) {
     const { id } = (await props.params);
@@ -87,7 +88,7 @@ export default async function ProjectReportPage(props: { params: Promise<{ id: s
                         <ExportButton scanId={latestScan.id} userPlan={userPlan} />
                         {userPlan !== 'none' && <ShareButton scanId={latestScan.id} initialPublicId={latestScan.public_id} />}
                         {/* Temporary outreach feature — owner only */}
-                        {user.email === (process.env.NEXT_PUBLIC_OWNER_EMAIL || 'vibecodedetector@gmail.com') && (
+                        {user.email === OWNER_EMAIL_CLIENT && (
                             <OutreachEmailModal
                                 scanResults={latestScan.results as Record<string, any>}
                                 projectUrl={project.url}

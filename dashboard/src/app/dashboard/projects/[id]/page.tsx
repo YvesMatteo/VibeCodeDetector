@@ -18,6 +18,8 @@ import { processAuditData } from '@/lib/audit-data';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
 import { Button } from '@/components/ui/button';
+import { formatDate } from '@/lib/format-date';
+import { getScoreColor, getScoreBg } from '@/lib/severity-utils';
 
 const FREQUENCY_LABELS: Record<string, string> = {
     every_6h: 'Every 6 hours',
@@ -26,35 +28,9 @@ const FREQUENCY_LABELS: Record<string, string> = {
     monthly: 'Monthly',
 };
 
-function getScoreColor(score: number | null): string {
-    if (score === null) return 'text-zinc-500';
-    if (score >= 80) return 'text-emerald-400';
-    if (score >= 60) return 'text-amber-400';
-    if (score >= 40) return 'text-orange-400';
-    return 'text-red-400';
-}
-
-function getScoreBg(score: number | null): string {
-    if (score === null) return 'bg-zinc-500/10 border-zinc-500/20';
-    if (score >= 80) return 'bg-emerald-500/10 border-emerald-500/20';
-    if (score >= 60) return 'bg-amber-500/10 border-amber-500/20';
-    if (score >= 40) return 'bg-orange-500/10 border-orange-500/20';
-    return 'bg-red-500/10 border-red-500/20';
-}
-
 function timeAgo(date: string | null): string {
     if (!date) return 'Never';
-    const now = Date.now();
-    const d = new Date(date).getTime();
-    const diff = now - d;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
-    return new Date(date).toLocaleDateString();
+    return formatDate(date, 'relative');
 }
 
 function countIssuesBySeverity(results: Record<string, any>): { critical: number; high: number; medium: number; low: number; total: number } {
@@ -99,17 +75,28 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
         .eq('user_id', user.id)
         .maybeSingle() as { data: { id: string; frequency: string; enabled: boolean; next_run_at: string | null; hour_utc: number } | null };
 
-    // Get recent scans for chart + overview
+    // Get recent scans for chart (metadata only — no results blob)
     const { data: recentScans } = await supabase
         .from('scans')
-        .select('id, overall_score, results, created_at, completed_at, status')
+        .select('id, overall_score, created_at, completed_at, status')
         .eq('project_id', id)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
         .limit(20);
 
-    const latestScan = recentScans?.[0] ?? null;
+    const latestScanMeta = recentScans?.[0] ?? null;
     const previousScan = recentScans?.[1] ?? null;
+
+    // Fetch full results only for the latest scan (for issue counts + top findings)
+    let latestScan: (typeof latestScanMeta & { results: Record<string, any> | null }) | null = null;
+    if (latestScanMeta) {
+        const { data: fullScan } = await supabase
+            .from('scans')
+            .select('id, overall_score, created_at, completed_at, status, results')
+            .eq('id', latestScanMeta.id)
+            .single();
+        latestScan = fullScan as any;
+    }
 
     const score = latestScan?.overall_score ?? null;
     const previousScore = previousScan?.overall_score ?? null;

@@ -9,8 +9,10 @@ import {
     Loader2, Play, Square, CheckCircle, XCircle, AlertTriangle,
     Mail, RotateCcw, Clock, ChevronDown, ChevronRight, Trash2, X,
 } from 'lucide-react';
+import { formatDate } from '@/lib/format-date';
+import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
 
-const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = OWNER_EMAIL_CLIENT;
 
 type UrlStatus = 'pending' | 'scanning' | 'finding_contacts' | 'generating' | 'sending' | 'done' | 'error' | 'skipped';
 
@@ -50,9 +52,8 @@ function getDomain(url: string): string {
     try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
 }
 
-function formatDate(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+function formatOutreachDate(iso: string): string {
+    return formatDate(iso, 'datetime');
 }
 
 function StatusBadge({ status }: { status: UrlStatus }) {
@@ -575,7 +576,7 @@ export default function BulkOutreachPage() {
                                     }`}
                                     onClick={() => loadBatchEntries(batch.id)}
                                 >
-                                    <span className="text-zinc-500">{formatDate(batch.created_at)}</span>
+                                    <span className="text-zinc-500">{formatOutreachDate(batch.created_at)}</span>
                                     <span className="text-zinc-400">{batch.total} URLs</span>
                                     {batch.sent > 0 && <span className="text-emerald-400">{batch.sent} sent</span>}
                                     {batch.error > 0 && <span className="text-red-400">{batch.error} errors</span>}
@@ -745,7 +746,7 @@ export default function BulkOutreachPage() {
                                                         {entry.url.replace(/^https?:\/\//, '')}
                                                     </span>
                                                     {contactedDomains.has(entry.domain) && entry.status !== 'done' && (
-                                                        <span className="ml-4 text-[10px] text-amber-500" title={`Previously contacted ${formatDate(contactedDomains.get(entry.domain)!)}`}>
+                                                        <span className="ml-4 text-[10px] text-amber-500" title={`Previously contacted ${formatOutreachDate(contactedDomains.get(entry.domain)!)}`}>
                                                             (contacted)
                                                         </span>
                                                     )}

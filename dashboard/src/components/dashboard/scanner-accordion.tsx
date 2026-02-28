@@ -53,13 +53,7 @@ import { getPlainEnglish } from '@/lib/plain-english';
 import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 import { getOwaspCategories } from '@/lib/owasp-mapping';
 import { toast } from 'sonner';
-
-function getIssueCountColor(count: number) {
-    if (count === 0) return 'text-green-400';
-    if (count <= 3) return 'text-amber-400';
-    if (count <= 7) return 'text-orange-400';
-    return 'text-red-400';
-}
+import { getIssueCountColor } from '@/lib/severity-utils';
 
 function getSeverityStyles(severity: string) {
     switch (severity) {

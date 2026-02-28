@@ -18,6 +18,7 @@ import {
     Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
 import { Button } from '@/components/ui/button'; // Assuming Button is available
 
 export const mainNav = [
@@ -36,7 +37,7 @@ export const connectLinks = [
     { name: 'Support', href: '/dashboard/support', icon: Mail, external: false },
 ];
 
-const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = OWNER_EMAIL_CLIENT;
 
 export const adminLinks = [
     { name: 'Bulk Outreach', href: '/dashboard/bulk-outreach', icon: Send },
