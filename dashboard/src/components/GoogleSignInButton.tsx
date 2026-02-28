@@ -1,47 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-
-declare global {
-    interface Window {
-        google?: {
-            accounts: {
-                id: {
-                    initialize: (config: GoogleIdConfig) => void;
-                    renderButton: (element: HTMLElement, config: GoogleButtonConfig) => void;
-                    prompt: (callback?: (notification: PromptNotification) => void) => void;
-                    cancel: () => void;
-                };
-            };
-        };
-    }
-}
-
-interface GoogleIdConfig {
-    client_id: string;
-    callback: (response: { credential: string }) => void;
-    auto_select?: boolean;
-    cancel_on_tap_outside?: boolean;
-    use_fedcm_for_prompt?: boolean;
-}
-
-interface GoogleButtonConfig {
-    type: 'standard' | 'icon';
-    theme: 'outline' | 'filled_blue' | 'filled_black';
-    size: 'large' | 'medium' | 'small';
-    text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-    shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-    logo_alignment?: 'left' | 'center';
-    width?: number;
-}
-
-interface PromptNotification {
-    isNotDisplayed: () => boolean;
-    isSkippedMoment: () => boolean;
-    getNotDisplayedReason: () => string;
-    getSkippedReason: () => string;
-}
+import { useState } from 'react';
 
 interface GoogleSignInButtonProps {
     onError?: (msg: string) => void;
@@ -49,89 +8,44 @@ interface GoogleSignInButtonProps {
     redirectTo?: string;
 }
 
+const TEXT_MAP = {
+    continue_with: 'Continue with Google',
+    signin_with: 'Sign in with Google',
+    signup_with: 'Sign up with Google',
+};
+
 export function GoogleSignInButton({ onError, text = 'continue_with', redirectTo }: GoogleSignInButtonProps) {
-    const buttonRef = useRef<HTMLDivElement>(null);
-    const [gisReady, setGisReady] = useState(false);
     const [signingIn, setSigningIn] = useState(false);
-    const supabase = createClient();
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-    // Load Google Identity Services script
-    useEffect(() => {
-        if (!clientId) return;
-
-        if (window.google?.accounts?.id) {
-            setGisReady(true);
+    function handleClick() {
+        if (!clientId) {
+            onError?.('Google sign-in is not configured.');
             return;
         }
 
-        const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-        if (existing) {
-            existing.addEventListener('load', () => setGisReady(true));
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => setGisReady(true);
-        document.head.appendChild(script);
-    }, [clientId]);
-
-    // Initialize GIS and render button
-    useEffect(() => {
-        if (!gisReady || !window.google || !buttonRef.current || !clientId) return;
-
-        window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: async (response: { credential: string }) => {
-                setSigningIn(true);
-                const { error } = await supabase.auth.signInWithIdToken({
-                    provider: 'google',
-                    token: response.credential,
-                });
-
-                if (error) {
-                    setSigningIn(false);
-                    onError?.('Could not sign in with Google. Please try again.');
-                } else {
-                    window.location.href = redirectTo || '/dashboard';
-                }
-            },
-            auto_select: false,
-            cancel_on_tap_outside: true,
-        });
-
-        const containerWidth = Math.min(buttonRef.current.offsetWidth, 400);
-        window.google.accounts.id.renderButton(buttonRef.current, {
-            type: 'standard',
-            theme: 'filled_black',
-            size: 'large',
-            text,
-            shape: 'rectangular',
-            logo_alignment: 'left',
-            width: containerWidth,
-        });
-    }, [gisReady, supabase, onError, text, clientId]);
-
-    // Fallback: use standard OAuth redirect when GIS not available
-    async function handleOAuthFallback() {
         setSigningIn(true);
-        const callbackUrl = redirectTo
-            ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
-            : `${window.location.origin}/auth/callback`;
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: callbackUrl,
-                queryParams: { prompt: 'select_account' },
-            },
+
+        // Store redirect target for after callback
+        const target = redirectTo || '/dashboard';
+        sessionStorage.setItem('google_auth_redirect', target);
+
+        // Generate nonce for security
+        const nonce = crypto.randomUUID();
+        sessionStorage.setItem('google_auth_nonce', nonce);
+
+        // Redirect directly to Google OAuth (implicit flow)
+        // This shows checkvibe.dev on the consent screen instead of supabase.co
+        const params = new URLSearchParams({
+            client_id: clientId,
+            redirect_uri: `${window.location.origin}/auth/google-callback`,
+            response_type: 'id_token',
+            scope: 'openid email profile',
+            nonce,
+            prompt: 'select_account',
         });
-        if (error) {
-            setSigningIn(false);
-            onError?.('Could not connect to Google. Please try again.');
-        }
+
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
     }
 
     if (signingIn) {
@@ -146,22 +60,10 @@ export function GoogleSignInButton({ onError, text = 'continue_with', redirectTo
         );
     }
 
-    // If GIS is ready and client ID exists, show the Google-rendered button
-    if (clientId && gisReady) {
-        return (
-            <div
-                ref={buttonRef}
-                className="w-full flex justify-center overflow-hidden rounded-md [&_iframe]:!rounded-md"
-                style={{ minHeight: '44px' }}
-            />
-        );
-    }
-
-    // Fallback button (no client ID, or GIS still loading)
     return (
         <button
             type="button"
-            onClick={handleOAuthFallback}
+            onClick={handleClick}
             className="w-full h-11 flex items-center justify-center gap-3 rounded-md border border-white/[0.08] bg-white/[0.03] text-white text-sm font-medium hover:bg-white/[0.06] transition-colors"
         >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -170,7 +72,7 @@ export function GoogleSignInButton({ onError, text = 'continue_with', redirectTo
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+            {TEXT_MAP[text]}
         </button>
     );
 }
