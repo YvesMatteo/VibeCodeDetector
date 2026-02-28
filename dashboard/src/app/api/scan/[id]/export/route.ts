@@ -39,13 +39,14 @@ export async function GET(
       return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
     }
 
-    // Fetch previous completed scan for diffing (same project or same URL)
+    // Fetch previous completed scan for diffing (same project, same owner)
     let previousScan: any = null;
     if (scan.project_id) {
       const { data } = await supabase
         .from('scans')
         .select('*')
         .eq('project_id', scan.project_id)
+        .eq('user_id', user.id)
         .eq('status', 'completed')
         .lt('completed_at', scan.completed_at)
         .order('completed_at', { ascending: false })
