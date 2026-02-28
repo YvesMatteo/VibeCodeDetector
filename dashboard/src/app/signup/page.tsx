@@ -71,7 +71,13 @@ function SignupPageInner() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError('Could not create account. Please try again.');
+                if (res.status === 429) {
+                    setError('Too many attempts. Please wait a minute and try again.');
+                } else if (data?.error) {
+                    setError(data.error);
+                } else {
+                    setError('Could not create account. Please try again.');
+                }
                 setLoading(false);
             } else {
                 setEmailSent(true);

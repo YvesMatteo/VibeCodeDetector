@@ -9,12 +9,18 @@ export async function POST(req: NextRequest) {
     const csrfError = checkCsrf(req);
     if (csrfError) return csrfError;
 
-    // Rate limit: 5 signups per minute per IP
+    // Rate limit: 5 signups per minute per IP (fail open — don't block signups if DB is down)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
         ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
-    const rl = await checkRateLimit(`signup:${ip}`, 5, 60);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    try {
+        const rl = await checkRateLimit(`signup:${ip}`, 5, 60);
+        if (rl.allowed === false && rl.currentCount > 0) {
+            // Only block if we genuinely have count data (not a fail-closed default)
+            return NextResponse.json({ error: 'Too many attempts. Please wait a minute and try again.' }, { status: 429 });
+        }
+    } catch (rateLimitError) {
+        console.error('Rate limit check failed for signup, allowing request:', rateLimitError);
+        // Fail open for signups — better to allow a signup than block a real user
     }
 
     let email: string;
@@ -99,9 +105,9 @@ export async function POST(req: NextRequest) {
             subject: template.subject,
             html: template.html,
         });
-    } catch (emailError) {
-        console.error('Resend send error:', emailError);
-        return NextResponse.json({ error: 'Failed to send confirmation email' }, { status: 500 });
+    } catch (emailError: any) {
+        console.error('Resend send error:', emailError?.message || emailError);
+        return NextResponse.json({ error: 'Failed to send confirmation email. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json(
