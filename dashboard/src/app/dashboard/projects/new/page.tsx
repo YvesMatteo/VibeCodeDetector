@@ -101,7 +101,7 @@ export default function NewProjectPage() {
 
             router.push(`/dashboard/projects/${result.project.id}`);
         } catch (err) {
-            const msg = err instanceof Error ? err.message : 'An error occurred';
+            const msg = err instanceof Error ? err.message : 'Failed to create project. Please try again.';
             if (!errorCode || (errorCode !== 'PLAN_REQUIRED' && errorCode !== 'PROJECT_LIMIT_REACHED')) {
                 toast.error(msg);
             }
@@ -186,6 +186,7 @@ export default function NewProjectPage() {
                                                 placeholder="My App"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
+                                                autoFocus
                                                 className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                             />
                                         </div>

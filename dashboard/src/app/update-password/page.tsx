@@ -118,6 +118,7 @@ export default function UpdatePasswordPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        autoFocus
                                         minLength={8}
                                         className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                     />

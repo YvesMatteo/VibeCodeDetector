@@ -28,6 +28,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "CheckVibe - Always-On Security Monitoring",
   description: "Monitor your website with 35 automated security checks. Detect exposed API keys, SQL injection, XSS, and more.",
+  manifest: "/manifest.json",
   metadataBase: new URL("https://checkvibe.dev"),
   openGraph: {
     title: "CheckVibe - Always-On Security Monitoring",

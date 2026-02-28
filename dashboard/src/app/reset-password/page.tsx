@@ -30,12 +30,12 @@ export default function ResetPasswordPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Something went wrong. Please try again.');
+                setError(data.error || 'Password reset failed. Please check your email and try again.');
             } else {
                 setSuccess(true);
             }
         } catch {
-            setError('Something went wrong. Please try again.');
+            setError('Password reset failed. Please check your connection and try again.');
         } finally {
             setLoading(false);
         }
@@ -92,6 +92,7 @@ export default function ResetPasswordPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    autoFocus
                                     className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                 />
                             </div>

@@ -68,6 +68,14 @@ export default function DashboardLayout({
 
     return (
         <div className="min-h-screen bg-background">
+            {/* Skip to content — accessibility */}
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded"
+            >
+                Skip to content
+            </a>
+
             {/* Mobile Header */}
             <header className="fixed top-0 left-0 right-0 z-40 h-12 safe-top bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
                 <div className="flex items-center gap-3">
@@ -116,7 +124,7 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content - Padded widely enough (240px) so expanded sidebar (220px) never covers content */}
-            <main className="md:pl-[240px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
+            <main id="main-content" className="md:pl-[240px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
                 <SWRProvider>
                     <div className="animate-fade-in-up">
                         {children}

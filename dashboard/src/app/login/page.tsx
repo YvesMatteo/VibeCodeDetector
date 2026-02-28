@@ -130,6 +130,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    autoFocus
                                     autoComplete="email"
                                     className="h-11 bg-white/[0.03] border-white/[0.08] focus:border-white/20 transition-colors placeholder:text-zinc-600"
                                 />
