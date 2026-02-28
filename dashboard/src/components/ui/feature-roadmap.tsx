@@ -1,5 +1,3 @@
-'use client';
-
 import { Shield, Key, Server, Database, CheckCircle2, XCircle, Terminal, FileCode2, Lock, ArrowRight } from 'lucide-react';
 
 const roadmapSteps = [
