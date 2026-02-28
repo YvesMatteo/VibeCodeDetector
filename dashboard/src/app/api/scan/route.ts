@@ -686,7 +686,7 @@ export async function POST(req: NextRequest) {
                     low: 1.5,
                     info: 0,
                 };
-                const DECAY_CONSTANT = 80; // higher = slower decay
+                const DECAY_CONSTANT = 120; // higher = slower decay
 
                 let totalPenalty = 0;
                 let scannersWithFindings = 0;
