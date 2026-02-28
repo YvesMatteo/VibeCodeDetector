@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
         ...DEV_ORIGINS,
     ];
     const rawOrigin = req.headers.get('origin');
-    // Use the raw origin for dev, but always use non-www for production (matches Supabase uri_allow_list)
+    // Use the raw origin for dev, but always use www for production (dashboard is on www.checkvibe.dev)
     const origin = (rawOrigin && DEV_ORIGINS.includes(rawOrigin))
         ? rawOrigin
-        : 'https://checkvibe.dev';
+        : 'https://www.checkvibe.dev';
     const { data, error } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email,
