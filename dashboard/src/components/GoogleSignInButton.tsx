@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface GoogleSignInButtonProps {
     onError?: (msg: string) => void;
@@ -16,36 +17,27 @@ const TEXT_MAP = {
 
 export function GoogleSignInButton({ onError, text = 'continue_with', redirectTo }: GoogleSignInButtonProps) {
     const [signingIn, setSigningIn] = useState(false);
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-    function handleClick() {
-        if (!clientId) {
-            onError?.('Google sign-in is not configured.');
-            return;
-        }
-
+    async function handleClick() {
         setSigningIn(true);
 
-        // Store redirect target for after callback
-        const target = redirectTo || '/dashboard';
-        sessionStorage.setItem('google_auth_redirect', target);
+        const supabase = createClient();
+        const redirectTarget = redirectTo || '/dashboard';
 
-        // Generate nonce for security
-        const nonce = crypto.randomUUID();
-        sessionStorage.setItem('google_auth_nonce', nonce);
-
-        // Redirect directly to Google OAuth (implicit flow)
-        // This shows checkvibe.dev on the consent screen instead of supabase.co
-        const params = new URLSearchParams({
-            client_id: clientId,
-            redirect_uri: `${window.location.origin}/auth/google-callback`,
-            response_type: 'id_token',
-            scope: 'openid email profile',
-            nonce,
-            prompt: 'select_account',
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTarget)}`,
+                queryParams: {
+                    prompt: 'select_account',
+                },
+            },
         });
 
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+        if (error) {
+            setSigningIn(false);
+            onError?.(error.message || 'Could not sign in with Google.');
+        }
     }
 
     if (signingIn) {
