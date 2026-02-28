@@ -41,8 +41,27 @@ export async function dispatchThreatAlerts(projectId: string): Promise<{ sent: b
     const frequency = settings.alert_frequency || 'daily';
     const cooldownMinutes = COOLDOWN_MINUTES[frequency] || 1440;
 
-    // Check last alert send time
-    const { data: lastAlert } = await supabase
+    // Idempotency: check if an alert was already sent for this project + alert_type
+    // within the cooldown window. This prevents duplicate emails on Vercel cron retries.
+    const cooldownCutoff = new Date(Date.now() - cooldownMinutes * 60 * 1000).toISOString();
+    const { data: recentAlert } = await supabase
+        .from('threat_alert_log' as any)
+        .select('sent_at')
+        .eq('project_id', projectId)
+        .eq('alert_type', frequency)
+        .gte('sent_at', cooldownCutoff)
+        .order('sent_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (recentAlert) {
+        // An alert was already sent within the cooldown window — skip to avoid duplicates
+        return { sent: false };
+    }
+
+    // Determine the "since" window — check the most recent alert of any type for this project
+    // to find new events since the last alert was sent
+    const { data: lastAlertAny } = await supabase
         .from('threat_alert_log' as any)
         .select('sent_at')
         .eq('project_id', projectId)
@@ -50,16 +69,9 @@ export async function dispatchThreatAlerts(projectId: string): Promise<{ sent: b
         .limit(1)
         .maybeSingle();
 
-    if (lastAlert) {
-        const lastSent = new Date(lastAlert.sent_at);
-        const minutesSince = (Date.now() - lastSent.getTime()) / (1000 * 60);
-        if (minutesSince < cooldownMinutes) return { sent: false };
-    }
-
-    // Determine the "since" window — either last alert or cooldown window
-    const sinceTime = lastAlert
-        ? new Date(lastAlert.sent_at).toISOString()
-        : new Date(Date.now() - cooldownMinutes * 60 * 1000).toISOString();
+    const sinceTime = lastAlertAny
+        ? new Date(lastAlertAny.sent_at).toISOString()
+        : cooldownCutoff;
 
     // Count new events since last alert
     const { count } = await supabase
