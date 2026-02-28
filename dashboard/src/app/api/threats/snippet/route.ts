@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { PLAN_CONFIG, FREE_PLAN_CONFIG } from '@/lib/plan-config';
 
 // GET /api/threats/snippet?projectId=xxx — returns the embed HTML
 export async function GET(req: NextRequest) {
@@ -11,6 +12,25 @@ export async function GET(req: NextRequest) {
     const rl = await checkRateLimit(`threats-snippet:${user.id}`, 30, 60);
     if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
+
+    // Plan gating: threat detection requires a paid plan
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+    const planKey = (profile?.plan || 'none') as string;
+    const planConfig = planKey in PLAN_CONFIG
+        ? PLAN_CONFIG[planKey as keyof typeof PLAN_CONFIG]
+        : FREE_PLAN_CONFIG;
+
+    if (!planConfig.threatDetection) {
+        return NextResponse.json(
+            { error: 'Threat detection requires a paid plan. Please upgrade.' },
+            { status: 403 }
+        );
     }
 
     const projectId = req.nextUrl.searchParams.get('projectId');

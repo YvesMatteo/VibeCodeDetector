@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkCsrf } from '@/lib/csrf';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { PLAN_CONFIG, FREE_PLAN_CONFIG } from '@/lib/plan-config';
 import crypto from 'crypto';
 
 // GET /api/threats/settings?projectId=xxx
@@ -13,6 +14,25 @@ export async function GET(req: NextRequest) {
     const rl = await checkRateLimit(`threat-settings-get:${user.id}`, 30, 60);
     if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
+
+    // Plan gating: threat detection requires a paid plan
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+    const planKey = (profile?.plan || 'none') as string;
+    const planConfig = planKey in PLAN_CONFIG
+        ? PLAN_CONFIG[planKey as keyof typeof PLAN_CONFIG]
+        : FREE_PLAN_CONFIG;
+
+    if (!planConfig.threatDetection) {
+        return NextResponse.json(
+            { error: 'Threat detection requires a paid plan. Please upgrade.' },
+            { status: 403 }
+        );
     }
 
     const projectId = req.nextUrl.searchParams.get('projectId');
@@ -55,6 +75,25 @@ export async function POST(req: NextRequest) {
     const rl = await checkRateLimit(`threat-settings:${user.id}`, 10, 60);
     if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
+
+    // Plan gating: threat detection requires a paid plan
+    const { data: postProfile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+    const postPlanKey = (postProfile?.plan || 'none') as string;
+    const postPlanConfig = postPlanKey in PLAN_CONFIG
+        ? PLAN_CONFIG[postPlanKey as keyof typeof PLAN_CONFIG]
+        : FREE_PLAN_CONFIG;
+
+    if (!postPlanConfig.threatDetection) {
+        return NextResponse.json(
+            { error: 'Threat detection requires a paid plan. Please upgrade.' },
+            { status: 403 }
+        );
     }
 
     const body = await req.json();
