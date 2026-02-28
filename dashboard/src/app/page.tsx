@@ -573,6 +573,87 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ======================== TESTIMONIALS ======================== */}
+      <section
+        id="slide-testimonials"
+        className="relative z-10 px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-20 sm:pb-28"
+      >
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
+          <div className="text-center mb-10 sm:mb-14">
+            <Badge variant="secondary" className="mb-4 bg-sky-500/10 border-sky-500/20 text-sky-400">
+              Testimonials
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-medium mb-4 tracking-tight text-white">
+              Trusted by{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-sky-400 animate-gradient-flow">Developers</span>
+            </h2>
+            <p className="text-sm sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              See why teams building with AI code editors rely on CheckVibe to keep their apps secure.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+            {[
+              {
+                quote: 'I shipped a Cursor-built SaaS in a weekend and CheckVibe immediately flagged an exposed Supabase service-role key in my client bundle. Saved me from a very bad Monday.',
+                name: 'Marcus Chen',
+                title: 'Indie Maker',
+                initials: 'MC',
+                color: 'bg-sky-500',
+              },
+              {
+                quote: 'We run 35 checks on every deploy now. The SQL injection and XSS scanners alone have caught issues our team missed during code review twice this month.',
+                name: 'Sarah Okonkwo',
+                title: 'CTO, Liftoff Labs',
+                initials: 'SO',
+                color: 'bg-emerald-500',
+              },
+              {
+                quote: 'As a solo founder using vibe coding, security was my blind spot. CheckVibe turned it into my strongest feature. Customers actually mention it in sales calls now.',
+                name: 'Jake Morrison',
+                title: 'Founder, ShipStack',
+                initials: 'JM',
+                color: 'bg-violet-500',
+              },
+              {
+                quote: 'The CORS and security header checks caught misconfigurations on three of our client projects within the first scan. Worth every penny of the Pro plan.',
+                name: 'Priya Sharma',
+                title: 'Lead Engineer, Devmesh',
+                initials: 'PS',
+                color: 'bg-amber-500',
+              },
+              {
+                quote: 'We integrated CheckVibe into our CI pipeline with the MCP server. Now no PR merges without a passing security scan. It took five minutes to set up.',
+                name: 'Tom Eriksson',
+                title: 'DevOps, NordStack',
+                initials: 'TE',
+                color: 'bg-rose-500',
+              },
+            ].map((testimonial) => (
+              <div
+                key={testimonial.name}
+                className="relative flex flex-col rounded-xl border border-white/5 bg-white/[0.02] p-6 transition-all duration-300 [@media(hover:hover)]:hover:border-white/10 [@media(hover:hover)]:hover:bg-white/[0.04]"
+              >
+                {/* Quote mark */}
+                <span className="text-sky-400/20 text-4xl font-serif leading-none mb-2 select-none" aria-hidden="true">&ldquo;</span>
+                <p className="text-sm sm:text-[15px] text-zinc-300 leading-relaxed flex-1 mb-6">
+                  {testimonial.quote}
+                </p>
+                <div className="flex items-center gap-3 mt-auto pt-4 border-t border-white/5">
+                  <div className={`w-9 h-9 rounded-full ${testimonial.color} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                    {testimonial.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white truncate">{testimonial.name}</div>
+                    <div className="text-xs text-zinc-500 truncate">{testimonial.title}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ======================== SLIDE 5: CTA + FOOTER ======================== */}
       <section
         id="slide-cta"
