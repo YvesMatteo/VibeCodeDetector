@@ -32,7 +32,7 @@
         },
         {
             "path": "/api/cron/threat-alerts",
-            "schedule": "0 */6 * * *"
+            "schedule": "0 0 * * *"
         }
     ]
 }
