@@ -11,20 +11,19 @@ export async function GET(request: Request) {
         next = '/dashboard';
     }
 
+    const isRecovery = next === '/update-password';
+
     if (code) {
         const supabase = await createClient();
+
+        // For password recovery, sign out any existing session first
+        // so the user starts clean on the update-password page
+        if (isRecovery) {
+            await supabase.auth.signOut();
+        }
+
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-            // Check if this is a password recovery flow — redirect to update-password
-            const { data: { session } } = await supabase.auth.getSession();
-            const amr = (session?.user as any)?.amr as Array<{ method: string }> | undefined;
-            const isRecovery = amr?.some(
-                (entry: { method: string }) => entry.method === 'recovery'
-            );
-            if (isRecovery) {
-                return NextResponse.redirect(`${origin}/update-password`);
-            }
-
             return NextResponse.redirect(`${origin}${next}`);
         }
     }

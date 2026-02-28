@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -17,8 +17,20 @@ export default function UpdatePasswordPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [ready, setReady] = useState(false);
     const router = useRouter();
     const supabase = createClient();
+
+    // Verify recovery session exists; if not, redirect to reset-password
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                router.replace('/reset-password');
+            } else {
+                setReady(true);
+            }
+        });
+    }, []);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -53,6 +65,8 @@ export default function UpdatePasswordPage() {
             setError(error.message);
         } else {
             setSuccess(true);
+            // Sign out the recovery session so user must log in with new password
+            await supabase.auth.signOut();
             setTimeout(() => router.push('/login'), 3000);
         }
     }
@@ -74,6 +88,14 @@ export default function UpdatePasswordPage() {
     };
 
     const strength = getPasswordStrength();
+
+    if (!ready && !success) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-4 bg-[#09090B]">
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 bg-[#09090B]">
