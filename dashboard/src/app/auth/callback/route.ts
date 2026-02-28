@@ -15,6 +15,15 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
+            // Check if this is a password recovery flow — redirect to update-password
+            const { data: { session } } = await supabase.auth.getSession();
+            const isRecovery = session?.user?.amr?.some(
+                (entry) => entry.method === 'recovery'
+            );
+            if (isRecovery) {
+                return NextResponse.redirect(`${origin}/update-password`);
+            }
+
             return NextResponse.redirect(`${origin}${next}`);
         }
     }
