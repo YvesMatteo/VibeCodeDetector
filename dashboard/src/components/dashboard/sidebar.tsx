@@ -16,6 +16,7 @@ import {
     ScrollText,
     Menu,
     Send,
+    Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
@@ -40,6 +41,7 @@ export const connectLinks = [
 const OWNER_EMAIL = OWNER_EMAIL_CLIENT;
 
 export const adminLinks = [
+    { name: 'Users', href: '/dashboard/admin/users', icon: Users },
     { name: 'Bulk Outreach', href: '/dashboard/bulk-outreach', icon: Send },
 ];
 
