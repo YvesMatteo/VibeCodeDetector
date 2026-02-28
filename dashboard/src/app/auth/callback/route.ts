@@ -17,8 +17,9 @@ export async function GET(request: Request) {
         if (!error) {
             // Check if this is a password recovery flow — redirect to update-password
             const { data: { session } } = await supabase.auth.getSession();
-            const isRecovery = session?.user?.amr?.some(
-                (entry) => entry.method === 'recovery'
+            const amr = (session?.user as any)?.amr as Array<{ method: string }> | undefined;
+            const isRecovery = amr?.some(
+                (entry: { method: string }) => entry.method === 'recovery'
             );
             if (isRecovery) {
                 return NextResponse.redirect(`${origin}/update-password`);

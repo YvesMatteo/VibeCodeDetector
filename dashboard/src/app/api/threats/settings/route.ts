@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         .eq('project_id', projectId)
         .maybeSingle();
 
-    const snippetToken = existing?.snippet_token
+    const snippetToken = (existing as any)?.snippet_token
         || `cvt_${projectId.replace(/-/g, '').slice(0, 12)}_${crypto.randomBytes(8).toString('hex')}`;
 
     const { data, error } = await supabase

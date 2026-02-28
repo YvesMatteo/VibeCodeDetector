@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     // Get aggregated stats via RPC
     const { data: stats, error: statsError } = await supabase
-        .rpc('get_threat_stats', { p_project_id: projectId, p_since: since });
+        .rpc('get_threat_stats' as any, { p_project_id: projectId, p_since: since });
 
     if (statsError) {
         console.error('Threat stats RPC error:', statsError);
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 
     if (timeSeries && !tsError) {
         for (const evt of timeSeries) {
-            const date = new Date(evt.created_at);
+            const date = new Date((evt as any).created_at);
             const hourKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}T${String(date.getUTCHours()).padStart(2, '0')}:00`;
 
             if (!buckets[hourKey]) {

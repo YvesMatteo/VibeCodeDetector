@@ -33,13 +33,14 @@ export async function GET(req: NextRequest) {
         .eq('user_id', user.id)
         .maybeSingle();
 
-    if (!settings?.snippet_token) {
+    const s = settings as any;
+    if (!s?.snippet_token) {
         return NextResponse.json({ error: 'Enable threat detection first' }, { status: 404 });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://checkvibe.dev';
 
-    const snippet = `<script src="${appUrl}/sdk/cv-threat.min.js" data-token="${settings.snippet_token}" async defer></script>`;
+    const snippet = `<script src="${appUrl}/sdk/cv-threat.min.js" data-token="${s.snippet_token}" async defer></script>`;
 
-    return NextResponse.json({ snippet, token: settings.snippet_token });
+    return NextResponse.json({ snippet, token: s.snippet_token });
 }

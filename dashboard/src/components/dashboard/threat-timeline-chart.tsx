@@ -23,12 +23,12 @@ interface ThreatTimelineChartProps {
     data: TimeSeriesBucket[];
 }
 
-function formatHour(hour: string): string {
+function formatHour(hour: unknown): string {
     try {
-        const d = new Date(hour + ':00Z');
+        const d = new Date(String(hour) + ':00Z');
         return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric' });
     } catch {
-        return hour;
+        return String(hour);
     }
 }
 
