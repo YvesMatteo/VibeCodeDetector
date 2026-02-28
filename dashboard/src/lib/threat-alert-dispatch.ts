@@ -105,9 +105,14 @@ export async function dispatchThreatAlerts(projectId: string): Promise<{ sent: b
         const resend = getResend();
         await resend.emails.send({
             from: FROM_EMAIL,
+            replyTo: 'support@checkvibe.dev',
             to: alertEmail,
             subject: template.subject,
             html: template.html,
+            headers: {
+                'List-Unsubscribe': '<mailto:support@checkvibe.dev?subject=unsubscribe>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
         });
 
         // Log the alert

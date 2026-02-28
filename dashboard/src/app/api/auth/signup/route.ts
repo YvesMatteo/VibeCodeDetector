@@ -100,9 +100,14 @@ export async function POST(req: NextRequest) {
         const resend = getResend();
         await resend.emails.send({
             from: 'CheckVibe <support@checkvibe.dev>',
+            replyTo: 'support@checkvibe.dev',
             to: email,
             subject: template.subject,
             html: template.html,
+            headers: {
+                'List-Unsubscribe': '<mailto:support@checkvibe.dev?subject=unsubscribe>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
         });
     } catch (emailError: any) {
         console.error('Resend send error:', emailError?.message || emailError);
