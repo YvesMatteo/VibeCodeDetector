@@ -28,13 +28,11 @@ function CallbackHandler() {
         async function handleAuth() {
             const supabase = createClient();
 
-            // Sign out any existing session so the new auth token takes over cleanly.
-            // This fixes the bug where clicking a reset/confirm link while logged in
-            // as a different account would keep the old session.
-            await supabase.auth.signOut({ scope: 'local' });
-
             if (code) {
-                // PKCE flow: exchange authorization code for session
+                // PKCE flow: exchange authorization code for session.
+                // Do NOT sign out first — signOut clears the PKCE code verifier
+                // that was stored when signInWithOAuth started the flow.
+                // exchangeCodeForSession replaces the old session automatically.
                 const { error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) {
                     console.error('Auth callback code exchange failed:', error.message);
@@ -43,6 +41,9 @@ function CallbackHandler() {
                 }
                 router.replace(next);
             } else if (hash) {
+                // Sign out any existing session for implicit/hash flows so the
+                // new auth token takes over cleanly (e.g. password reset links).
+                await supabase.auth.signOut({ scope: 'local' });
                 // Implicit flow: tokens are in the URL hash fragment
                 // Extract them manually since we signed out before the client could auto-process
                 const params = new URLSearchParams(hash.substring(1));
