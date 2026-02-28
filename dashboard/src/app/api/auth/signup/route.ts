@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
 
     // If user already exists (unconfirmed re-signup), generate a magic link instead
     if (error && (error.message?.includes('already been registered') || error.message?.includes('email_exists'))) {
-        console.log('User already exists, sending magic link for:', email);
         const { data: magicData, error: magicError } = await supabase.auth.admin.generateLink({
             type: 'magiclink',
             email,

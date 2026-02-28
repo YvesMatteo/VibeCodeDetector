@@ -496,18 +496,6 @@ export async function POST(req: NextRequest) {
         socialLinks = { ...socialLinks, ...githubResult.value.socialLinks };
     }
 
-    // Log strategy results for debugging
-    const strategyLog: Record<string, number> = {
-        html: collect(htmlResult).length,
-        security: collect(securityResult).length,
-        github: githubResult.status === 'fulfilled' ? githubResult.value.emails.length : 0,
-        dns: collect(dnsResult).length,
-        sitemap: collect(sitemapResult).length,
-        google: collect(googleResult).length,
-        whois: collect(whoisResult).length,
-    };
-    console.log(`[scrape-email] ${domain}: strategies=${JSON.stringify(strategyLog)}, total=${allResults.length}`);
-
     // Deduplicate: keep highest score per email
     const emailMap = new Map<string, EmailResult>();
     for (const r of allResults) {

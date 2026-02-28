@@ -55,7 +55,6 @@ export async function POST(req: Request) {
         .maybeSingle();
 
     if (existing) {
-        console.log(`Event ${event.id} already processed, skipping`);
         return new NextResponse(null, { status: 200 });
     }
 
@@ -115,7 +114,6 @@ export async function POST(req: Request) {
                     .eq('id', userId);
 
                 if (error) throw error;
-                console.log(`Activated plan '${planInfo.plan}' for user ${userId}`);
             } catch (error) {
                 console.error('Error activating plan:', error);
                 return new NextResponse('Error activating plan', { status: 500 });
@@ -156,8 +154,6 @@ export async function POST(req: Request) {
                         plan_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : new Date().toISOString(),
                     })
                     .eq('id', profile.id);
-
-                console.log(`Monthly reset for user ${profile.id}`);
             } catch (error) {
                 console.error('Error resetting monthly scans:', error);
                 return new NextResponse(null, { status: 500 });
@@ -190,7 +186,6 @@ export async function POST(req: Request) {
                         .update({ plan_scans_limit: 0 })
                         .eq('id', profile.id);
 
-                    console.log(`Payment failed for user ${profile.id} — scanning restricted`);
                 }
             } catch (error) {
                 console.error('Error handling payment failure:', error);
@@ -223,7 +218,6 @@ export async function POST(req: Request) {
                     })
                     .eq('id', profile.id);
 
-                console.log(`Deactivated plan for user ${profile.id}`);
             }
         } catch (error) {
             console.error('Error deactivating plan:', error);
@@ -269,7 +263,6 @@ export async function POST(req: Request) {
                         .from('profiles')
                         .update({ plan_scans_limit: 0 })
                         .eq('id', profile.id);
-                    console.log(`Restricted scanning for user ${profile.id} due to subscription status: ${subStatus}`);
                 }
             } catch (error) {
                 console.error('Error restricting plan for non-active subscription:', error);
@@ -296,7 +289,6 @@ export async function POST(req: Request) {
                         })
                         .eq('id', profile.id);
 
-                    console.log(`Updated plan to '${planInfo.plan}' for user ${profile.id}`);
                 }
             } catch (error) {
                 console.error('Error updating plan:', error);

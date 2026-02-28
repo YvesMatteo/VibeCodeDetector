@@ -170,7 +170,6 @@ RULES:
 
                 if (is429 && attempt < MAX_RETRIES) {
                     const delay = parseRetryDelay(lastError);
-                    console.log(`Gemini ${modelName} rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
                     await sleep(delay);
                     continue;
                 }
