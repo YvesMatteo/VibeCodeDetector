@@ -78,16 +78,8 @@ export async function POST(req: NextRequest) {
         const isAnnual = billing === 'annual';
         const priceId = isAnnual ? planConfig.priceAnnual : planConfig.priceMonthly;
 
-        const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').trim();
-        const allowedOrigins = [
-            siteUrl,
-            ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
-        ].filter(Boolean) as string[];
-        const requestOrigin = req.headers.get('origin');
-        if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        const origin = requestOrigin;
+        // Use the origin that already passed CSRF validation for redirect URLs
+        const origin = req.headers.get('origin') || (process.env.NEXT_PUBLIC_SITE_URL || '').trim();
 
         const session = await stripe.checkout.sessions.create({
             line_items: [
