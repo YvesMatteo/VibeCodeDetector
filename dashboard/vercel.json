@@ -1,6 +1,41 @@
 {
     "framework": "nextjs",
     "outputDirectory": ".next",
+    "redirects": [
+        {
+            "source": "/:path(.*)",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "checkvibe.online"
+                }
+            ],
+            "destination": "https://checkvibe.dev/:path",
+            "permanent": true
+        },
+        {
+            "source": "/:path(.*)",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "www.checkvibe.dev"
+                }
+            ],
+            "destination": "https://checkvibe.dev/:path",
+            "permanent": true
+        },
+        {
+            "source": "/:path(.*)",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "www.checkvibe.online"
+                }
+            ],
+            "destination": "https://checkvibe.dev/:path",
+            "permanent": true
+        }
+    ],
     "crons": [
         {
             "path": "/api/cron/scheduled-scans",

@@ -56,6 +56,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
+    canonical: 'https://checkvibe.dev',
     types: {
       'application/rss+xml': 'https://checkvibe.dev/feed.xml',
     },

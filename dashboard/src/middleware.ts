@@ -1,7 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
+const PRIMARY_DOMAIN = 'checkvibe.dev';
+
 export async function middleware(request: NextRequest) {
+    // 301 redirect non-primary domains (e.g. checkvibe.online) to checkvibe.dev
+    const host = request.headers.get('host')?.split(':')[0];
+    if (host && host !== PRIMARY_DOMAIN && host !== 'localhost' && !host.endsWith('.vercel.app')) {
+        const url = new URL(request.url);
+        url.host = PRIMARY_DOMAIN;
+        url.port = '';
+        url.protocol = 'https:';
+        return NextResponse.redirect(url, 301);
+    }
+
     try {
         return await updateSession(request);
     } catch (e) {
