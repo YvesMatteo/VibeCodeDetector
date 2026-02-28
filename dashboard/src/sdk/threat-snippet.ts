@@ -48,7 +48,7 @@
     const queue: ThreatEvent[] = [];
 
     function enqueue(evt: Omit<ThreatEvent, "path" | "timestamp">) {
-        if (queue.length >= MAX_QUEUE_SIZE) return;
+        if (queue.length >= MAX_QUEUE_SIZE) queue.shift(); // Drop oldest to cap memory
         queue.push({
             ...evt,
             path: location.pathname + location.search,
@@ -56,25 +56,46 @@
         });
     }
 
-    function flush() {
+    const MAX_RETRIES = 3;
+
+    function flush(retryCount = 0) {
         if (queue.length === 0) return;
         const batch = queue.splice(0, MAX_BATCH_SIZE);
         const payload = JSON.stringify({ token: TOKEN, events: batch });
 
-        // Prefer sendBeacon for reliability during page unload
-        if (navigator.sendBeacon) {
+        // Prefer sendBeacon for page unload (no retry possible, best-effort)
+        if (retryCount === 0 && document.visibilityState === "hidden" && navigator.sendBeacon) {
             const blob = new Blob([payload], { type: "application/json" });
             navigator.sendBeacon(INGEST_URL, blob);
-        } else {
-            // Fallback to fetch fire-and-forget
-            try {
-                fetch(INGEST_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: payload,
-                    keepalive: true,
-                }).catch(() => {});
-            } catch (_) {}
+            return;
+        }
+
+        // Use fetch with retry logic and exponential backoff
+        try {
+            fetch(INGEST_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: payload,
+                keepalive: true,
+            })
+                .then((res) => {
+                    if (!res.ok && retryCount < MAX_RETRIES) {
+                        queue.unshift(...batch);
+                        setTimeout(() => flush(retryCount + 1), Math.pow(2, retryCount) * 1000);
+                    }
+                })
+                .catch(() => {
+                    if (retryCount < MAX_RETRIES) {
+                        queue.unshift(...batch);
+                        setTimeout(() => flush(retryCount + 1), Math.pow(2, retryCount) * 1000);
+                    }
+                    // After max retries, drop the batch silently
+                });
+        } catch (_) {
+            if (retryCount < MAX_RETRIES) {
+                queue.unshift(...batch);
+                setTimeout(() => flush(retryCount + 1), Math.pow(2, retryCount) * 1000);
+            }
         }
     }
 
@@ -86,7 +107,7 @@
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "hidden") flush();
         });
-        window.addEventListener("pagehide", flush);
+        window.addEventListener("pagehide", () => flush());
     }
 
     // ---------------------------------------------------------------------------
@@ -98,11 +119,20 @@
         /javascript\s*:/i,
         /on(error|load|click|mouseover|focus|blur)\s*=/i,
         /<iframe[\s>]/i,
-        /<img[^>]+onerror/i,
-        /document\.(cookie|write|location)/i,
+        /<img[^>]+onerror\s*=/i,
+        /<svg[^>]+onload\s*=/i,
+        /<iframe[^>]+src\s*=\s*["']?javascript:/i,
+        /<body[^>]+onload\s*=/i,
+        /document\.(cookie|domain|write)/i,
+        /window\.(location|open)\s*=/i,
         /eval\s*\(/i,
+        /setTimeout\s*\(\s*["'`]/i,
+        /setInterval\s*\(\s*["'`]/i,
+        /\.innerHTML\s*=/i,
+        /fromCharCode/i,
         /\balert\s*\(/i,
-        /\bString\.fromCharCode/i,
+        /\bprompt\s*\(/i,
+        /\bconfirm\s*\(/i,
         /&#x?[0-9a-f]+;/i,
     ];
 
@@ -140,10 +170,18 @@
         /UNION\s+(ALL\s+)?SELECT/i,
         /OR\s+1\s*=\s*1/i,
         /['"];?\s*DROP\s/i,
-        /SLEEP\s*\(/i,
+        /SLEEP\s*\(\d+\)/i,
         /BENCHMARK\s*\(/i,
         /WAITFOR\s+DELAY/i,
         /;\s*SELECT\s/i,
+        /;\s*(DROP|ALTER|CREATE|TRUNCATE|DELETE|INSERT|UPDATE)\s/i,
+        /'\s*OR\s+'[^']*'\s*=\s*'/i,
+        /'\s*AND\s+'[^']*'\s*=\s*'/i,
+        /INTO\s+(OUT|DUMP)FILE/i,
+        /LOAD_FILE\s*\(/i,
+        /information_schema/i,
+        /CHAR\s*\(\d+/i,
+        /0x[0-9a-fA-F]{8,}/i,
         /--\s*$/,
         /\/\*.*\*\//,
         /'\s+OR\s+'/i,
@@ -275,25 +313,54 @@
     // Detection: CSRF (cross-origin form submissions)
     // ---------------------------------------------------------------------------
 
+    // Known payment/auth providers whose forms are legitimate cross-domain POSTs
+    const CSRF_SAFE_DOMAINS = [
+        "stripe.com",
+        "paypal.com",
+        "braintreegateway.com",
+        "checkout.shopify.com",
+        "accounts.google.com",
+        "login.microsoftonline.com",
+        "appleid.apple.com",
+        "github.com",
+        "auth0.com",
+    ];
+
     function monitorCsrf() {
         document.addEventListener("submit", (e) => {
             const form = e.target as HTMLFormElement;
             if (!form || !form.action) return;
 
             try {
-                const formOrigin = new URL(form.action).origin;
-                if (formOrigin !== location.origin) {
-                    // Check if form has a CSRF token field
-                    const hasCsrfToken = form.querySelector(
-                        'input[name*="csrf"], input[name*="token"], input[name*="_token"], input[name*="authenticity"]'
-                    );
-                    if (!hasCsrfToken) {
-                        enqueue({
-                            type: "csrf",
-                            severity: "high",
-                            payload: `cross-origin form submit to ${formOrigin}`,
-                        });
-                    }
+                // Only flag POST forms (GET requests are not CSRF vectors)
+                const method = (form.method || "GET").toUpperCase();
+                if (method === "GET") return;
+
+                const formUrl = new URL(form.action);
+                const formHost = formUrl.hostname;
+                const pageHost = location.hostname;
+
+                // Only flag if the form submits to a DIFFERENT domain (not just cross-origin)
+                // e.g. api.example.com -> example.com is fine; example.com -> evil.com is not
+                const formDomain = formHost.split(".").slice(-2).join(".");
+                const pageDomain = pageHost.split(".").slice(-2).join(".");
+                if (formDomain === pageDomain) return;
+
+                // Skip known safe payment/auth provider domains
+                if (CSRF_SAFE_DOMAINS.some((safe) => formHost === safe || formHost.endsWith("." + safe))) {
+                    return;
+                }
+
+                // Check if form has a CSRF token field
+                const hasCsrfToken = form.querySelector(
+                    'input[name*="csrf"], input[name*="token"], input[name*="_token"], input[name*="authenticity"]'
+                );
+                if (!hasCsrfToken) {
+                    enqueue({
+                        type: "csrf",
+                        severity: "high",
+                        payload: `cross-domain POST to ${formHost}`,
+                    });
                 }
             } catch (_) {}
         }, true);
