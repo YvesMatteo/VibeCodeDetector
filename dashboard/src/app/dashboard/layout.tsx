@@ -1,70 +1,29 @@
-'use client';
-
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import {
-    Sheet,
-    SheetContent,
-    SheetTitle,
-} from '@/components/ui/sheet';
-import {
-    Menu,
-    Plus,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { SWRProvider } from '@/lib/swr-config';
-import { Sidebar } from '@/components/dashboard/sidebar';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const pathname = usePathname();
-    const router = useRouter();
-    const supabase = createClient();
-    const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [userPlan, setUserPlan] = useState<string>('none');
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    useEffect(() => {
-        async function loadUser() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUserEmail(user.email || null);
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('plan')
-                    .eq('id', user.id)
-                    .single();
-                if (profile) setUserPlan(profile.plan || 'none');
-            }
-        }
-        loadUser();
-    }, []);
-
-    // Handle checkout success redirect (?success=true)
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('success') === 'true') {
-            toast.success('Subscription activated! You are all set.');
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-    }, []);
-
-    const initials = userEmail
-        ? userEmail.substring(0, 2).toUpperCase()
-        : '??';
-
-    async function handleLogout() {
-        await supabase.auth.signOut();
-        router.push('/');
-        router.refresh();
+    if (!user) {
+        redirect('/login');
     }
+
+    // Fetch profile for plan info
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+    const userEmail = user.email || null;
+    const userPlan = profile?.plan || 'none';
 
     return (
         <div className="min-h-screen bg-background">
@@ -76,61 +35,15 @@ export default function DashboardLayout({
                 Skip to content
             </a>
 
-            {/* Mobile Header */}
-            <header className="fixed top-0 left-0 right-0 z-40 h-12 safe-top bg-background/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-4 md:hidden">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setMobileOpen(true)}
-                        className="h-11 w-11 flex items-center justify-center -ml-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
-                        aria-label="Open navigation"
-                    >
-                        <Menu className="h-5 w-5" />
-                    </button>
-                    <Link href="/" className="flex items-center">
-                        <Image src="/logo-icon.png" alt="CheckVibe" width={24} height={24} className="h-6 w-6 object-contain" />
-                    </Link>
-                </div>
-                <Button asChild size="sm" className="bg-sky-400 text-white hover:bg-sky-500 border-0 font-medium h-9 px-3.5 text-xs rounded-lg">
-                    <Link href="/dashboard/projects/new">
-                        <Plus className="mr-1 h-3.5 w-3.5" />
-                        New
-                    </Link>
-                </Button>
-            </header>
-
-            {/* Mobile Drawer */}
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="w-64 p-0 bg-background border-white/[0.06] safe-bottom" showCloseButton={false}>
-                    <SheetTitle className="sr-only">Navigation</SheetTitle>
-                    <Sidebar
-                        userEmail={userEmail}
-                        userPlan={userPlan}
-                        initials={initials}
-                        handleLogout={handleLogout}
-                        onNavClick={() => setMobileOpen(false)}
-                        isMobile={true}
-                    />
-                </SheetContent>
-            </Sheet>
-
-            {/* Desktop Sidebar - Fixed Hover Expand */}
-            <aside className="hidden md:block fixed inset-y-0 left-0 z-50 h-screen overflow-visible">
-                <Sidebar
-                    userEmail={userEmail}
-                    userPlan={userPlan}
-                    initials={initials}
-                    handleLogout={handleLogout}
-                />
-            </aside>
-
-            {/* Main Content - Padded widely enough (240px) so expanded sidebar (220px) never covers content */}
-            <main id="main-content" className="md:pl-[240px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
-                <SWRProvider>
-                    <div className="animate-fade-in-up">
-                        {children}
-                    </div>
-                </SWRProvider>
-            </main>
+            <DashboardShell userEmail={userEmail} userPlan={userPlan}>
+                <main id="main-content" className="md:pl-[240px] pt-12 md:pt-0 relative min-h-dvh safe-bottom">
+                    <SWRProvider>
+                        <div className="animate-fade-in-up">
+                            {children}
+                        </div>
+                    </SWRProvider>
+                </main>
+            </DashboardShell>
         </div>
     );
 }
