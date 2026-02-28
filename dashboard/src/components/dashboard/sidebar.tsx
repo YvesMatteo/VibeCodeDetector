@@ -36,7 +36,7 @@ export const connectLinks = [
     { name: 'Support', href: '/dashboard/support', icon: Mail, external: false },
 ];
 
-const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'vibecodedetector@gmail.com';
 
 export const adminLinks = [
     { name: 'Bulk Outreach', href: '/dashboard/bulk-outreach', icon: Send },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'vibecodedetector@gmail.com';
 
 // ── Ignore patterns ──────────────────────────────────────────────────
 const IGNORE_PATTERNS = [

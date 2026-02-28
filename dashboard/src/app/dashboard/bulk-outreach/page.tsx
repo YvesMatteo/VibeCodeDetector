@@ -10,7 +10,7 @@ import {
     Mail, RotateCcw, Clock, ChevronDown, ChevronRight, Trash2, X,
 } from 'lucide-react';
 
-const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'vibecodedetector@gmail.com';
 
 type UrlStatus = 'pending' | 'scanning' | 'finding_contacts' | 'generating' | 'sending' | 'done' | 'error' | 'skipped';
 

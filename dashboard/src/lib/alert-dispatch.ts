@@ -43,7 +43,8 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
         if (!rules || rules.length === 0) return;
 
         const now = new Date();
-        const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/dashboard/projects/${opts.projectId}/report`;
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://checkvibe.dev');
+        const dashboardUrl = `${appUrl}/dashboard/projects/${opts.projectId}/report`;
 
         const deliveries = rules.map(async (rule: any) => {
             // 24h throttle check

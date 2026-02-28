@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import nodemailer from 'nodemailer';
 
-const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'vibecodedetector@gmail.com';
 
 /** Convert plain text body to a clean HTML email with footer */
 function buildHtml(body: string, recipientEmail: string): string {
@@ -72,7 +72,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No valid email addresses' }, { status: 400 });
     }
 
-    const gmailUser = process.env.GMAIL_USER || 'yves.matro@gmail.com';
+    const gmailUser = process.env.GMAIL_USER;
+    if (!gmailUser) {
+        return NextResponse.json({ error: 'GMAIL_USER not configured' }, { status: 500 });
+    }
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
     if (!gmailAppPassword) {

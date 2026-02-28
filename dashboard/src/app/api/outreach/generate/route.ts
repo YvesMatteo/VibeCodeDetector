@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const OWNER_EMAIL = 'vibecodedetector@gmail.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'vibecodedetector@gmail.com';
 const MODELS = ['gemini-2.0-flash'];
 const MAX_RETRIES = 1; // Keep low — Vercel Hobby has 60s function timeout
 
