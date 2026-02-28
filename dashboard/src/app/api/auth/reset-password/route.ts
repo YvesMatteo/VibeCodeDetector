@@ -33,17 +33,22 @@ export async function POST(req: NextRequest) {
 
     // Generate recovery link for the user
     // Validate origin against allowlist to prevent open redirect
+    const DEV_ORIGINS = process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : [];
     const ALLOWED_ORIGINS = [
-        process.env.NEXT_PUBLIC_SITE_URL,
-        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : []),
-    ].filter(Boolean) as string[];
+        'https://checkvibe.dev',
+        'https://www.checkvibe.dev',
+        ...DEV_ORIGINS,
+    ];
     const rawOrigin = req.headers.get('origin');
-    const origin = (rawOrigin && ALLOWED_ORIGINS.includes(rawOrigin)) ? rawOrigin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.checkvibe.dev');
+    // Use the raw origin for dev, but always use non-www for production (matches Supabase uri_allow_list)
+    const origin = (rawOrigin && DEV_ORIGINS.includes(rawOrigin))
+        ? rawOrigin
+        : 'https://checkvibe.dev';
     const { data, error } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email,
         options: {
-            redirectTo: `${origin}/update-password`,
+            redirectTo: `${origin}/auth/callback?next=/update-password`,
         },
     });
 
