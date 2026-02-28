@@ -67,33 +67,19 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    // Get top source IPs
-    const { data: ipData } = await supabase
-        .from('threat_events' as any)
-        .select('source_ip, created_at')
-        .eq('project_id', projectId)
-        .gte('created_at', since)
-        .order('created_at', { ascending: false });
+    // Get top source IPs via RPC (aggregated in Postgres, not client-side)
+    const { data: topIpsRaw } = await supabase.rpc('get_threat_top_ips' as any, {
+        p_project_id: projectId,
+        p_since: since,
+        p_limit: 10
+    });
 
-    const ipCounts: Record<string, { count: number; lastSeen: string }> = {};
-    if (ipData) {
-        for (const evt of ipData) {
-            const ip = (evt as any).source_ip;
-            if (!ip) continue;
-            if (!ipCounts[ip]) {
-                ipCounts[ip] = { count: 0, lastSeen: (evt as any).created_at };
-            }
-            ipCounts[ip].count++;
-        }
-    }
-
-    const topIps = Object.entries(ipCounts)
-        .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 10)
-        .map(([ip, data]) => ({ ip, count: data.count, lastSeen: data.lastSeen }));
+    const topIps = Array.isArray(topIpsRaw)
+        ? topIpsRaw.map((row: any) => ({ ip: row.source_ip, count: Number(row.event_count) }))
+        : [];
 
     return NextResponse.json({
-        stats: stats || {},
+        stats: stats || { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
         timeSeries: Object.values(buckets),
         topIps,
         hours,
