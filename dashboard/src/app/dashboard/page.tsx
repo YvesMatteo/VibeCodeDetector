@@ -7,6 +7,7 @@ import { ProjectCard } from '@/components/dashboard/project-card';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ProjectSearch } from '@/components/dashboard/project-search';
+import { countIssuesBySeverity } from '@/lib/scan-utils';
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
     const params = await searchParams;
@@ -63,47 +64,53 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
     }
 
-    // For each project, get the latest scan with severity breakdown
-    const projectsWithScans = await Promise.all(
-        filteredProjects.map(async (project) => {
-            const { data: latestScan } = await supabase
-                .from('scans')
-                .select('id, overall_score, completed_at, results')
-                .eq('project_id', project.id)
-                .eq('status', 'completed')
-                .order('completed_at', { ascending: false })
-                .limit(1)
-                .single();
+    // Batch-fetch latest scan metadata per project (no results blob, fixes N+1)
+    const latestScansMap: Record<string, { id: string; overall_score: number | null; completed_at: string | null }> = {};
+    if (projectIds.length > 0) {
+        const { data: recentScans } = await supabase
+            .from('scans')
+            .select('project_id, id, overall_score, completed_at')
+            .in('project_id', projectIds)
+            .eq('status', 'completed')
+            .order('completed_at', { ascending: false });
 
-            const severity = { critical: 0, high: 0, medium: 0, low: 0 };
-            let issueCount = 0;
-            if (latestScan?.results) {
-                const results = latestScan.results as Record<string, any>;
-                Object.values(results).forEach((r: any) => {
-                    if (r.findings && Array.isArray(r.findings)) {
-                        r.findings.forEach((f: any) => {
-                            const sev = f.severity?.toLowerCase();
-                            if (sev === 'info') return;
-                            issueCount++;
-                            if (sev === 'critical') severity.critical++;
-                            else if (sev === 'high') severity.high++;
-                            else if (sev === 'medium') severity.medium++;
-                            else severity.low++;
-                        });
-                    }
-                });
+        for (const scan of (recentScans || []) as any[]) {
+            if (scan.project_id && !latestScansMap[scan.project_id]) {
+                latestScansMap[scan.project_id] = scan;
             }
+        }
+    }
 
-            return {
-                ...project,
-                latestScore: latestScan?.overall_score ?? null,
-                lastAuditDate: latestScan?.completed_at ?? null,
-                issueCount,
-                severity,
-                monitoringFrequency: scheduleMap.get(project.id) || null,
+    // Fetch results ONLY for the latest scan per project (for severity breakdown)
+    const latestScanIds = Object.values(latestScansMap).map(s => s.id);
+    const severityMap: Record<string, { issueCount: number; severity: { critical: number; high: number; medium: number; low: number } }> = {};
+    if (latestScanIds.length > 0) {
+        const { data: scansWithResults } = await supabase
+            .from('scans')
+            .select('id, results')
+            .in('id', latestScanIds);
+
+        for (const scan of (scansWithResults || [])) {
+            const counts = countIssuesBySeverity(scan.results as Record<string, any>);
+            severityMap[scan.id] = {
+                issueCount: counts.total,
+                severity: { critical: counts.critical, high: counts.high, medium: counts.medium, low: counts.low },
             };
-        })
-    );
+        }
+    }
+
+    const projectsWithScans = filteredProjects.map((project) => {
+        const latestScan = latestScansMap[project.id] ?? null;
+        const scanSeverity = latestScan ? severityMap[latestScan.id] : null;
+        return {
+            ...project,
+            latestScore: latestScan?.overall_score ?? null,
+            lastAuditDate: latestScan?.completed_at ?? null,
+            issueCount: scanSeverity?.issueCount ?? 0,
+            severity: scanSeverity?.severity ?? { critical: 0, high: 0, medium: 0, low: 0 },
+            monitoringFrequency: scheduleMap.get(project.id) || null,
+        };
+    });
 
     const usageStats = planScansLimit > 0 ? (
         <div className="flex items-center gap-4 mt-1">

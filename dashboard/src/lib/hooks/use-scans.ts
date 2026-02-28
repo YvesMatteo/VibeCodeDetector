@@ -1,5 +1,7 @@
 import useSWR from 'swr';
 
+/** Lightweight scan metadata returned by the list endpoint (GET /api/scan).
+ *  The full `results` JSON is only available from the detail endpoint (GET /api/scan/:id). */
 export interface Scan {
   id: string;
   url: string;
@@ -7,7 +9,6 @@ export interface Scan {
   overall_score: number | null;
   created_at: string;
   completed_at: string | null;
-  results: Record<string, unknown> | null;
   project_id: string | null;
 }
 

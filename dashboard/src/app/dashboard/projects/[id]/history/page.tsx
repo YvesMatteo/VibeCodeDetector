@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { ScoreChart } from '@/components/dashboard/score-chart';
+import { formatDate } from '@/lib/format-date';
+import { countIssuesBySeverity } from '@/lib/scan-utils';
 
 function getVibeRating(issues: number): { label: string; color: string; bg: string } {
     if (issues === 0) return { label: 'Clean', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
@@ -11,18 +13,6 @@ function getVibeRating(issues: number): { label: string; color: string; bg: stri
     if (issues <= 15) return { label: 'Needs Work', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
     if (issues <= 25) return { label: 'At Risk', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
     return { label: 'Critical', color: 'text-red-500', bg: 'bg-red-500/15 border-red-500/30' };
-}
-
-function countIssues(results: any): number {
-    if (!results || typeof results !== 'object') return 0;
-    let count = 0;
-    for (const key of Object.keys(results)) {
-        const scanner = results[key];
-        if (scanner?.findings && Array.isArray(scanner.findings)) {
-            count += scanner.findings.filter((f: any) => f.severity && f.severity.toLowerCase() !== 'info').length;
-        }
-    }
-    return count;
 }
 
 export default async function ProjectHistoryPage(props: { params: Promise<{ id: string }> }) {
@@ -83,7 +73,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
             ) : (
                 <div className="relative">
                     {scans.map((scan: any, index: number) => {
-                        const issueCount = countIssues(scan.results);
+                        const issueCount = countIssuesBySeverity(scan.results as Record<string, any>).total;
                         const score = scan.overall_score;
                         const rating = getVibeRating(issueCount);
                         const date = new Date(scan.created_at);
@@ -112,7 +102,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                                                 {isFirst && <Badge className="bg-sky-400/10 text-sky-400 border-sky-400/20 text-xs border">Latest</Badge>}
                                             </div>
                                             <span className="text-xs text-zinc-600">
-                                                {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {formatDate(date, 'datetime')}
                                             </span>
                                         </div>
                                         <p className="text-sm text-zinc-400">

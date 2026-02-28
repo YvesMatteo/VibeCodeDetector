@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
         let query = supabase
             .from('scans')
-            .select('id, url, status, overall_score, created_at, completed_at, results, project_id', { count: 'exact' })
+            .select('id, url, status, overall_score, created_at, completed_at, project_id', { count: 'exact' })
             .eq('user_id', auth.userId)
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);

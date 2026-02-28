@@ -7,6 +7,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { encrypt } from '@/lib/encryption';
 import { PLAN_FREQUENCY_MAP } from '@/lib/plan-config';
 import { computeNextRun, resolveAppUrl } from '@/lib/schedule-utils';
+import { countIssuesBySeverity } from '@/lib/scan-utils';
 
 export async function GET() {
     try {
@@ -14,6 +15,12 @@ export async function GET() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 30 project list reads per minute per user
+        const rlList = await checkRateLimit(`projects-list:${user.id}`, 30, 60);
+        if (!rlList.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         // Fetch projects with latest scan info
@@ -34,9 +41,10 @@ export async function GET() {
         const scheduleMap: Record<string, any> = {};
 
         if (projectIds.length > 0) {
+            // Step 1: Fetch latest scan metadata per project (no results blob)
             const { data: recentScans } = await supabase
                 .from('scans')
-                .select('project_id, id, overall_score, completed_at, results')
+                .select('project_id, id, overall_score, completed_at')
                 .in('project_id', projectIds)
                 .eq('status', 'completed')
                 .order('completed_at', { ascending: false });
@@ -45,6 +53,26 @@ export async function GET() {
                 if (scan.project_id && !latestScansMap[scan.project_id]) {
                     latestScansMap[scan.project_id] = scan;
                 }
+            }
+
+            // Step 2: Fetch results ONLY for the latest scan per project (for issue counts)
+            const latestScanIds = Object.values(latestScansMap).map((s: any) => s.id);
+            const issueCountsMap: Record<string, number> = {};
+            if (latestScanIds.length > 0) {
+                const { data: scansWithResults } = await supabase
+                    .from('scans')
+                    .select('id, results')
+                    .in('id', latestScanIds);
+
+                for (const scan of (scansWithResults || [])) {
+                    const counts = countIssuesBySeverity(scan.results as Record<string, any>);
+                    issueCountsMap[scan.id] = counts.total;
+                }
+            }
+
+            // Attach issue counts to the latestScansMap entries
+            for (const [projectId, scan] of Object.entries(latestScansMap)) {
+                (scan as any)._issueCount = issueCountsMap[(scan as any).id] ?? 0;
             }
 
             // Fetch scheduled scans for monitoring badges
@@ -60,17 +88,7 @@ export async function GET() {
 
         const projectsWithScans = (projects || []).map((project) => {
             const latestScan = latestScansMap[project.id] ?? null;
-            let issueCount = 0;
-            if (latestScan?.results) {
-                const results = latestScan.results as Record<string, any>;
-                Object.values(results).forEach((r: any) => {
-                    if (r.findings && Array.isArray(r.findings)) {
-                        r.findings.forEach((f: any) => {
-                            if (f.severity?.toLowerCase() !== 'info') issueCount++;
-                        });
-                    }
-                });
-            }
+            const issueCount = (latestScan as any)?._issueCount ?? 0;
             const schedule = scheduleMap[project.id] ?? null;
             return {
                 ...project,

@@ -20,6 +20,7 @@ import { ScoreChart } from '@/components/dashboard/score-chart';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format-date';
 import { getScoreColor, getScoreBg } from '@/lib/severity-utils';
+import { countIssuesBySeverity } from '@/lib/scan-utils';
 
 const FREQUENCY_LABELS: Record<string, string> = {
     every_6h: 'Every 6 hours',
@@ -31,24 +32,6 @@ const FREQUENCY_LABELS: Record<string, string> = {
 function timeAgo(date: string | null): string {
     if (!date) return 'Never';
     return formatDate(date, 'relative');
-}
-
-function countIssuesBySeverity(results: Record<string, any>): { critical: number; high: number; medium: number; low: number; total: number } {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0, total: 0 };
-    for (const key of Object.keys(results)) {
-        const scanner = results[key];
-        if (scanner?.findings && Array.isArray(scanner.findings)) {
-            for (const f of scanner.findings) {
-                const sev = (f.severity || '').toLowerCase();
-                if (sev === 'critical') counts.critical++;
-                else if (sev === 'high') counts.high++;
-                else if (sev === 'medium') counts.medium++;
-                else if (sev === 'low') counts.low++;
-                if (sev !== 'info') counts.total++;
-            }
-        }
-    }
-    return counts;
 }
 
 export default async function ProjectOverviewPage(props: { params: Promise<{ id: string }> }) {
@@ -217,9 +200,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                                 {timeAgo(latestScan.completed_at || latestScan.created_at)}
                             </p>
                             <p className="text-xs text-zinc-500 mt-2">
-                                {new Date(latestScan.completed_at || latestScan.created_at).toLocaleDateString('en-US', {
-                                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                                })}
+                                {formatDate(latestScan.completed_at || latestScan.created_at, 'datetime')}
                             </p>
                         </div>
 
@@ -263,9 +244,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                             </p>
                             {schedule?.enabled && schedule.next_run_at && (
                                 <p className="text-xs text-zinc-500 mt-2">
-                                    Next check: {new Date(schedule.next_run_at).toLocaleDateString('en-US', {
-                                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                                    })}
+                                    Next check: {formatDate(schedule.next_run_at, 'datetime')}
                                 </p>
                             )}
                             {!schedule && (

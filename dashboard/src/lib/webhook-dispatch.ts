@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { countIssuesBySeverity } from '@/lib/scan-utils';
 
 function getServiceClient() {
     return createServiceClient(
@@ -20,23 +21,6 @@ interface WebhookPayload {
 
 function signPayload(payload: string, secret: string): string {
     return crypto.createHmac('sha256', secret).update(payload).digest('hex');
-}
-
-function countIssuesBySeverity(results: Record<string, any>): { critical: number; high: number; medium: number; low: number } {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
-    for (const key of Object.keys(results)) {
-        const scanner = results[key];
-        if (scanner?.findings && Array.isArray(scanner.findings)) {
-            for (const f of scanner.findings) {
-                const sev = (f.severity || '').toLowerCase();
-                if (sev === 'critical') counts.critical++;
-                else if (sev === 'high') counts.high++;
-                else if (sev === 'medium') counts.medium++;
-                else if (sev === 'low') counts.low++;
-            }
-        }
-    }
-    return counts;
 }
 
 /**
