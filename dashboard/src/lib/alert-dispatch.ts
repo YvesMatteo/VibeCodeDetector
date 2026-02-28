@@ -54,7 +54,7 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
                 if (hoursSince < THROTTLE_HOURS) return;
             }
 
-            let template: { subject: string; html: string } | null = null;
+            let template: { subject: string; html: string; text: string } | null = null;
 
             if (rule.type === 'score_drop' && opts.previousScore !== null) {
                 const drop = opts.previousScore - opts.currentScore;
