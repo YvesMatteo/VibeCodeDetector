@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { SupportForm } from './support-form';
+import { formatDate } from '@/lib/format-date';
 
 export const metadata: Metadata = {
     title: 'Support | CheckVibe',
@@ -59,7 +60,7 @@ export default async function SupportPage() {
                                                 {ticket.status}
                                             </span>
                                             <span className="text-xs text-zinc-500">
-                                                {new Date(ticket.created_at).toLocaleDateString()}
+                                                {formatDate(ticket.created_at, 'short')}
                                             </span>
                                         </div>
                                         <h3 className="font-medium text-sm text-zinc-200 mb-1">{ticket.subject}</h3>

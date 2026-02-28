@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { SettingsTabs } from '@/components/dashboard/settings-tabs';
 import { PageHeader } from '@/components/dashboard/page-header';
+import { formatDate } from '@/lib/format-date';
 
 export default async function SettingsPage() {
     const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function SettingsPage() {
                 <SettingsTabs
                     email={user?.email || ''}
                     userId={user?.id || ''}
-                    createdAt={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+                    createdAt={user?.created_at ? formatDate(user.created_at, 'short') : ''}
                     plan={plan}
                 />
             </div>

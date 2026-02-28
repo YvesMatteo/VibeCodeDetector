@@ -7,6 +7,7 @@ import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport } from '@/components/dashboard/audit-report';
 import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
 import { ExportButton } from '@/components/dashboard/export-button';
+import { formatDate } from '@/lib/format-date';
 
 export default async function ProjectAuditDetailPage(props: { params: Promise<{ id: string; scanId: string }> }) {
     const params = await props.params;
@@ -37,7 +38,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
                 </Link>
                 <ChevronRight className="h-3.5 w-3.5" />
                 <span className="text-zinc-300">
-                    {new Date(scan.completed_at || scan.created_at).toLocaleDateString()}
+                    {formatDate(scan.completed_at || scan.created_at, 'short')}
                 </span>
             </nav>
 
@@ -46,7 +47,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-1.5 text-sm text-zinc-400">
                         <Clock className="h-4 w-4" />
-                        Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
+                        Scanned on {formatDate(scan.completed_at || scan.created_at, 'datetime')}
                     </div>
                     <Badge variant="secondary" className="bg-white/5 border-white/10 text-xs">{scan.status}</Badge>
                     {scan.overall_score != null && (

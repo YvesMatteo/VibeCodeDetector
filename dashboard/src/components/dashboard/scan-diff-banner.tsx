@@ -1,18 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowDownCircle, ArrowUpCircle, Minus } from 'lucide-react';
 import type { ScanDiff } from '@/lib/scan-diff';
+import { formatDate } from '@/lib/format-date';
 
 interface ScanDiffBannerProps {
     diff: ScanDiff;
     previousScanDate: string;
-}
-
-function formatDate(dateStr: string): string {
-    try {
-        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-        return dateStr;
-    }
 }
 
 export function ScanDiffBanner({ diff, previousScanDate }: ScanDiffBannerProps) {

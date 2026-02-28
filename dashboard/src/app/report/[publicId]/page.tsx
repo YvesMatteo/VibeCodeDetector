@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, ExternalLink, Clock } from 'lucide-react';
 import { processAuditData } from '@/lib/audit-data';
 import { AuditReport } from '@/components/dashboard/audit-report';
+import { formatDate } from '@/lib/format-date';
 import type { Metadata } from 'next';
 
 function getSupabaseAdmin() {
@@ -97,7 +98,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ p
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            Scanned on {new Date(scan.completed_at || scan.created_at).toLocaleString()}
+                            Scanned on {formatDate(scan.completed_at || scan.created_at, 'datetime')}
                         </div>
                         <Badge variant="secondary" className="bg-white/5 border-white/10">
                             Score: {scan.overall_score ?? '—'}/100

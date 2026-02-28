@@ -1,6 +1,7 @@
 // Full markdown report generator for scan exports
 import { computeScanDiff } from './scan-diff';
 import { computeOwaspSummary } from './owasp-mapping';
+import { formatDate } from './format-date';
 
 const scannerNames: Record<string, string> = {
   security: 'Security Headers',
@@ -108,10 +109,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   const lines: string[] = [];
   const url = scan.url || 'Unknown URL';
   const domain = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-  const scanDate = new Date(scan.completed_at || scan.created_at).toLocaleString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-  });
+  const scanDate = formatDate(scan.completed_at || scan.created_at, 'long');
 
   const results = (scan.results || {}) as Record<string, any>;
 
@@ -138,9 +136,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
   // ── Scan Diff ──────────────────────────────────────────────────────────
   if (previousScan?.results) {
     const diff = computeScanDiff(results, previousScan.results as Record<string, any>);
-    const prevDate = new Date(previousScan.completed_at || previousScan.created_at).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-    });
+    const prevDate = formatDate(previousScan.completed_at || previousScan.created_at, 'short');
     const parts: string[] = [];
     if (diff.resolvedIssues.length > 0) parts.push(`${diff.resolvedIssues.length} resolved`);
     if (diff.newIssues.length > 0) parts.push(`${diff.newIssues.length} new`);
