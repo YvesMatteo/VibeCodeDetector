@@ -1,7 +1,7 @@
 const BRAND = {
     name: 'CheckVibe',
-    url: 'https://www.checkvibe.dev',
-    logoUrl: 'https://www.checkvibe.dev/logo.png',
+    url: 'https://checkvibe.dev',
+    logoUrl: 'https://checkvibe.dev/logo.png',
     color: '#FFFFFF',
     bg: '#09090B',
     cardBg: '#111113',
@@ -25,7 +25,7 @@ function layout(content: string): string {
 <!-- Logo -->
 <tr><td align="center" style="padding-bottom:32px;">
 <a href="${BRAND.url}" style="text-decoration:none;display:inline-flex;align-items:center;">
-<img src="${BRAND.logoUrl}" alt="${BRAND.name}" width="36" height="36" style="border-radius:8px;margin-right:10px;"/>
+<img src="${BRAND.logoUrl}" alt="${BRAND.name}" width="36" height="36" style="border-radius:8px;margin-right:10px;background-color:${BRAND.bg};"/>
 <span style="font-size:20px;font-weight:600;color:${BRAND.color};letter-spacing:-0.02em;">${BRAND.name}</span>
 </a>
 </td></tr>
