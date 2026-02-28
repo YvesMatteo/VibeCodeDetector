@@ -211,7 +211,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                                 <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[item.finding.severity?.toLowerCase()] || 'text-zinc-400 bg-zinc-500/10'}`}>
                                     {item.finding.severity}
                                 </Badge>
-                                <span className="text-[13px] text-zinc-300 truncate flex-1">{item.finding.title || item.finding.id}</span>
+                                <span className="text-[13px] text-zinc-300 truncate flex-1" title={item.finding.title || item.finding.id}>{item.finding.title || item.finding.id}</span>
                                 <span className="text-[11px] text-zinc-600 shrink-0">{SCANNER_NAMES[item.scannerKey] || item.scannerKey}</span>
                             </div>
                         ))}
@@ -236,7 +236,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                                 <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[item.finding.severity?.toLowerCase()] || 'text-zinc-400 bg-zinc-500/10'}`}>
                                     {item.finding.severity}
                                 </Badge>
-                                <span className="text-[13px] text-zinc-300 truncate flex-1">{item.finding.title || item.finding.id}</span>
+                                <span className="text-[13px] text-zinc-300 truncate flex-1" title={item.finding.title || item.finding.id}>{item.finding.title || item.finding.id}</span>
                                 <span className="text-[11px] text-zinc-600 shrink-0">{SCANNER_NAMES[item.scannerKey] || item.scannerKey}</span>
                             </div>
                         ))}
@@ -271,13 +271,13 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
                                             <Badge variant="outline" className={`text-[10px] capitalize shrink-0 border-0 ${SEVERITY_COLORS[severity] || 'text-zinc-400 bg-zinc-500/10'}`}>
                                                 {severity || '?'}
                                             </Badge>
-                                            <span className="text-sm text-zinc-300 truncate">{findingId}</span>
+                                            <span className="text-sm text-zinc-300 truncate" title={findingId}>{findingId}</span>
                                             <span className="text-xs text-zinc-600 shrink-0">{scanner}</span>
                                             <span className="text-xs text-zinc-600 shrink-0 bg-white/[0.04] rounded px-1.5 py-0.5">
                                                 {REASON_LABELS[d.reason] || d.reason}
                                             </span>
                                             {d.note && (
-                                                <span className="text-xs text-zinc-600 italic truncate">{d.note}</span>
+                                                <span className="text-xs text-zinc-600 italic truncate" title={d.note}>{d.note}</span>
                                             )}
                                         </div>
                                         {onRestore && (

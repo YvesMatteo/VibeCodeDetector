@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { OWNER_EMAIL } from '@/lib/constants';
 const MODELS = ['gemini-2.0-flash'];
 const MAX_RETRIES = 1; // Keep low — Vercel Hobby has 60s function timeout
@@ -64,6 +65,12 @@ export async function POST(req: NextRequest) {
 
     if (!user || user.email !== OWNER_EMAIL) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Rate limit: 5 email generations per minute
+    const rlGen = await checkRateLimit(`outreach-gen:${user.id}`, 5, 60);
+    if (!rlGen.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const { scanResults, projectUrl, issueCount, severityBreakdown } = await req.json();

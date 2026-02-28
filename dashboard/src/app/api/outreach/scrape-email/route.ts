@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { OWNER_EMAIL } from '@/lib/constants';
 
 // ── Ignore patterns ──────────────────────────────────────────────────
@@ -453,6 +454,12 @@ export async function POST(req: NextRequest) {
 
     if (!user || user.email !== OWNER_EMAIL) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Rate limit: 5 email scrapes per minute
+    const rlScrape = await checkRateLimit(`outreach-scrape:${user.id}`, 5, 60);
+    if (!rlScrape.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const { url } = await req.json();

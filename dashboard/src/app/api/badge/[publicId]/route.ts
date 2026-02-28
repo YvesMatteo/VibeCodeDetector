@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 function getSupabaseAdmin() {
   return createClient(
@@ -25,13 +26,21 @@ function getLabel(score: number): string {
 }
 
 export async function GET(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   const { publicId } = await params;
 
   if (!/^[0-9a-f]{6,16}$/i.test(publicId)) {
     return new NextResponse('Not found', { status: 404 });
+  }
+
+  // Rate limit: 5 badge requests per minute per IP (public endpoint)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+    ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
+  const rl = await checkRateLimit(`badge:${ip}`, 5, 60);
+  if (!rl.allowed) {
+    return new NextResponse('Too many requests', { status: 429 });
   }
 
   const supabase = getSupabaseAdmin();

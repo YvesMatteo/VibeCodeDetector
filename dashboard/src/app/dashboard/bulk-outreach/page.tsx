@@ -740,7 +740,7 @@ export default function BulkOutreachPage() {
                                                 onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
                                             >
                                                 <td className="px-4 py-2.5 text-zinc-600 tabular-nums">{i + 1}</td>
-                                                <td className="px-4 py-2.5 text-white truncate max-w-[300px] font-mono text-xs">
+                                                <td className="px-4 py-2.5 text-white truncate max-w-[300px] font-mono text-xs" title={entry.url}>
                                                     <span className="flex items-center gap-1">
                                                         {expandedIdx === i ? <ChevronDown className="h-3 w-3 text-zinc-500 shrink-0" /> : <ChevronRight className="h-3 w-3 text-zinc-500 shrink-0" />}
                                                         {entry.url.replace(/^https?:\/\//, '')}
@@ -775,7 +775,7 @@ export default function BulkOutreachPage() {
                                                 <td className="px-4 py-2.5">
                                                     <StatusBadge status={entry.status} />
                                                     {entry.error && entry.status === 'error' && (
-                                                        <p className="text-[10px] text-red-400/60 mt-0.5 truncate max-w-[180px]">{entry.error}</p>
+                                                        <p className="text-[10px] text-red-400/60 mt-0.5 truncate max-w-[180px]" title={entry.error}>{entry.error}</p>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-2.5 text-center tabular-nums">

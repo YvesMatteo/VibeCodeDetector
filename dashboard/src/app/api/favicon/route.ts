@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const FALLBACK_ICON = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAKRJREFUWEft' +
@@ -10,6 +11,14 @@ const FALLBACK_ICON = Buffer.from(
 );
 
 export async function GET(req: NextRequest) {
+    // Rate limit: 30 favicon requests per minute per IP (public endpoint)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+        ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
+    const rlFav = await checkRateLimit(`favicon:${ip}`, 30, 60);
+    if (!rlFav.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const domain = req.nextUrl.searchParams.get('domain');
     if (!domain) {
         return NextResponse.json({ error: 'Missing domain' }, { status: 400 });

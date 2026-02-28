@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // ---------------------------------------------------------------------------
 // GET /api/keys/[id]/usage — Get usage stats for a specific API key
@@ -17,6 +18,12 @@ export async function GET(
 
     const scopeError = requireScope(context, 'keys:read');
     if (scopeError) return scopeError;
+
+    // Rate limit: 30 usage reads per minute per user
+    const rlUsage = await checkRateLimit(`keys-usage:${context.userId}`, 30, 60);
+    if (!rlUsage.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const supabase = getServiceClient();
 

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 function getSupabaseAdmin() {
     return createClient(
@@ -44,13 +45,21 @@ const NO_DATA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height=
 const SVG_HEADERS = { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=600, s-maxage=600' };
 
 export async function GET(
-    _req: Request,
+    req: NextRequest,
     { params }: { params: Promise<{ projectId: string }> },
 ) {
     const { projectId } = await params;
 
     if (!/^[0-9a-f-]{36}$/i.test(projectId)) {
         return new NextResponse(NO_DATA_SVG, { status: 200, headers: SVG_HEADERS });
+    }
+
+    // Rate limit: 5 badge requests per minute per IP (public endpoint)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+        ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
+    const rl = await checkRateLimit(`badge-project:${ip}`, 5, 60);
+    if (!rl.allowed) {
+        return new NextResponse('Too many requests', { status: 429 });
     }
 
     const supabase = getSupabaseAdmin();

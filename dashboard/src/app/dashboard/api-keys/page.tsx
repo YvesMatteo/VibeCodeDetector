@@ -33,6 +33,7 @@ import {
     CircleDot,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate as sharedFormatDate } from '@/lib/format-date';
 
 interface ApiKey {
     id: string;
@@ -91,6 +92,7 @@ export default function ApiKeysPage() {
             setKeys(data.keys || []);
         } catch (err) {
             console.error('Failed to fetch keys:', err);
+            toast.error('Failed to load API keys. Please refresh the page.');
         } finally {
             setLoading(false);
         }
@@ -133,10 +135,11 @@ export default function ApiKeysPage() {
                 resetCreateForm();
                 fetchKeys();
             } else {
-                toast.error(data.error || 'Failed to create key');
+                toast.error(data.error || 'Failed to create API key. Please try again.');
             }
         } catch (err) {
             console.error('Failed to create key:', err);
+            toast.error('API key creation failed. Please check your connection and try again.');
         } finally {
             setCreating(false);
         }
@@ -160,10 +163,11 @@ export default function ApiKeysPage() {
                 setRevokeTarget(null);
             } else {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to revoke key');
+                toast.error(data.error || 'Failed to revoke API key. Please try again.');
             }
         } catch (err) {
             console.error('Failed to revoke key:', err);
+            toast.error('API key revocation failed. Please check your connection and try again.');
         } finally {
             setRevoking(null);
         }
@@ -180,10 +184,11 @@ export default function ApiKeysPage() {
                 setDeleteTarget(null);
             } else {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to delete key');
+                toast.error(data.error || 'Failed to delete API key. Please try again.');
             }
         } catch (err) {
             console.error('Failed to delete key:', err);
+            toast.error('API key deletion failed. Please check your connection and try again.');
         } finally {
             setDeleting(null);
         }
@@ -210,21 +215,12 @@ export default function ApiKeysPage() {
 
     function formatDate(date: string | null) {
         if (!date) return 'Never';
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric',
-        });
+        return sharedFormatDate(date, 'short');
     }
 
     function formatRelative(date: string | null) {
         if (!date) return 'Never';
-        const diff = Date.now() - new Date(date).getTime();
-        const minutes = Math.floor(diff / 60000);
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        const days = Math.floor(hours / 24);
-        return `${days}d ago`;
+        return sharedFormatDate(date, 'relative');
     }
 
     const activeKeys = keys.filter(k => !k.revoked_at && (!k.expires_at || new Date(k.expires_at) >= new Date()));
@@ -824,7 +820,7 @@ function ActivityFeed() {
                                             <span className={`text-[11px] font-mono font-medium ${methodColors[log.method] || 'text-zinc-400'}`}>
                                                 {log.method}
                                             </span>
-                                            <span className="text-[11px] text-zinc-400 font-mono truncate">
+                                            <span className="text-[11px] text-zinc-400 font-mono truncate" title={log.endpoint}>
                                                 {log.endpoint}
                                             </span>
                                             <span className={`text-[10px] font-mono ml-auto shrink-0 ${statusColor(log.status_code)}`}>
@@ -832,7 +828,7 @@ function ActivityFeed() {
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-[10px] text-zinc-600 truncate">
+                                            <span className="text-[10px] text-zinc-600 truncate" title={log.key_name}>
                                                 {log.key_name}
                                             </span>
                                             <span className="text-[10px] text-zinc-700">&middot;</span>

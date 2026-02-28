@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { validateTargetUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { encrypt } from '@/lib/encryption';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function GET(
     _req: NextRequest,
@@ -14,6 +15,12 @@ export async function GET(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 30 project reads per minute per user
+        const rlGet = await checkRateLimit(`project-get:${user.id}`, 30, 60);
+        if (!rlGet.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         const { data: project, error } = await supabase
@@ -55,6 +62,12 @@ export async function PATCH(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 10 project updates per minute per user
+        const rlPatch = await checkRateLimit(`project-patch:${user.id}`, 10, 60);
+        if (!rlPatch.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         // Verify ownership
@@ -144,6 +157,12 @@ export async function DELETE(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 10 project deletions per minute per user
+        const rlDel = await checkRateLimit(`project-del:${user.id}`, 10, 60);
+        if (!rlDel.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         // Verify ownership first

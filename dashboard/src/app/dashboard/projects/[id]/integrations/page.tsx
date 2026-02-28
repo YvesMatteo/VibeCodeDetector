@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/format-date';
 
 interface WebhookEntry {
     id: string;
@@ -126,7 +127,7 @@ export default function IntegrationsPage() {
                     setNetlifyDeployments(netlifyData.deployments || []);
                 }
             } catch {
-                setError('Failed to load data. Please try again.');
+                setError('Failed to load integrations. Please refresh the page.');
             } finally {
                 setLoading(false);
             }
@@ -150,7 +151,7 @@ export default function IntegrationsPage() {
             setNewUrl('');
             toast.success('Webhook created');
         } catch (e: any) {
-            toast.error(e.message || 'Failed to create webhook');
+            toast.error(e.message || 'Failed to create webhook. Please verify the URL and try again.');
         } finally {
             setAdding(false);
         }
@@ -163,7 +164,7 @@ export default function IntegrationsPage() {
             setWebhooks(webhooks.filter(w => w.id !== id));
             toast.success('Webhook deleted');
         } catch {
-            toast.error('Failed to delete webhook');
+            toast.error('Failed to delete webhook. Please try again.');
         }
     }
 
@@ -189,7 +190,7 @@ export default function IntegrationsPage() {
             setVercelWebhookUrl(data.webhook_url);
             toast.success('Vercel deploy hook enabled');
         } catch (e: any) {
-            toast.error(e.message || 'Failed to enable Vercel integration');
+            toast.error(e.message || 'Failed to enable Vercel integration. Please try again.');
         } finally {
             setVercelLoading(false);
         }
@@ -206,7 +207,7 @@ export default function IntegrationsPage() {
             setVercelWebhookUrl(null);
             toast.success('Vercel deploy hook removed');
         } catch {
-            toast.error('Failed to remove Vercel integration');
+            toast.error('Failed to remove Vercel integration. Please try again.');
         } finally {
             setVercelLoading(false);
         }
@@ -234,7 +235,7 @@ export default function IntegrationsPage() {
             setNetlifyWebhookUrl(data.webhook_url);
             toast.success('Netlify deploy hook enabled');
         } catch (e: any) {
-            toast.error(e.message || 'Failed to enable Netlify integration');
+            toast.error(e.message || 'Failed to enable Netlify integration. Please try again.');
         } finally {
             setNetlifyLoading(false);
         }
@@ -251,7 +252,7 @@ export default function IntegrationsPage() {
             setNetlifyWebhookUrl(null);
             toast.success('Netlify deploy hook removed');
         } catch {
-            toast.error('Failed to remove Netlify integration');
+            toast.error('Failed to remove Netlify integration. Please try again.');
         } finally {
             setNetlifyLoading(false);
         }
@@ -269,10 +270,10 @@ export default function IntegrationsPage() {
                 setBadgeEnabled(!badgeEnabled);
                 toast.success(badgeEnabled ? 'Badge disabled' : 'Badge enabled');
             } else {
-                toast.error('Failed to update badge setting');
+                toast.error('Failed to update security badge. Please try again.');
             }
         } catch {
-            toast.error('Failed to update badge setting');
+            toast.error('Failed to update security badge. Please check your connection and try again.');
         } finally {
             setBadgeToggling(false);
         }
@@ -491,7 +492,7 @@ jobs:
                             </span>
                             {vercelIntegration.last_deployment_at && (
                                 <span>
-                                    &middot; Last deploy: {new Date(vercelIntegration.last_deployment_at).toLocaleDateString()}
+                                    &middot; Last deploy: {formatDate(vercelIntegration.last_deployment_at, 'short')}
                                 </span>
                             )}
                         </div>
@@ -504,10 +505,19 @@ jobs:
                                         <div key={dep.id} className="flex items-center justify-between p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] text-xs">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 {dep.deployment_url && (
-                                                    <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 truncate flex items-center gap-1">
-                                                        <ExternalLink className="h-3 w-3 shrink-0" />
-                                                        <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
-                                                    </a>
+                                                    <>
+                                                        <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 truncate flex items-center gap-1" title={dep.deployment_url}>
+                                                            <ExternalLink className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
+                                                        </a>
+                                                        <button
+                                                            onClick={() => copyToClipboard(dep.deployment_url!, `vcel-dep-${dep.id}`)}
+                                                            className="text-zinc-600 hover:text-zinc-300 transition-colors shrink-0 p-0.5"
+                                                            title="Copy URL"
+                                                        >
+                                                            {copiedId === `vcel-dep-${dep.id}` ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                                        </button>
+                                                    </>
                                                 )}
                                                 {dep.git_branch && (
                                                     <span className="text-zinc-600 shrink-0">{dep.git_branch}</span>
@@ -522,7 +532,7 @@ jobs:
                                                         {dep.result_score}
                                                     </span>
                                                 )}
-                                                <span className="text-zinc-600">{new Date(dep.created_at).toLocaleDateString()}</span>
+                                                <span className="text-zinc-600">{formatDate(dep.created_at, 'short')}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -614,7 +624,7 @@ jobs:
                             </span>
                             {netlifyIntegration.last_deployment_at && (
                                 <span>
-                                    &middot; Last deploy: {new Date(netlifyIntegration.last_deployment_at).toLocaleDateString()}
+                                    &middot; Last deploy: {formatDate(netlifyIntegration.last_deployment_at, 'short')}
                                 </span>
                             )}
                         </div>
@@ -627,10 +637,19 @@ jobs:
                                         <div key={dep.id} className="flex items-center justify-between p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] text-xs">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 {dep.deployment_url && (
-                                                    <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 truncate flex items-center gap-1">
-                                                        <ExternalLink className="h-3 w-3 shrink-0" />
-                                                        <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
-                                                    </a>
+                                                    <>
+                                                        <a href={dep.deployment_url} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 truncate flex items-center gap-1" title={dep.deployment_url}>
+                                                            <ExternalLink className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate">{dep.deployment_url.replace(/^https?:\/\//, '')}</span>
+                                                        </a>
+                                                        <button
+                                                            onClick={() => copyToClipboard(dep.deployment_url!, `ntlf-dep-${dep.id}`)}
+                                                            className="text-zinc-600 hover:text-zinc-300 transition-colors shrink-0 p-0.5"
+                                                            title="Copy URL"
+                                                        >
+                                                            {copiedId === `ntlf-dep-${dep.id}` ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
@@ -639,7 +658,7 @@ jobs:
                                                         {dep.result_score}
                                                     </span>
                                                 )}
-                                                <span className="text-zinc-600">{new Date(dep.created_at).toLocaleDateString()}</span>
+                                                <span className="text-zinc-600">{formatDate(dep.created_at, 'short')}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -728,7 +747,16 @@ jobs:
                         {webhooks.map((wh) => (
                             <div key={wh.id} className="flex items-start sm:items-center justify-between p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] gap-2">
                                 <div className="min-w-0">
-                                    <p className="text-sm text-zinc-300 truncate">{wh.url}</p>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <p className="text-sm text-zinc-300 truncate" title={wh.url}>{wh.url}</p>
+                                        <button
+                                            onClick={() => copyToClipboard(wh.url, `wh-${wh.id}`)}
+                                            className="text-zinc-600 hover:text-zinc-300 transition-colors shrink-0 p-0.5"
+                                            title="Copy URL"
+                                        >
+                                            {copiedId === `wh-${wh.id}` ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                        </button>
+                                    </div>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-[10px] text-zinc-600">
                                             Events: {wh.events.join(', ')}

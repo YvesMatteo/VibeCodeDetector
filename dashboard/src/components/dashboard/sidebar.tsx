@@ -169,7 +169,7 @@ export function Sidebar({
                         !isMobile && "group-hover:opacity-100",
                         isMobile && "opacity-100"
                     )}>
-                        <p className="text-[12px] font-medium text-white truncate">
+                        <p className="text-[12px] font-medium text-white truncate" title={userEmail || 'User'}>
                             {userEmail?.split('@')[0] || 'User'}
                         </p>
                         <p className="text-[10px] text-zinc-500 capitalize leading-none whitespace-nowrap">

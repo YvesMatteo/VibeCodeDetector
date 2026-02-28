@@ -87,10 +87,10 @@ export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issu
 
                 {/* Top: Project Name & Subtitle */}
                 <div className="mb-4 pr-10">
-                    <h3 className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors">
+                    <h3 className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors" title={name}>
                         {name}
                     </h3>
-                    <p className="text-xs text-zinc-500 truncate mt-1 tracking-wide">
+                    <p className="text-xs text-zinc-500 truncate mt-1 tracking-wide" title={url}>
                         {platformLabel} <span className="mx-1.5 opacity-50">|</span> {hostname}
                     </p>
                 </div>

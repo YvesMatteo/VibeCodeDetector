@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient } from '@/lib/api-keys';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // ---------------------------------------------------------------------------
 // GET /api/keys/activity — Get recent API activity across all keys for the user
@@ -12,6 +13,12 @@ export async function GET(req: NextRequest) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 30 activity reads per minute per user
+        const rlActivity = await checkRateLimit(`keys-activity:${user.id}`, 30, 60);
+        if (!rlActivity.allowed) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
         const searchParams = req.nextUrl.searchParams;

@@ -73,7 +73,7 @@ export default async function ProjectLayout({
                                 />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">
+                                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate" title={project.name}>
                                             {project.name}
                                         </h1>
                                         <Badge className={`${planColors[userPlan] || planColors.none} text-[10px] font-medium border capitalize shrink-0`}>
@@ -88,7 +88,7 @@ export default async function ProjectLayout({
                                             <ExternalLink className="h-4 w-4" />
                                         </a>
                                     </div>
-                                    <p className="text-sm text-zinc-500 mt-0.5 truncate">{hostname}</p>
+                                    <p className="text-sm text-zinc-500 mt-0.5 truncate" title={project.url}>{hostname}</p>
                                 </div>
                             </div>
                         </div>

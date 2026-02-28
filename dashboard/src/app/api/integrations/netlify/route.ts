@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Rate limit: 30 netlify integration reads per minute per user
+    const rlNetlifyGet = await checkRateLimit(`netlify-get:${user.id}`, 30, 60);
+    if (!rlNetlifyGet.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
+
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { User, Shield, CreditCard } from 'lucide-react';
+import { User, Shield, CreditCard, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { ManageSubscriptionButton } from '@/app/dashboard/settings/manage-subscription-button';
 
@@ -24,6 +25,14 @@ const tabs = [
 
 export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsProps) {
     const [activeTab, setActiveTab] = useState<string>('profile');
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    function copyToClipboard(text: string, field: string) {
+        navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        toast.success('Copied to clipboard');
+        setTimeout(() => setCopiedField(null), 2000);
+    }
 
     return (
         <div className="flex flex-col md:flex-row gap-8">
@@ -60,7 +69,16 @@ export function SettingsTabs({ email, userId, createdAt, plan }: SettingsTabsPro
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-zinc-400">Account ID</Label>
-                                <Input defaultValue={userId} disabled className="bg-transparent border-white/[0.06] font-mono text-xs text-zinc-500 h-10 truncate" />
+                                <div className="flex items-center gap-2">
+                                    <Input defaultValue={userId} disabled className="bg-transparent border-white/[0.06] font-mono text-xs text-zinc-500 h-10 truncate" title={userId} />
+                                    <button
+                                        onClick={() => copyToClipboard(userId, 'userId')}
+                                        className="text-zinc-500 hover:text-zinc-300 transition-colors shrink-0 p-2"
+                                        title="Copy Account ID"
+                                    >
+                                        {copiedField === 'userId' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-zinc-400">Member Since</Label>

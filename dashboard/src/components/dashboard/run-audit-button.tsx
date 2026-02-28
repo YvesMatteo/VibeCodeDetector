@@ -160,9 +160,9 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
             }
         } catch (err) {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            const message = err instanceof Error ? err.message : 'An error occurred';
+            const message = err instanceof Error ? err.message : 'Scan failed unexpectedly. Please try again.';
             setError(message);
-            toast.error(message || 'An error occurred while running the audit');
+            toast.error(message || 'Scan failed unexpectedly. Please try again.');
         } finally {
             setLoading(false);
             setDisplayProgress(0);
@@ -209,7 +209,7 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                         indicatorClassName="bg-sky-400"
                     />
                     <div className="flex items-center justify-between">
-                        <p className="text-[11px] text-zinc-500 truncate">{currentScanner}...</p>
+                        <p className="text-[11px] text-zinc-500 truncate" title={currentScanner}>{currentScanner}...</p>
                         {scannerCount && (
                             <p className="text-[11px] text-zinc-500 tabular-nums">{scannerCount} scanners</p>
                         )}

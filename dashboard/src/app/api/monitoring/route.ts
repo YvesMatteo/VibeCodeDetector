@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Rate limit: 30 monitoring reads per minute per user
+    const rlGet = await checkRateLimit(`monitoring-get:${user.id}`, 30, 60);
+    if (!rlGet.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+    }
+
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
@@ -33,8 +39,8 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Rate limit: 20 monitoring writes per minute per user
-    const rl = await checkRateLimit(`monitoring:${user.id}`, 20, 60);
+    // Rate limit: 10 monitoring writes per minute per user
+    const rl = await checkRateLimit(`monitoring:${user.id}`, 10, 60);
     if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
@@ -127,9 +133,9 @@ export async function DELETE(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Rate limit: 20 monitoring deletes per minute per user
-    const rl = await checkRateLimit(`monitoring-del:${user.id}`, 20, 60);
-    if (!rl.allowed) {
+    // Rate limit: 10 monitoring deletes per minute per user
+    const rl2 = await checkRateLimit(`monitoring-del:${user.id}`, 10, 60);
+    if (!rl2.allowed) {
         return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 

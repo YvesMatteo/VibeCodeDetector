@@ -95,6 +95,12 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Rate limit: 30 dismissal reads per minute per user
+        const rlGet = await checkRateLimit(`dismiss-get:${user.id}`, 30, 60);
+        if (!rlGet.allowed) {
+            return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+        }
+
         const projectId = req.nextUrl.searchParams.get('projectId');
         if (!projectId) {
             return NextResponse.json({ error: 'projectId query param is required' }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import nodemailer from 'nodemailer';
 import { OWNER_EMAIL } from '@/lib/constants';
 
@@ -54,6 +55,12 @@ export async function POST(req: NextRequest) {
 
     if (!user || user.email !== OWNER_EMAIL) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Rate limit: 5 outreach sends per minute
+    const rlSend = await checkRateLimit(`outreach-send:${user.id}`, 5, 60);
+    if (!rlSend.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const { to, subject, body } = await req.json();

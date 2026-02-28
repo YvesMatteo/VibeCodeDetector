@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
 import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const PLAN_KEY_LIMITS: Record<string, number> = {
     none: 0,
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
 
     const scopeError = requireScope(context, 'keys:manage');
     if (scopeError) return scopeError;
+
+    // Rate limit: 10 key creations per minute per user
+    const rlCreate = await checkRateLimit(`keys-create:${context.userId}`, 10, 60);
+    if (!rlCreate.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const userId = context.userId;
 
@@ -215,6 +222,12 @@ export async function GET(req: NextRequest) {
 
     const scopeError = requireScope(context, 'keys:read');
     if (scopeError) return scopeError;
+
+    // Rate limit: 30 key list reads per minute per user
+    const rlList = await checkRateLimit(`keys-list:${context.userId}`, 30, 60);
+    if (!rlList.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const supabase = getServiceClient();
     const keysTable = supabase.from('api_keys');

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient, validateScopes, isValidDomain, isValidIpOrCidr, type Scope } from '@/lib/api-keys';
 import { resolveAuth, requireScope } from '@/lib/api-auth';
 import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // ---------------------------------------------------------------------------
 // DELETE /api/keys/[id] — Revoke or permanently delete an API key
@@ -24,6 +25,12 @@ export async function DELETE(
 
     const scopeError = requireScope(context, 'keys:manage');
     if (scopeError) return scopeError;
+
+    // Rate limit: 10 key deletions per minute per user
+    const rlDel = await checkRateLimit(`keys-del:${context.userId}`, 10, 60);
+    if (!rlDel.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const permanent = req.nextUrl.searchParams.get('permanent') === 'true';
     const supabase = getServiceClient();
@@ -103,6 +110,12 @@ export async function PATCH(
 
     const scopeError = requireScope(context, 'keys:manage');
     if (scopeError) return scopeError;
+
+    // Rate limit: 10 key updates per minute per user
+    const rlPatch = await checkRateLimit(`keys-patch:${context.userId}`, 10, 60);
+    if (!rlPatch.allowed) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const supabase = getServiceClient();
 
