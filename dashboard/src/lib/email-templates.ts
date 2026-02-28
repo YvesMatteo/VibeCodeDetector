@@ -175,6 +175,70 @@ ${button('Review Findings', opts.dashboardUrl)}
     };
 }
 
+export function threatAlertTemplate(opts: {
+    projectName: string;
+    eventCount: number;
+    criticalCount: number;
+    highCount: number;
+    mediumCount: number;
+    topAttackType: string;
+    uniqueIps: number;
+    dashboardUrl: string;
+}): { subject: string; html: string } {
+    const severityLabel = opts.criticalCount > 0 ? 'critical' : opts.highCount > 0 ? 'high' : 'medium';
+    const headerColor = opts.criticalCount > 0 ? '#EF4444' : opts.highCount > 0 ? '#F97316' : '#EAB308';
+
+    return {
+        subject: `Threat alert: ${opts.projectName} (${opts.eventCount} events detected)`,
+        html: layout(`
+<h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:${headerColor};letter-spacing:-0.02em;">
+Live threats detected
+</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${BRAND.mutedText};">
+Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> recorded <strong style="color:${headerColor};">${opts.eventCount}</strong> threat ${opts.eventCount === 1 ? 'event' : 'events'}.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr>
+<td style="background-color:rgba(239,68,68,0.1);border-radius:8px;padding:12px;text-align:center;width:33%;">
+<span style="font-size:24px;font-weight:700;color:#EF4444;">${opts.criticalCount}</span>
+<span style="font-size:12px;color:${BRAND.mutedText};display:block;margin-top:2px;">Critical</span>
+</td>
+<td style="background-color:rgba(249,115,22,0.1);border-radius:8px;padding:12px;text-align:center;width:33%;">
+<span style="font-size:24px;font-weight:700;color:#F97316;">${opts.highCount}</span>
+<span style="font-size:12px;color:${BRAND.mutedText};display:block;margin-top:2px;">High</span>
+</td>
+<td style="background-color:rgba(234,179,8,0.1);border-radius:8px;padding:12px;text-align:center;width:33%;">
+<span style="font-size:24px;font-weight:700;color:#EAB308;">${opts.mediumCount}</span>
+<span style="font-size:12px;color:${BRAND.mutedText};display:block;margin-top:2px;">Medium</span>
+</td>
+</tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr>
+<td style="padding:8px 0;font-size:13px;color:${BRAND.mutedText};border-bottom:1px solid ${BRAND.borderColor};">
+Top attack type
+</td>
+<td style="padding:8px 0;font-size:13px;color:${BRAND.color};text-align:right;border-bottom:1px solid ${BRAND.borderColor};text-transform:uppercase;">
+${opts.topAttackType || 'N/A'}
+</td>
+</tr>
+<tr>
+<td style="padding:8px 0;font-size:13px;color:${BRAND.mutedText};">
+Unique source IPs
+</td>
+<td style="padding:8px 0;font-size:13px;color:${BRAND.color};text-align:right;">
+${opts.uniqueIps}
+</td>
+</tr>
+</table>
+
+${button('View Threats', opts.dashboardUrl)}
+`),
+    };
+}
+
 export function scoreBelowAlertTemplate(opts: {
     projectName: string;
     currentScore: number;

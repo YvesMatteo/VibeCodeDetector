@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     const secret = `whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-    const validEvents = ['scan.completed', 'scan.started', 'score.changed'];
+    const validEvents = ['scan.completed', 'scan.started', 'score.changed', 'threat.detected'];
     const safeEvents = (events || ['scan.completed']).filter((e: string) => validEvents.includes(e));
 
     if (safeEvents.length === 0) {

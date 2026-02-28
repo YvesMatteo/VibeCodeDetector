@@ -29,6 +29,10 @@
         {
             "path": "/api/cron/scheduled-scans",
             "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron/threat-alerts",
+            "schedule": "*/5 * * * *"
         }
     ]
 }

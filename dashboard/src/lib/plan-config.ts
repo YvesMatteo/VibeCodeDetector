@@ -9,6 +9,9 @@ export const FREE_PLAN_CONFIG = {
     apiKeys: 0,
     monitoringFrequency: 'weekly' as const,
     monitoringLabel: 'Weekly monitoring',
+    threatDetection: false,
+    threatRetentionHours: 0,
+    threatAlertFrequencies: [] as readonly string[],
 } as const;
 
 export const PLAN_CONFIG = {
@@ -23,6 +26,9 @@ export const PLAN_CONFIG = {
         apiKeys: 1,
         monitoringFrequency: 'daily' as const,
         monitoringLabel: 'Daily monitoring',
+        threatDetection: true,
+        threatRetentionHours: 24,
+        threatAlertFrequencies: ['daily'] as readonly string[],
     },
     pro: {
         name: 'Pro',
@@ -35,6 +41,9 @@ export const PLAN_CONFIG = {
         apiKeys: 5,
         monitoringFrequency: 'daily' as const,
         monitoringLabel: 'Daily monitoring',
+        threatDetection: true,
+        threatRetentionHours: 168,
+        threatAlertFrequencies: ['immediate', 'hourly', 'daily'] as readonly string[],
     },
     max: {
         name: 'Max',
@@ -47,6 +56,9 @@ export const PLAN_CONFIG = {
         apiKeys: 20,
         monitoringFrequency: 'every_6h' as const,
         monitoringLabel: 'Every 6 hours',
+        threatDetection: true,
+        threatRetentionHours: 720,
+        threatAlertFrequencies: ['immediate', 'hourly', 'daily'] as readonly string[],
     },
 } as const;
 

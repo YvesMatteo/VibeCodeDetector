@@ -9,7 +9,8 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true next build",
-    "test": "vitest"
+    "test": "vitest",
+    "build:sdk": "esbuild src/sdk/threat-snippet.ts --bundle --minify --outfile=public/sdk/cv-threat.min.js --format=iife --target=es2017"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -60,6 +61,7 @@
     "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "^5.1.4",
     "dotenv": "^17.3.1",
+    "esbuild": "^0.25.12",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
