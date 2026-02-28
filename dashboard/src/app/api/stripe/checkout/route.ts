@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
                 },
             ],
             mode: 'subscription',
+            adaptive_pricing: { enabled: true },
             allow_promotion_codes: true,
             success_url: `${origin}/dashboard?success=true`,
             cancel_url: `${origin}/dashboard/credits?canceled=true`,

@@ -70,7 +70,7 @@ const comparisonFeatures = [
 ];
 
 export default function CreditsPage() {
-    const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
+    const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
