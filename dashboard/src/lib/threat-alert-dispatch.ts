@@ -121,6 +121,7 @@ export async function dispatchThreatAlerts(projectId: string): Promise<{ sent: b
             to: alertEmail,
             subject: template.subject,
             html: template.html,
+            text: template.text,
             headers: {
                 'List-Unsubscribe': '<mailto:support@checkvibe.dev?subject=unsubscribe>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

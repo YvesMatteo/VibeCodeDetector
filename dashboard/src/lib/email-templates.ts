@@ -62,7 +62,7 @@ ${text}
 </table>`;
 }
 
-export function confirmEmailTemplate(confirmUrl: string): { subject: string; html: string } {
+export function confirmEmailTemplate(confirmUrl: string): { subject: string; html: string; text: string } {
     return {
         subject: 'Confirm your CheckVibe account',
         html: layout(`
@@ -85,10 +85,11 @@ Button not working? Copy and paste this link:<br/>
 <a href="${confirmUrl}" style="color:#71717A;">${confirmUrl}</a>
 </p>
 `),
+        text: `Confirm your email\n\nThanks for signing up for CheckVibe. Visit the link below to confirm your email address and activate your account.\n\n${confirmUrl}\n\nIf you didn't create an account, you can safely ignore this email.\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }
 
-export function resetPasswordTemplate(resetUrl: string): { subject: string; html: string } {
+export function resetPasswordTemplate(resetUrl: string): { subject: string; html: string; text: string } {
     return {
         subject: 'Reset your CheckVibe password',
         html: layout(`
@@ -111,6 +112,7 @@ Button not working? Copy and paste this link:<br/>
 <a href="${resetUrl}" style="color:#71717A;">${resetUrl}</a>
 </p>
 `),
+        text: `Reset your password\n\nWe received a request to reset the password for your CheckVibe account. Visit the link below to choose a new password.\n\n${resetUrl}\n\nThis link will expire in 24 hours. If you didn't request a password reset, you can safely ignore this email.\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }
 
@@ -120,7 +122,7 @@ export function scoreDropAlertTemplate(opts: {
     currentScore: number;
     drop: number;
     dashboardUrl: string;
-}): { subject: string; html: string } {
+}): { subject: string; html: string; text: string } {
     return {
         subject: `Score drop alert: ${opts.projectName} (-${opts.drop} points)`,
         html: layout(`
@@ -142,6 +144,7 @@ Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> 
 
 ${button('View Dashboard', opts.dashboardUrl)}
 `),
+        text: `Security score dropped\n\nYour project ${opts.projectName} dropped from ${opts.previousScore} to ${opts.currentScore} (${opts.drop} point decrease).\n\nView dashboard: ${opts.dashboardUrl}\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }
 
@@ -150,7 +153,7 @@ export function newCriticalAlertTemplate(opts: {
     criticalCount: number;
     currentScore: number;
     dashboardUrl: string;
-}): { subject: string; html: string } {
+}): { subject: string; html: string; text: string } {
     return {
         subject: `Critical findings: ${opts.projectName} (${opts.criticalCount} new)`,
         html: layout(`
@@ -172,6 +175,7 @@ Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> 
 
 ${button('Review Findings', opts.dashboardUrl)}
 `),
+        text: `New critical findings detected\n\nYour project ${opts.projectName} has ${opts.criticalCount} critical security ${opts.criticalCount === 1 ? 'finding' : 'findings'} that need immediate attention.\n\nReview findings: ${opts.dashboardUrl}\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }
 
@@ -184,7 +188,7 @@ export function threatAlertTemplate(opts: {
     topAttackType: string;
     uniqueIps: number;
     dashboardUrl: string;
-}): { subject: string; html: string } {
+}): { subject: string; html: string; text: string } {
     const severityLabel = opts.criticalCount > 0 ? 'critical' : opts.highCount > 0 ? 'high' : 'medium';
     const headerColor = opts.criticalCount > 0 ? '#EF4444' : opts.highCount > 0 ? '#F97316' : '#EAB308';
 
@@ -236,6 +240,7 @@ ${opts.uniqueIps}
 
 ${button('View Threats', opts.dashboardUrl)}
 `),
+        text: `Live threats detected\n\nYour project ${opts.projectName} recorded ${opts.eventCount} threat ${opts.eventCount === 1 ? 'event' : 'events'}.\n\nCritical: ${opts.criticalCount} | High: ${opts.highCount} | Medium: ${opts.mediumCount}\nTop attack type: ${opts.topAttackType || 'N/A'}\nUnique source IPs: ${opts.uniqueIps}\n\nView threats: ${opts.dashboardUrl}\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }
 
@@ -244,7 +249,7 @@ export function scoreBelowAlertTemplate(opts: {
     currentScore: number;
     threshold: number;
     dashboardUrl: string;
-}): { subject: string; html: string } {
+}): { subject: string; html: string; text: string } {
     return {
         subject: `Score below threshold: ${opts.projectName} (${opts.currentScore}/${opts.threshold})`,
         html: layout(`
@@ -266,5 +271,6 @@ Your project <strong style="color:${BRAND.color};">${opts.projectName}</strong> 
 
 ${button('View Dashboard', opts.dashboardUrl)}
 `),
+        text: `Score below threshold\n\nYour project ${opts.projectName} scored ${opts.currentScore}, which is below your alert threshold of ${opts.threshold}.\n\nView dashboard: ${opts.dashboardUrl}\n\n---\n${new Date().getFullYear()} CheckVibe. All rights reserved.`,
     };
 }

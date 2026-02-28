@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
             to: email,
             subject: template.subject,
             html: template.html,
+            text: template.text,
             headers: {
                 'List-Unsubscribe': '<mailto:support@checkvibe.dev?subject=unsubscribe>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
