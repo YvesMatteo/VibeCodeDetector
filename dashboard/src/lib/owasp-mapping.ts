@@ -36,8 +36,8 @@ const OWASP_BY_ID = Object.fromEntries(OWASP_TOP_10.map(c => [c.id, c]));
 export const SCANNER_OWASP_MAP: Record<string, string[]> = {
   // A01 — Broken Access Control
   cors: ['A01'],
-  open_redirect: ['A01'],
-  file_upload: ['A01'],
+  open_redirect: ['A01', 'A10'],
+  file_upload: ['A01', 'A10'],
   csrf: ['A01', 'A05'],
 
   // A02 — Cryptographic Failures
@@ -56,7 +56,7 @@ export const SCANNER_OWASP_MAP: Record<string, string[]> = {
   ddos_protection: ['A04', 'A05'],
 
   // A05 — Security Misconfiguration
-  security: ['A05'],
+  security: ['A05', 'A10'],
   cookies: ['A05'],
   dns_email: ['A05'],
   debug_endpoints: ['A05'],
@@ -79,9 +79,6 @@ export const SCANNER_OWASP_MAP: Record<string, string[]> = {
 
   // A09 — Security Logging & Monitoring Failures
   audit_logging: ['A09'],
-
-  // A10 — SSRF
-  // (covered by internal checks, no dedicated scanner yet)
 
   // Additional scanners
   supabase_backend: ['A05', 'A07'],
