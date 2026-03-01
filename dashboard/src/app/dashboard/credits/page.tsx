@@ -19,7 +19,7 @@ const pricingPlans = [
         description: 'Try it out',
         domains: FREE_PLAN_CONFIG.domains,
         scans: FREE_PLAN_CONFIG.scans,
-        features: [`${FREE_PLAN_CONFIG.projects} project`, FREE_PLAN_CONFIG.monitoringLabel, 'Issue overview', 'Blurred finding details'],
+        features: [`${FREE_PLAN_CONFIG.projects} project`, `${FREE_PLAN_CONFIG.scans} scans/mo`, FREE_PLAN_CONFIG.monitoringLabel, 'Issue overview', 'Blurred finding details'],
         highlighted: false,
         isFree: true,
     },
@@ -31,7 +31,7 @@ const pricingPlans = [
         description: 'For solo makers',
         domains: PLAN_CONFIG.starter.domains,
         scans: PLAN_CONFIG.starter.scans,
-        features: [`${PLAN_CONFIG.starter.projects} project`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export'],
+        features: [`${PLAN_CONFIG.starter.projects} project`, `${PLAN_CONFIG.starter.scans} scans/mo`, `${PLAN_CONFIG.starter.apiKeys} API key`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export'],
         highlighted: false,
     },
     {
@@ -42,7 +42,7 @@ const pricingPlans = [
         description: 'For growing projects',
         domains: PLAN_CONFIG.pro.domains,
         scans: PLAN_CONFIG.pro.scans,
-        features: [`${PLAN_CONFIG.pro.projects} projects`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
+        features: [`${PLAN_CONFIG.pro.projects} projects`, `${PLAN_CONFIG.pro.scans} scans/mo`, `${PLAN_CONFIG.pro.apiKeys} API keys`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
         highlighted: false,
     },
     {
@@ -53,13 +53,15 @@ const pricingPlans = [
         description: 'For teams & agencies',
         domains: PLAN_CONFIG.max.domains,
         scans: PLAN_CONFIG.max.scans,
-        features: [`${PLAN_CONFIG.max.projects} projects`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
+        features: [`${PLAN_CONFIG.max.projects} projects`, `${PLAN_CONFIG.max.scans.toLocaleString()} scans/mo`, `${PLAN_CONFIG.max.apiKeys} API keys`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
         highlighted: false,
     },
 ];
 
 const comparisonFeatures = [
-    { name: 'Projects', free: '1', starter: '1', pro: '3', max: '10' },
+    { name: 'Projects', free: `${FREE_PLAN_CONFIG.projects}`, starter: `${PLAN_CONFIG.starter.projects}`, pro: `${PLAN_CONFIG.pro.projects}`, max: `${PLAN_CONFIG.max.projects}` },
+    { name: 'Monthly scans', free: `${FREE_PLAN_CONFIG.scans}`, starter: `${PLAN_CONFIG.starter.scans}`, pro: `${PLAN_CONFIG.pro.scans}`, max: `${PLAN_CONFIG.max.scans}` },
+    { name: 'API keys', free: `${FREE_PLAN_CONFIG.apiKeys}`, starter: `${PLAN_CONFIG.starter.apiKeys}`, pro: `${PLAN_CONFIG.pro.apiKeys}`, max: `${PLAN_CONFIG.max.apiKeys}` },
     { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', max: 'Every 6h' },
     { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
     { name: '35 security checks', free: true, starter: true, pro: true, max: true },
