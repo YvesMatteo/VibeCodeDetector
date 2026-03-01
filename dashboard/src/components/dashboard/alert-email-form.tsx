@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, Mail } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AlertEmailFormProps {
@@ -42,17 +42,10 @@ export function AlertEmailForm({ projectId, initialEmail }: AlertEmailFormProps)
         <form onSubmit={handleSave}>
             <Card className="mb-6 bg-white/[0.02] border-white/[0.06]">
                 <CardHeader>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-amber-500/10">
-                            <Mail className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-white">Notifications</CardTitle>
-                            <CardDescription className="text-zinc-400">
-                                Email address for all security alerts, scheduled scan reports, and threat detection notifications
-                            </CardDescription>
-                        </div>
-                    </div>
+                    <CardTitle className="text-white">Notifications</CardTitle>
+                    <CardDescription className="text-zinc-400">
+                        Email address for all security alerts, scheduled scan reports, and threat detection notifications
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
