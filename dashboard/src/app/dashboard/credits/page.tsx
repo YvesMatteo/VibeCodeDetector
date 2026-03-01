@@ -46,28 +46,28 @@ const pricingPlans = [
         highlighted: false,
     },
     {
-        id: 'custom',
-        name: 'Custom',
+        id: 'max',
+        name: 'Max',
         description: 'For teams & agencies',
-        features: ['Unlimited projects', 'Custom scan limits', 'Unlimited API keys', 'Custom monitoring', 'Live threat detection', 'Dedicated support'],
+        features: ['Unlimited projects', 'Unlimited scans', 'Unlimited API keys', 'Custom monitoring', 'Live threat detection', 'Dedicated support'],
         highlighted: false,
         isCustom: true,
     },
 ];
 
 const comparisonFeatures = [
-    { name: 'Projects', free: `${FREE_PLAN_CONFIG.projects}`, starter: `${PLAN_CONFIG.starter.projects}`, pro: `${PLAN_CONFIG.pro.projects}`, custom: 'Custom' },
-    { name: 'Monthly scans', free: `${FREE_PLAN_CONFIG.scans}`, starter: `${PLAN_CONFIG.starter.scans}`, pro: `${PLAN_CONFIG.pro.scans}`, custom: 'Custom' },
-    { name: 'API keys', free: `${FREE_PLAN_CONFIG.apiKeys}`, starter: `${PLAN_CONFIG.starter.apiKeys}`, pro: `${PLAN_CONFIG.pro.apiKeys}`, custom: 'Custom' },
-    { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', custom: 'Custom' },
-    { name: 'Full finding details', free: false, starter: true, pro: true, custom: true },
-    { name: '35 security checks', free: true, starter: true, pro: true, custom: true },
-    { name: 'PDF export', free: false, starter: true, pro: true, custom: true },
-    { name: 'AI fix suggestions', free: false, starter: true, pro: true, custom: true },
-    { name: 'API access', free: false, starter: true, pro: true, custom: true },
-    { name: 'Live threat detection', free: false, starter: false, pro: true, custom: true },
-    { name: 'Priority support', free: false, starter: true, pro: true, custom: true },
-    { name: 'Dedicated support', free: false, starter: false, pro: false, custom: true },
+    { name: 'Projects', free: `${FREE_PLAN_CONFIG.projects}`, starter: `${PLAN_CONFIG.starter.projects}`, pro: `${PLAN_CONFIG.pro.projects}`, max: 'Custom' },
+    { name: 'Monthly scans', free: `${FREE_PLAN_CONFIG.scans}`, starter: `${PLAN_CONFIG.starter.scans}`, pro: `${PLAN_CONFIG.pro.scans}`, max: 'Custom' },
+    { name: 'API keys', free: `${FREE_PLAN_CONFIG.apiKeys}`, starter: `${PLAN_CONFIG.starter.apiKeys}`, pro: `${PLAN_CONFIG.pro.apiKeys}`, max: 'Custom' },
+    { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', max: 'Custom' },
+    { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
+    { name: '35 security checks', free: true, starter: true, pro: true, max: true },
+    { name: 'PDF export', free: false, starter: true, pro: true, max: true },
+    { name: 'AI fix suggestions', free: false, starter: true, pro: true, max: true },
+    { name: 'API access', free: false, starter: true, pro: true, max: true },
+    { name: 'Live threat detection', free: false, starter: false, pro: true, max: true },
+    { name: 'Priority support', free: false, starter: true, pro: true, max: true },
+    { name: 'Dedicated support', free: false, starter: false, pro: false, max: true },
 ];
 
 export default function CreditsPage() {
@@ -306,11 +306,11 @@ export default function CreditsPage() {
                                                 {isCustom ? (
                                                     <Button
                                                         size="sm"
-                                                        className="w-[120px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20 gap-1.5"
-                                                        variant="outline"
+                                                        className="w-[120px] bg-white/10 hover:bg-white/20 text-white border-0"
+                                                        variant="secondary"
                                                         asChild
                                                     >
-                                                        <a href="mailto:support@checkvibe.dev"><MessageSquare className="h-3.5 w-3.5" />Contact Us</a>
+                                                        <a href="mailto:support@checkvibe.dev">Contact Us</a>
                                                     </Button>
                                                 ) : 'isFree' in plan && plan.isFree ? (
                                                     <Button
@@ -361,7 +361,7 @@ export default function CreditsPage() {
                                 className={`border-b border-white/[0.04] ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
                             >
                                 <td className="p-4 pl-5 text-sm text-zinc-400">{feature.name}</td>
-                                {(['free', 'starter', 'pro', 'custom'] as const).map((planKey) => {
+                                {(['free', 'starter', 'pro', 'max'] as const).map((planKey) => {
                                     const value = feature[planKey];
                                     return (
                                         <td key={planKey} className="p-4 text-center">
@@ -393,10 +393,7 @@ export default function CreditsPage() {
                     return (
                         <Card
                             key={plan.id}
-                            className={`relative transition-colors flex flex-col ${isCustom
-                                ? 'bg-emerald-500/[0.03] border-emerald-500/20 hover:border-emerald-500/30'
-                                : 'bg-white/[0.01] border-white/[0.06] hover:border-white/[0.10]'
-                                }`}
+                            className={`relative transition-colors flex flex-col bg-white/[0.01] border-white/[0.06] hover:border-white/[0.10]`}
                         >
                             {isCurrent && (
                                 <div className="absolute -top-3 right-4 z-20">
@@ -410,7 +407,7 @@ export default function CreditsPage() {
                                 <CardDescription className="text-zinc-500">{plan.description}</CardDescription>
                                 <div className="mt-6">
                                     {isCustom ? (
-                                        <span className="text-3xl font-heading font-bold text-white">Custom</span>
+                                        <span className="text-3xl font-heading font-bold white text-center">Max</span>
                                     ) : 'isFree' in plan && plan.isFree ? (
                                         <span className="text-3xl font-heading font-bold text-white">Free</span>
                                     ) : billing === 'annual' ? (
@@ -436,11 +433,11 @@ export default function CreditsPage() {
                                     {isCustom ? (
                                         <Button
                                             size="lg"
-                                            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20 gap-2"
-                                            variant="outline"
+                                            className="w-full bg-white/10 hover:bg-white/20 text-white border-0"
+                                            variant="secondary"
                                             asChild
                                         >
-                                            <a href="mailto:support@checkvibe.dev"><MessageSquare className="h-4 w-4" />Contact Us</a>
+                                            <a href="mailto:support@checkvibe.dev">Contact Us</a>
                                         </Button>
                                     ) : 'isFree' in plan && plan.isFree ? (
                                         <Button
@@ -483,7 +480,7 @@ export default function CreditsPage() {
                                 <ul className="space-y-3.5 mb-8 flex-1 px-1">
                                     {plan.features.map((feature) => (
                                         <li key={feature} className="flex items-center gap-3">
-                                            <CheckCircle className={`h-4 w-4 shrink-0 ${isCustom ? 'text-emerald-500/60' : 'text-zinc-600'}`} />
+                                            <CheckCircle className={`h-4 w-4 shrink-0 text-zinc-600`} />
                                             <span className="text-sm text-zinc-400">{feature}</span>
                                         </li>
                                     ))}
