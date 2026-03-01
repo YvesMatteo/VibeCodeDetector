@@ -54,7 +54,7 @@ export default function HomePage() {
           <SupportedTools />
 
           {/* ======================== MCP INTEGRATION ======================== */}
-          <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-20 sm:mb-28">
+          <div className="max-w-4xl mx-auto relative z-10 w-full mt-0 sm:mt-2 mb-10 sm:mb-14">
             <div className="text-center mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-heading font-medium mb-3 tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
                 Native <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-gradient-flow">MCP Server</span> Support
@@ -67,7 +67,7 @@ export default function HomePage() {
             {/* eslint-disable @next/next/no-img-element -- decorative tool logos, no need for next/image optimization */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
               {/* Claude */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center">
                   <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
                 </div>
@@ -75,7 +75,7 @@ export default function HomePage() {
               </div>
 
               {/* Cursor */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
@@ -83,7 +83,7 @@ export default function HomePage() {
               </div>
 
               {/* Antigravity */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
                 <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
                   <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
                 </div>
