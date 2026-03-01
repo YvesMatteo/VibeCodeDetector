@@ -23,14 +23,14 @@ export default function UpdatePasswordPage() {
 
     // Verify recovery session exists; if not, redirect to reset-password
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user) {
                 router.replace('/reset-password');
             } else {
                 setReady(true);
             }
         });
-    }, []);
+    }, [router, supabase.auth]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -62,11 +62,11 @@ export default function UpdatePasswordPage() {
         setLoading(false);
 
         if (error) {
-            setError(error.message);
+            setError('Could not update password. Please try again or request a new reset link.');
         } else {
             setSuccess(true);
             // Sign out the recovery session so user must log in with new password
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: 'global' });
             setTimeout(() => router.push('/login'), 3000);
         }
     }

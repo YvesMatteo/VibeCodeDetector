@@ -43,11 +43,7 @@ export default function LoginPage() {
             });
 
             if (error) {
-                if (error.message?.toLowerCase().includes('email not confirmed')) {
-                    setError('Please confirm your email before signing in. Check your inbox (and spam folder) for the confirmation link.');
-                } else {
-                    setError('Invalid login credentials');
-                }
+                setError('Invalid login credentials');
             } else {
                 window.location.href = '/dashboard';
                 return;

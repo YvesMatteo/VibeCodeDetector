@@ -12,14 +12,17 @@ export default function GoogleCallbackPage() {
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
             const idToken = params.get('id_token');
-            const redirectTo = sessionStorage.getItem('google_auth_redirect') || '/dashboard';
+            let redirectTo = sessionStorage.getItem('google_auth_redirect') || '/dashboard';
+            if (!redirectTo.startsWith('/') || redirectTo.startsWith('//') || redirectTo.includes('://')) {
+                redirectTo = '/dashboard';
+            }
 
             if (!idToken) {
                 // Check for error in query params (Google returns errors there)
                 const queryParams = new URLSearchParams(window.location.search);
                 const googleError = queryParams.get('error');
                 if (googleError) {
-                    setError(`Google sign-in was cancelled or failed (${googleError}).`);
+                    setError('Google sign-in was cancelled or failed. Please try again.');
                 } else {
                     setError('No authentication token received from Google.');
                 }

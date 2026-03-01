@@ -9,18 +9,12 @@ export async function POST(req: NextRequest) {
     const csrfError = checkCsrf(req);
     if (csrfError) return csrfError;
 
-    // Rate limit: 5 signups per minute per IP (fail open — don't block signups if DB is down)
+    // Rate limit: 5 signups per minute per IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
         ?? req.headers.get('x-real-ip') ?? '0.0.0.0';
-    try {
-        const rl = await checkRateLimit(`signup:${ip}`, 5, 60);
-        if (rl.allowed === false && rl.currentCount > 0) {
-            // Only block if we genuinely have count data (not a fail-closed default)
-            return NextResponse.json({ error: 'Too many attempts. Please wait a minute and try again.' }, { status: 429 });
-        }
-    } catch (rateLimitError) {
-        console.error('Rate limit check failed for signup, allowing request:', rateLimitError);
-        // Fail open for signups — better to allow a signup than block a real user
+    const rl = await checkRateLimit(`signup:${ip}`, 5, 60);
+    if (rl.allowed === false) {
+        return NextResponse.json({ error: 'Too many attempts. Please wait a minute and try again.' }, { status: 429 });
     }
 
     let email: string;
@@ -41,6 +35,15 @@ export async function POST(req: NextRequest) {
 
     if (password.length < 8) {
         return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+        return NextResponse.json({ error: 'Password must contain an uppercase letter' }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+        return NextResponse.json({ error: 'Password must contain a lowercase letter' }, { status: 400 });
+    }
+    if (!/\d/.test(password)) {
+        return NextResponse.json({ error: 'Password must contain a number' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
