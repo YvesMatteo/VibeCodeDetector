@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clock, Globe, MoreVertical } from 'lucide-react';
-import { useState } from 'react';
+import { MoreVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     DropdownMenu,
@@ -32,19 +31,10 @@ const FREQ_LABELS: Record<string, string> = {
     monthly: 'Monthly',
 };
 
-export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issueCount = 0, severity, lastAuditDate, backendType, monitoringFrequency }: ProjectCardProps) {
-    const [imgError, setImgError] = useState(false);
+export function ProjectCard({ id, name, url, plan, latestScore, issueCount = 0, severity, backendType, monitoringFrequency }: ProjectCardProps) {
     const hostname = (() => {
         try { return new URL(url).hostname; } catch { return url; }
     })();
-
-    const hasAudit = lastAuditDate != null;
-
-    // Cache-bust favicon so it refreshes after each scan
-    const cacheBuster = lastAuditDate ? `?v=${new Date(lastAuditDate).getTime()}` : '';
-    const faviconSrc = faviconUrl
-        ? `${faviconUrl}${faviconUrl.includes('?') ? '&' : '?'}v=${lastAuditDate ? new Date(lastAuditDate).getTime() : '0'}`
-        : `/api/favicon?domain=${hostname}&sz=64${cacheBuster ? `&_=${new Date(lastAuditDate!).getTime()}` : ''}`;
 
     const platformLabel = backendType ? backendType.charAt(0).toUpperCase() + backendType.slice(1) : hostname.split('.').pop()?.toUpperCase() || 'WEB';
 

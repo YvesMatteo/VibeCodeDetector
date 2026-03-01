@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -11,9 +11,9 @@ const ScannerAccordion = dynamic(
     { ssr: false, loading: () => <div className="animate-pulse space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-white/[0.03]" />)}</div> }
 );
 import { ArrowDownCircle, ArrowUpCircle, CheckCircle2, AlertTriangle as TriangleAlert, Minus } from 'lucide-react';
-import { computeOwaspSummary, OWASP_TOP_10 } from '@/lib/owasp-mapping';
+import { computeOwaspSummary } from '@/lib/owasp-mapping';
 import type { ScanDiff } from '@/lib/scan-diff';
-import { buildFingerprint, DISMISSAL_REASONS, type Dismissal, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
+import { buildFingerprint, type Dismissal, type DismissalReason, type DismissalScope } from '@/lib/dismissals';
 import type { AuditReportData, ScanResultItem } from '@/lib/audit-data';
 import { getIssueCountColorMuted as getIssueCountColor } from '@/lib/severity-utils';
 
@@ -76,13 +76,13 @@ interface AuditReportProps {
     previousScanDate?: string | null;
     dismissedFingerprints?: Set<string>;
     dismissals?: Dismissal[];
-    onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void;
+    onDismiss?: (fingerprint: string, scannerKey: string, finding: { id?: string; title: string; severity: string; description?: string; recommendation?: string }, reason: DismissalReason, scope: DismissalScope, note?: string) => void;
     onRestore?: (dismissalId: string) => void;
     userPlan?: string;
 }
 
-export function AuditReport({ data, diff, previousScanDate, dismissedFingerprints, dismissals, onDismiss, onRestore, userPlan }: AuditReportProps) {
-    const { totalFindings, issueCount, passingCheckCount, visibleScannerCount, techStack, techStackCveFindings, scannerResults } = data;
+export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onDismiss, onRestore, userPlan }: AuditReportProps) {
+    const { totalFindings, issueCount, visibleScannerCount, techStackCveFindings, scannerResults } = data;
     const [showDismissed, setShowDismissed] = useState(false);
     const [showResolved, setShowResolved] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -301,7 +301,7 @@ export function AuditReport({ data, diff, previousScanDate, dismissedFingerprint
             {techStackCveFindings.length > 0 && (
                 <div className="mb-8 space-y-2">
                     <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Known Vulnerabilities</h4>
-                    {techStackCveFindings.map((finding: any, i: number) => (
+                    {techStackCveFindings.map((finding: ScanResultItem['findings'][number], i: number) => (
                         <div key={i} className="p-3 rounded-lg border bg-red-500/5 border-red-500/15">
                             <div className="flex items-center gap-2 mb-1">
                                 <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
