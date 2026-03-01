@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 /**
  * OWASP Top 10:2021 mapping for CheckVibe scanner findings.
  * Maps each scanner type to one or more OWASP categories so findings
  * can display compliance badges and the report can show coverage.
  */
+import type { ScanResultItem } from './audit-data';
 
 export interface OwaspCategory {
   id: string;
@@ -107,7 +107,7 @@ export function getOwaspCategories(scannerKey: string): OwaspCategory[] {
  * Returns an array of 10 items, one per OWASP category, with finding counts.
  */
 export function computeOwaspSummary(
-  results: Record<string, any>,
+  results: Record<string, ScanResultItem>,
 ): Array<{ category: OwaspCategory; findingCount: number; tested: boolean }> {
   // Track which OWASP categories are tested and their finding counts
   const counts: Record<string, number> = {};
@@ -126,8 +126,8 @@ export function computeOwaspSummary(
     }
 
     // Count actionable findings (non-info)
-    const findings = result.findings || [];
-    const actionable = findings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+    const findings = result.findings ?? [];
+    const actionable = findings.filter((f) => f.severity?.toLowerCase() !== 'info');
 
     for (const id of owaspIds) {
       counts[id] = (counts[id] || 0) + actionable.length;

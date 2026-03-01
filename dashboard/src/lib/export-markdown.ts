@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 // Full markdown report generator for scan exports
 import { computeScanDiff } from './scan-diff';
 import { computeOwaspSummary } from './owasp-mapping';
 import { formatDate } from './format-date';
+import type { ScanResultItem } from './audit-data';
 
 const scannerNames: Record<string, string> = {
   security: 'Security Headers',
@@ -101,7 +101,7 @@ function severityEmoji(severity: string): string {
   }
 }
 
-function sortedScannerKeys(results: Record<string, any>): string[] {
+function sortedScannerKeys(results: Record<string, ScanResultItem>): string[] {
   const keys = Object.keys(results);
   return keys.sort((a, b) => {
     const ia = SCANNER_ORDER.indexOf(a);
@@ -113,19 +113,27 @@ function sortedScannerKeys(results: Record<string, any>): string[] {
   });
 }
 
-export function generateScanMarkdown(scan: any, previousScan?: any): string {
+interface ScanRecord {
+  url?: string;
+  completed_at?: string;
+  created_at?: string;
+  status?: string;
+  results?: Record<string, ScanResultItem>;
+}
+
+export function generateScanMarkdown(scan: ScanRecord, previousScan?: ScanRecord): string {
   const lines: string[] = [];
   const url = scan.url || 'Unknown URL';
   const domain = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   const scanDate = formatDate(scan.completed_at || scan.created_at, 'long');
 
-  const results = (scan.results || {}) as Record<string, any>;
+  const results = (scan.results || {}) as Record<string, ScanResultItem>;
 
   // Count total issues first for the header
   let totalIssueCount = 0;
-  Object.values(results).forEach((r: any) => {
+  Object.values(results).forEach((r) => {
     if (r.findings && Array.isArray(r.findings)) {
-      r.findings.forEach((f: any) => {
+      r.findings.forEach((f) => {
         if (f.severity?.toLowerCase() !== 'info') totalIssueCount++;
       });
     }
@@ -143,7 +151,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
 
   // ── Scan Diff ──────────────────────────────────────────────────────────
   if (previousScan?.results) {
-    const diff = computeScanDiff(results, previousScan.results as Record<string, any>);
+    const diff = computeScanDiff(results, previousScan.results as Record<string, ScanResultItem>);
     const prevDate = formatDate(previousScan.completed_at || previousScan.created_at, 'short');
     const parts: string[] = [];
     if (diff.resolvedIssues.length > 0) parts.push(`${diff.resolvedIssues.length} resolved`);
@@ -157,9 +165,9 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
 
   // Count info/passing checks
   let infoCount = 0;
-  Object.values(results).forEach((r: any) => {
+  Object.values(results).forEach((r) => {
     if (r.findings && Array.isArray(r.findings)) {
-      r.findings.forEach((f: any) => {
+      r.findings.forEach((f) => {
         if (f.severity?.toLowerCase() === 'info') infoCount++;
       });
     }
@@ -171,9 +179,9 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
 
   // ── Severity Summary ────────────────────────────────────────────────────
   const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
-  Object.values(results).forEach((r: any) => {
+  Object.values(results).forEach((r) => {
     if (r.findings && Array.isArray(r.findings)) {
-      r.findings.forEach((f: any) => {
+      r.findings.forEach((f) => {
         const sev = (f.severity || 'info').toLowerCase();
         if (sev in counts) counts[sev as keyof typeof counts]++;
       });
@@ -202,7 +210,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
     if (r.error) {
       lines.push(`| ${name} | — | Error: ${r.error} |`);
     } else {
-      const issueCount = r.findings?.filter((f: any) => f.severity?.toLowerCase() !== 'info').length ?? 0;
+      const issueCount = r.findings?.filter((f) => f.severity?.toLowerCase() !== 'info').length ?? 0;
       lines.push(`| ${name} | ${issueCount} | OK |`);
     }
   }
@@ -222,7 +230,7 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
 
   // ── Tech Stack ──────────────────────────────────────────────────────────
   const techStack = results.tech_stack;
-  if (techStack?.technologies?.length > 0) {
+  if (techStack?.technologies && techStack.technologies.length > 0) {
     lines.push(`## Detected Tech Stack`);
     lines.push('');
     for (const tech of techStack.technologies) {
@@ -232,14 +240,14 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
     }
     lines.push('');
 
-    const cves = techStack.findings?.filter((f: any) => f.severity?.toLowerCase() !== 'info') || [];
+    const cves = techStack.findings?.filter((f) => f.severity?.toLowerCase() !== 'info') ?? [];
     if (cves.length > 0) {
       lines.push(`### Known Vulnerabilities (CVEs)`);
       lines.push('');
       for (const cve of cves) {
         lines.push(`- ${severityEmoji(cve.severity)} **${cve.title}** (${cve.severity})`);
         if (cve.description) lines.push(`  ${cve.description}`);
-        if (cve.recommendation) lines.push(`  **Fix:** ${cve.recommendation}`);
+        if (cve.recommendation) lines.push(`  **Fix:** ${String(cve.recommendation)}`);
       }
       lines.push('');
     }
@@ -265,9 +273,9 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
       continue;
     }
 
-    const allFindings = r.findings || [];
-    const issues = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
-    const infoFindings = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
+    const allFindings = r.findings ?? [];
+    const issues = allFindings.filter((f) => f.severity?.toLowerCase() !== 'info');
+    const infoFindings = allFindings.filter((f) => f.severity?.toLowerCase() === 'info');
     lines.push(`**Issues:** ${issues.length} | **Info:** ${infoFindings.length}`);
     lines.push('');
 
@@ -277,8 +285,8 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
       continue;
     }
 
-    const actionableFindings = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
-    const passingFindings = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
+    const actionableFindings = allFindings.filter((f) => f.severity?.toLowerCase() !== 'info');
+    const passingFindings = allFindings.filter((f) => f.severity?.toLowerCase() === 'info');
 
     for (const finding of actionableFindings) {
       const sev = finding.severity || 'info';
@@ -289,15 +297,15 @@ export function generateScanMarkdown(scan: any, previousScan?: any): string {
         lines.push(`**Description:** ${finding.description}  `);
       }
       if (finding.recommendation) {
-        lines.push(`**Recommendation:** ${finding.recommendation}  `);
+        lines.push(`**Recommendation:** ${String(finding.recommendation)}  `);
       }
       if (finding.reportUrl) {
-        lines.push(`**Report:** ${finding.reportUrl}  `);
+        lines.push(`**Report:** ${String(finding.reportUrl)}  `);
       }
       if (finding.evidence) {
         lines.push('');
         lines.push('```');
-        lines.push(finding.evidence);
+        lines.push(String(finding.evidence));
         lines.push('```');
       }
       lines.push('');

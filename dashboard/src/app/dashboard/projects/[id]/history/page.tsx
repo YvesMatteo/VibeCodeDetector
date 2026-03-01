@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -73,7 +72,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                 </div>
             ) : (
                 <div className="relative">
-                    {scans.map((scan: any, index: number) => {
+                    {scans.map((scan, index: number) => {
                         const score = scan.overall_score;
                         const rating = getVibeRating(score);
                         const date = new Date(scan.created_at);

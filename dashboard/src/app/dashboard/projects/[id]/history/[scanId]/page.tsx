@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, ChevronRight } from 'lucide-react';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport } from '@/components/dashboard/audit-report';
-import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
+import { processAuditData, getMissingScannerNames, type ScanResultItem } from '@/lib/audit-data';
 import { ExportButton } from '@/components/dashboard/export-button';
 import { formatDate } from '@/lib/format-date';
 
@@ -35,7 +34,7 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
 
     const userPlan = profile?.plan || 'none';
 
-    const auditData = processAuditData(scan.results as Record<string, any>);
+    const auditData = processAuditData(scan.results as unknown as Record<string, ScanResultItem>);
     const missingScanners = getMissingScannerNames(scan.results as Record<string, unknown>);
 
     return (

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
@@ -27,6 +26,39 @@ function getServiceClient() {
 
 export const maxDuration = 60;
 
+interface VercelPayloadMeta {
+    githubCommitRef?: string;
+    githubCommitSha?: string;
+}
+
+interface VercelPayloadDeployment {
+    url?: string;
+    id?: string;
+    meta?: VercelPayloadMeta;
+}
+
+interface VercelPayloadInner {
+    deployment?: VercelPayloadDeployment;
+    url?: string;
+    id?: string;
+    meta?: VercelPayloadMeta;
+}
+
+interface VercelPayload {
+    type?: string;
+    url?: string;
+    id?: string;
+    payload?: VercelPayloadInner;
+}
+
+interface VercelIntegration {
+    id: string;
+    project_id: string;
+    user_id: string;
+    webhook_secret: string;
+    enabled: boolean;
+}
+
 export async function POST(req: NextRequest) {
     try {
         // Read raw body for signature verification
@@ -37,9 +69,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
         }
 
-        let payload: any;
+        let payload: VercelPayload;
         try {
-            payload = JSON.parse(rawBody);
+            payload = JSON.parse(rawBody) as VercelPayload;
         } catch {
             return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
         }
@@ -67,16 +99,16 @@ export async function POST(req: NextRequest) {
 
         // Find all enabled vercel integrations and try to match by signature
         const { data: integrations, error: intError } = await supabase
-            .from('vercel_integrations')
+            .from('vercel_integrations' as never)
             .select('id, project_id, user_id, webhook_secret, enabled')
-            .eq('enabled', true);
+            .eq('enabled', true) as { data: VercelIntegration[] | null; error: unknown };
 
         if (intError || !integrations || integrations.length === 0) {
             return NextResponse.json({ error: 'No active integrations found' }, { status: 404 });
         }
 
         // Verify signature against each integration's secret until we find a match
-        let matchedIntegration: any = null;
+        let matchedIntegration: VercelIntegration | null = null;
         for (const integration of integrations) {
             const expectedSig = crypto
                 .createHmac('sha1', integration.webhook_secret)
@@ -97,21 +129,21 @@ export async function POST(req: NextRequest) {
 
         // Rate limit: 30 deployments per minute per integration
         const { data: recentCount } = await supabase
-            .from('vercel_deployments')
+            .from('vercel_deployments' as never)
             .select('id', { count: 'exact', head: true })
             .eq('integration_id', matchedIntegration.id)
-            .gte('created_at', new Date(Date.now() - 60_000).toISOString());
+            .gte('created_at', new Date(Date.now() - 60_000).toISOString()) as { data: { id: string }[] | null };
 
-        if (recentCount && (recentCount as any).length > 30) {
+        if (recentCount && recentCount.length > 30) {
             return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
         }
 
         // Idempotency: check if this deployment was already processed
         const { data: existingDeploy } = await supabase
-            .from('vercel_deployments')
+            .from('vercel_deployments' as never)
             .select('id')
             .eq('vercel_deployment_id', deploymentId)
-            .maybeSingle();
+            .maybeSingle() as { data: { id: string } | null };
 
         if (existingDeploy) {
             return NextResponse.json({ message: 'Deployment already processed', deploymentId });
@@ -167,7 +199,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Build scan request
-        const scanBody: Record<string, any> = {
+        const scanBody: Record<string, unknown> = {
             url: project.url,
             projectId: project.id,
             backendType: project.backend_type || 'none',
@@ -216,7 +248,7 @@ export async function POST(req: NextRequest) {
             await supabase
                 .from('vercel_deployments')
                 .update({ scan_id: scanId })
-                .eq('id', (deployment as any).id);
+                .eq('id', (deployment as { id: string }).id);
 
             // Update integration's last deployment info
             await supabase

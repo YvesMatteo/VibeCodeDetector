@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
 import { Shield, ExternalLink, Clock } from 'lucide-react';
-import { processAuditData } from '@/lib/audit-data';
+import { processAuditData, type ScanResultItem } from '@/lib/audit-data';
 import { AuditReport } from '@/components/dashboard/audit-report';
 import { formatDate } from '@/lib/format-date';
 import type { Metadata } from 'next';
@@ -55,7 +54,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ p
         return notFound();
     }
 
-    const auditData = processAuditData(scan.results as Record<string, any>);
+    const auditData = processAuditData(scan.results as Record<string, ScanResultItem>);
     const domain = scan.url?.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'Unknown';
 
     return (

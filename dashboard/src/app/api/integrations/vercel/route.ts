@@ -1,9 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
 import { checkCsrf } from '@/lib/csrf';
 import { checkRateLimit } from '@/lib/rate-limit';
+
+interface VercelIntegration {
+    id: string;
+    project_id: string;
+    enabled: boolean;
+    last_deployment_at: string | null;
+    last_scan_id: string | null;
+    created_at: string;
+}
 
 // GET /api/integrations/vercel?projectId=xxx
 export async function GET(req: NextRequest) {
@@ -20,15 +28,13 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const sbUnchecked = supabase as any;
-
-    // Fetch integration
-    const { data: integration, error } = await sbUnchecked
-        .from('vercel_integrations')
+    // Fetch integration — vercel_integrations is not in generated types
+    const { data: integration, error } = await supabase
+        .from('vercel_integrations' as never)
         .select('id, project_id, enabled, last_deployment_at, last_scan_id, created_at')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as { data: VercelIntegration | null; error: unknown };
 
     if (error) {
         console.error('Fetch vercel integration error:', error);
@@ -40,12 +46,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch recent deployments
-    const { data: deployments } = await sbUnchecked
-        .from('vercel_deployments')
+    const { data: deployments } = await supabase
+        .from('vercel_deployments' as never)
         .select('id, vercel_deployment_id, deployment_url, git_branch, git_commit_sha, scan_id, result_score, created_at')
-        .eq('integration_id', (integration as { id: string }).id)
+        .eq('integration_id', integration.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(10) as { data: Record<string, unknown>[] | null };
 
     return NextResponse.json({
         integration,
@@ -81,15 +87,13 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-    const sbUnchecked = supabase as any;
-
     // Check if integration already exists
-    const { data: existing } = await sbUnchecked
-        .from('vercel_integrations')
+    const { data: existing } = await supabase
+        .from('vercel_integrations' as never)
         .select('id')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as { data: { id: string } | null };
 
     if (existing) {
         return NextResponse.json({ error: 'Integration already exists for this project' }, { status: 409 });
@@ -97,8 +101,8 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = `vcel_whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-    const { data, error } = await sbUnchecked
-        .from('vercel_integrations')
+    const { data, error } = await supabase
+        .from('vercel_integrations' as never)
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -106,7 +110,7 @@ export async function POST(req: NextRequest) {
             enabled: true,
         })
         .select('id, project_id, enabled, created_at')
-        .single();
+        .single() as { data: Record<string, unknown> | null; error: unknown };
 
     if (error) {
         console.error('Create vercel integration error:', error);
@@ -139,11 +143,11 @@ export async function DELETE(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { error } = await (supabase as any)
-        .from('vercel_integrations')
+    const { error } = await supabase
+        .from('vercel_integrations' as never)
         .delete()
         .eq('project_id', projectId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id) as { error: unknown };
 
     if (error) {
         console.error('Delete vercel integration error:', error);

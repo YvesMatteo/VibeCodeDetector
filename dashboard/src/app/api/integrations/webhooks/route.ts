@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
@@ -22,11 +21,11 @@ export async function GET(req: NextRequest) {
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
     const { data, error } = await supabase
-        .from('project_webhooks' as any)
+        .from('project_webhooks' as never)
         .select('id, url, events, enabled, last_triggered_at, last_status, created_at')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: Record<string, unknown>[] | null; error: unknown };
 
     if (error) {
         console.error('List webhooks error:', error);
@@ -90,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await supabase
-        .from('project_webhooks' as any)
+        .from('project_webhooks' as never)
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -100,7 +99,7 @@ export async function POST(req: NextRequest) {
             enabled: true,
         })
         .select('id, project_id, url, events, enabled, created_at')
-        .single();
+        .single() as { data: Record<string, unknown> | null; error: unknown };
 
     if (error) {
         console.error('Create webhook error:', error);
@@ -108,7 +107,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Return the webhook data + secret as a separate one-time field
-    return NextResponse.json({ ...(data as any), secret }, { status: 201 });
+    return NextResponse.json({ ...(data as Record<string, unknown>), secret }, { status: 201 });
 }
 
 // DELETE /api/integrations/webhooks?id=xxx
@@ -130,10 +129,10 @@ export async function DELETE(req: NextRequest) {
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
     const { error } = await supabase
-        .from('project_webhooks' as any)
+        .from('project_webhooks' as never)
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id) as { error: unknown };
 
     if (error) {
         console.error('Delete webhook error:', error);

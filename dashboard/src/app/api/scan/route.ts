@@ -690,18 +690,15 @@ export async function POST(req: NextRequest) {
                 const DECAY_CONSTANT = 120; // higher = slower decay
 
                 let totalPenalty = 0;
-                // scannersWithFindings tracked for potential future use in scoring
-                let _scannersWithFindings = 0;
-
                 for (const [, result] of Object.entries(results)) {
                     if (typeof result !== 'object' || result === null) continue;
-                    const r = result as Record<string, any>;
+                    const r = result as Record<string, unknown>;
                     if (r.error || r.skipped) continue;
                     if (!Array.isArray(r.findings) || r.findings.length === 0) continue;
 
-                    _scannersWithFindings++;
                     for (const f of r.findings) {
-                        const sev = (f.severity || 'info').toLowerCase();
+                        const finding = f as Record<string, unknown>;
+                        const sev = ((finding.severity as string | undefined) || 'info').toLowerCase();
                         totalPenalty += SEVERITY_PENALTY[sev] ?? 0;
                     }
                 }
@@ -759,12 +756,14 @@ export async function POST(req: NextRequest) {
                 if (resolvedProjectId) {
                     try {
                         const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0 };
+                        type CountKey = keyof Omit<typeof counts, 'total'>;
                         for (const val of Object.values(results)) {
-                            const r = val as Record<string, any>;
+                            const r = val as Record<string, unknown>;
                             if (!r || !Array.isArray(r.findings)) continue;
                             for (const f of r.findings) {
-                                const sev = (f.severity || 'info').toLowerCase();
-                                if (sev in counts) (counts as any)[sev]++;
+                                const finding = f as Record<string, unknown>;
+                                const sev = ((finding.severity as string | undefined) || 'info').toLowerCase();
+                                if (sev in counts) counts[sev as CountKey]++;
                                 counts.total++;
                             }
                         }
@@ -818,10 +817,11 @@ export async function POST(req: NextRequest) {
 
                             const counts = { critical: 0, high: 0, medium: 0, low: 0 };
                             for (const val of Object.values(results)) {
-                                const r = val as Record<string, any>;
+                                const r = val as Record<string, unknown>;
                                 if (!r || !Array.isArray(r.findings)) continue;
                                 for (const f of r.findings) {
-                                    const sev = (f.severity || '').toLowerCase();
+                                    const finding = f as Record<string, unknown>;
+                                    const sev = ((finding.severity as string | undefined) || '').toLowerCase();
                                     if (sev === 'critical') counts.critical++;
                                     else if (sev === 'high') counts.high++;
                                     else if (sev === 'medium') counts.medium++;
@@ -846,7 +846,8 @@ export async function POST(req: NextRequest) {
                 if (scanId) {
                     try {
                         const svc = getServiceClient();
-                        void svc.from('vercel_deployments' as any)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        void (svc as any).from('vercel_deployments')
                             .update({ result_score: overallScore })
                             .eq('scan_id', scanId);
                     } catch { /* non-critical */ }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
@@ -27,6 +26,24 @@ function getServiceClient() {
 
 export const maxDuration = 60;
 
+interface NetlifyPayload {
+    state?: string;
+    status?: string;
+    id?: string;
+    deploy_id?: string;
+    ssl_url?: string;
+    url?: string;
+    deploy_ssl_url?: string;
+}
+
+interface NetlifyIntegration {
+    id: string;
+    project_id: string;
+    user_id: string;
+    webhook_secret: string;
+    enabled: boolean;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const rawBody = await req.text();
@@ -36,9 +53,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
         }
 
-        let payload: any;
+        let payload: NetlifyPayload;
         try {
-            payload = JSON.parse(rawBody);
+            payload = JSON.parse(rawBody) as NetlifyPayload;
         } catch {
             return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
         }
@@ -60,16 +77,16 @@ export async function POST(req: NextRequest) {
 
         // Find all enabled netlify integrations and verify signature
         const { data: integrations, error: intError } = await supabase
-            .from('netlify_integrations')
+            .from('netlify_integrations' as never)
             .select('id, project_id, user_id, webhook_secret, enabled')
-            .eq('enabled', true);
+            .eq('enabled', true) as { data: NetlifyIntegration[] | null; error: unknown };
 
         if (intError || !integrations || integrations.length === 0) {
             return NextResponse.json({ error: 'No active integrations found' }, { status: 404 });
         }
 
         // Verify HMAC-SHA256 signature against each integration's secret
-        let matchedIntegration: any = null;
+        let matchedIntegration: NetlifyIntegration | null = null;
         for (const integration of integrations) {
             const expectedSig = crypto
                 .createHmac('sha256', integration.webhook_secret)
@@ -90,10 +107,10 @@ export async function POST(req: NextRequest) {
 
         // Rate limit: max 1 scan per 10 minutes per integration
         const { data: recentDeploys } = await supabase
-            .from('netlify_deployments')
+            .from('netlify_deployments' as never)
             .select('id')
             .eq('integration_id', matchedIntegration.id)
-            .gte('created_at', new Date(Date.now() - 10 * 60_000).toISOString());
+            .gte('created_at', new Date(Date.now() - 10 * 60_000).toISOString()) as { data: { id: string }[] | null };
 
         if (recentDeploys && recentDeploys.length > 0) {
             return NextResponse.json({
@@ -104,10 +121,10 @@ export async function POST(req: NextRequest) {
 
         // Idempotency: check if this deployment was already processed
         const { data: existingDeploy } = await supabase
-            .from('netlify_deployments')
+            .from('netlify_deployments' as never)
             .select('id')
             .eq('netlify_deployment_id', deploymentId)
-            .maybeSingle();
+            .maybeSingle() as { data: { id: string } | null };
 
         if (existingDeploy) {
             return NextResponse.json({ message: 'Deployment already processed', deploymentId });
@@ -117,14 +134,14 @@ export async function POST(req: NextRequest) {
 
         // Insert deployment record
         const { data: deployment, error: deployInsertErr } = await supabase
-            .from('netlify_deployments')
+            .from('netlify_deployments' as never)
             .insert({
                 integration_id: matchedIntegration.id,
                 netlify_deployment_id: deploymentId,
                 deployment_url: deploymentUrl,
             })
             .select('id')
-            .single();
+            .single() as { data: { id: string } | null; error: unknown };
 
         if (deployInsertErr) {
             console.error('Failed to insert netlify deployment:', deployInsertErr);
@@ -154,7 +171,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Build scan request
-        const scanBody: Record<string, any> = {
+        const scanBody: Record<string, string> = {
             url: project.url,
             projectId: project.id,
             backendType: project.backend_type || 'none',
@@ -193,20 +210,20 @@ export async function POST(req: NextRequest) {
             const text = await scanRes.text();
             const firstLine = text.split('\n')[0];
             try {
-                const parsed = JSON.parse(firstLine);
+                const parsed = JSON.parse(firstLine) as { scanId?: string };
                 scanId = parsed.scanId || null;
             } catch { /* ignore parse error */ }
         }
 
         // Update deployment record with scan ID
-        if (scanId) {
+        if (scanId && deployment) {
             await supabase
-                .from('netlify_deployments')
+                .from('netlify_deployments' as never)
                 .update({ scan_id: scanId })
-                .eq('id', (deployment as any).id);
+                .eq('id', deployment.id);
 
             await supabase
-                .from('netlify_integrations')
+                .from('netlify_integrations' as never)
                 .update({
                     last_deployment_at: new Date().toISOString(),
                     last_scan_id: scanId,
