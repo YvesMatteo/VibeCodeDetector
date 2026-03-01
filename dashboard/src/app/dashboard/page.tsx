@@ -7,7 +7,9 @@ import { ProjectCard } from '@/components/dashboard/project-card';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ProjectSearch } from '@/components/dashboard/project-search';
-import { countIssuesBySeverity } from '@/lib/scan-utils';
+import { countIssuesExcludingDismissed, computeAdjustedScore } from '@/lib/scan-utils';
+import { buildFingerprint } from '@/lib/dismissals';
+import type { Dismissal } from '@/lib/dismissals';
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
     const params = await searchParams;
@@ -81,20 +83,41 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
     }
 
+    // Fetch all dismissed findings for this user (one query for all projects)
+    const { data: allDismissals } = await supabase
+        .from('dismissed_findings')
+        .select('*')
+        .eq('user_id', user.id);
+
+    // Group dismissals by project_id
+    const dismissalsByProject = new Map<string, Set<string>>();
+    for (const d of (allDismissals || []) as Dismissal[]) {
+        if (!d.project_id) continue;
+        if (!dismissalsByProject.has(d.project_id)) {
+            dismissalsByProject.set(d.project_id, new Set());
+        }
+        dismissalsByProject.get(d.project_id)!.add(d.fingerprint);
+    }
+
     // Fetch results ONLY for the latest scan per project (for severity breakdown)
     const latestScanIds = Object.values(latestScansMap).map(s => s.id);
-    const severityMap: Record<string, { issueCount: number; severity: { critical: number; high: number; medium: number; low: number } }> = {};
+    const severityMap: Record<string, { issueCount: number; severity: { critical: number; high: number; medium: number; low: number }; adjustedScore: number | null }> = {};
     if (latestScanIds.length > 0) {
         const { data: scansWithResults } = await supabase
             .from('scans')
-            .select('id, results')
+            .select('id, project_id, results')
             .in('id', latestScanIds);
 
-        for (const scan of (scansWithResults || [])) {
-            const counts = countIssuesBySeverity(scan.results as Record<string, unknown>);
+        for (const scan of (scansWithResults || []) as { id: string; project_id: string; results: Record<string, unknown> }[]) {
+            const dismissed = dismissalsByProject.get(scan.project_id) ?? new Set<string>();
+            const counts = countIssuesExcludingDismissed(scan.results, dismissed);
+            const adjScore = dismissed.size > 0
+                ? computeAdjustedScore(scan.results, dismissed)
+                : null;
             severityMap[scan.id] = {
                 issueCount: counts.total,
                 severity: { critical: counts.critical, high: counts.high, medium: counts.medium, low: counts.low },
+                adjustedScore: adjScore,
             };
         }
     }
@@ -104,7 +127,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         const scanSeverity = latestScan ? severityMap[latestScan.id] : null;
         return {
             ...project,
-            latestScore: latestScan?.overall_score ?? null,
+            latestScore: scanSeverity?.adjustedScore ?? latestScan?.overall_score ?? null,
             lastAuditDate: latestScan?.completed_at ?? null,
             issueCount: scanSeverity?.issueCount ?? 0,
             severity: scanSeverity?.severity ?? { critical: 0, high: 0, medium: 0, low: 0 },
