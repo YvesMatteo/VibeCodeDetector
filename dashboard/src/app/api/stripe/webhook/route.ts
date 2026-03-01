@@ -64,6 +64,12 @@ export async function POST(req: Request) {
 
         if (!userId || !isValidUUID(userId)) {
             console.error('Invalid userId in webhook metadata:', userId);
+            return new NextResponse(null, { status: 500 });
+        }
+
+        // M3: Verify payment was actually completed
+        if (session.payment_status !== 'paid') {
+            console.warn('Checkout session not paid, skipping activation:', session.payment_status);
             return new NextResponse(null, { status: 200 });
         }
 
@@ -93,7 +99,7 @@ export async function POST(req: Request) {
             if (session.subscription) {
                 try {
                     const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-                    periodStart = new Date((sub as any).current_period_start * 1000).toISOString();
+                    periodStart = new Date(((sub as unknown as { current_period_start: number }).current_period_start) * 1000).toISOString();
                 } catch (e) {
                     console.warn('Could not fetch subscription period, using current time:', e);
                 }
@@ -108,8 +114,8 @@ export async function POST(req: Request) {
                         plan_scans_limit: planInfo.scans,
                         plan_scans_used: 0,
                         plan_period_start: periodStart,
-                        stripe_customer_id: session.customer as string,
-                        stripe_subscription_id: session.subscription as string,
+                        stripe_customer_id: (typeof session.customer === 'string' ? session.customer : session.customer?.id) ?? null,
+                        stripe_subscription_id: (typeof session.subscription === 'string' ? session.subscription : session.subscription?.id) ?? null,
                     })
                     .eq('id', userId);
 
@@ -147,13 +153,18 @@ export async function POST(req: Request) {
                     return new NextResponse(null, { status: 200 });
                 }
 
-                await supabase
+                const { error: updateError } = await supabase
                     .from('profiles')
                     .update({
                         plan_scans_used: 0,
                         plan_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : new Date().toISOString(),
                     })
                     .eq('id', profile.id);
+
+                if (updateError) {
+                    console.error('Error resetting scan counter:', updateError);
+                    return new NextResponse('Error resetting scan counter', { status: 500 });
+                }
             } catch (error) {
                 console.error('Error resetting monthly scans:', error);
                 return new NextResponse(null, { status: 500 });
@@ -181,11 +192,15 @@ export async function POST(req: Request) {
                     // Restrict scanning while payment is failing.
                     // When Stripe retries successfully, customer.subscription.updated
                     // fires and restores the correct limits from the price amount.
-                    await supabase
+                    const { error: updateError } = await supabase
                         .from('profiles')
                         .update({ plan_scans_limit: 0 })
                         .eq('id', profile.id);
 
+                    if (updateError) {
+                        console.error('Error restricting plan for payment failure:', updateError);
+                        return new NextResponse('Error restricting plan', { status: 500 });
+                    }
                 }
             } catch (error) {
                 console.error('Error handling payment failure:', error);
@@ -205,7 +220,7 @@ export async function POST(req: Request) {
                 .single();
 
             if (profile) {
-                await supabase
+                const { error: updateError } = await supabase
                     .from('profiles')
                     .update({
                         plan: 'none',
@@ -218,6 +233,10 @@ export async function POST(req: Request) {
                     })
                     .eq('id', profile.id);
 
+                if (updateError) {
+                    console.error('Error deactivating plan:', updateError);
+                    return new NextResponse('Error deactivating plan', { status: 500 });
+                }
             }
         } catch (error) {
             console.error('Error deactivating plan:', error);
@@ -232,7 +251,7 @@ export async function POST(req: Request) {
         let planInfo: PlanInfo | null = null;
 
         // Check price ID first (more reliable than metadata for portal changes)
-        const items = (subscription as any).items?.data;
+        const items = (subscription as unknown as { items?: { data?: Array<{ price?: { id?: string } }> } }).items?.data;
         if (items?.length > 0) {
             const priceId = items[0].price?.id;
             if (priceId) {
@@ -250,7 +269,7 @@ export async function POST(req: Request) {
 
         // Handle non-active subscription states
         const subStatus = subscription.status;
-        if (subStatus === 'past_due' || subStatus === 'unpaid' || subStatus === 'paused' || subStatus === 'incomplete') {
+        if (subStatus === 'past_due' || subStatus === 'unpaid' || subStatus === 'paused' || subStatus === 'incomplete' || subStatus === 'canceled') {
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
@@ -259,10 +278,15 @@ export async function POST(req: Request) {
                     .single();
 
                 if (profile) {
-                    await supabase
+                    const { error: updateError } = await supabase
                         .from('profiles')
                         .update({ plan_scans_limit: 0 })
                         .eq('id', profile.id);
+
+                    if (updateError) {
+                        console.error('Error restricting plan for non-active subscription:', updateError);
+                        return new NextResponse('Error restricting plan', { status: 500 });
+                    }
                 }
             } catch (error) {
                 console.error('Error restricting plan for non-active subscription:', error);
@@ -280,7 +304,7 @@ export async function POST(req: Request) {
                     .single();
 
                 if (profile) {
-                    await supabase
+                    const { error: updateError } = await supabase
                         .from('profiles')
                         .update({
                             plan: planInfo.plan,
@@ -289,6 +313,10 @@ export async function POST(req: Request) {
                         })
                         .eq('id', profile.id);
 
+                    if (updateError) {
+                        console.error('Error updating plan:', updateError);
+                        return new NextResponse('Error updating plan', { status: 500 });
+                    }
                 }
             } catch (error) {
                 console.error('Error updating plan:', error);
