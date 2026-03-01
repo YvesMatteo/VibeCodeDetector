@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 /** Shared audit data types and processing — importable from both server and client components */
 
 /**

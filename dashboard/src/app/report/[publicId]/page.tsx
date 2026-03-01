@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';

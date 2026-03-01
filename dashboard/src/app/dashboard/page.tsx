@@ -49,12 +49,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     // Fetch monitoring schedules for all projects
     const projectIds = filteredProjects.map(p => p.id);
     const { data: schedules } = projectIds.length > 0
-        ? await supabase
-            .from('scheduled_scans' as string)
+        ? await (supabase
+            .from('scheduled_scans' as never)
             .select('project_id, frequency, enabled')
-            .in('project_id', projectIds)
-            .eq('user_id', user.id)
-            .eq('enabled', true)
+            .in('project_id' as never, projectIds)
+            .eq('user_id' as never, user.id)
+            .eq('enabled' as never, true)) as unknown as { data: { project_id: string; frequency: string; enabled: boolean }[] | null }
         : { data: [] };
 
     const scheduleMap = new Map<string, string>();

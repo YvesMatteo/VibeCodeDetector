@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import crypto from 'crypto';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { countIssuesBySeverity } from '@/lib/scan-utils';

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { OWNER_EMAIL } from '@/lib/constants';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || user.email !== OWNER_EMAIL) {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     // Get plans from profiles table
     const { data: profiles } = await admin.from('profiles').select('id, plan');
-    const planMap = new Map((profiles || []).map((p: any) => [p.id, p.plan]));
+    const planMap = new Map((profiles || []).map((p: { id: string; plan: string }) => [p.id, p.plan]));
 
     const users = (data?.users || []).map(u => ({
         id: u.id,

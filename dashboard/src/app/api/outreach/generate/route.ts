@@ -90,12 +90,14 @@ export async function POST(req: NextRequest) {
     const companyContext = await scrapeCompanyContext(projectUrl);
 
     // Build a summary of findings for the prompt
-    const findingsSummary = Object.entries(scanResults as Record<string, any>)
+    interface ScanFinding { severity?: string; title?: string }
+    interface ScanResultEntry { skipped?: boolean; findings?: ScanFinding[] }
+    const findingsSummary = Object.entries(scanResults as Record<string, ScanResultEntry>)
         .filter(([, v]) => v && !v.skipped && Array.isArray(v.findings) && v.findings.length > 0)
         .map(([scanner, result]) => {
-            const findings = (result as any).findings
-                .filter((f: any) => f.severity?.toLowerCase() !== 'info')
-                .map((f: any) => `  - [${f.severity?.toUpperCase()}] ${f.title}`);
+            const findings = (result.findings || [])
+                .filter((f) => f.severity?.toLowerCase() !== 'info')
+                .map((f) => `  - [${f.severity?.toUpperCase()}] ${f.title}`);
             return findings.length > 0 ? `${scanner}:\n${findings.join('\n')}` : null;
         })
         .filter(Boolean)
@@ -170,8 +172,8 @@ RULES:
                 const body = lines.slice(bodyStart).join('\n').trim();
 
                 return NextResponse.json({ subject, body, raw: emailText, model: modelName });
-            } catch (err: any) {
-                lastError = err?.message || String(err);
+            } catch (err: unknown) {
+                lastError = err instanceof Error ? err.message : String(err);
                 const is429 = lastError.includes('429') || lastError.includes('quota') || lastError.includes('Too Many Requests');
 
                 if (is429 && attempt < MAX_RETRIES) {

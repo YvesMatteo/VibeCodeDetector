@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient } from '@/lib/api-keys';
 import { createClient } from '@/lib/supabase/server';

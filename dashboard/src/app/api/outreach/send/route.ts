@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import { OWNER_EMAIL } from '@/lib/constants';
 
 /** Convert plain text body to a clean HTML email with footer */
-function buildHtml(body: string, recipientEmail: string): string {
+function buildHtml(body: string): string {
     // Convert bullet points (•) to styled list items
     const lines = body.split('\n');
     let html = '';
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     // Send to FIRST recipient, check if it works before sending to others
     const first = validRecipients[0].trim();
-    const htmlBody = buildHtml(body, first);
+    const htmlBody = buildHtml(body);
     try {
         await transporter.sendMail({
             from: `"Yves Romano" <${gmailUser}>`,
@@ -119,8 +119,8 @@ export async function POST(req: NextRequest) {
             },
         });
         results.push({ email: first, success: true });
-    } catch (err: any) {
-        const msg = err?.message || '';
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : '';
         console.error(`Email send error to ${first}:`, msg);
         results.push({ email: first, success: false, error: msg });
 
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
     // First succeeded — send to remaining recipients sequentially
     for (let i = 1; i < validRecipients.length; i++) {
         const recipient = validRecipients[i].trim();
-        const recipientHtml = buildHtml(body, recipient);
+        const recipientHtml = buildHtml(body);
         try {
             await transporter.sendMail({
                 from: `"Yves Romano" <${gmailUser}>`,
@@ -152,9 +152,10 @@ export async function POST(req: NextRequest) {
                 },
             });
             results.push({ email: recipient, success: true });
-        } catch (err: any) {
-            console.error(`Email send error to ${recipient}:`, err?.message);
-            results.push({ email: recipient, success: false, error: err?.message });
+        } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : '';
+            console.error(`Email send error to ${recipient}:`, errMsg);
+            results.push({ email: recipient, success: false, error: errMsg });
         }
     }
 

@@ -40,7 +40,7 @@ export async function GET(
     }
 
     // Fetch previous completed scan for diffing (same project, same owner)
-    let previousScan: any = null;
+    let previousScan: typeof scan | null = null;
     if (scan.project_id) {
       const { data } = await supabase
         .from('scans')
@@ -62,7 +62,7 @@ export async function GET(
     const format = req.nextUrl.searchParams.get('format');
 
     if (format === 'pdf') {
-      const pdfBytes = await markdownToPdf(markdown, domain, date);
+      const pdfBytes = await markdownToPdf(markdown);
       return new NextResponse(pdfBytes as unknown as BodyInit, {
         status: 200,
         headers: {
@@ -91,7 +91,7 @@ export async function GET(
 // Produces a clean, readable PDF from the markdown content.
 // ---------------------------------------------------------------------------
 
-async function markdownToPdf(markdown: string, domain: string, date: string): Promise<Uint8Array> {
+async function markdownToPdf(markdown: string): Promise<Uint8Array> {
   const lines = markdown.split('\n');
   const objects: string[] = [];
   let objectCount = 0;

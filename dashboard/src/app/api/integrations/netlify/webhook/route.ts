@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
         }
 
+         
         let payload: any;
         try {
             payload = JSON.parse(rawBody);
@@ -68,6 +70,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify HMAC-SHA256 signature against each integration's secret
+         
         let matchedIntegration: any = null;
         for (const integration of integrations) {
             const expectedSig = crypto

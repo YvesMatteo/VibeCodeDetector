@@ -46,14 +46,15 @@ export async function GET(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+    // threat_settings not in generated types — cast through never
     const { data: settings } = await supabase
-        .from('threat_settings' as any)
+        .from('threat_settings' as never)
         .select('snippet_token')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id)
+        .eq('project_id' as never, projectId)
+        .eq('user_id' as never, user.id)
         .maybeSingle();
 
-    const s = settings as any;
+    const s = settings as { snippet_token?: string } | null;
     if (!s?.snippet_token) {
         return NextResponse.json({ error: 'Enable threat detection first' }, { status: 404 });
     }

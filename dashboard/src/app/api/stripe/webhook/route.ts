@@ -252,8 +252,8 @@ export async function POST(req: Request) {
 
         // Check price ID first (more reliable than metadata for portal changes)
         const items = (subscription as unknown as { items?: { data?: Array<{ price?: { id?: string } }> } }).items?.data;
-        if (items?.length > 0) {
-            const priceId = items[0].price?.id;
+        if (items && items.length > 0) {
+            const priceId = items[0]?.price?.id;
             if (priceId) {
                 planInfo = resolvePlanByPriceId(priceId);
             }

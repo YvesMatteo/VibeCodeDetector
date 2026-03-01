@@ -26,8 +26,8 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
 
     const handleDismiss = useCallback(async (
         fingerprint: string,
-        scannerKey: string,
-        finding: any,
+        _scannerKey: string,
+        _finding: { id?: string; title: string; severity: string; description?: string; recommendation?: string },
         reason: DismissalReason,
         scope: DismissalScope,
         note?: string,

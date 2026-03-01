@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 /**
  * OWASP Top 10:2021 mapping for CheckVibe scanner findings.
  * Maps each scanner type to one or more OWASP categories so findings

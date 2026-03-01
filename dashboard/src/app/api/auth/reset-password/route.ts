@@ -34,11 +34,6 @@ export async function POST(req: NextRequest) {
     // Generate recovery link for the user
     // Validate origin against allowlist to prevent open redirect
     const DEV_ORIGINS = process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : [];
-    const ALLOWED_ORIGINS = [
-        'https://checkvibe.dev',
-        'https://www.checkvibe.dev',
-        ...DEV_ORIGINS,
-    ];
     const rawOrigin = req.headers.get('origin');
     // Use the raw origin for dev, but always use www for production (dashboard is on www.checkvibe.dev)
     const origin = (rawOrigin && DEV_ORIGINS.includes(rawOrigin))

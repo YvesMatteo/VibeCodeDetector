@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        let { url, scanTypes, githubRepo, supabasePAT } = body;
+        const { url, scanTypes, githubRepo, supabasePAT } = body;
         const projectId: string | undefined = body.projectId;
 
         // If projectId is provided, fetch project and use its config
@@ -689,7 +690,8 @@ export async function POST(req: NextRequest) {
                 const DECAY_CONSTANT = 120; // higher = slower decay
 
                 let totalPenalty = 0;
-                let scannersWithFindings = 0;
+                // scannersWithFindings tracked for potential future use in scoring
+                let _scannersWithFindings = 0;
 
                 for (const [, result] of Object.entries(results)) {
                     if (typeof result !== 'object' || result === null) continue;

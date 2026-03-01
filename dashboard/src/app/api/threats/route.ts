@@ -54,10 +54,11 @@ export async function GET(req: NextRequest) {
     const from = req.nextUrl.searchParams.get('from');
     const to = req.nextUrl.searchParams.get('to');
 
+    // threat_events not in generated types — cast through never
     let query = supabase
-        .from('threat_events' as any)
+        .from('threat_events' as never)
         .select('*', { count: 'exact' })
-        .eq('project_id', projectId)
+        .eq('project_id' as never, projectId)
         .order('created_at', { ascending: false })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 

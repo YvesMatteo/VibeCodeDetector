@@ -19,10 +19,16 @@ interface Finding {
     severity: string;
 }
 
+interface TechStackFinding {
+    title?: string;
+    description?: string;
+    [key: string]: unknown;
+}
+
 interface TechStackResult {
-    findings?: Array<{ title?: string; description?: string;[key: string]: any }>;
+    findings?: TechStackFinding[];
     detectedTechnologies?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface AIFixPromptProps {

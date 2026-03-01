@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';

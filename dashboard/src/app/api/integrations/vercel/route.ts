@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
@@ -19,9 +20,12 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
+     
+    const sbUnchecked = supabase as any;
+
     // Fetch integration
-    const { data: integration, error } = await supabase
-        .from('vercel_integrations' as any)
+    const { data: integration, error } = await sbUnchecked
+        .from('vercel_integrations')
         .select('id, project_id, enabled, last_deployment_at, last_scan_id, created_at')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
@@ -37,10 +41,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch recent deployments
-    const { data: deployments } = await supabase
-        .from('vercel_deployments' as any)
+    const { data: deployments } = await sbUnchecked
+        .from('vercel_deployments')
         .select('id, vercel_deployment_id, deployment_url, git_branch, git_commit_sha, scan_id, result_score, created_at')
-        .eq('integration_id', (integration as any).id)
+        .eq('integration_id', (integration as { id: string }).id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -78,9 +82,12 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+     
+    const sbUnchecked = supabase as any;
+
     // Check if integration already exists
-    const { data: existing } = await supabase
-        .from('vercel_integrations' as any)
+    const { data: existing } = await sbUnchecked
+        .from('vercel_integrations')
         .select('id')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
@@ -92,8 +99,8 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = `vcel_whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-    const { data, error } = await supabase
-        .from('vercel_integrations' as any)
+    const { data, error } = await sbUnchecked
+        .from('vercel_integrations')
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -111,7 +118,7 @@ export async function POST(req: NextRequest) {
     const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://checkvibe.dev'}/api/integrations/vercel/webhook`;
 
     return NextResponse.json({
-        ...(data as any),
+        ...(data as Record<string, unknown>),
         webhook_secret: webhookSecret,
         webhook_url: webhookUrl,
     }, { status: 201 });
@@ -134,8 +141,9 @@ export async function DELETE(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { error } = await supabase
-        .from('vercel_integrations' as any)
+     
+    const { error } = await (supabase as any)
+        .from('vercel_integrations')
         .delete()
         .eq('project_id', projectId)
         .eq('user_id', user.id);

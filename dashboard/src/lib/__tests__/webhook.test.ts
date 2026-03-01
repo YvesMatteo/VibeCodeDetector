@@ -289,7 +289,7 @@ describe('stripe-plans — plan limits consistency', () => {
 
 // Dynamic import so the env vars and mocks are set up first.
 // We use a lazy require pattern because the route module reads env at import time.
-let POST: (req: Request) => Promise<{ status: number; body: string | null }>;
+let POST: (req: Request) => Promise<Response>;
 
 beforeEach(async () => {
   vi.resetModules();

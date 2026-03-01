@@ -366,7 +366,8 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
 
             {/* Detailed Results by Scanner */}
             <ScannerAccordion
-                results={scannerResults}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                results={scannerResults as Record<string, any>}
                 dismissedFingerprints={dismissed}
                 onDismiss={onDismiss}
                 userPlan={userPlan}

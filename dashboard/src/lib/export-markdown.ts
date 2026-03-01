@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 // Full markdown report generator for scan exports
 import { computeScanDiff } from './scan-diff';
 import { computeOwaspSummary } from './owasp-mapping';

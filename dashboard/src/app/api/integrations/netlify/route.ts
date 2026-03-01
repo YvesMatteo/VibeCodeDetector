@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
@@ -19,8 +20,10 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { data: integration, error } = await supabase
-        .from('netlify_integrations' as any)
+    const sbUnchecked = supabase as any;
+
+    const { data: integration, error } = await sbUnchecked
+        .from('netlify_integrations')
         .select('id, project_id, enabled, last_deployment_at, last_scan_id, created_at')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
@@ -35,10 +38,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ integration: null, deployments: [] });
     }
 
-    const { data: deployments } = await supabase
-        .from('netlify_deployments' as any)
+    const { data: deployments } = await sbUnchecked
+        .from('netlify_deployments')
         .select('id, netlify_deployment_id, deployment_url, scan_id, result_score, created_at')
-        .eq('integration_id', (integration as any).id)
+        .eq('integration_id', (integration as { id: string }).id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -76,9 +79,11 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+    const sbUnchecked = supabase as any;
+
     // Check if integration already exists
-    const { data: existing } = await supabase
-        .from('netlify_integrations' as any)
+    const { data: existing } = await sbUnchecked
+        .from('netlify_integrations')
         .select('id')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
@@ -90,8 +95,8 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = `ntlf_whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-    const { data, error } = await supabase
-        .from('netlify_integrations' as any)
+    const { data, error } = await sbUnchecked
+        .from('netlify_integrations')
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -109,7 +114,7 @@ export async function POST(req: NextRequest) {
     const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://checkvibe.dev'}/api/integrations/netlify/webhook`;
 
     return NextResponse.json({
-        ...(data as any),
+        ...(data as Record<string, unknown>),
         webhook_secret: webhookSecret,
         webhook_url: webhookUrl,
     }, { status: 201 });
@@ -132,8 +137,8 @@ export async function DELETE(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { error } = await supabase
-        .from('netlify_integrations' as any)
+    const { error } = await (supabase as any)
+        .from('netlify_integrations')
         .delete()
         .eq('project_id', projectId)
         .eq('user_id', user.id);

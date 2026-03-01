@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { checkCsrf } from '@/lib/csrf';
 

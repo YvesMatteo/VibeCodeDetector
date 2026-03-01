@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkCsrf } from '@/lib/csrf';
@@ -48,8 +49,9 @@ export async function GET(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-    const { data, error } = await supabase
-        .from('threat_settings' as any)
+     
+    const { data, error } = await (supabase as any)
+        .from('threat_settings')
         .select('*')
         .eq('project_id', projectId)
         .eq('user_id', user.id)
@@ -117,18 +119,21 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+     
+    const sbUnchecked = supabase as any;
+
     // Generate snippet token if needed
-    const { data: existing } = await supabase
-        .from('threat_settings' as any)
+    const { data: existing } = await sbUnchecked
+        .from('threat_settings')
         .select('id, snippet_token')
         .eq('project_id', projectId)
         .maybeSingle();
 
-    const snippetToken = (existing as any)?.snippet_token
+    const snippetToken = (existing as { snippet_token?: string } | null)?.snippet_token
         || `cvt_${projectId.replace(/-/g, '').slice(0, 12)}_${crypto.randomBytes(8).toString('hex')}`;
 
-    const { data, error } = await supabase
-        .from('threat_settings' as any)
+    const { data, error } = await sbUnchecked
+        .from('threat_settings')
         .upsert({
             project_id: projectId,
             user_id: user.id,

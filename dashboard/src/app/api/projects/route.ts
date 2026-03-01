@@ -9,6 +9,21 @@ import { PLAN_FREQUENCY_MAP } from '@/lib/plan-config';
 import { computeNextRun, resolveAppUrl } from '@/lib/schedule-utils';
 import { countIssuesBySeverity } from '@/lib/scan-utils';
 
+interface LatestScanEntry {
+    id: string;
+    project_id: string | null;
+    overall_score: number | null;
+    completed_at: string | null;
+    _issueCount?: number;
+}
+
+interface ScheduleEntry {
+    project_id: string;
+    frequency: string;
+    enabled: boolean;
+    next_run_at: string | null;
+}
+
 export async function GET() {
     try {
         const supabase = await createClient();
@@ -37,8 +52,8 @@ export async function GET() {
 
         // Batch-fetch latest scan for all projects in ONE query (fixes N+1)
         const projectIds = (projects || []).map((p) => p.id);
-        const latestScansMap: Record<string, any> = {};
-        const scheduleMap: Record<string, any> = {};
+        const latestScansMap: Record<string, LatestScanEntry> = {};
+        const scheduleMap: Record<string, ScheduleEntry> = {};
 
         if (projectIds.length > 0) {
             // Step 1: Fetch latest scan metadata per project (no results blob)
@@ -51,12 +66,12 @@ export async function GET() {
 
             for (const scan of (recentScans || [])) {
                 if (scan.project_id && !latestScansMap[scan.project_id]) {
-                    latestScansMap[scan.project_id] = scan;
+                    latestScansMap[scan.project_id] = scan as LatestScanEntry;
                 }
             }
 
             // Step 2: Fetch results ONLY for the latest scan per project (for issue counts)
-            const latestScanIds = Object.values(latestScansMap).map((s: any) => s.id);
+            const latestScanIds = Object.values(latestScansMap).map((s) => s.id);
             const issueCountsMap: Record<string, number> = {};
             if (latestScanIds.length > 0) {
                 const { data: scansWithResults } = await supabase
@@ -65,30 +80,32 @@ export async function GET() {
                     .in('id', latestScanIds);
 
                 for (const scan of (scansWithResults || [])) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- countIssuesBySeverity requires Record<string, any>
                     const counts = countIssuesBySeverity(scan.results as Record<string, any>);
                     issueCountsMap[scan.id] = counts.total;
                 }
             }
 
             // Attach issue counts to the latestScansMap entries
-            for (const [projectId, scan] of Object.entries(latestScansMap)) {
-                (scan as any)._issueCount = issueCountsMap[(scan as any).id] ?? 0;
+            for (const scan of Object.values(latestScansMap)) {
+                scan._issueCount = issueCountsMap[scan.id] ?? 0;
             }
 
             // Fetch scheduled scans for monitoring badges
-            const { data: schedules } = await supabase
-                .from('scheduled_scans' as any)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- scheduled_scans not in generated types
+            const { data: schedules } = await (supabase as any)
+                .from('scheduled_scans')
                 .select('project_id, frequency, enabled, next_run_at')
                 .in('project_id', projectIds);
 
-            for (const s of (schedules || []) as any[]) {
+            for (const s of (schedules || []) as ScheduleEntry[]) {
                 if (s.project_id) scheduleMap[s.project_id] = s;
             }
         }
 
         const projectsWithScans = (projects || []).map((project) => {
             const latestScan = latestScansMap[project.id] ?? null;
-            const issueCount = (latestScan as any)?._issueCount ?? 0;
+            const issueCount = latestScan?._issueCount ?? 0;
             const schedule = scheduleMap[project.id] ?? null;
             return {
                 ...project,
@@ -123,9 +140,6 @@ export async function POST(req: NextRequest) {
         }
 
         // Rate limit: 10 project creations per minute per user
-        const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
-            ?? req.headers.get('x-real-ip')
-            ?? '0.0.0.0';
         const rl = await checkRateLimit(`project-create:${user.id}`, 10, 60);
         if (!rl.allowed) {
             return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
@@ -228,10 +242,12 @@ export async function POST(req: NextRequest) {
             const frequency = PLAN_FREQUENCY_MAP[plan] || 'weekly';
             const nextRunAt = computeNextRun(frequency, 6);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- scheduled_scans & alert_rules not in generated types
+            const svcUnchecked = svc as any;
+
             // Insert scheduled scan + 2 default alert rules (fire-and-forget)
             await Promise.allSettled([
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- scheduled_scans not in generated types
-                svc.from('scheduled_scans' as any).insert({
+                svcUnchecked.from('scheduled_scans').insert({
                     project_id: project.id,
                     user_id: user.id,
                     frequency,
@@ -239,8 +255,7 @@ export async function POST(req: NextRequest) {
                     enabled: true,
                     next_run_at: nextRunAt,
                 }),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- alert_rules not in generated types
-                svc.from('alert_rules' as any).insert([
+                svcUnchecked.from('alert_rules').insert([
                     {
                         project_id: project.id,
                         user_id: user.id,

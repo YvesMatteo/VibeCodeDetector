@@ -844,7 +844,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
         const all = new Set<string>();
         Object.keys(results).forEach(key => {
             const result = results[key];
-            if (!result.error && !isEffectivelySkipped(key, result) && (result.findings?.length > 0 || result.technologies?.length > 0)) {
+            if (!result.error && !isEffectivelySkipped(key, result) && ((result.findings?.length ?? 0) > 0 || (result.technologies?.length ?? 0) > 0)) {
                 all.add(key);
             }
         });
