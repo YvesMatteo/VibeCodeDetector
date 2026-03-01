@@ -5,7 +5,6 @@ import { processAuditData, getMissingScannerNames, type ScanResultItem } from '@
 import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ExportButton } from '@/components/dashboard/export-button';
-import { ShareButton } from '@/components/dashboard/share-button';
 import { OutreachEmailModal } from '@/components/dashboard/outreach-email-modal';
 import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
@@ -121,7 +120,6 @@ export default async function ProjectReportPage(props: {
                     <div className="flex flex-wrap items-center gap-2 mb-6">
                         <AIFixPrompt url={project.url} findings={auditData!.allFindings} techStack={auditData!.techStack} userPlan={userPlan} />
                         <ExportButton scanId={latestScan.id} userPlan={userPlan} />
-                        {userPlan !== 'none' && <ShareButton scanId={latestScan.id} initialPublicId={latestScan.public_id} />}
                         {/* Temporary outreach feature — owner only */}
                         {user.email === OWNER_EMAIL_CLIENT && (
                             <OutreachEmailModal
