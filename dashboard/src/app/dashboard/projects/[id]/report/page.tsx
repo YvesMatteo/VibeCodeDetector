@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
-import { processAuditData, getMissingScannerNames } from '@/lib/audit-data';
+import { processAuditData, getMissingScannerNames, type ScanResultItem } from '@/lib/audit-data';
 import { AuditReportWithDismissals } from '@/components/dashboard/audit-report-with-dismissals';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ExportButton } from '@/components/dashboard/export-button';
@@ -61,12 +61,12 @@ export default async function ProjectReportPage(props: { params: Promise<{ id: s
         d.scope === 'project' || d.scan_id === latestScan?.id
     );
 
-    const auditData = latestScan ? processAuditData(latestScan.results as Record<string, any>) : null;
+    const auditData = latestScan ? processAuditData(latestScan.results as Record<string, ScanResultItem>) : null;
     const missingScanners = latestScan
         ? getMissingScannerNames(latestScan.results as Record<string, unknown>)
         : [];
     const scanDiff = (latestScan && previousScan)
-        ? computeScanDiff(latestScan.results as Record<string, any>, previousScan.results as Record<string, any>)
+        ? computeScanDiff(latestScan.results as Record<string, unknown>, previousScan.results as Record<string, unknown>)
         : null;
     const previousScanDate = previousScan?.completed_at ?? previousScan?.created_at ?? null;
 
@@ -90,7 +90,7 @@ export default async function ProjectReportPage(props: { params: Promise<{ id: s
                         {/* Temporary outreach feature — owner only */}
                         {user.email === OWNER_EMAIL_CLIENT && (
                             <OutreachEmailModal
-                                scanResults={latestScan.results as Record<string, any>}
+                                scanResults={latestScan.results as Record<string, unknown>}
                                 projectUrl={project.url}
                                 issueCount={auditData!.issueCount}
                                 severityBreakdown={auditData!.totalFindings}

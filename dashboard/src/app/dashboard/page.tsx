@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, FolderKanban, Search, ChevronDown, LayoutGrid, List } from 'lucide-react';
+import { Plus, FolderKanban } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
@@ -50,7 +50,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const projectIds = filteredProjects.map(p => p.id);
     const { data: schedules } = projectIds.length > 0
         ? await supabase
-            .from('scheduled_scans' as any)
+            .from('scheduled_scans' as string)
             .select('project_id, frequency, enabled')
             .in('project_id', projectIds)
             .eq('user_id', user.id)
@@ -59,7 +59,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
     const scheduleMap = new Map<string, string>();
     if (schedules) {
-        for (const s of schedules as any[]) {
+        for (const s of schedules as { project_id: string; frequency: string; enabled: boolean }[]) {
             scheduleMap.set(s.project_id, s.frequency);
         }
     }
@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             .eq('status', 'completed')
             .order('completed_at', { ascending: false });
 
-        for (const scan of (recentScans || []) as any[]) {
+        for (const scan of (recentScans || []) as { project_id: string; id: string; overall_score: number | null; completed_at: string | null }[]) {
             if (scan.project_id && !latestScansMap[scan.project_id]) {
                 latestScansMap[scan.project_id] = scan;
             }
@@ -91,7 +91,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             .in('id', latestScanIds);
 
         for (const scan of (scansWithResults || [])) {
-            const counts = countIssuesBySeverity(scan.results as Record<string, any>);
+            const counts = countIssuesBySeverity(scan.results as Record<string, unknown>);
             severityMap[scan.id] = {
                 issueCount: counts.total,
                 severity: { critical: counts.critical, high: counts.high, medium: counts.medium, low: counts.low },

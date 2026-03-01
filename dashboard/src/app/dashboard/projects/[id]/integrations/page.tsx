@@ -150,8 +150,8 @@ export default function IntegrationsPage() {
             setWebhooks([data, ...webhooks]);
             setNewUrl('');
             toast.success('Webhook created');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to create webhook. Please verify the URL and try again.');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to create webhook. Please verify the URL and try again.');
         } finally {
             setAdding(false);
         }
@@ -189,8 +189,8 @@ export default function IntegrationsPage() {
             setVercelSecret(data.webhook_secret);
             setVercelWebhookUrl(data.webhook_url);
             toast.success('Vercel deploy hook enabled');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to enable Vercel integration. Please try again.');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to enable Vercel integration. Please try again.');
         } finally {
             setVercelLoading(false);
         }
@@ -234,8 +234,8 @@ export default function IntegrationsPage() {
             setNetlifySecret(data.webhook_secret);
             setNetlifyWebhookUrl(data.webhook_url);
             toast.success('Netlify deploy hook enabled');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to enable Netlify integration. Please try again.');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to enable Netlify integration. Please try again.');
         } finally {
             setNetlifyLoading(false);
         }

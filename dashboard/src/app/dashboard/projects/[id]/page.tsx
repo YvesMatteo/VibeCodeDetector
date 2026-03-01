@@ -5,16 +5,12 @@ import {
     Shield,
     Clock,
     AlertTriangle,
-    ExternalLink,
     ArrowRight,
-    GitBranch,
-    Server,
     TrendingUp,
     TrendingDown,
     Minus,
     Activity,
 } from 'lucide-react';
-import { processAuditData } from '@/lib/audit-data';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
 import { Button } from '@/components/ui/button';
@@ -52,7 +48,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
 
     // Get monitoring schedule
     const { data: schedule } = await supabase
-        .from('scheduled_scans' as any)
+        .from('scheduled_scans' as string)
         .select('id, frequency, enabled, next_run_at, hour_utc')
         .eq('project_id', id)
         .eq('user_id', user.id)
@@ -71,21 +67,21 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
     const previousScan = recentScans?.[1] ?? null;
 
     // Fetch full results only for the latest scan (for issue counts + top findings)
-    let latestScan: (typeof latestScanMeta & { results: Record<string, any> | null }) | null = null;
+    let latestScan: (typeof latestScanMeta & { results: Record<string, unknown> | null }) | null = null;
     if (latestScanMeta) {
         const { data: fullScan } = await supabase
             .from('scans')
             .select('id, overall_score, created_at, completed_at, status, results')
             .eq('id', latestScanMeta.id)
             .single();
-        latestScan = fullScan as any;
+        latestScan = fullScan as typeof latestScan;
     }
 
     const score = latestScan?.overall_score ?? null;
     const previousScore = previousScan?.overall_score ?? null;
     const scoreDelta = (score !== null && previousScore !== null) ? score - previousScore : null;
 
-    const issues = latestScan ? countIssuesBySeverity(latestScan.results as Record<string, any>) : null;
+    const issues = latestScan ? countIssuesBySeverity(latestScan.results as Record<string, unknown>) : null;
     // Chart data (oldest first)
     const chartData = (recentScans || [])
         .filter(s => s.overall_score !== null)
@@ -98,7 +94,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
     // Top findings from latest scan
     const topFindings: { scanner: string; finding: string; severity: string }[] = [];
     if (latestScan?.results) {
-        const results = latestScan.results as Record<string, any>;
+        const results = latestScan.results as Record<string, { name?: string; findings?: { severity?: string; title?: string; description?: string }[] }>;
         for (const key of Object.keys(results)) {
             const scanner = results[key];
             if (scanner?.findings && Array.isArray(scanner.findings)) {
@@ -115,10 +111,6 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             }
         }
     }
-
-    const hostname = (() => {
-        try { return new URL(project.url).hostname; } catch { return project.url; }
-    })();
 
     return (
         <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full space-y-6">

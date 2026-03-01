@@ -60,11 +60,11 @@ export default function ThreatsPage() {
 
     // Stats
     const [stats, setStats] = useState<Stats | null>(null);
-    const [timeSeries, setTimeSeries] = useState<any[]>([]);
+    const [timeSeries, setTimeSeries] = useState<{ hour: string; critical: number; high: number; medium: number; low: number; total: number }[]>([]);
     const [topIps, setTopIps] = useState<TopIp[]>([]);
 
     // Events
-    const [events, setEvents] = useState<any[]>([]);
+    const [events, setEvents] = useState<{ id: string; event_type: string; severity: string; source_ip: string | null; request_path: string | null; payload_snippet: string | null; created_at: string }[]>([]);
     const [eventPage, setEventPage] = useState(1);
     const [eventTotal, setEventTotal] = useState(0);
     const [eventTotalPages, setEventTotalPages] = useState(0);
@@ -172,8 +172,8 @@ export default function ThreatsPage() {
                     setSnippet(snippetData.snippet);
                 }
             }
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to save settings');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to save settings');
         } finally {
             setSaving(false);
         }

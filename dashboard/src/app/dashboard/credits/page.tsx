@@ -7,52 +7,53 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Crown, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
+import { FREE_PLAN_CONFIG, PLAN_CONFIG } from '@/lib/plan-config';
 import { toast } from 'sonner';
 
 const pricingPlans = [
     {
         id: 'free',
-        name: 'Free',
-        priceMonthly: 0,
-        priceAnnualPerMonth: 0,
+        name: FREE_PLAN_CONFIG.name,
+        priceMonthly: FREE_PLAN_CONFIG.priceMonthly,
+        priceAnnualPerMonth: FREE_PLAN_CONFIG.priceAnnualPerMonth,
         description: 'Try it out',
-        domains: 1,
-        scans: 3,
-        features: ['1 project', 'Weekly monitoring', 'Issue overview', 'Blurred finding details'],
+        domains: FREE_PLAN_CONFIG.domains,
+        scans: FREE_PLAN_CONFIG.scans,
+        features: [`${FREE_PLAN_CONFIG.projects} project`, FREE_PLAN_CONFIG.monitoringLabel, 'Issue overview', 'Blurred finding details'],
         highlighted: false,
         isFree: true,
     },
     {
         id: 'starter',
-        name: 'Starter',
-        priceMonthly: 19,
-        priceAnnualPerMonth: 13.30,
+        name: PLAN_CONFIG.starter.name,
+        priceMonthly: PLAN_CONFIG.starter.priceMonthly,
+        priceAnnualPerMonth: PLAN_CONFIG.starter.priceAnnualPerMonth,
         description: 'For solo makers',
-        domains: 1,
-        scans: 5,
-        features: ['1 project', 'Daily monitoring', '35 security checks', 'PDF export'],
+        domains: PLAN_CONFIG.starter.domains,
+        scans: PLAN_CONFIG.starter.scans,
+        features: [`${PLAN_CONFIG.starter.projects} project`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export'],
         highlighted: false,
     },
     {
         id: 'pro',
-        name: 'Pro',
-        priceMonthly: 39,
-        priceAnnualPerMonth: 27.30,
+        name: PLAN_CONFIG.pro.name,
+        priceMonthly: PLAN_CONFIG.pro.priceMonthly,
+        priceAnnualPerMonth: PLAN_CONFIG.pro.priceAnnualPerMonth,
         description: 'For growing projects',
-        domains: 3,
-        scans: 20,
-        features: ['3 projects', 'Daily monitoring', '35 security checks', 'Priority support'],
+        domains: PLAN_CONFIG.pro.domains,
+        scans: PLAN_CONFIG.pro.scans,
+        features: [`${PLAN_CONFIG.pro.projects} projects`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
         highlighted: false,
     },
     {
         id: 'max',
-        name: 'Max',
-        priceMonthly: 79,
-        priceAnnualPerMonth: 55.30,
+        name: PLAN_CONFIG.max.name,
+        priceMonthly: PLAN_CONFIG.max.priceMonthly,
+        priceAnnualPerMonth: PLAN_CONFIG.max.priceAnnualPerMonth,
         description: 'For teams & agencies',
-        domains: 10,
-        scans: 75,
-        features: ['10 projects', 'Every 6h monitoring', '35 security checks', 'Dedicated support'],
+        domains: PLAN_CONFIG.max.domains,
+        scans: PLAN_CONFIG.max.scans,
+        features: [`${PLAN_CONFIG.max.projects} projects`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
         highlighted: false,
     },
 ];
@@ -73,7 +74,7 @@ export default function CreditsPage() {
     const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
     const [loading, setLoading] = useState<string | null>(null);
     const [portalLoading, setPortalLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
     const [currency, setCurrency] = useState<CurrencyCode>('USD');
     const [currentPlan, setCurrentPlan] = useState<string>('none');
     const [scansUsed, setScansUsed] = useState(0);

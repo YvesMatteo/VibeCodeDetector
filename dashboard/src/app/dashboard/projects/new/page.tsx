@@ -12,7 +12,6 @@ import { PageHeader } from '@/components/dashboard/page-header';
 import {
     ArrowLeft,
     Loader2,
-    Globe,
     GitBranch,
     ServerCrash,
     FolderKanban,
@@ -35,7 +34,7 @@ export default function NewProjectPage() {
     const [backendUrl, setBackendUrl] = useState('');
     const [supabasePAT, setSupabasePAT] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
     const [step, setStep] = useState(1);
     const router = useRouter();

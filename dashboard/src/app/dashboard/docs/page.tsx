@@ -382,7 +382,7 @@ const sections = [
     },
 ];
 
-function Section({ id, title, content }: { id: string; title: string; content: React.ReactNode }) {
+function Section({ title, content }: { id: string; title: string; content: React.ReactNode }) {
     const [open, setOpen] = useState(false);
 
     return (

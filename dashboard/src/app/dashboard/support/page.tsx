@@ -49,7 +49,7 @@ export default async function SupportPage() {
 
                         {!tickets || tickets.length === 0 ? (
                             <div className="text-center py-8">
-                                <p className="text-zinc-500 text-sm">You haven't submitted any tickets yet.</p>
+                                <p className="text-zinc-500 text-sm">You haven&apos;t submitted any tickets yet.</p>
                             </div>
                         ) : (
                             <div className="space-y-4">

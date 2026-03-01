@@ -15,25 +15,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/format-date';
 
-interface Schedule {
-    id: string;
-    frequency: string;
-    hour_utc: number;
-    day_of_week: number | null;
-    enabled: boolean;
-    next_run_at: string | null;
-    last_run_at: string | null;
-}
-
-interface AlertRule {
-    id: string;
-    type: string;
-    threshold: number | null;
-    notify_email: string | null;
-    enabled: boolean;
-    last_triggered_at: string | null;
-}
-
 const FREQUENCIES = [
     { value: 'every_6h', label: 'Every 6h' },
     { value: 'daily', label: 'Daily' },
@@ -125,8 +106,8 @@ export default function MonitoringPage() {
             if (!res.ok) throw new Error(data.error);
             setNextRun(data.next_run_at);
             toast.success('Schedule saved');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to save scan schedule. Please try again.');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to save scan schedule. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -151,8 +132,8 @@ export default function MonitoringPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             toast.success('Alert rule saved');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to save alert rule. Please try again.');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to save alert rule. Please try again.');
         } finally {
             setSaving(false);
         }
