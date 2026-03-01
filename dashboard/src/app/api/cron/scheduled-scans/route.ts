@@ -101,11 +101,12 @@ export async function GET(req: NextRequest) {
             }
 
             // Build the scan request body
-            const scanBody: Record<string, string> = {
+            const scanBody: Record<string, string | boolean> = {
                 url: project.url,
                 projectId: project.id,
                 backendType: project.backend_type || 'none',
                 backendUrl: project.backend_url || '',
+                isScheduled: true,
             };
 
             if (project.github_repo) {

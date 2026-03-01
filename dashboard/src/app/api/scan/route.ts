@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
         let { url, githubRepo, supabasePAT } = body;
         const { scanTypes } = body;
         const projectId: string | undefined = body.projectId;
+        const isScheduled = !!body.isScheduled;
 
         // If projectId is provided, fetch project and use its config
         let resolvedProjectId: string | undefined;
@@ -860,7 +861,7 @@ export async function POST(req: NextRequest) {
                 }
 
                 // Dispatch alert emails (fire-and-forget)
-                if (resolvedProjectId && scanId) {
+                if (resolvedProjectId && scanId && isScheduled) {
                     (async () => {
                         try {
                             const svc = getServiceClient();

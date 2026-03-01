@@ -82,7 +82,7 @@ export default function MonitoringPage() {
             }
         }
         load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectId]);
 
     async function saveSchedule() {
@@ -200,11 +200,10 @@ export default function MonitoringPage() {
                                     <button
                                         key={f.value}
                                         onClick={() => setFrequency(f.value)}
-                                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                                            frequency === f.value
+                                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${frequency === f.value
                                                 ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
                                                 : 'bg-white/[0.03] text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'
-                                        }`}
+                                            }`}
                                     >
                                         {f.label}
                                     </button>
@@ -260,85 +259,87 @@ export default function MonitoringPage() {
             </div>
 
             {/* Alert Rules */}
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-amber-500/10">
-                        <Bell className="h-4 w-4 text-amber-400" />
+            {scheduleEnabled && (
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 rounded-lg bg-amber-500/10">
+                            <Bell className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-medium text-white">Alert Rules</h3>
+                            <p className="text-xs text-zinc-500">Get notified when security conditions change</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="text-sm font-medium text-white">Alert Rules</h3>
-                        <p className="text-xs text-zinc-500">Get notified when security conditions change</p>
-                    </div>
-                </div>
 
-                <div className="space-y-6">
-                    {ALERT_TYPES.map(({ type, label, description, icon: Icon, defaultThreshold }) => {
-                        const alert = alerts[type];
-                        return (
-                            <div key={type} className="border-b border-white/[0.04] pb-6 last:border-0 last:pb-0">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-1.5 rounded-lg bg-white/[0.03] mt-0.5">
-                                            <Icon className="h-3.5 w-3.5 text-zinc-400" />
+                    <div className="space-y-6">
+                        {ALERT_TYPES.map(({ type, label, description, icon: Icon, defaultThreshold }) => {
+                            const alert = alerts[type];
+                            return (
+                                <div key={type} className="border-b border-white/[0.04] pb-6 last:border-0 last:pb-0">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-1.5 rounded-lg bg-white/[0.03] mt-0.5">
+                                                <Icon className="h-3.5 w-3.5 text-zinc-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-white">{label}</p>
+                                                <p className="text-xs text-zinc-500">{description}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{label}</p>
-                                            <p className="text-xs text-zinc-500">{description}</p>
-                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                                            <input
+                                                type="checkbox"
+                                                checked={alert.enabled}
+                                                onChange={(e) => setAlerts({
+                                                    ...alerts,
+                                                    [type]: { ...alert, enabled: e.target.checked },
+                                                })}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-9 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-sky-500 relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform peer-checked:after:translate-x-4" />
+                                        </label>
                                     </div>
-                                    <label className="flex items-center gap-2 cursor-pointer shrink-0">
-                                        <input
-                                            type="checkbox"
-                                            checked={alert.enabled}
-                                            onChange={(e) => setAlerts({
-                                                ...alerts,
-                                                [type]: { ...alert, enabled: e.target.checked },
-                                            })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-9 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-sky-500 relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform peer-checked:after:translate-x-4" />
-                                    </label>
+
+                                    {alert.enabled && defaultThreshold !== null && (
+                                        <div className="ml-0 sm:ml-10 mt-3">
+                                            <label className="text-xs text-zinc-400 mb-1 block">Threshold</label>
+                                            <input
+                                                type="number"
+                                                value={alert.threshold ?? defaultThreshold}
+                                                onChange={(e) => setAlerts({
+                                                    ...alerts,
+                                                    [type]: { ...alert, threshold: Number(e.target.value) },
+                                                })}
+                                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-24 min-h-[44px]"
+                                                min={1}
+                                                max={100}
+                                            />
+                                            <span className="text-xs text-zinc-500 ml-2">
+                                                {type === 'score_drop' ? 'points' : 'score'}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
+                            );
+                        })}
+                    </div>
 
-                                {alert.enabled && defaultThreshold !== null && (
-                                    <div className="ml-0 sm:ml-10 mt-3">
-                                        <label className="text-xs text-zinc-400 mb-1 block">Threshold</label>
-                                        <input
-                                            type="number"
-                                            value={alert.threshold ?? defaultThreshold}
-                                            onChange={(e) => setAlerts({
-                                                ...alerts,
-                                                [type]: { ...alert, threshold: Number(e.target.value) },
-                                            })}
-                                            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-24 min-h-[44px]"
-                                            min={1}
-                                            max={100}
-                                        />
-                                        <span className="text-xs text-zinc-500 ml-2">
-                                            {type === 'score_drop' ? 'points' : 'score'}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                    <div className="mt-6 pt-6 border-t border-white/[0.04]">
+                        <Button
+                            size="sm"
+                            onClick={saveAllAlerts}
+                            disabled={savingAlert}
+                            className="bg-sky-500 hover:bg-sky-400 text-white"
+                        >
+                            {savingAlert ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                            Save Alert Rules
+                        </Button>
+                        <p className="text-xs text-zinc-600 mt-2">
+                            Alert email can be configured in Settings
+                        </p>
+                    </div>
                 </div>
-
-                <div className="mt-6 pt-6 border-t border-white/[0.04]">
-                    <Button
-                        size="sm"
-                        onClick={saveAllAlerts}
-                        disabled={savingAlert}
-                        className="bg-sky-500 hover:bg-sky-400 text-white"
-                    >
-                        {savingAlert ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-                        Save Alert Rules
-                    </Button>
-                    <p className="text-xs text-zinc-600 mt-2">
-                        Alert email can be configured in Settings
-                    </p>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

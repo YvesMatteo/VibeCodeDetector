@@ -31,7 +31,7 @@ const FREQ_LABELS: Record<string, string> = {
     monthly: 'Monthly',
 };
 
-export function ProjectCard({ id, name, url, plan, latestScore, issueCount = 0, severity, backendType, monitoringFrequency }: ProjectCardProps) {
+export function ProjectCard({ id, name, url, faviconUrl, plan, latestScore, issueCount = 0, severity, backendType, monitoringFrequency }: ProjectCardProps) {
     const hostname = (() => {
         try { return new URL(url).hostname; } catch { return url; }
     })();
@@ -67,9 +67,13 @@ export function ProjectCard({ id, name, url, plan, latestScore, issueCount = 0, 
                     <h3 className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors" title={name}>
                         {name}
                     </h3>
-                    <p className="text-xs text-zinc-500 truncate mt-1 tracking-wide" title={url}>
-                        {platformLabel} <span className="mx-1.5 opacity-50">|</span> {hostname}
-                    </p>
+                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1 tracking-wide" title={url}>
+                        <span className="shrink-0">{platformLabel}</span>
+                        <span className="shrink-0 opacity-50">|</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={faviconUrl || `/api/favicon?domain=${hostname}&sz=32`} alt="" className="w-3.5 h-3.5 rounded-sm object-contain shrink-0 mix-blend-screen" />
+                        <span className="truncate">{hostname}</span>
+                    </div>
                 </div>
 
                 {/* Score & Issues */}

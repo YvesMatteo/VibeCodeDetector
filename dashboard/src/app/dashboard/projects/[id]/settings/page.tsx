@@ -58,10 +58,11 @@ export default async function ProjectSettingsPage(props: { params: Promise<{ id:
                     backend_type: project.backend_type,
                     backend_url: project.backend_url,
                     has_supabase_pat: !!project.supabase_pat,
+                    favicon_url: project.favicon_url,
                 }}
-            />
-
-            <AlertEmailForm projectId={params.id} initialEmail={alertEmail} />
+            >
+                <AlertEmailForm projectId={params.id} initialEmail={alertEmail} />
+            </ProjectSettingsForm>
         </div>
     );
 }

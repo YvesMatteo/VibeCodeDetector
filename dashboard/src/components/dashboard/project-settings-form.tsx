@@ -41,10 +41,10 @@ interface ProjectSettingsFormProps {
         backend_type: string | null;
         backend_url: string | null;
         has_supabase_pat?: boolean;
+        favicon_url?: string | null;
     };
 }
-
-export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsFormProps) {
+export function ProjectSettingsForm({ projectId, initialData, children }: ProjectSettingsFormProps & { children?: React.ReactNode }) {
     const router = useRouter();
 
     const [name, setName] = useState(initialData.name || '');
@@ -145,13 +145,21 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="url" className="text-zinc-300">Target URL</Label>
-                                <Input
-                                    id="url"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    placeholder="https://example.com"
-                                    className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="url"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        placeholder="https://example.com"
+                                        className={`bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50 ${initialData.favicon_url ? 'pl-9' : ''}`}
+                                    />
+                                    {initialData.favicon_url && (
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-sm overflow-hidden flex items-center justify-center">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={initialData.favicon_url} alt="" className="w-full h-full object-contain mix-blend-screen" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="githubRepo" className="text-zinc-300">
@@ -255,6 +263,10 @@ export function ProjectSettingsForm({ projectId, initialData }: ProjectSettingsF
                     </Button>
                 </div>
             </form>
+
+            <div className="mb-6">
+                {children}
+            </div>
 
             {/* Danger Zone */}
             <Card className="border-red-500/20 bg-red-500/5">
