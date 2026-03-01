@@ -53,7 +53,6 @@ export default function ThreatsPage() {
     // Settings
     const [settings, setSettings] = useState<ThreatSettings>({ enabled: false, project_id: projectId });
     const [alertFrequency] = useState('immediate');
-    const [alertEmail, setAlertEmail] = useState('');
 
     // Snippet
     const [snippet, setSnippet] = useState('');
@@ -86,8 +85,6 @@ export default function ThreatsPage() {
             }
             const data = await res.json();
             setSettings(data);
-            // Alert frequency is always immediate
-            setAlertEmail(data.alert_email || '');
 
             if (data.enabled && data.snippet_token) {
                 const snippetRes = await fetch(`/api/threats/snippet?projectId=${projectId}`);
@@ -156,7 +153,6 @@ export default function ThreatsPage() {
                     projectId,
                     enabled,
                     alertFrequency,
-                    alertEmail: alertEmail || undefined,
                 }),
             });
             const data = await res.json();
@@ -257,34 +253,15 @@ export default function ThreatsPage() {
 
                 {settings.enabled && (
                     <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <label className="text-xs text-zinc-400 mb-1.5 block">Alert Frequency</label>
-                                <div className="px-3 py-2 rounded-lg text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30 inline-block min-h-[36px] leading-[20px]">
-                                    Immediate
-                                </div>
+                        <div>
+                            <label className="text-xs text-zinc-400 mb-1.5 block">Alert Frequency</label>
+                            <div className="px-3 py-2 rounded-lg text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30 inline-block min-h-[36px] leading-[20px]">
+                                Immediate
                             </div>
-                            <div className="flex-1">
-                                <label className="text-xs text-zinc-400 mb-1.5 block">Alert Email</label>
-                                <input
-                                    type="email"
-                                    value={alertEmail}
-                                    onChange={(e) => setAlertEmail(e.target.value)}
-                                    placeholder="your@email.com"
-                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-300 w-full placeholder:text-zinc-600 min-h-[36px]"
-                                />
-                            </div>
+                            <p className="text-xs text-zinc-600 mt-1.5">
+                                Alert email can be configured in Settings
+                            </p>
                         </div>
-
-                        <Button
-                            size="sm"
-                            onClick={() => saveSettings(true)}
-                            disabled={saving}
-                            className="bg-sky-500 hover:bg-sky-400 text-white text-xs"
-                        >
-                            {saving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
-                            Save Settings
-                        </Button>
 
                         {snippet && (
                             <div className="mt-4">

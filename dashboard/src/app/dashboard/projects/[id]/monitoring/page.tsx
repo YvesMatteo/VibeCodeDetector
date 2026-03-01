@@ -50,7 +50,6 @@ export default function MonitoringPage() {
         new_critical: { enabled: false, threshold: null },
         score_below: { enabled: false, threshold: 50 },
     });
-    const [notifyEmail, setNotifyEmail] = useState('');
 
     useEffect(() => {
         async function load() {
@@ -68,16 +67,13 @@ export default function MonitoringPage() {
 
                 if (data.alerts) {
                     const alertMap = { ...alerts };
-                    let loadedEmail = '';
                     for (const alert of data.alerts) {
                         alertMap[alert.type] = {
                             enabled: alert.enabled,
                             threshold: alert.threshold,
                         };
-                        if (alert.notify_email) loadedEmail = alert.notify_email;
                     }
                     setAlerts(alertMap);
-                    if (loadedEmail) setNotifyEmail(loadedEmail);
                 }
             } catch {
                 setError('Failed to load monitoring settings. Please refresh the page.');
@@ -129,7 +125,6 @@ export default function MonitoringPage() {
                             type: 'alert',
                             alertType: type,
                             threshold: alert.threshold,
-                            notifyEmail: notifyEmail || undefined,
                             enabled: alert.enabled,
                         }),
                     });
@@ -329,18 +324,7 @@ export default function MonitoringPage() {
                     })}
                 </div>
 
-                {/* Shared notification email + save */}
-                <div className="mt-6 pt-6 border-t border-white/[0.04] space-y-4">
-                    <div>
-                        <label className="text-xs text-zinc-400 mb-1.5 block">Notification email for all alerts</label>
-                        <input
-                            type="email"
-                            value={notifyEmail}
-                            onChange={(e) => setNotifyEmail(e.target.value)}
-                            placeholder="your@email.com"
-                            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-sm placeholder:text-zinc-600 min-h-[44px]"
-                        />
-                    </div>
+                <div className="mt-6 pt-6 border-t border-white/[0.04]">
                     <Button
                         size="sm"
                         onClick={saveAllAlerts}
@@ -350,6 +334,9 @@ export default function MonitoringPage() {
                         {savingAlert ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
                         Save Alert Rules
                     </Button>
+                    <p className="text-xs text-zinc-600 mt-2">
+                        Alert email can be configured in Settings
+                    </p>
                 </div>
             </div>
         </div>
