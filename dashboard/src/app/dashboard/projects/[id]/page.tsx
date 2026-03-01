@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { RunAuditButton } from '@/components/dashboard/run-audit-button';
 import { ScoreChart } from '@/components/dashboard/score-chart';
+import { RefreshOverlay } from '@/components/dashboard/refresh-overlay';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format-date';
 import { getScoreColor, getScoreBg } from '@/lib/severity-utils';
@@ -171,6 +172,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             {/* Status cards row - Supabase style */}
             {latestScan ? (
                 <>
+                    <RefreshOverlay>
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-white/[0.06]">
                         {/* Security Score */}
                         <div className="flex-1 p-5 md:p-6 lg:p-8 shrink-0">
@@ -270,6 +272,7 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                             )}
                         </div>
                     </div>
+                    </RefreshOverlay>
 
                     {/* Single column: Score trend */}
                     <div className="grid grid-cols-1 gap-4">

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Play, CheckCircle } from 'lucide-react';
+import { Loader2, Play, CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScanProgress } from '@/lib/hooks/use-scan-progress';
 
@@ -24,12 +24,14 @@ const SCANNER_NAMES = [
 
 export function RunAuditButton({ projectId, variant = 'default', size = 'default', className }: RunAuditButtonProps) {
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [scanId, setScanId] = useState<string | null>(null);
     const [displayProgress, setDisplayProgress] = useState(0);
     const [currentScanner, setCurrentScanner] = useState('');
     const router = useRouter();
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [isPending, startTransition] = useTransition();
 
     // Real-time progress from Supabase Realtime
     const realtimeProgress = useScanProgress(scanId);
@@ -54,6 +56,14 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
             setCurrentScanner(SCANNER_NAMES[idx] || 'Scanning');
         }
     }, [realPct, realtimeProgress.status, realtimeProgress.completedScanners, loading, displayProgress]);
+
+    // Clear refreshing state when the transition finishes
+    useEffect(() => {
+        if (refreshing && !isPending) {
+            setRefreshing(false);
+            window.dispatchEvent(new Event('scan-refresh-end'));
+        }
+    }, [refreshing, isPending]);
 
     useEffect(() => {
         return () => {
@@ -156,20 +166,26 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                 setCurrentScanner('Complete');
                 toast.success(`Audit complete — Score: ${finalResult.overallScore ?? '—'}`);
 
-                // Short delay to show completion state
+                // Short delay to show completion state, then refresh page data
                 await new Promise(r => setTimeout(r, 800));
-                router.refresh();
+                setLoading(false);
+                setRefreshing(true);
+                window.dispatchEvent(new Event('scan-refresh-start'));
+                startTransition(() => {
+                    router.refresh();
+                });
             } else {
                 setError('No results received');
                 toast.error('Scan completed but no results were received');
+                setLoading(false);
             }
         } catch (err) {
             if (intervalRef.current) clearInterval(intervalRef.current);
             const message = err instanceof Error ? err.message : 'Scan failed unexpectedly. Please try again.';
             setError(message);
             toast.error(message || 'Scan failed unexpectedly. Please try again.');
-        } finally {
             setLoading(false);
+        } finally {
             setDisplayProgress(0);
             setCurrentScanner('');
             setScanId(null);
@@ -181,11 +197,13 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
         ? `${realtimeProgress.completedScanners}/${realtimeProgress.totalScanners}`
         : null;
 
+    const isRefreshing = refreshing || isPending;
+
     return (
         <div>
             <Button
                 onClick={handleRunAudit}
-                disabled={loading}
+                disabled={loading || isRefreshing}
                 variant={variant}
                 size={size}
                 className={className || 'bg-sky-500 hover:bg-sky-400 text-white border-0'}
@@ -198,6 +216,11 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                                 ? `Checking... ${scannerCount}`
                                 : `Checking... ${progressPct}%`
                             : 'Done'}
+                    </>
+                ) : isRefreshing ? (
+                    <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Updating scores...
                     </>
                 ) : (
                     <>
