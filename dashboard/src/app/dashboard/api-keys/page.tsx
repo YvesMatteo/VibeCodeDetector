@@ -303,7 +303,16 @@ export default function ApiKeysPage() {
                                     <div className="flex items-center gap-3">
                                         <Terminal className="h-4 w-4 text-zinc-400" />
                                         <div>
-                                            <CardTitle className="text-white text-sm font-medium">Use with AI Coding Agents (MCP)</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <CardTitle className="text-white text-sm font-medium">Use with AI Coding Agents (MCP)</CardTitle>
+                                                <div className="flex items-center gap-1 ml-1" title="Cursor, Claude, and Antigravity">
+                                                    {/* eslint-disable @next/next/no-img-element */}
+                                                    <img src="/images/tools/cursor.png" alt="Cursor" className="w-3.5 h-3.5 rounded-[2px]" />
+                                                    <img src="/images/tools/claude.svg" alt="Claude" className="w-3.5 h-3.5" />
+                                                    <img src="/images/tools/antigravity.png" alt="Antigravity" className="w-3.5 h-3.5 rounded-[2px]" />
+                                                    {/* eslint-enable @next/next/no-img-element */}
+                                                </div>
+                                            </div>
                                             <CardDescription className="text-zinc-500 text-xs">Works with Claude Code, Cursor, and Antigravity</CardDescription>
                                         </div>
                                     </div>

@@ -22,11 +22,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { SimpleIcon } from '@/components/ui/simple-icon';
+import { siSupabase, siFirebase, siConvex } from 'simple-icons';
+
 const BACKEND_OPTIONS = [
     { value: 'none', label: 'None (auto-detect)' },
-    { value: 'supabase', label: 'Supabase' },
-    { value: 'firebase', label: 'Firebase' },
-    { value: 'convex', label: 'Convex' },
+    { value: 'supabase', label: 'Supabase', icon: <SimpleIcon path={siSupabase.path} color={`#${siSupabase.hex}`} className="w-4 h-4" /> },
+    { value: 'firebase', label: 'Firebase', icon: <SimpleIcon path={siFirebase.path} color={`#${siFirebase.hex}`} className="w-4 h-4" /> },
+    { value: 'convex', label: 'Convex', icon: <SimpleIcon path={siConvex.path} color={`#${siConvex.hex}`} className="w-4 h-4" /> },
 ];
 
 interface ProjectSettingsFormProps {

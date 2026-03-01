@@ -9,14 +9,14 @@ import {
     Copy,
     Check,
     Loader2,
-    GitBranch,
     Code2,
-    Triangle,
     ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/format-date';
+import { SimpleIcon } from '@/components/ui/simple-icon';
+import { siGithub, siVercel, siNetlify } from 'simple-icons';
 
 interface WebhookEntry {
     id: string;
@@ -318,8 +318,8 @@ jobs:
             {/* CI/CD Integration */}
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-violet-500/10">
-                        <GitBranch className="h-4 w-4 text-violet-400" />
+                    <div className="p-2 rounded-lg bg-white/[0.05]">
+                        <SimpleIcon path={siGithub.path} className="h-4 w-4 text-white" />
                     </div>
                     <div>
                         <h3 className="text-sm font-medium text-white">GitHub Actions</h3>
@@ -346,7 +346,7 @@ jobs:
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-white/[0.05]">
-                            <Triangle className="h-4 w-4 text-white" />
+                            <SimpleIcon path={siVercel.path} className="h-4 w-4 text-white" />
                         </div>
                         <div>
                             <h3 className="text-sm font-medium text-white">Vercel Deploy Hook</h3>
@@ -477,8 +477,8 @@ jobs:
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-teal-500/10">
-                            <GitBranch className="h-4 w-4 text-teal-400" />
+                        <div className="p-2 rounded-lg bg-[#00C7B7]/10">
+                            <SimpleIcon path={siNetlify.path} color={`#${siNetlify.hex}`} className="h-4 w-4" />
                         </div>
                         <div>
                             <h3 className="text-sm font-medium text-white">Netlify Deploy Hook</h3>
