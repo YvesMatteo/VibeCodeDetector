@@ -82,7 +82,9 @@ export async function POST(req: NextRequest) {
                 .update(rawBody)
                 .digest('hex');
 
-            if (signature === expectedSig) {
+            const sigBuffer = Buffer.from(signature, 'hex');
+            const expectedBuffer = Buffer.from(expectedSig, 'hex');
+            if (sigBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
                 matchedIntegration = integration;
                 break;
             }

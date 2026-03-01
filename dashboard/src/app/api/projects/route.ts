@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
+import { validateTargetUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { encrypt } from '@/lib/encryption';
 import { PLAN_FREQUENCY_MAP } from '@/lib/plan-config';
@@ -230,6 +230,7 @@ export async function POST(req: NextRequest) {
 
             // Insert scheduled scan + 2 default alert rules (fire-and-forget)
             await Promise.allSettled([
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- scheduled_scans not in generated types
                 svc.from('scheduled_scans' as any).insert({
                     project_id: project.id,
                     user_id: user.id,
@@ -238,6 +239,7 @@ export async function POST(req: NextRequest) {
                     enabled: true,
                     next_run_at: nextRunAt,
                 }),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- alert_rules not in generated types
                 svc.from('alert_rules' as any).insert([
                     {
                         project_id: project.id,
@@ -264,7 +266,7 @@ export async function POST(req: NextRequest) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                    'x-cron-secret': process.env.CRON_SECRET || '',
                 },
                 body: JSON.stringify({ projectId: project.id }),
             }).catch(() => { /* non-critical */ });
