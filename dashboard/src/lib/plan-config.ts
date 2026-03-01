@@ -41,9 +41,9 @@ export const PLAN_CONFIG = {
         apiKeys: 5,
         monitoringFrequency: 'daily' as const,
         monitoringLabel: 'Daily monitoring',
-        threatDetection: false,
-        threatRetentionHours: 0,
-        threatAlertFrequencies: [] as readonly string[],
+        threatDetection: true,
+        threatRetentionHours: 168,
+        threatAlertFrequencies: ['immediate', 'hourly', 'daily'] as readonly string[],
     },
     /** Max is custom pricing — not self-serve. Limits here are defaults for legacy/webhook handling. */
     max: {
@@ -57,9 +57,9 @@ export const PLAN_CONFIG = {
         apiKeys: 20,
         monitoringFrequency: 'every_6h' as const,
         monitoringLabel: 'Every 6 hours',
-        threatDetection: false,
-        threatRetentionHours: 0,
-        threatAlertFrequencies: [] as readonly string[],
+        threatDetection: true,
+        threatRetentionHours: 720,
+        threatAlertFrequencies: ['immediate', 'hourly', 'daily'] as readonly string[],
     },
 } as const;
 
