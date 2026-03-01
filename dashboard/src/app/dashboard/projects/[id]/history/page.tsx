@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { ScoreChart } from '@/components/dashboard/score-chart';
+import { FetchErrorState } from '@/components/dashboard/fetch-error-state';
 import { formatDate } from '@/lib/format-date';
 
 function getVibeRating(score: number | null): { label: string; color: string; bg: string } {
@@ -31,16 +32,35 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
 
     if (!project) return notFound();
 
-    const PAGE_SIZE = 20;
-    const { data: scans, count } = await supabase
-        .from('scans')
-        .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
-        .eq('project_id', params.id)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .range(0, PAGE_SIZE - 1);
+    let scans: { id: string; url: string; status: string; overall_score: number | null; created_at: string; completed_at: string | null }[] | null = null;
+    let totalScans = 0;
+    let fetchError = false;
 
-    const totalScans = count || 0;
+    try {
+        const PAGE_SIZE = 20;
+        const { data, count, error } = await supabase
+            .from('scans')
+            .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
+            .eq('project_id', params.id)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .range(0, PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        scans = data;
+        totalScans = count || 0;
+    } catch {
+        fetchError = true;
+    }
+
+    if (fetchError) {
+        return (
+            <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto w-full">
+                <FetchErrorState message="Failed to load scan history. Please try again." />
+            </div>
+        );
+    }
 
     // Chart data (oldest first)
     const chartData = (scans || [])

@@ -7,6 +7,7 @@ import { AIFixPrompt } from '@/components/dashboard/ai-fix-prompt';
 import { AuditReport } from '@/components/dashboard/audit-report';
 import { processAuditData, getMissingScannerNames, type ScanResultItem } from '@/lib/audit-data';
 import { ExportButton } from '@/components/dashboard/export-button';
+import { FetchErrorState } from '@/components/dashboard/fetch-error-state';
 import { formatDate } from '@/lib/format-date';
 
 export default async function ProjectAuditDetailPage(props: { params: Promise<{ id: string; scanId: string }> }) {
@@ -16,23 +17,51 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
 
     if (!user) redirect('/login');
 
-    const { data: scan, error } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('id', params.scanId)
-        .eq('user_id', user.id)
-        .eq('project_id', params.id)
-        .single();
+    interface ScanRecord {
+        id: string;
+        url: string;
+        status: string;
+        overall_score: number | null;
+        created_at: string;
+        completed_at: string | null;
+        results: unknown;
+    }
 
-    if (error || !scan) return notFound();
+    let scan: ScanRecord | null = null;
+    let userPlan = 'none';
+    let fetchError = false;
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('plan')
-        .eq('id', user.id)
-        .single();
+    try {
+        const { data: scanData, error: scanError } = await supabase
+            .from('scans')
+            .select('*')
+            .eq('id', params.scanId)
+            .eq('user_id', user.id)
+            .eq('project_id', params.id)
+            .single();
 
-    const userPlan = profile?.plan || 'none';
+        if (scanError || !scanData) return notFound();
+
+        scan = scanData as ScanRecord;
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan')
+            .eq('id', user.id)
+            .single();
+
+        userPlan = profile?.plan || 'none';
+    } catch {
+        fetchError = true;
+    }
+
+    if (fetchError || !scan) {
+        return (
+            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+                <FetchErrorState message="Failed to load audit details. Please try again." />
+            </div>
+        );
+    }
 
     const auditData = processAuditData(scan.results as unknown as Record<string, ScanResultItem>);
     const missingScanners = getMissingScannerNames(scan.results as Record<string, unknown>);
