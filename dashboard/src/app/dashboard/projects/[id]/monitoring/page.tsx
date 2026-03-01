@@ -16,10 +16,8 @@ import { toast } from 'sonner';
 import { formatDate } from '@/lib/format-date';
 
 const FREQUENCIES = [
-    { value: 'every_6h', label: 'Every 6h' },
     { value: 'daily', label: 'Daily' },
     { value: 'weekly', label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
 ];
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
