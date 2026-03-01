@@ -7,13 +7,6 @@ import { Shield, Zap, BarChart3, X } from 'lucide-react';
 export function WelcomeModal() {
     const [open, setOpen] = useState(() => { if (typeof window === 'undefined') return false; return !localStorage.getItem('cv-welcome-dismissed'); });
 
-    useEffect(() => {
-        const dismissed = localStorage.getItem('cv-welcome-dismissed');
-        if (!dismissed) {
-            setOpen(true);
-        }
-    }, []);
-
     function handleDismiss() {
         localStorage.setItem('cv-welcome-dismissed', '1');
         setOpen(false);

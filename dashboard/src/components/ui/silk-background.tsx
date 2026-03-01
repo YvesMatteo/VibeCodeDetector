@@ -183,15 +183,17 @@ export function SilkBackground() {
 
         window.addEventListener('resize', handleResize);
 
+        // Capture ref for cleanup closure (avoids stale ref in cleanup)
+        const container = containerRef.current;
+
         // Cleanup
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('resize', handleResize);
             clearTimeout(resizeTimeout);
             cancelAnimationFrame(animationId);
-            const el = containerRef.current;
-            if (el && el.contains(renderer.domElement)) {
-                el.removeChild(renderer.domElement);
+            if (container && container.contains(renderer.domElement)) {
+                container.removeChild(renderer.domElement);
             }
             renderer.dispose();
             geometry.dispose();
