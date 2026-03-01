@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Crown, Minus } from 'lucide-react';
+import { CheckCircle, Crown, Minus, MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { FREE_PLAN_CONFIG, PLAN_CONFIG } from '@/lib/plan-config';
@@ -31,7 +31,7 @@ const pricingPlans = [
         description: 'For solo makers',
         domains: PLAN_CONFIG.starter.domains,
         scans: PLAN_CONFIG.starter.scans,
-        features: [`${PLAN_CONFIG.starter.projects} project`, `${PLAN_CONFIG.starter.scans} scans/mo`, `${PLAN_CONFIG.starter.apiKeys} API key`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export'],
+        features: [`${PLAN_CONFIG.starter.projects} project`, `${PLAN_CONFIG.starter.scans} scans/mo`, `${PLAN_CONFIG.starter.apiKeys} API key`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export & AI fix', 'API access'],
         highlighted: false,
     },
     {
@@ -42,34 +42,32 @@ const pricingPlans = [
         description: 'For growing projects',
         domains: PLAN_CONFIG.pro.domains,
         scans: PLAN_CONFIG.pro.scans,
-        features: [`${PLAN_CONFIG.pro.projects} projects`, `${PLAN_CONFIG.pro.scans} scans/mo`, `${PLAN_CONFIG.pro.apiKeys} API keys`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
+        features: [`${PLAN_CONFIG.pro.projects} projects`, `${PLAN_CONFIG.pro.scans} scans/mo`, `${PLAN_CONFIG.pro.apiKeys} API keys`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Live threat detection', 'Priority support'],
         highlighted: false,
     },
     {
-        id: 'max',
-        name: PLAN_CONFIG.max.name,
-        priceMonthly: PLAN_CONFIG.max.priceMonthly,
-        priceAnnualPerMonth: PLAN_CONFIG.max.priceAnnualPerMonth,
+        id: 'custom',
+        name: 'Custom',
         description: 'For teams & agencies',
-        domains: PLAN_CONFIG.max.domains,
-        scans: PLAN_CONFIG.max.scans,
-        features: [`${PLAN_CONFIG.max.projects} projects`, `${PLAN_CONFIG.max.scans.toLocaleString()} scans/mo`, `${PLAN_CONFIG.max.apiKeys} API keys`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
+        features: ['Unlimited projects', 'Custom scan limits', 'Unlimited API keys', 'Custom monitoring', 'Live threat detection', 'Dedicated support'],
         highlighted: false,
+        isCustom: true,
     },
 ];
 
 const comparisonFeatures = [
-    { name: 'Projects', free: `${FREE_PLAN_CONFIG.projects}`, starter: `${PLAN_CONFIG.starter.projects}`, pro: `${PLAN_CONFIG.pro.projects}`, max: `${PLAN_CONFIG.max.projects}` },
-    { name: 'Monthly scans', free: `${FREE_PLAN_CONFIG.scans}`, starter: `${PLAN_CONFIG.starter.scans}`, pro: `${PLAN_CONFIG.pro.scans}`, max: `${PLAN_CONFIG.max.scans}` },
-    { name: 'API keys', free: `${FREE_PLAN_CONFIG.apiKeys}`, starter: `${PLAN_CONFIG.starter.apiKeys}`, pro: `${PLAN_CONFIG.pro.apiKeys}`, max: `${PLAN_CONFIG.max.apiKeys}` },
-    { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', max: 'Every 6h' },
-    { name: 'Full finding details', free: false, starter: true, pro: true, max: true },
-    { name: '35 security checks', free: true, starter: true, pro: true, max: true },
-    { name: 'PDF export', free: false, starter: true, pro: true, max: true },
-    { name: 'AI fix suggestions', free: false, starter: true, pro: true, max: true },
-    { name: 'API access', free: false, starter: false, pro: true, max: true },
-    { name: 'Priority support', free: false, starter: false, pro: true, max: true },
-    { name: 'Dedicated support', free: false, starter: false, pro: false, max: true },
+    { name: 'Projects', free: `${FREE_PLAN_CONFIG.projects}`, starter: `${PLAN_CONFIG.starter.projects}`, pro: `${PLAN_CONFIG.pro.projects}`, custom: 'Custom' },
+    { name: 'Monthly scans', free: `${FREE_PLAN_CONFIG.scans}`, starter: `${PLAN_CONFIG.starter.scans}`, pro: `${PLAN_CONFIG.pro.scans}`, custom: 'Custom' },
+    { name: 'API keys', free: `${FREE_PLAN_CONFIG.apiKeys}`, starter: `${PLAN_CONFIG.starter.apiKeys}`, pro: `${PLAN_CONFIG.pro.apiKeys}`, custom: 'Custom' },
+    { name: 'Monitoring frequency', free: 'Weekly', starter: 'Daily', pro: 'Daily', custom: 'Custom' },
+    { name: 'Full finding details', free: false, starter: true, pro: true, custom: true },
+    { name: '35 security checks', free: true, starter: true, pro: true, custom: true },
+    { name: 'PDF export', free: false, starter: true, pro: true, custom: true },
+    { name: 'AI fix suggestions', free: false, starter: true, pro: true, custom: true },
+    { name: 'API access', free: false, starter: true, pro: true, custom: true },
+    { name: 'Live threat detection', free: false, starter: false, pro: true, custom: true },
+    { name: 'Priority support', free: false, starter: true, pro: true, custom: true },
+    { name: 'Dedicated support', free: false, starter: false, pro: false, custom: true },
 ];
 
 export default function CreditsPage() {
@@ -269,16 +267,12 @@ export default function CreditsPage() {
                             <th className="text-left p-5 text-sm font-medium text-zinc-500 w-[240px]">Features</th>
                             {pricingPlans.map((plan) => {
                                 const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
+                                const isCustom = 'isCustom' in plan && plan.isCustom;
                                 return (
                                     <th key={plan.id} className="p-5 text-center min-w-[180px]">
                                         <div className="flex flex-col items-center gap-2">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg font-medium text-white">{plan.name}</span>
-                                                {plan.highlighted && (
-                                                    <Badge className="bg-white text-zinc-900 border-0 px-2 py-0.5 text-[10px] font-medium">
-                                                        Popular
-                                                    </Badge>
-                                                )}
                                                 {isCurrent && (
                                                     <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/20 px-2 py-0.5 text-[10px]">
                                                         Current
@@ -286,7 +280,9 @@ export default function CreditsPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                {'isFree' in plan && plan.isFree ? (
+                                                {isCustom ? (
+                                                    <span className="text-2xl font-heading font-bold text-white">Custom</span>
+                                                ) : 'isFree' in plan && plan.isFree ? (
                                                     <span className="text-2xl font-heading font-bold text-white">Free</span>
                                                 ) : billing === 'annual' ? (
                                                     <div className="flex flex-col items-center">
@@ -307,7 +303,16 @@ export default function CreditsPage() {
                                             </div>
 
                                             <div className="mt-4 w-full">
-                                                {'isFree' in plan && plan.isFree ? (
+                                                {isCustom ? (
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-[120px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20 gap-1.5"
+                                                        variant="outline"
+                                                        asChild
+                                                    >
+                                                        <a href="mailto:support@checkvibe.dev"><MessageSquare className="h-3.5 w-3.5" />Contact Us</a>
+                                                    </Button>
+                                                ) : 'isFree' in plan && plan.isFree ? (
                                                     <Button
                                                         size="sm"
                                                         className="w-[120px] bg-transparent border-white/[0.06] text-zinc-600 hover:bg-white/[0.02]"
@@ -328,11 +333,8 @@ export default function CreditsPage() {
                                                 ) : (
                                                     <Button
                                                         size="sm"
-                                                        className={`w-[120px] ${plan.highlighted
-                                                            ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                                            : 'bg-white/10 hover:bg-white/20 text-white border-0'
-                                                            }`}
-                                                        variant={plan.highlighted ? 'default' : 'secondary'}
+                                                        className="w-[120px] bg-white/10 hover:bg-white/20 text-white border-0"
+                                                        variant="secondary"
                                                         onClick={() => handleSubscribe(plan.id)}
                                                         disabled={loading !== null}
                                                     >
@@ -359,7 +361,7 @@ export default function CreditsPage() {
                                 className={`border-b border-white/[0.04] ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
                             >
                                 <td className="p-4 pl-5 text-sm text-zinc-400">{feature.name}</td>
-                                {(['free', 'starter', 'pro', 'max'] as const).map((planKey) => {
+                                {(['free', 'starter', 'pro', 'custom'] as const).map((planKey) => {
                                     const value = feature[planKey];
                                     return (
                                         <td key={planKey} className="p-4 text-center">
@@ -386,22 +388,16 @@ export default function CreditsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:hidden">
                 {pricingPlans.map((plan) => {
                     const isCurrent = plan.id === 'free' ? currentPlan === 'none' : currentPlan === plan.id;
+                    const isCustom = 'isCustom' in plan && plan.isCustom;
 
                     return (
                         <Card
                             key={plan.id}
-                            className={`relative transition-colors flex flex-col ${plan.highlighted
-                                ? 'bg-white/[0.02] border-white/[0.10]'
+                            className={`relative transition-colors flex flex-col ${isCustom
+                                ? 'bg-emerald-500/[0.03] border-emerald-500/20 hover:border-emerald-500/30'
                                 : 'bg-white/[0.01] border-white/[0.06] hover:border-white/[0.10]'
                                 }`}
                         >
-                            {plan.highlighted && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                                    <Badge className="bg-white text-zinc-900 border-0 px-3 py-1 text-xs font-medium">
-                                        Popular
-                                    </Badge>
-                                </div>
-                            )}
                             {isCurrent && (
                                 <div className="absolute -top-3 right-4 z-20">
                                     <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/20 px-3 py-1">
@@ -413,7 +409,9 @@ export default function CreditsPage() {
                                 <CardTitle className="text-lg font-medium text-white">{plan.name}</CardTitle>
                                 <CardDescription className="text-zinc-500">{plan.description}</CardDescription>
                                 <div className="mt-6">
-                                    {'isFree' in plan && plan.isFree ? (
+                                    {isCustom ? (
+                                        <span className="text-3xl font-heading font-bold text-white">Custom</span>
+                                    ) : 'isFree' in plan && plan.isFree ? (
                                         <span className="text-3xl font-heading font-bold text-white">Free</span>
                                     ) : billing === 'annual' ? (
                                         <div className="flex flex-col items-center">
@@ -435,7 +433,16 @@ export default function CreditsPage() {
                                 </div>
 
                                 <div className="mt-6 w-full">
-                                    {'isFree' in plan && plan.isFree ? (
+                                    {isCustom ? (
+                                        <Button
+                                            size="lg"
+                                            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20 gap-2"
+                                            variant="outline"
+                                            asChild
+                                        >
+                                            <a href="mailto:support@checkvibe.dev"><MessageSquare className="h-4 w-4" />Contact Us</a>
+                                        </Button>
+                                    ) : 'isFree' in plan && plan.isFree ? (
                                         <Button
                                             size="lg"
                                             className="w-full bg-transparent border-white/[0.06] text-zinc-600"
@@ -456,11 +463,8 @@ export default function CreditsPage() {
                                     ) : (
                                         <Button
                                             size="lg"
-                                            className={`w-full ${plan.highlighted
-                                                ? 'bg-white text-zinc-900 hover:bg-zinc-200 border-0'
-                                                : 'bg-white/10 hover:bg-white/20 text-white border-0'
-                                                }`}
-                                            variant={plan.highlighted ? 'default' : 'secondary'}
+                                            className="w-full bg-white/10 hover:bg-white/20 text-white border-0"
+                                            variant="secondary"
                                             onClick={() => handleSubscribe(plan.id)}
                                             disabled={loading !== null}
                                         >
@@ -479,7 +483,7 @@ export default function CreditsPage() {
                                 <ul className="space-y-3.5 mb-8 flex-1 px-1">
                                     {plan.features.map((feature) => (
                                         <li key={feature} className="flex items-center gap-3">
-                                            <CheckCircle className="h-4 w-4 text-zinc-600 shrink-0" />
+                                            <CheckCircle className={`h-4 w-4 shrink-0 ${isCustom ? 'text-emerald-500/60' : 'text-zinc-600'}`} />
                                             <span className="text-sm text-zinc-400">{feature}</span>
                                         </li>
                                     ))}

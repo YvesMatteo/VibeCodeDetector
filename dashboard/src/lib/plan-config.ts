@@ -26,9 +26,9 @@ export const PLAN_CONFIG = {
         apiKeys: 1,
         monitoringFrequency: 'daily' as const,
         monitoringLabel: 'Daily monitoring',
-        threatDetection: true,
-        threatRetentionHours: 24,
-        threatAlertFrequencies: ['daily'] as readonly string[],
+        threatDetection: false,
+        threatRetentionHours: 0,
+        threatAlertFrequencies: [] as readonly string[],
     },
     pro: {
         name: 'Pro',
@@ -45,6 +45,7 @@ export const PLAN_CONFIG = {
         threatRetentionHours: 168,
         threatAlertFrequencies: ['immediate', 'hourly', 'daily'] as readonly string[],
     },
+    /** Max is custom pricing — not self-serve. Limits here are defaults for legacy/webhook handling. */
     max: {
         name: 'Max',
         priceMonthly: 79,

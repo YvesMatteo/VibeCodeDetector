@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, MessageSquare } from 'lucide-react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
 import { FREE_PLAN_CONFIG, PLAN_CONFIG } from '@/lib/plan-config';
 
@@ -24,7 +24,7 @@ const pricingTiers = [
     priceMonthly: PLAN_CONFIG.starter.priceMonthly,
     priceAnnualPerMonth: PLAN_CONFIG.starter.priceAnnualPerMonth,
     description: 'For solo makers',
-    features: [`${PLAN_CONFIG.starter.projects} project`, `${PLAN_CONFIG.starter.scans} scans/mo`, `${PLAN_CONFIG.starter.apiKeys} API key`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'Full history'],
+    features: [`${PLAN_CONFIG.starter.projects} project`, `${PLAN_CONFIG.starter.scans} scans/mo`, `${PLAN_CONFIG.starter.apiKeys} API key`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'PDF export & AI fix', 'API access'],
     cta: 'Get Started',
     highlighted: true,
     badgeText: 'Most Popular',
@@ -34,20 +34,19 @@ const pricingTiers = [
     priceMonthly: PLAN_CONFIG.pro.priceMonthly,
     priceAnnualPerMonth: PLAN_CONFIG.pro.priceAnnualPerMonth,
     description: 'For growing projects',
-    features: [`${PLAN_CONFIG.pro.projects} projects`, `${PLAN_CONFIG.pro.scans} scans/mo`, `${PLAN_CONFIG.pro.apiKeys} API keys`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
+    features: [`${PLAN_CONFIG.pro.projects} projects`, `${PLAN_CONFIG.pro.scans} scans/mo`, `${PLAN_CONFIG.pro.apiKeys} API keys`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Live threat detection', 'Priority support'],
     cta: 'Get Started',
     highlighted: false,
   },
   {
-    name: PLAN_CONFIG.max.name,
-    priceMonthly: PLAN_CONFIG.max.priceMonthly,
-    priceAnnualPerMonth: PLAN_CONFIG.max.priceAnnualPerMonth,
+    name: 'Custom',
     description: 'For teams & agencies',
-    features: [`${PLAN_CONFIG.max.projects} projects`, `${PLAN_CONFIG.max.scans.toLocaleString()} scans/mo`, `${PLAN_CONFIG.max.apiKeys} API keys`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
-    cta: 'Get Started',
+    features: ['Unlimited projects', 'Custom scan limits', 'Unlimited API keys', 'Custom monitoring', 'Live threat detection', 'Dedicated support', 'Feature requests'],
+    cta: 'Contact Us',
     highlighted: true,
-    badgeText: 'Best Value',
+    badgeText: 'Enterprise',
     badgeColor: 'bg-emerald-500',
+    isCustom: true,
   },
 ];
 
@@ -138,7 +137,7 @@ export function PricingSection() {
           {pricingTiers.map((tier) => (
             <div key={tier.name} className="h-full">
               <div className={`relative h-full flex flex-col rounded-xl border transition-all duration-300 ${tier.highlighted
-                ? tier.name === 'Max'
+                ? 'isCustom' in tier && tier.isCustom
                   ? 'bg-zinc-900/60 border-emerald-400/30 shadow-[0_0_30px_-10px_rgba(52,211,153,0.2)]'
                   : 'bg-zinc-900/60 border-sky-400/30 shadow-[0_0_30px_-10px_rgba(59,130,246,0.2)]'
                 : 'bg-zinc-900/40 border-white/5 [@media(hover:hover)]:hover:border-white/10'
@@ -154,7 +153,9 @@ export function PricingSection() {
                   <h3 className="text-lg font-medium text-white">{tier.name}</h3>
                   <p className="text-sm text-zinc-400 mt-1">{tier.description}</p>
                   <div className="mt-4">
-                    {'isFree' in tier && tier.isFree ? (
+                    {'isCustom' in tier && tier.isCustom ? (
+                      <span className="text-4xl font-bold text-white tracking-tight">Custom</span>
+                    ) : 'isFree' in tier && tier.isFree ? (
                       <span className="text-4xl font-bold text-white tracking-tight">Free</span>
                     ) : billing === 'annual' ? (
                       <div className="flex flex-col">
@@ -178,13 +179,21 @@ export function PricingSection() {
                   <ul className="space-y-3 mb-8 flex-1">
                     {tier.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? (tier.name === 'Max' ? 'text-emerald-400' : 'text-sky-400') : 'text-zinc-500'}`} />
+                        <CheckCircle className={`h-5 w-5 shrink-0 ${tier.highlighted ? ('isCustom' in tier && tier.isCustom ? 'text-emerald-400' : 'text-sky-400') : 'text-zinc-500'}`} />
                         <span className="text-sm text-zinc-300">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  {'isFree' in tier && tier.isFree ? (
+                  {'isCustom' in tier && tier.isCustom ? (
+                    <Button
+                      className="w-full bg-emerald-500 hover:bg-emerald-400 text-white border-0 shadow-lg shadow-emerald-400/20 gap-2"
+                      variant="default"
+                      asChild
+                    >
+                      <Link href="mailto:support@checkvibe.dev"><MessageSquare className="h-4 w-4" />{tier.cta}</Link>
+                    </Button>
+                  ) : 'isFree' in tier && tier.isFree ? (
                     <Button
                       className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white"
                       variant="outline"
@@ -195,9 +204,7 @@ export function PricingSection() {
                   ) : (
                     <Button
                       className={`w-full ${tier.highlighted
-                        ? tier.name === 'Max'
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-white border-0 shadow-lg shadow-emerald-400/20'
-                          : 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
+                        ? 'bg-sky-500 hover:bg-sky-400 text-white border-0 shadow-lg shadow-sky-400/20'
                         : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
                         }`}
                       variant={tier.highlighted ? 'default' : 'outline'}
