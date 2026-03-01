@@ -64,13 +64,15 @@ function extractEmails(text: string): string[] {
     for (const m of text.matchAll(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
         try {
             const data = JSON.parse(m[1]);
-            const extractFromLD = (obj: any) => {
+            const extractFromLD = (obj: unknown) => {
                 if (!obj || typeof obj !== 'object') return;
-                if (typeof obj.email === 'string') emails.add(obj.email.replace(/^mailto:/i, '').toLowerCase());
-                if (obj.contactPoint) {
-                    const points = Array.isArray(obj.contactPoint) ? obj.contactPoint : [obj.contactPoint];
+                const o = obj as Record<string, unknown>;
+                if (typeof o.email === 'string') emails.add(o.email.replace(/^mailto:/i, '').toLowerCase());
+                if (o.contactPoint) {
+                    const points = Array.isArray(o.contactPoint) ? o.contactPoint : [o.contactPoint];
                     for (const cp of points) {
-                        if (typeof cp.email === 'string') emails.add(cp.email.replace(/^mailto:/i, '').toLowerCase());
+                        const cpObj = cp as Record<string, unknown>;
+                        if (typeof cpObj.email === 'string') emails.add(cpObj.email.replace(/^mailto:/i, '').toLowerCase());
                     }
                 }
                 if (Array.isArray(obj)) obj.forEach(extractFromLD);
@@ -422,14 +424,17 @@ async function strategyWhois(domain: string): Promise<EmailResult[]> {
         const rdap = JSON.parse(rdapText);
 
         // Extract emails from vCard entities
-        const extractVcardEmails = (entities: any[]) => {
+        const extractVcardEmails = (entities: unknown[]) => {
             if (!Array.isArray(entities)) return;
             for (const entity of entities) {
-                if (entity.vcardArray) {
-                    const vcard = entity.vcardArray[1] || [];
+                const ent = entity as Record<string, unknown>;
+                if (ent.vcardArray) {
+                    const vcardArray = ent.vcardArray as unknown[];
+                    const vcard = (vcardArray[1] as unknown[]) || [];
                     for (const field of vcard) {
-                        if (field[0] === 'email' && typeof field[3] === 'string') {
-                            const email = field[3].toLowerCase();
+                        const f = field as unknown[];
+                        if (f[0] === 'email' && typeof f[3] === 'string') {
+                            const email = f[3].toLowerCase();
                             if (!IGNORE_PATTERNS.some(p => p.test(email))) {
                                 results.push({ email, source: 'whois', score: scoreEmail(email, 'whois', email.endsWith(`@${domain}`)) });
                             }
@@ -437,11 +442,12 @@ async function strategyWhois(domain: string): Promise<EmailResult[]> {
                     }
                 }
                 // Recurse into nested entities
-                if (entity.entities) extractVcardEmails(entity.entities);
+                if (ent.entities) extractVcardEmails(ent.entities as unknown[]);
             }
         };
 
-        if (rdap.entities) extractVcardEmails(rdap.entities);
+        const rdapObj = rdap as Record<string, unknown>;
+        if (rdapObj.entities) extractVcardEmails(rdapObj.entities as unknown[]);
     } catch { /* skip */ }
 
     return results;

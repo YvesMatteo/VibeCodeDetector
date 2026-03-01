@@ -43,7 +43,6 @@ export async function updateSession(request: NextRequest) {
 
     const pathname = request.nextUrl.pathname;
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-    const isLandingPage = pathname === '/';
     const isDashboard = pathname.startsWith('/dashboard');
 
     // Redirect to login if accessing protected routes without auth

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { decrypt } from '@/lib/encryption';
@@ -24,6 +23,26 @@ function getServiceClient() {
 
 export const maxDuration = 300; // 5 min max for Vercel Pro
 
+interface ScheduledScanProject {
+    id: string;
+    url: string;
+    github_repo: string | null;
+    backend_type: string | null;
+    backend_url: string | null;
+    supabase_pat: string | null;
+    user_id: string;
+}
+
+interface ScheduledScanRow {
+    id: string;
+    project_id: string;
+    frequency: string;
+    hour_utc: number;
+    day_of_week: number | null;
+    enabled: boolean;
+    projects: ScheduledScanProject;
+}
+
 // Note: Using GET because Vercel Cron only supports GET requests.
 // The Bearer token check prevents accidental triggering by prefetchers/crawlers.
 export async function GET(req: NextRequest) {
@@ -45,11 +64,11 @@ export async function GET(req: NextRequest) {
 
     // Find all due scheduled scans
     const { data: dueSchedules, error: queryError } = await supabase
-        .from('scheduled_scans')
+        .from('scheduled_scans' as never)
         .select('*, projects!inner(id, url, github_repo, backend_type, backend_url, supabase_pat, user_id)')
         .eq('enabled', true)
         .lte('next_run_at', now)
-        .limit(10); // Process up to 10 per invocation to stay within time limits
+        .limit(10) as { data: ScheduledScanRow[] | null; error: unknown }; // Process up to 10 per invocation to stay within time limits
 
     if (queryError) {
         console.error('Failed to query scheduled scans:', queryError);
@@ -63,7 +82,7 @@ export async function GET(req: NextRequest) {
     const results: { projectId: string; status: string; scanId?: string; error?: string }[] = [];
 
     for (const schedule of dueSchedules) {
-        const project = (schedule as any).projects;
+        const project = schedule.projects;
         if (!project) {
             results.push({ projectId: schedule.project_id, status: 'skipped', error: 'Project not found' });
             continue;
@@ -82,7 +101,7 @@ export async function GET(req: NextRequest) {
             }
 
             // Build the scan request body
-            const scanBody: Record<string, any> = {
+            const scanBody: Record<string, string> = {
                 url: project.url,
                 projectId: project.id,
                 backendType: project.backend_type || 'none',
@@ -120,7 +139,7 @@ export async function GET(req: NextRequest) {
                 const text = await scanRes.text();
                 const firstLine = text.split('\n')[0];
                 try {
-                    const parsed = JSON.parse(firstLine);
+                    const parsed = JSON.parse(firstLine) as { scanId?: string };
                     results.push({ projectId: project.id, status: 'triggered', scanId: parsed.scanId });
                 } catch {
                     results.push({ projectId: project.id, status: 'triggered' });
@@ -133,9 +152,10 @@ export async function GET(req: NextRequest) {
             // Update schedule timing
             await updateSchedule(supabase, schedule);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(`Scheduled scan failed for project ${project.id}:`, err);
-            results.push({ projectId: project.id, status: 'error', error: err.message?.slice(0, 200) });
+            const msg = err instanceof Error ? err.message?.slice(0, 200) : 'Unknown error';
+            results.push({ projectId: project.id, status: 'error', error: msg });
             // Still advance the schedule
             await updateSchedule(supabase, schedule);
         }
@@ -148,7 +168,7 @@ export async function GET(req: NextRequest) {
     });
 }
 
-async function updateSchedule(supabase: ReturnType<typeof getServiceClient>, schedule: any) {
+async function updateSchedule(supabase: ReturnType<typeof getServiceClient>, schedule: ScheduledScanRow) {
     const nextRunAt = computeNextRun(
         schedule.frequency,
         schedule.hour_utc,
@@ -156,7 +176,7 @@ async function updateSchedule(supabase: ReturnType<typeof getServiceClient>, sch
     );
 
     await supabase
-        .from('scheduled_scans')
+        .from('scheduled_scans' as never)
         .update({
             last_run_at: new Date().toISOString(),
             next_run_at: nextRunAt,

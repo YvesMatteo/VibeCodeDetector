@@ -49,7 +49,6 @@ export async function GET(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-     
     const { data, error } = await (supabase as any)
         .from('threat_settings')
         .select('*')
@@ -119,7 +118,6 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-     
     const sbUnchecked = supabase as any;
 
     // Generate snippet token if needed

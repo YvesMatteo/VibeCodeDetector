@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { url, scanTypes, githubRepo, supabasePAT } = body;
+        let { url, scanTypes, githubRepo, supabasePAT } = body;
         const projectId: string | undefined = body.projectId;
 
         // If projectId is provided, fetch project and use its config

@@ -1,24 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import type { NextRequest } from 'next/server';
 import { checkCsrf } from '@/lib/csrf';
 
 /**
  * Minimal mock for NextRequest — only the headers used by checkCsrf.
  */
-function makeRequest(headers: Record<string, string>) {
+function makeRequest(headers: Record<string, string>): NextRequest {
   return {
     headers: {
       get(name: string) {
         return headers[name.toLowerCase()] ?? null;
       },
     },
-  } as any; // cast to NextRequest
+  } as unknown as NextRequest;
 }
 
 // We need to mock NextResponse.json since it's imported from next/server
 vi.mock('next/server', () => ({
   NextResponse: {
-    json(body: any, init?: { status?: number }) {
+    json(body: unknown, init?: { status?: number }) {
       return { body, status: init?.status ?? 200 };
     },
   },

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { hashApiKey, getServiceClient, type Scope } from './api-keys';
@@ -48,9 +47,9 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
       && crypto.timingSafeEqual(Buffer.from(cronSecret), Buffer.from(process.env.CRON_SECRET))) {
     // Cron requests must include a projectId in the body. We look up the owner
     // from the database to avoid trusting any user-supplied user ID.
-    let body: Record<string, any>;
+    let body: Record<string, unknown>;
     try {
-      body = await req.clone().json();
+      body = await req.clone().json() as Record<string, unknown>;
     } catch {
       return {
         context: null,
