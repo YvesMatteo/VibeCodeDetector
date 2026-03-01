@@ -45,8 +45,8 @@ import {
     Sparkles,
     Copy,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getPlainEnglish } from '@/lib/plain-english';
@@ -54,6 +54,46 @@ import { buildFingerprint, DISMISSAL_REASONS, type DismissalReason, type Dismiss
 import { getOwaspCategories } from '@/lib/owasp-mapping';
 import { toast } from 'sonner';
 import { getIssueCountColor } from '@/lib/severity-utils';
+
+// ---------------------------------------------------------------------------
+// Type definitions
+// ---------------------------------------------------------------------------
+
+type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+
+interface ScannerFinding {
+    id?: string;
+    title: string;
+    description?: string;
+    severity: Severity;
+    category?: string;
+    recommendation?: string;
+    reportUrl?: string;
+    evidence?: string;
+    details?: Record<string, unknown>;
+    /** Internal: set by splitFindings to link detail findings to their summary */
+    _summaryId?: string;
+}
+
+interface Technology {
+    name: string;
+    version?: string;
+    category?: string;
+}
+
+interface ScannerResult {
+    score?: number;
+    findings?: ScannerFinding[];
+    error?: string;
+    skipped?: boolean;
+    reason?: string;
+    missingConfig?: string;
+    metadata?: Record<string, unknown>;
+    scannedAt?: string;
+    technologies?: Technology[];
+}
+
+// ---------------------------------------------------------------------------
 
 function getSeverityStyles(severity: string) {
     switch (severity) {
@@ -70,7 +110,7 @@ function getSeverityStyles(severity: string) {
     }
 }
 
-const scannerIcons: Record<string, any> = {
+const scannerIcons: Record<string, LucideIcon> = {
     security: Shield,
     api_keys: Key,
     legal: Scale,
@@ -141,11 +181,11 @@ const scannerNames: Record<string, string> = {
 };
 
 interface DismissCallback {
-    (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string): void;
+    (fingerprint: string, scannerKey: string, finding: ScannerFinding, reason: DismissalReason, scope: DismissalScope, note?: string): void;
 }
 
 interface ScannerAccordionProps {
-    results: Record<string, any>;
+    results: Record<string, ScannerResult>;
     dismissedFingerprints?: Set<string>;
     onDismiss?: DismissCallback;
     onRestore?: (dismissalId: string) => void;
@@ -163,15 +203,15 @@ const SUMMARY_IDS = new Set([
     'scorecard-overall',
 ]);
 
-function isSummaryFinding(f: any): boolean {
-    return SUMMARY_IDS.has(f.id);
+function isSummaryFinding(f: ScannerFinding): boolean {
+    return SUMMARY_IDS.has(f.id || '');
 }
 
 /** Split findings into summaries and their associated detail findings. */
-function splitFindings(findings: any[]): { summaries: any[]; details: any[]; plain: any[] } {
-    const summaries: any[] = [];
-    const details: any[] = [];
-    const plain: any[] = [];
+function splitFindings(findings: ScannerFinding[]): { summaries: ScannerFinding[]; details: ScannerFinding[]; plain: ScannerFinding[] } {
+    const summaries: ScannerFinding[] = [];
+    const details: ScannerFinding[] = [];
+    const plain: ScannerFinding[] = [];
 
     // Map summary IDs to their detail prefix
     const prefixMap: Record<string, string> = {
@@ -187,18 +227,18 @@ function splitFindings(findings: any[]): { summaries: any[]; details: any[]; pla
     for (const f of findings) {
         if (isSummaryFinding(f)) {
             summaries.push(f);
-            summaryIds.add(f.id);
+            summaryIds.add(f.id || '');
         }
     }
 
     // Collect detail findings that belong to a summary
     for (const f of findings) {
-        if (summaryIds.has(f.id)) continue;
+        if (summaryIds.has(f.id || '')) continue;
         let isDetail = false;
         for (const [sumId, prefix] of Object.entries(prefixMap)) {
             if (summaryIds.has(sumId) && f.id?.startsWith(prefix)) {
                 details.push({ ...f, _summaryId: sumId });
-                detailIds.add(f.id);
+                detailIds.add(f.id || '');
                 isDetail = true;
                 break;
             }
@@ -215,9 +255,9 @@ function splitFindings(findings: any[]): { summaries: any[]; details: any[]; pla
 // Components
 // ---------------------------------------------------------------------------
 
-function SeveritySummary({ findings }: { findings: any[] }) {
+function SeveritySummary({ findings }: { findings: ScannerFinding[] }) {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 };
-    findings.forEach((f: any) => {
+    findings.forEach((f: ScannerFinding) => {
         const sev = f.severity?.toLowerCase();
         if (sev === 'info') return;
         if (sev === 'critical') counts.critical++;
@@ -321,7 +361,7 @@ function DismissDropdown({ onConfirm, onClose }: { onConfirm: (reason: Dismissal
     );
 }
 
-function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { finding: any; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: any, reason: DismissalReason, scope: DismissalScope, note?: string) => void; userPlan?: string }) {
+function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { finding: ScannerFinding; index: number; scannerKey?: string; onDismiss?: (fingerprint: string, scannerKey: string, finding: ScannerFinding, reason: DismissalReason, scope: DismissalScope, note?: string) => void; userPlan?: string }) {
     const [showDismiss, setShowDismiss] = useState(false);
     const [showAiFix, setShowAiFix] = useState(false);
     const styles = getSeverityStyles(finding.severity);
@@ -389,7 +429,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
                             </p>
 
                             {(() => {
-                                const plainEnglish = getPlainEnglish(finding.title, finding.description);
+                                const plainEnglish = getPlainEnglish(finding.title, finding.description || '');
                                 if (plainEnglish) {
                                     return (
                                         <div className="mt-3 p-3 bg-sky-400/10 border border-sky-400/20 rounded-md">
@@ -470,7 +510,7 @@ function FindingCard({ finding, index, scannerKey, onDismiss, userPlan }: { find
 }
 
 /** A summary finding with expandable detail findings underneath. */
-function SummaryWithDetails({ summary, details }: { summary: any; details: any[] }) {
+function SummaryWithDetails({ summary, details }: { summary: ScannerFinding; details: ScannerFinding[] }) {
     const [showDetails, setShowDetails] = useState(false);
     const styles = getSeverityStyles(summary.severity);
     const SeverityIcon = styles.icon;
@@ -523,7 +563,7 @@ function SummaryWithDetails({ summary, details }: { summary: any; details: any[]
 }
 
 /** Collapsible section for info/passing-check findings. */
-function PassingChecksSection({ findings, userPlan }: { findings: any[]; userPlan?: string }) {
+function PassingChecksSection({ findings, userPlan }: { findings: ScannerFinding[]; userPlan?: string }) {
     if (findings.length === 0) return null;
     if (userPlan === 'none') return null;
     return (
@@ -533,7 +573,7 @@ function PassingChecksSection({ findings, userPlan }: { findings: any[]; userPla
                 {findings.length} passing check{findings.length !== 1 ? 's' : ''}
             </summary>
             <div className="mt-2 space-y-1.5">
-                {findings.map((f: any, i: number) => (
+                {findings.map((f: ScannerFinding, i: number) => (
                     <div key={i} className="flex items-start gap-2 px-3 py-2 text-xs text-zinc-500 bg-slate-900/40 rounded">
                         <CheckCircle className="h-3.5 w-3.5 text-green-500/50 mt-0.5 shrink-0" />
                         <span>{f.title}</span>
@@ -559,21 +599,21 @@ function FreePlanUpgradeCard() {
     );
 }
 
-function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, userPlan }: { scannerKey: string; result: any; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback; userPlan?: string }) {
-    const allFindings: any[] = result.findings || [];
+function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, userPlan }: { scannerKey: string; result: ScannerResult; dismissedFingerprints?: Set<string>; onDismiss?: DismissCallback; userPlan?: string }) {
+    const allFindings: ScannerFinding[] = result.findings || [];
     const isFreePlan = userPlan === 'none';
 
     // Filter out dismissed findings
-    const isActive = (f: any) => {
+    const isActive = (f: ScannerFinding) => {
         if (!dismissedFingerprints || dismissedFingerprints.size === 0) return true;
         return !dismissedFingerprints.has(buildFingerprint(scannerKey, f));
     };
 
-    const actionable = allFindings.filter((f: any) => f.severity?.toLowerCase() !== 'info' && isActive(f));
-    const passingChecks = allFindings.filter((f: any) => f.severity?.toLowerCase() === 'info');
+    const actionable = allFindings.filter((f: ScannerFinding) => f.severity?.toLowerCase() !== 'info' && isActive(f));
+    const passingChecks = allFindings.filter((f: ScannerFinding) => f.severity?.toLowerCase() === 'info');
 
     // For api_keys scanner, group findings by category
-    const hasCategories = scannerKey === 'api_keys' && actionable.some((f: any) => f.category);
+    const hasCategories = scannerKey === 'api_keys' && actionable.some((f: ScannerFinding) => f.category);
 
     if (hasCategories) {
         const categories = [
@@ -581,12 +621,12 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
             { key: 'infrastructure', label: 'Exposed Infrastructure', icon: Server, color: 'text-orange-400' },
             { key: 'databases', label: 'Exposed Databases', icon: Database, color: 'text-amber-400' },
         ];
-        const uncategorized = actionable.filter((f: any) => !f.category);
+        const uncategorized = actionable.filter((f: ScannerFinding) => !f.category);
 
         return (
             <div className="space-y-6">
                 {categories.map(cat => {
-                    const catFindings = actionable.filter((f: any) => f.category === cat.key);
+                    const catFindings = actionable.filter((f: ScannerFinding) => f.category === cat.key);
                     if (catFindings.length === 0) return null;
                     const CatIcon = cat.icon;
                     return (
@@ -597,7 +637,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
                                 <span className="text-xs text-zinc-500">({catFindings.length})</span>
                             </div>
                             <div className="space-y-4">
-                                {catFindings.map((finding: any, i: number) => (
+                                {catFindings.map((finding: ScannerFinding, i: number) => (
                                     <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                                 ))}
                             </div>
@@ -606,7 +646,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
                 })}
                 {uncategorized.length > 0 && (
                     <div className="space-y-4">
-                        {uncategorized.map((finding: any, i: number) => (
+                        {uncategorized.map((finding: ScannerFinding, i: number) => (
                             <FindingCard key={i} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                         ))}
                     </div>
@@ -624,10 +664,10 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
         return (
             <div className="space-y-4">
                 {summaries.map((summary, i) => {
-                    const related = details.filter((d: any) => d._summaryId === summary.id);
+                    const related = details.filter((d: ScannerFinding) => d._summaryId === summary.id);
                     return <SummaryWithDetails key={summary.id || i} summary={summary} details={related} />;
                 })}
-                {plain.length > 0 && plain.map((finding: any, i: number) => (
+                {plain.length > 0 && plain.map((finding: ScannerFinding, i: number) => (
                     <FindingCard key={`plain-${i}`} finding={finding} index={i} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
                 ))}
                 {isFreePlan && actionable.length > 0 && <FreePlanUpgradeCard />}
@@ -638,7 +678,7 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
 
     return (
         <div className="space-y-4">
-            {actionable.map((finding: any, index: number) => (
+            {actionable.map((finding: ScannerFinding, index: number) => (
                 <FindingCard key={index} finding={finding} index={index} scannerKey={scannerKey} onDismiss={onDismiss} userPlan={userPlan} />
             ))}
             {isFreePlan && actionable.length > 0 && <FreePlanUpgradeCard />}
@@ -652,40 +692,40 @@ function FindingsList({ scannerKey, result, dismissedFingerprints, onDismiss, us
 // ---------------------------------------------------------------------------
 
 // Check if a hosting scanner didn't detect its platform (all info, score 100)
-function isNonApplicableHosting(key: string, result: any): boolean {
+function isNonApplicableHosting(key: string, result: ScannerResult): boolean {
     if (!key.endsWith('_hosting')) return false;
     if (result.error) return false;
     if (typeof result.score !== 'number' || result.score !== 100) return false;
     if (!result.findings || result.findings.length === 0) return true;
-    return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+    return result.findings.every((f: ScannerFinding) => f.severity?.toLowerCase() === 'info');
 }
 
 // Hide supabase_mgmt when it errored (JWT/token not provided) or has no real findings
 // But don't hide if it's explicitly skipped (we want to show the "missing config" message)
-function isNonApplicableMgmt(key: string, result: any): boolean {
+function isNonApplicableMgmt(key: string, result: ScannerResult): boolean {
     if (key !== 'supabase_mgmt') return false;
     if (result.skipped) return false; // Show skipped scanners
     if (result.error) return true; // Token wasn't provided or invalid
     if (!result.findings || result.findings.length === 0) return true;
-    return result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+    return result.findings.every((f: ScannerFinding) => f.severity?.toLowerCase() === 'info');
 }
 
 // Detect scanners that returned "not detected" results — treat as skipped
 const NOT_DETECTED_PATTERNS = /no .* (instance|functionality) detected|not found in HTML/i;
 
-function isNotDetectedResult(key: string, result: any): boolean {
+function isNotDetectedResult(key: string, result: ScannerResult): boolean {
     if (result.error || result.skipped) return false;
     const findings = result.findings || [];
     // Must have 0 actionable issues
-    const actionable = findings.filter((f: any) => f.severity?.toLowerCase() !== 'info');
+    const actionable = findings.filter((f: ScannerFinding) => f.severity?.toLowerCase() !== 'info');
     if (actionable.length > 0) return false;
     // Check if any finding title matches "not detected" patterns
-    return findings.some((f: any) => NOT_DETECTED_PATTERNS.test(f.title || ''));
+    return findings.some((f: ScannerFinding) => NOT_DETECTED_PATTERNS.test(f.title || ''));
 }
 
-function getNotDetectedHint(key: string, result: any): string {
+function getNotDetectedHint(key: string, result: ScannerResult): string {
     const findings = result.findings || [];
-    const match = findings.find((f: any) => NOT_DETECTED_PATTERNS.test(f.title || ''));
+    const match = findings.find((f: ScannerFinding) => NOT_DETECTED_PATTERNS.test(f.title || ''));
     if (match?.title) return match.title + '.';
     const names: Record<string, string> = {
         supabase_backend: 'No Supabase instance detected on this site.',
@@ -698,17 +738,17 @@ function getNotDetectedHint(key: string, result: any): string {
 // Hide backend scanners that were skipped because a different backend is configured.
 // e.g. when Supabase is selected, Firebase/Convex show "Backend type is not Firebase" —
 // these are irrelevant, not actionable, so hide them entirely.
-function isIrrelevantBackend(key: string, result: any): boolean {
+function isIrrelevantBackend(key: string, result: ScannerResult): boolean {
     if (!result.skipped) return false;
     return typeof result.reason === 'string' && result.reason.startsWith('Backend type is not');
 }
 
-function shouldHide(key: string, result: any): boolean {
+function shouldHide(key: string, result: ScannerResult): boolean {
     return isNonApplicableHosting(key, result) || isNonApplicableMgmt(key, result) || isIrrelevantBackend(key, result);
 }
 
 /** Check if a scanner should be shown in the skipped section at the bottom */
-function isEffectivelySkipped(key: string, result: any): boolean {
+function isEffectivelySkipped(key: string, result: ScannerResult): boolean {
     return result.skipped || isNotDetectedResult(key, result);
 }
 
@@ -754,7 +794,7 @@ const SCANNER_ORDER: string[] = [
     'legal',
 ];
 
-function sortedEntries(results: Record<string, any>): [string, any][] {
+function sortedEntries(results: Record<string, ScannerResult>): [string, ScannerResult][] {
     const entries = Object.entries(results);
     return entries.sort(([a, ra], [b, rb]) => {
         // Push skipped / not-detected scanners to the bottom
@@ -776,8 +816,8 @@ function sortedEntries(results: Record<string, any>): [string, any][] {
 // ---------------------------------------------------------------------------
 
 /** Count active (non-dismissed) issues for a scanner */
-function countActiveIssues(scannerKey: string, findings: any[], dismissed?: Set<string>): number {
-    return findings.filter((f: any) => {
+function countActiveIssues(scannerKey: string, findings: ScannerFinding[], dismissed?: Set<string>): number {
+    return findings.filter((f: ScannerFinding) => {
         if (f.severity?.toLowerCase() === 'info') return false;
         if (dismissed && dismissed.size > 0 && dismissed.has(buildFingerprint(scannerKey, f))) return false;
         return true;
@@ -871,7 +911,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                             githubRepo: 'Add a GitHub repository link in your project settings to enable this scanner.',
                             supabasePAT: 'Add a Supabase Personal Access Token in your project settings to enable this scanner.',
                         };
-                        const hint = configHints[result.missingConfig] || result.reason;
+                        const hint = configHints[result.missingConfig || ''] || result.reason;
                         return (
                             <div key={key} className="bg-white/[0.01] animate-fade-in-up opacity-60 hover:opacity-80 transition-opacity" style={{ animationDelay: `${500 + scannerIndex * 100}ms` }}>
                                 <div className="px-3 sm:px-4 py-3 pb-3 flex items-center justify-between gap-3 sm:gap-4">
@@ -890,7 +930,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                             <p className="text-[11px] text-zinc-600 mt-0.5">{hint}</p>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">—</span>
+                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">&mdash;</span>
                                 </div>
                             </div>
                         );
@@ -917,7 +957,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                             <p className="text-[11px] text-zinc-600 mt-0.5">{hint}</p>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">—</span>
+                                    <span className="text-sm font-semibold tabular-nums text-zinc-700">&mdash;</span>
                                 </div>
                             </div>
                         );
@@ -945,7 +985,7 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                             </span>
                                         </div>
                                         <div className="mt-1">
-                                            <SeveritySummary findings={(result.findings || []).filter((f: any) => !dismissedFingerprints?.has(buildFingerprint(key, f)))} />
+                                            <SeveritySummary findings={(result.findings || []).filter((f: ScannerFinding) => !dismissedFingerprints?.has(buildFingerprint(key, f)))} />
                                         </div>
                                     </div>
                                 </div>
@@ -972,11 +1012,11 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
                                 <div className="overflow-hidden">
                                     <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0 border-t border-white/5">
                                         {/* Tech Stack Badges */}
-                                        {key === 'tech_stack' && result.technologies?.length > 0 && (
+                                        {key === 'tech_stack' && result.technologies?.length && result.technologies.length > 0 && (
                                             <div className="mb-4 pb-4 border-b border-white/5 pt-3">
                                                 <h4 className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Detected Technologies</h4>
                                                 <div className="flex flex-wrap gap-1.5">
-                                                    {result.technologies.map((tech: any, i: number) => (
+                                                    {result.technologies.map((tech: Technology, i: number) => (
                                                         <Badge key={i} variant="outline" className="text-[11px] bg-indigo-500/10 text-indigo-400 border-indigo-500/30 rounded py-0 h-6">
                                                             {tech.name}{tech.version ? ` ${tech.version}` : ''}
                                                             {tech.category && <span className="ml-1 text-indigo-400/50">({tech.category})</span>}
