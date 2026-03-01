@@ -8,6 +8,7 @@ import {
     isValidUUID,
     type PlanInfo,
 } from '@/lib/stripe-plans';
+import { FREE_PLAN_CONFIG } from '@/lib/plan-config';
 
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing STRIPE_SECRET_KEY environment variable');
@@ -220,12 +221,13 @@ export async function POST(req: Request) {
                 .single();
 
             if (profile) {
+                // Reset to free tier limits (not zero — users should still be able to scan)
                 const { error: updateError } = await supabase
                     .from('profiles')
                     .update({
                         plan: 'none',
-                        plan_domains: 0,
-                        plan_scans_limit: 0,
+                        plan_domains: FREE_PLAN_CONFIG.domains,
+                        plan_scans_limit: FREE_PLAN_CONFIG.scans,
                         plan_scans_used: 0,
                         plan_period_start: null,
                         stripe_subscription_id: null,

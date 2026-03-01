@@ -104,17 +104,17 @@ describe('stripe-plans — resolvePlanByPriceId', () => {
   // -----------------------------------------------------------------------
   it('resolves starter monthly price ID', () => {
     const result = resolvePlanByPriceId('price_1Sz2CgLRbxIsl4HLE7jp6ecZ');
-    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 5 });
+    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 30 });
   });
 
   it('resolves starter annual (30% off) price ID', () => {
     const result = resolvePlanByPriceId('price_1T1G35LRbxIsl4HLq1Geq4Ov');
-    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 5 });
+    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 30 });
   });
 
   it('resolves starter legacy annual (20% off) price ID', () => {
     const result = resolvePlanByPriceId('price_1Sz2CiLRbxIsl4HLDkUzXZXs');
-    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 5 });
+    expect(result).toEqual({ plan: 'starter', domains: 1, scans: 30 });
   });
 
   // -----------------------------------------------------------------------
@@ -122,17 +122,17 @@ describe('stripe-plans — resolvePlanByPriceId', () => {
   // -----------------------------------------------------------------------
   it('resolves pro monthly price ID', () => {
     const result = resolvePlanByPriceId('price_1Sz2CjLRbxIsl4HLbs2LEaw0');
-    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 20 });
+    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 155 });
   });
 
   it('resolves pro annual (30% off) price ID', () => {
     const result = resolvePlanByPriceId('price_1T1G36LRbxIsl4HLcxaSjnej');
-    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 20 });
+    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 155 });
   });
 
   it('resolves pro legacy annual (20% off) price ID', () => {
     const result = resolvePlanByPriceId('price_1Sz2ClLRbxIsl4HLrXX3IxAf');
-    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 20 });
+    expect(result).toEqual({ plan: 'pro', domains: 3, scans: 155 });
   });
 
   // -----------------------------------------------------------------------
@@ -140,25 +140,25 @@ describe('stripe-plans — resolvePlanByPriceId', () => {
   // -----------------------------------------------------------------------
   it('resolves max monthly price ID', () => {
     const result = resolvePlanByPriceId('price_1T1G99LRbxIsl4HLzT5TNktI');
-    expect(result).toEqual({ plan: 'max', domains: 10, scans: 75 });
+    expect(result).toEqual({ plan: 'max', domains: 10, scans: 3000 });
   });
 
   it('resolves max annual (30% off) price ID', () => {
     const result = resolvePlanByPriceId('price_1T1G99LRbxIsl4HLfsEV74xC');
-    expect(result).toEqual({ plan: 'max', domains: 10, scans: 75 });
+    expect(result).toEqual({ plan: 'max', domains: 10, scans: 3000 });
   });
 
   it('resolves max legacy monthly ($89) price ID', () => {
     const result = resolvePlanByPriceId('price_1Sz2CnLRbxIsl4HL2XFxYOmP');
-    expect(result).toEqual({ plan: 'max', domains: 10, scans: 75 });
+    expect(result).toEqual({ plan: 'max', domains: 10, scans: 3000 });
   });
 
   it('resolves max legacy annual price IDs', () => {
     expect(resolvePlanByPriceId('price_1T1G36LRbxIsl4HLk68EVav3')).toEqual({
-      plan: 'max', domains: 10, scans: 75,
+      plan: 'max', domains: 10, scans: 3000,
     });
     expect(resolvePlanByPriceId('price_1Sz2CoLRbxIsl4HL1uhpaBEp')).toEqual({
-      plan: 'max', domains: 10, scans: 75,
+      plan: 'max', domains: 10, scans: 3000,
     });
   });
 
@@ -176,15 +176,15 @@ describe('stripe-plans — resolvePlanByPriceId', () => {
 
 describe('stripe-plans — resolvePlanByMetadata', () => {
   it('resolves valid "starter" plan name', () => {
-    expect(resolvePlanByMetadata('starter')).toEqual({ plan: 'starter', domains: 1, scans: 5 });
+    expect(resolvePlanByMetadata('starter')).toEqual({ plan: 'starter', domains: 1, scans: 30 });
   });
 
   it('resolves valid "pro" plan name', () => {
-    expect(resolvePlanByMetadata('pro')).toEqual({ plan: 'pro', domains: 3, scans: 20 });
+    expect(resolvePlanByMetadata('pro')).toEqual({ plan: 'pro', domains: 3, scans: 155 });
   });
 
   it('resolves valid "max" plan name', () => {
-    expect(resolvePlanByMetadata('max')).toEqual({ plan: 'max', domains: 10, scans: 75 });
+    expect(resolvePlanByMetadata('max')).toEqual({ plan: 'max', domains: 10, scans: 3000 });
   });
 
   it('rejects invalid plan name "enterprise"', () => {
@@ -239,7 +239,7 @@ describe('stripe-plans — isValidUUID', () => {
 });
 
 describe('stripe-plans — plan limits consistency', () => {
-  it('all starter prices map to domains:1, scans:5', () => {
+  it('all starter prices map to domains:1, scans:30', () => {
     const starterPrices = Object.entries(PLANS_BY_PRICE_ID).filter(
       ([, info]) => info.plan === 'starter'
     );
@@ -250,7 +250,7 @@ describe('stripe-plans — plan limits consistency', () => {
     }
   });
 
-  it('all pro prices map to domains:3, scans:20', () => {
+  it('all pro prices map to domains:3, scans:155', () => {
     const proPrices = Object.entries(PLANS_BY_PRICE_ID).filter(
       ([, info]) => info.plan === 'pro'
     );
@@ -261,7 +261,7 @@ describe('stripe-plans — plan limits consistency', () => {
     }
   });
 
-  it('all max prices map to domains:10, scans:75', () => {
+  it('all max prices map to domains:10, scans:3000', () => {
     const maxPrices = Object.entries(PLANS_BY_PRICE_ID).filter(
       ([, info]) => info.plan === 'max'
     );
@@ -420,7 +420,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = profilesTracker.updateCalls[0];
     expect(updateCall.plan).toBe('starter');
     expect(updateCall.plan_domains).toBe(1);
-    expect(updateCall.plan_scans_limit).toBe(5);
+    expect(updateCall.plan_scans_limit).toBe(30);
     expect(updateCall.plan_scans_used).toBe(0);
     expect(updateCall.stripe_customer_id).toBe('cus_test_123');
     expect(updateCall.stripe_subscription_id).toBe('sub_test_123');
@@ -448,7 +448,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('pro');
     expect(updateCall.plan_domains).toBe(3);
-    expect(updateCall.plan_scans_limit).toBe(20);
+    expect(updateCall.plan_scans_limit).toBe(155);
   });
 
   it('activates max plan from monthly price ID', async () => {
@@ -473,7 +473,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('max');
     expect(updateCall.plan_domains).toBe(10);
-    expect(updateCall.plan_scans_limit).toBe(75);
+    expect(updateCall.plan_scans_limit).toBe(3000);
   });
 
   it('activates starter annual plan from annual price ID', async () => {
@@ -498,7 +498,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('starter');
     expect(updateCall.plan_domains).toBe(1);
-    expect(updateCall.plan_scans_limit).toBe(5);
+    expect(updateCall.plan_scans_limit).toBe(30);
   });
 
   it('activates pro annual plan from annual price ID', async () => {
@@ -523,7 +523,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('pro');
     expect(updateCall.plan_domains).toBe(3);
-    expect(updateCall.plan_scans_limit).toBe(20);
+    expect(updateCall.plan_scans_limit).toBe(155);
   });
 
   it('activates max annual plan from annual price ID', async () => {
@@ -548,7 +548,7 @@ describe('webhook POST — checkout.session.completed', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('max');
     expect(updateCall.plan_domains).toBe(10);
-    expect(updateCall.plan_scans_limit).toBe(75);
+    expect(updateCall.plan_scans_limit).toBe(3000);
   });
 
   it('returns 200 but does not activate when userId is missing', async () => {
@@ -617,7 +617,7 @@ describe('webhook POST — metadata fallback validation', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('pro');
     expect(updateCall.plan_domains).toBe(3);
-    expect(updateCall.plan_scans_limit).toBe(20);
+    expect(updateCall.plan_scans_limit).toBe(155);
   });
 
   it('falls back to valid metadata plan when price ID is unknown', async () => {
@@ -642,7 +642,7 @@ describe('webhook POST — metadata fallback validation', () => {
     const updateCall = supabaseMock._tables['profiles'].updateCalls[0];
     expect(updateCall.plan).toBe('max');
     expect(updateCall.plan_domains).toBe(10);
-    expect(updateCall.plan_scans_limit).toBe(75);
+    expect(updateCall.plan_scans_limit).toBe(3000);
   });
 
   it('rejects invalid metadata plan name and does not activate', async () => {
@@ -809,8 +809,8 @@ describe('webhook POST — customer.subscription.deleted', () => {
 
     const updateCall = profilesTracker.updateCalls[0];
     expect(updateCall.plan).toBe('none');
-    expect(updateCall.plan_domains).toBe(0);
-    expect(updateCall.plan_scans_limit).toBe(0);
+    expect(updateCall.plan_domains).toBe(1);       // Free tier: 1 domain
+    expect(updateCall.plan_scans_limit).toBe(4);    // Free tier: 4 scans
     expect(updateCall.plan_scans_used).toBe(0);
     expect(updateCall.plan_period_start).toBeNull();
     expect(updateCall.stripe_subscription_id).toBeNull();
@@ -869,7 +869,7 @@ describe('webhook POST — customer.subscription.updated', () => {
     const updateCall = profilesTracker.updateCalls[0];
     expect(updateCall.plan).toBe('pro');
     expect(updateCall.plan_domains).toBe(3);
-    expect(updateCall.plan_scans_limit).toBe(20);
+    expect(updateCall.plan_scans_limit).toBe(155);
   });
 
   it('restricts scanning for past_due subscription status', async () => {

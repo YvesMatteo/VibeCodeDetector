@@ -60,7 +60,6 @@ export default function ThreatsPage() {
     // Stats
     const [stats, setStats] = useState<Stats | null>(null);
     const [timeSeries, setTimeSeries] = useState<{ hour: string; critical: number; high: number; medium: number; low: number; total: number }[]>([]);
-    const [topIps, setTopIps] = useState<TopIp[]>([]);
 
     // Events
     const [events, setEvents] = useState<{ id: string; event_type: string; severity: string; source_ip: string | null; request_path: string | null; payload_snippet: string | null; created_at: string }[]>([]);
@@ -105,7 +104,6 @@ export default function ThreatsPage() {
             const data = await res.json();
             setStats(data.stats);
             setTimeSeries(data.timeSeries || []);
-            setTopIps(data.topIps || []);
         } catch {
             // Non-critical
         }
@@ -251,38 +249,24 @@ export default function ThreatsPage() {
                     </label>
                 </div>
 
-                {settings.enabled && (
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-xs text-zinc-400 mb-1.5 block">Alert Frequency</label>
-                            <div className="px-3 py-2 rounded-lg text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30 inline-block min-h-[36px] leading-[20px]">
-                                Immediate
-                            </div>
-                            <p className="text-xs text-zinc-600 mt-1.5">
-                                Alert email can be configured in Settings
-                            </p>
+                {settings.enabled && snippet && (
+                    <div className="pt-2">
+                        <label className="text-xs text-zinc-400 mb-1.5 block">Embed this snippet in your website&apos;s &lt;head&gt;</label>
+                        <div className="relative">
+                            <pre className="bg-black/40 border border-white/[0.06] rounded-lg p-3 pr-12 text-xs text-emerald-400 font-mono overflow-x-auto">
+                                {snippet}
+                            </pre>
+                            <button
+                                onClick={copySnippet}
+                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
+                            >
+                                {copied ? (
+                                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                ) : (
+                                    <Copy className="h-3.5 w-3.5 text-zinc-400" />
+                                )}
+                            </button>
                         </div>
-
-                        {snippet && (
-                            <div className="mt-4">
-                                <label className="text-xs text-zinc-400 mb-1.5 block">Embed this snippet in your website&apos;s &lt;head&gt;</label>
-                                <div className="relative">
-                                    <pre className="bg-black/40 border border-white/[0.06] rounded-lg p-3 pr-12 text-xs text-emerald-400 font-mono overflow-x-auto">
-                                        {snippet}
-                                    </pre>
-                                    <button
-                                        onClick={copySnippet}
-                                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
-                                    >
-                                        {copied ? (
-                                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                                        ) : (
-                                            <Copy className="h-3.5 w-3.5 text-zinc-400" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -346,33 +330,6 @@ export default function ThreatsPage() {
                         totalPages={eventTotalPages}
                         onPageChange={(p) => loadEvents(p)}
                     />
-                </div>
-            )}
-
-            {/* Top Source IPs */}
-            {settings.enabled && topIps.length > 0 && (
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
-                    <h3 className="text-sm font-medium text-white mb-4">Top Source IPs</h3>
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-white/[0.06]">
-                                <th className="text-left py-2 px-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">IP Address</th>
-                                <th className="text-left py-2 px-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Events</th>
-                                <th className="text-left py-2 px-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Last Seen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {topIps.map((ip) => (
-                                <tr key={ip.ip} className="border-b border-white/[0.03]">
-                                    <td className="py-2 px-3 text-xs text-zinc-300 font-mono">{ip.ip}</td>
-                                    <td className="py-2 px-3 text-xs text-zinc-400">{ip.count.toLocaleString()}</td>
-                                    <td className="py-2 px-3 text-xs text-zinc-500">
-                                        {new Date(ip.lastSeen).toLocaleString()}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
                 </div>
             )}
         </div>
