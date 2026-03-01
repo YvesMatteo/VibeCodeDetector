@@ -78,11 +78,12 @@ interface AuditReportProps {
     dismissedFingerprints?: Set<string>;
     dismissals?: Dismissal[];
     onDismiss?: (fingerprint: string, scannerKey: string, finding: { id?: string; title: string; severity: string; description?: string; recommendation?: string }, reason: DismissalReason, scope: DismissalScope, note?: string) => void;
+    onDismissAll?: () => void;
     onRestore?: (dismissalId: string) => void;
     userPlan?: string;
 }
 
-export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onDismiss, onRestore, userPlan }: AuditReportProps) {
+export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onDismiss, onDismissAll, onRestore, userPlan }: AuditReportProps) {
     const { totalFindings, issueCount, visibleScannerCount, techStackCveFindings, scannerResults } = data;
     const [showDismissed, setShowDismissed] = useState(false);
     const [showResolved, setShowResolved] = useState(false);
@@ -189,6 +190,15 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
                             >
                                 <Flag className="h-3 w-3" />
                                 {dismissalCount} dismissed
+                            </button>
+                        )}
+                        {adjusted.total > 0 && onDismissAll && (
+                            <button
+                                onClick={onDismissAll}
+                                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 rounded border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                            >
+                                <Flag className="h-3 w-3" />
+                                Dismiss all
                             </button>
                         )}
                     </div>
