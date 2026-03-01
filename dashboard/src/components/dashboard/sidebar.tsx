@@ -14,13 +14,12 @@ import {
     ExternalLink,
     Mail,
     ScrollText,
-    Menu,
     Send,
     Users,
+    type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
-import { Button } from '@/components/ui/button'; // Assuming Button is available
 
 export const mainNav = [
     { name: 'Projects', href: '/dashboard', icon: FolderKanban },
@@ -66,7 +65,7 @@ export function Sidebar({
 }: SidebarProps) {
     const pathname = usePathname();
 
-    const NavItem = ({ item, isExternal = false }: { item: any, isExternal?: boolean }) => {
+    const NavItem = ({ item, isExternal = false }: { item: { name: string; href: string; icon: LucideIcon; external?: boolean }, isExternal?: boolean }) => {
         const isActive = !isExternal && (
             pathname === item.href ||
             (item.href !== '/dashboard' && pathname.startsWith(item.href)) ||

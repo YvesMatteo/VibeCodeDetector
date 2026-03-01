@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +27,6 @@ function SignupPageInner() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
-    const supabase = createClient();
 
     async function handleSignup(e: React.FormEvent) {
         e.preventDefault();

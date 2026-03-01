@@ -62,7 +62,6 @@ export default async function Image() {
             gap: "20px",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://checkvibe.dev"}/icon.png`}
             width={90}

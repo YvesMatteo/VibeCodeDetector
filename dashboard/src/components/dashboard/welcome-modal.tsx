@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Zap, BarChart3, X } from 'lucide-react';
 
 export function WelcomeModal() {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(() => { if (typeof window === 'undefined') return false; return !localStorage.getItem('cv-welcome-dismissed'); });
 
     useEffect(() => {
         const dismissed = localStorage.getItem('cv-welcome-dismissed');

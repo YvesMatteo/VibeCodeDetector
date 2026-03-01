@@ -189,8 +189,9 @@ export function SilkBackground() {
             window.removeEventListener('resize', handleResize);
             clearTimeout(resizeTimeout);
             cancelAnimationFrame(animationId);
-            if (containerRef.current && containerRef.current.contains(renderer.domElement)) {
-                containerRef.current.removeChild(renderer.domElement);
+            const el = containerRef.current;
+            if (el && el.contains(renderer.domElement)) {
+                el.removeChild(renderer.domElement);
             }
             renderer.dispose();
             geometry.dispose();

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share2, Link2, Check, X } from 'lucide-react';
+import { Share2, Link2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ShareButtonProps {
@@ -14,7 +14,6 @@ interface ShareButtonProps {
 export function ShareButton({ scanId, initialPublicId, className }: ShareButtonProps) {
     const [publicId, setPublicId] = useState<string | null>(initialPublicId ?? null);
     const [loading, setLoading] = useState(false);
-    const [showLink, setShowLink] = useState(false);
 
     async function handleShare() {
         if (publicId) {
@@ -22,7 +21,6 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
             const url = `${window.location.origin}/report/${publicId}`;
             await navigator.clipboard.writeText(url);
             toast.success('Public link copied to clipboard');
-            setShowLink(true);
             return;
         }
 
@@ -38,7 +36,6 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
             const url = `${window.location.origin}/report/${data.publicId}`;
             await navigator.clipboard.writeText(url);
             toast.success('Public link created and copied to clipboard');
-            setShowLink(true);
         } catch {
             toast.error('Failed to create public link. Please check your connection and try again.');
         } finally {
@@ -52,7 +49,6 @@ export function ShareButton({ scanId, initialPublicId, className }: ShareButtonP
             const res = await fetch(`/api/scan/${scanId}/share`, { method: 'DELETE' });
             if (res.ok) {
                 setPublicId(null);
-                setShowLink(false);
                 toast.success('Public link removed');
             }
         } catch {

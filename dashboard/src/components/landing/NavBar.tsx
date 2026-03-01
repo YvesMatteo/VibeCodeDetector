@@ -18,10 +18,7 @@ export function NavBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Detect touch device
-  const [isTouch, setIsTouch] = useState(false);
-  useEffect(() => {
-    setIsTouch('ontouchstart' in window || window.matchMedia('(pointer: coarse)').matches);
-  }, []);
+  const [isTouch] = useState(() => typeof window !== 'undefined' && ('ontouchstart' in window || window.matchMedia('(pointer: coarse)').matches));
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => {

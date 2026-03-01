@@ -35,7 +35,8 @@ export default function MonitoringPage() {
     const projectId = params.id;
 
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [savingSchedule, setSavingSchedule] = useState(false);
+    const [savingAlert, setSavingAlert] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Schedule state
@@ -88,7 +89,7 @@ export default function MonitoringPage() {
     }, [projectId]);
 
     async function saveSchedule() {
-        setSaving(true);
+        setSavingSchedule(true);
         try {
             const res = await fetch('/api/monitoring', {
                 method: 'POST',
@@ -109,12 +110,12 @@ export default function MonitoringPage() {
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : 'Failed to save scan schedule. Please try again.');
         } finally {
-            setSaving(false);
+            setSavingSchedule(false);
         }
     }
 
     async function saveAlert(alertType: string) {
-        setSaving(true);
+        setSavingAlert(true);
         try {
             const alert = alerts[alertType];
             const res = await fetch('/api/monitoring', {
@@ -135,7 +136,7 @@ export default function MonitoringPage() {
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : 'Failed to save alert rule. Please try again.');
         } finally {
-            setSaving(false);
+            setSavingAlert(false);
         }
     }
 
@@ -246,10 +247,10 @@ export default function MonitoringPage() {
                 <Button
                     size="sm"
                     onClick={saveSchedule}
-                    disabled={saving}
+                    disabled={savingSchedule}
                     className="bg-sky-500 hover:bg-sky-400 text-white"
                 >
-                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                    {savingSchedule ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
                     Save Schedule
                 </Button>
             </div>
@@ -333,10 +334,10 @@ export default function MonitoringPage() {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => saveAlert(type)}
-                                            disabled={saving}
+                                            disabled={savingAlert}
                                             className="text-xs"
                                         >
-                                            {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+                                            {savingAlert ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
                                             Save
                                         </Button>
                                     </div>

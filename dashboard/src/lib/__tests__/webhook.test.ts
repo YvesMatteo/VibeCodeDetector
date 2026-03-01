@@ -5,39 +5,17 @@ import {
   resolvePlanByPriceId,
   resolvePlanByMetadata,
   isValidUUID,
-  type PlanInfo,
 } from '@/lib/stripe-plans';
 
 // ---------------------------------------------------------------------------
 // Mock setup for the webhook route's external dependencies
 // ---------------------------------------------------------------------------
 
-// Supabase mock — tracks all DB operations for assertions
-const mockSupabaseChain = {
-  from: vi.fn(),
-  select: vi.fn(),
-  eq: vi.fn(),
-  maybeSingle: vi.fn(),
-  single: vi.fn(),
-  update: vi.fn(),
-  upsert: vi.fn(),
-};
 
-// Build a chainable mock where every method returns the chain itself
-function buildSupabaseChain(overrides: Record<string, any> = {}) {
-  const chain: any = {};
-  for (const key of Object.keys(mockSupabaseChain)) {
-    chain[key] = vi.fn().mockReturnValue(chain);
-  }
-  // Apply overrides (for terminal operations that return data)
-  for (const [key, value] of Object.entries(overrides)) {
-    chain[key] = vi.fn().mockResolvedValue(value);
-  }
-  return chain;
-}
 
 // The "admin" Supabase client mock
-let supabaseMock: ReturnType<typeof buildSupabaseChain>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock object has dynamic shape
+let supabaseMock: any;
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => supabaseMock,
@@ -97,7 +75,7 @@ const TEST_USER_ID = '61599829-2889-47eb-920c-c0214989313a';
  */
 function makeEvent(
   type: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   eventId = `evt_test_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 ) {
   return {
@@ -311,7 +289,7 @@ describe('stripe-plans — plan limits consistency', () => {
 
 // Dynamic import so the env vars and mocks are set up first.
 // We use a lazy require pattern because the route module reads env at import time.
-let POST: (req: Request) => Promise<any>;
+let POST: (req: Request) => Promise<{ status: number; body: string | null }>;
 
 beforeEach(async () => {
   vi.resetModules();
@@ -344,11 +322,12 @@ beforeEach(async () => {
  * fresh chainable objects each time, while recording all operations on a
  * shared tracker for assertion purposes.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- mock chains require dynamic typing */
 function createDefaultSupabaseMock() {
   const mock: any = {};
 
   // Shared trackers per table for test assertions
-  const tables: Record<string, { updateCalls: any[]; upsertCalls: any[]; selectCalls: any[] }> = {};
+  const tables: Record<string, { updateCalls: unknown[]; upsertCalls: unknown[]; selectCalls: unknown[] }> = {};
 
   function getTracker(table: string) {
     if (!tables[table]) {
@@ -364,7 +343,7 @@ function createDefaultSupabaseMock() {
     const builder: any = {};
 
     // select chain: .select(...).eq(...).single()/.maybeSingle()
-    builder.select = vi.fn((...args: any[]) => {
+    builder.select = vi.fn((...args: unknown[]) => {
       tracker.selectCalls.push(args);
       return builder;
     });
@@ -384,7 +363,7 @@ function createDefaultSupabaseMock() {
     );
 
     // update chain: .update({...}).eq(...)
-    builder.update = vi.fn((payload: any) => {
+    builder.update = vi.fn((payload: unknown) => {
       tracker.updateCalls.push(payload);
       // Return a new mini-chain that resolves on .eq()
       const updateChain: any = {};
@@ -393,7 +372,7 @@ function createDefaultSupabaseMock() {
     });
 
     // upsert: terminal
-    builder.upsert = vi.fn((...args: any[]) => {
+    builder.upsert = vi.fn((...args: unknown[]) => {
       tracker.upsertCalls.push(args);
       return Promise.resolve({ error: null });
     });
@@ -405,6 +384,7 @@ function createDefaultSupabaseMock() {
   mock._tables = tables;
   return mock;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 describe('webhook POST — checkout.session.completed', () => {
   it('activates starter plan from monthly price ID', async () => {

@@ -11,8 +11,12 @@ import { computeScanDiff } from '@/lib/scan-diff';
 import type { Dismissal } from '@/lib/dismissals';
 import { OWNER_EMAIL_CLIENT } from '@/lib/constants';
 
-export default async function ProjectReportPage(props: { params: Promise<{ id: string }> }) {
+export default async function ProjectReportPage(props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ scanId?: string }>;
+}) {
     const { id } = (await props.params);
+    const { scanId } = (await props.searchParams);
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -35,17 +39,47 @@ export default async function ProjectReportPage(props: { params: Promise<{ id: s
 
     const userPlan = profile?.plan || 'none';
 
-    // Get latest 2 completed scans (current + previous for diff)
-    const { data: recentScans } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('project_id', id)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(2);
+    let latestScan: Record<string, unknown> | null = null;
+    let previousScan: Record<string, unknown> | null = null;
 
-    const latestScan = recentScans?.[0] ?? null;
-    const previousScan = recentScans?.[1] ?? null;
+    if (scanId) {
+        // Fetch the specific scan requested via query param
+        const { data: specificScan } = await supabase
+            .from('scans')
+            .select('*')
+            .eq('id', scanId)
+            .eq('project_id', id)
+            .eq('user_id', user.id)
+            .single();
+
+        latestScan = specificScan ?? null;
+
+        // Fetch the previous scan before this one for diff
+        if (latestScan) {
+            const { data: prevScans } = await supabase
+                .from('scans')
+                .select('*')
+                .eq('project_id', id)
+                .eq('status', 'completed')
+                .lt('completed_at', (latestScan as Record<string, unknown>).completed_at as string ?? (latestScan as Record<string, unknown>).created_at as string)
+                .order('completed_at', { ascending: false })
+                .limit(1);
+
+            previousScan = prevScans?.[0] ?? null;
+        }
+    } else {
+        // Fallback: get latest 2 completed scans (current + previous for diff)
+        const { data: recentScans } = await supabase
+            .from('scans')
+            .select('*')
+            .eq('project_id', id)
+            .eq('status', 'completed')
+            .order('completed_at', { ascending: false })
+            .limit(2);
+
+        latestScan = recentScans?.[0] ?? null;
+        previousScan = recentScans?.[1] ?? null;
+    }
 
     // Fetch dismissed findings for this project
     const { data: dismissalsRaw } = await supabase

@@ -34,6 +34,7 @@ export default function AdminUsersPage() {
     useEffect(() => {
         if (userEmail === null) return;
         if (userEmail !== OWNER_EMAIL_CLIENT) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional early return
             setError('Forbidden');
             setLoading(false);
             return;

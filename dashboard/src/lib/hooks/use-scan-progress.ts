@@ -49,6 +49,7 @@ export function useScanProgress(scanId: string | null): ScanProgress {
 
   useEffect(() => {
     if (!scanId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset
       cleanup();
       return;
     }
@@ -67,6 +68,7 @@ export function useScanProgress(scanId: string | null): ScanProgress {
           filter: `id=eq.${scanId}`,
         },
         (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- realtime payload
           const row = payload.new as Record<string, any>;
           setProgress({
             status: row.status ?? null,
@@ -94,6 +96,7 @@ export function useScanProgress(scanId: string | null): ScanProgress {
       .select('*')
       .eq('id', scanId)
       .single()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- columns not in generated types
       .then(({ data }: { data: any }) => {
         if (data) {
           setProgress((prev) => ({

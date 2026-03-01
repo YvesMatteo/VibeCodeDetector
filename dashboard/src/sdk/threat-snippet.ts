@@ -91,7 +91,7 @@
                     }
                     // After max retries, drop the batch silently
                 });
-        } catch (_) {
+        } catch {
             if (retryCount < MAX_RETRIES) {
                 queue.unshift(...batch);
                 setTimeout(() => flush(retryCount + 1), Math.pow(2, retryCount) * 1000);
@@ -238,9 +238,9 @@
     function scanForBots() {
         const signals: string[] = [];
 
-        if ((navigator as any).webdriver) signals.push("webdriver=true");
-        if (!(window as any).chrome && /Chrome/.test(navigator.userAgent)) signals.push("phantom_chrome");
-        if ((window as any)._phantom || (window as any).__nightmare) signals.push("phantom_nightmare");
+        if ((navigator as unknown as Record<string, unknown>).webdriver) signals.push("webdriver=true");
+        if (!(window as unknown as Record<string, unknown>).chrome && /Chrome/.test(navigator.userAgent)) signals.push("phantom_chrome");
+        if ((window as unknown as Record<string, unknown>)._phantom || (window as unknown as Record<string, unknown>).__nightmare) signals.push("phantom_nightmare");
         if (!navigator.languages || navigator.languages.length === 0) signals.push("no_languages");
 
         if (signals.length >= 2) {
@@ -362,7 +362,7 @@
                         payload: `cross-domain POST to ${formHost}`,
                     });
                 }
-            } catch (_) {}
+            } catch {}
         }, true);
     }
 
@@ -377,7 +377,7 @@
         scanForBots();
         monitorForms();
         monitorCsrf();
-    } catch (_) {
+    } catch {
         // Never break the host page
     }
 })();

@@ -26,6 +26,14 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
 
     if (error || !scan) return notFound();
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+    const userPlan = profile?.plan || 'none';
+
     const auditData = processAuditData(scan.results as Record<string, any>);
     const missingScanners = getMissingScannerNames(scan.results as Record<string, unknown>);
 
@@ -57,8 +65,8 @@ export default async function ProjectAuditDetailPage(props: { params: Promise<{ 
                     )}
                 </div>
                 <div className="flex gap-2 shrink-0">
-                    <AIFixPrompt url={scan.url} findings={auditData.allFindings} techStack={auditData.techStack} />
-                    <ExportButton scanId={params.scanId} />
+                    <AIFixPrompt url={scan.url} findings={auditData.allFindings} techStack={auditData.techStack} userPlan={userPlan} />
+                    <ExportButton scanId={params.scanId} userPlan={userPlan} />
                 </div>
             </div>
 
