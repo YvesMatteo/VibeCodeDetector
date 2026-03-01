@@ -188,7 +188,9 @@ interface ScannerAccordionProps {
     results: Record<string, ScannerResult>;
     dismissedFingerprints?: Set<string>;
     onDismiss?: DismissCallback;
+    onDismissAll?: () => void;
     onRestore?: (dismissalId: string) => void;
+    undismissedCount?: number;
     userPlan?: string;
 }
 
@@ -824,9 +826,10 @@ function countActiveIssues(scannerKey: string, findings: ScannerFinding[], dismi
     }).length;
 }
 
-export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, userPlan }: ScannerAccordionProps) {
+export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, onDismissAll, undismissedCount, userPlan }: ScannerAccordionProps) {
     // All scanners start collapsed
     const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+    const [showDismissConfirm, setShowDismissConfirm] = useState(false);
 
     const toggle = (key: string) => {
         setOpenSections(prev => {
@@ -866,6 +869,32 @@ export function ScannerAccordion({ results, dismissedFingerprints, onDismiss, us
     return (
         <div className="flex flex-col rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.005]">
             <div className="flex items-center justify-end gap-2 mb-2 p-3 pb-0">
+                {onDismissAll && (undismissedCount ?? 0) > 0 && !showDismissConfirm && (
+                    <button
+                        onClick={() => setShowDismissConfirm(true)}
+                        className="text-[11px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10 flex items-center gap-1.5"
+                    >
+                        <Flag className="h-3 w-3" />
+                        Dismiss all
+                    </button>
+                )}
+                {showDismissConfirm && (
+                    <div className="flex items-center gap-2 text-[11px]">
+                        <span className="text-zinc-400">Dismiss {undismissedCount} findings as not applicable?</span>
+                        <button
+                            onClick={() => { onDismissAll?.(); setShowDismissConfirm(false); }}
+                            className="font-medium text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20"
+                        >
+                            Yes, dismiss all
+                        </button>
+                        <button
+                            onClick={() => setShowDismissConfirm(false)}
+                            className="font-medium text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
                 <button
                     onClick={allExpanded ? collapseAll : expandAll}
                     className="text-[11px] font-medium text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10"

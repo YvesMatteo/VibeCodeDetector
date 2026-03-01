@@ -154,6 +154,7 @@ export default async function ProjectReportPage(props: {
                         projectId={id}
                         scanId={latestScan.id}
                         initialDismissals={activeDismissals}
+                        originalScore={latestScan.overall_score}
                         userPlan={userPlan}
                     />
                 </>

@@ -13,10 +13,11 @@ interface Props {
     projectId: string;
     scanId: string;
     initialDismissals: Dismissal[];
+    originalScore?: number | null;
     userPlan?: string;
 }
 
-export function AuditReportWithDismissals({ data, diff, previousScanDate, projectId, scanId, initialDismissals, userPlan }: Props) {
+export function AuditReportWithDismissals({ data, diff, previousScanDate, projectId, scanId, initialDismissals, originalScore, userPlan }: Props) {
     const [dismissals, setDismissals] = useState<Dismissal[]>(initialDismissals);
 
     const dismissedFingerprints = useMemo(
@@ -187,6 +188,31 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
         }
     }, []);
 
+    const handleRestoreAll = useCallback(async () => {
+        if (dismissals.length === 0) return;
+
+        const toRestore = [...dismissals];
+        setDismissals([]);
+        toast.success(`${toRestore.length} findings restored`);
+
+        const results = await Promise.allSettled(
+            toRestore.map(d =>
+                fetch(`/api/dismissals/${d.id}`, { method: 'DELETE' }).then(async res => {
+                    if (!res.ok) throw new Error(await res.text());
+                })
+            )
+        );
+
+        const failed = results
+            .map((r, i) => r.status === 'rejected' ? toRestore[i] : null)
+            .filter((d): d is Dismissal => d !== null);
+
+        if (failed.length > 0) {
+            setDismissals(prev => [...prev, ...failed]);
+            toast.error(`${failed.length} restores failed. Try again.`);
+        }
+    }, [dismissals]);
+
     return (
         <AuditReport
             data={data}
@@ -196,7 +222,9 @@ export function AuditReportWithDismissals({ data, diff, previousScanDate, projec
             dismissals={dismissals}
             onDismiss={handleDismiss}
             onDismissAll={handleDismissAll}
+            onRestoreAll={handleRestoreAll}
             onRestore={handleRestore}
+            originalScore={originalScore}
             userPlan={userPlan}
         />
     );

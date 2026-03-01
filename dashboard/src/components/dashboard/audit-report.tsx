@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Flag, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
@@ -43,6 +43,30 @@ function computeAdjustedCounts(
     return counts;
 }
 
+/** Recompute security score using the same exponential-decay formula as the scan route,
+ *  but excluding dismissed findings so the score improves when issues are dismissed. */
+const SEVERITY_PENALTY: Record<string, number> = { critical: 15, high: 8, medium: 4, low: 1.5, info: 0 };
+const DECAY_CONSTANT = 120;
+
+function computeAdjustedScore(
+    results: Record<string, ScanResultItem>,
+    dismissed: Set<string>,
+): number {
+    let totalPenalty = 0;
+    for (const [key, result] of Object.entries(results)) {
+        if ('skipped' in result && result.skipped) continue;
+        if (!result.findings || !Array.isArray(result.findings)) continue;
+        for (const f of result.findings) {
+            const sev = f.severity?.toLowerCase() || 'info';
+            if (dismissed.has(buildFingerprint(key, f))) continue;
+            totalPenalty += SEVERITY_PENALTY[sev] ?? 0;
+        }
+    }
+    if (totalPenalty === 0) return 100;
+    const raw = 100 * Math.exp(-totalPenalty / DECAY_CONSTANT);
+    return Math.min(100, Math.round(Math.max(5, raw)));
+}
+
 const REASON_LABELS: Record<string, string> = {
     false_positive: 'False positive',
     accepted_risk: 'Accepted risk',
@@ -79,15 +103,18 @@ interface AuditReportProps {
     dismissals?: Dismissal[];
     onDismiss?: (fingerprint: string, scannerKey: string, finding: { id?: string; title: string; severity: string; description?: string; recommendation?: string }, reason: DismissalReason, scope: DismissalScope, note?: string) => void;
     onDismissAll?: () => void;
+    onRestoreAll?: () => void;
     onRestore?: (dismissalId: string) => void;
+    originalScore?: number | null;
     userPlan?: string;
 }
 
-export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onDismiss, onDismissAll, onRestore, userPlan }: AuditReportProps) {
+export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onDismiss, onDismissAll, onRestoreAll, onRestore, originalScore, userPlan }: AuditReportProps) {
     const { totalFindings, issueCount, visibleScannerCount, techStackCveFindings, scannerResults } = data;
     const [showDismissed, setShowDismissed] = useState(false);
     const [showResolved, setShowResolved] = useState(false);
     const [showNew, setShowNew] = useState(false);
+    const [showDismissConfirm, setShowDismissConfirm] = useState(false);
 
     const dismissed = dismissedFingerprints ?? new Set<string>();
     const dismissalCount = dismissed.size;
@@ -97,6 +124,13 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
     const adjusted = hasDismissals
         ? computeAdjustedCounts(data.results, dismissed)
         : { critical: totalFindings.critical, high: totalFindings.high, medium: totalFindings.medium, low: totalFindings.low, total: issueCount };
+
+    // Compute adjusted score (dismissed findings improve the score)
+    const adjustedScore = useMemo(
+        () => hasDismissals ? computeAdjustedScore(data.results, dismissed) : originalScore,
+        [data.results, dismissed, hasDismissals, originalScore],
+    );
+    const scoreImproved = originalScore != null && adjustedScore != null && adjustedScore > originalScore;
 
     const hasResolvedIssues = diff && diff.resolvedIssues.length > 0;
     const hasNewIssues = diff && diff.newIssues.length > 0;
@@ -192,14 +226,10 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
                                 {dismissalCount} dismissed
                             </button>
                         )}
-                        {adjusted.total > 0 && onDismissAll && (
-                            <button
-                                onClick={onDismissAll}
-                                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 rounded border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]"
-                            >
-                                <Flag className="h-3 w-3" />
-                                Dismiss all
-                            </button>
+                        {scoreImproved && (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
+                                Score: {originalScore} → {adjustedScore}
+                            </span>
                         )}
                     </div>
                 </div>
@@ -258,16 +288,25 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
             {/* Dismissed Findings Section */}
             {hasDismissals && showDismissed && dismissals && (
                 <Card className="bg-white/[0.02] border-white/[0.06] mb-8">
-                    <button
-                        onClick={() => setShowDismissed(false)}
-                        className="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer"
-                    >
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <button
+                            onClick={() => setShowDismissed(false)}
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+                        >
                             <Flag className="h-4 w-4 text-zinc-500" />
                             <span className="text-sm font-medium text-zinc-400">Dismissed findings ({dismissalCount})</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-zinc-500 rotate-180" />
-                    </button>
+                            <ChevronDown className="h-4 w-4 text-zinc-500 rotate-180" />
+                        </button>
+                        {onRestoreAll && dismissals.length > 1 && (
+                            <button
+                                onClick={onRestoreAll}
+                                className="text-xs font-medium text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                            >
+                                <RotateCcw className="h-3 w-3" />
+                                Restore all
+                            </button>
+                        )}
+                    </div>
                     <CardContent className="pt-0 pb-4">
                         <div className="space-y-2">
                             {dismissals.map(d => {
@@ -380,6 +419,8 @@ export function AuditReport({ data, diff, dismissedFingerprints, dismissals, onD
                 results={scannerResults as Record<string, any>}
                 dismissedFingerprints={dismissed}
                 onDismiss={onDismiss}
+                onDismissAll={onDismissAll}
+                undismissedCount={adjusted.total}
                 userPlan={userPlan}
             />
         </>
