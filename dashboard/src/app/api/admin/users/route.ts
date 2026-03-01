@@ -6,11 +6,41 @@ import { OWNER_EMAIL } from '@/lib/constants';
 export async function GET() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== OWNER_EMAIL) {
+    if (!user) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Check admin status from profiles table (preferred).
+    // The is_admin column may not exist yet, so we cast to bypass Supabase's
+    // generated types and handle the missing-column case at runtime.
     const admin = createAdminClient();
+    const { data: profile, error: profileError } = await admin
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single() as { data: { is_admin?: boolean | null } | null; error: { message: string } | null };
+
+    if (profileError || profile === null) {
+        // Profile lookup failed — fall back to email check with warning
+        console.warn(
+            `[admin-auth] Could not read profile for user ${user.id}: ${profileError?.message ?? 'no profile row'}. ` +
+            'Falling back to OWNER_EMAIL check. Add is_admin column to profiles table to remove this fallback.'
+        );
+        if (user.email !== OWNER_EMAIL) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+    } else if (typeof profile.is_admin === 'undefined' || profile.is_admin === null) {
+        // is_admin column doesn't exist yet — fall back to email check with warning
+        console.warn(
+            '[admin-auth] profiles.is_admin column not found. ' +
+            'Falling back to OWNER_EMAIL check. Run migration to add is_admin boolean column.'
+        );
+        if (user.email !== OWNER_EMAIL) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+    } else if (!profile.is_admin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Query auth.users via admin client
     const { data, error } = await admin.auth.admin.listUsers({ perPage: 100 });

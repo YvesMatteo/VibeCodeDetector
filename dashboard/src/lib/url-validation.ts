@@ -19,8 +19,15 @@ const PRIVATE_PATTERNS = [
   /^0x/i,      // Hex-encoded IP
 ];
 
-/** Check if a hostname matches any private/reserved IP pattern. */
+/** TLDs reserved for internal/private networks. */
+const PRIVATE_TLDS = ['.local', '.internal', '.corp', '.home', '.lan'];
+
+/** Check if a hostname matches any private/reserved IP pattern or internal TLD. */
 export function isPrivateHostname(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  if (PRIVATE_TLDS.some(tld => lower.endsWith(tld))) {
+    return true;
+  }
   return PRIVATE_PATTERNS.some(p => p.test(hostname));
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { isPrivateHostname } from '@/lib/url-validation';
 
 const FALLBACK_ICON = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAKRJREFUWEft' +
@@ -28,11 +29,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
     }
 
-    // Block internal/private hostnames to prevent SSRF
-    const lowerDomain = domain.toLowerCase();
-    if (lowerDomain === 'localhost' || lowerDomain.endsWith('.local') || lowerDomain.endsWith('.internal') ||
-        lowerDomain.endsWith('.corp') || lowerDomain.endsWith('.home') || lowerDomain.endsWith('.lan') ||
-        /^(10|127|172\.(1[6-9]|2[0-9]|3[01])|192\.168)\./.test(domain)) {
+    // Block internal/private hostnames to prevent SSRF (shared validation)
+    if (isPrivateHostname(domain)) {
         return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
     }
 
