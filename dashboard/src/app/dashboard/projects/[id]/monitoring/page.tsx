@@ -47,11 +47,12 @@ export default function MonitoringPage() {
     const [nextRun, setNextRun] = useState<string | null>(null);
 
     // Alert state
-    const [alerts, setAlerts] = useState<Record<string, { enabled: boolean; threshold: number | null; email: string }>>({
-        score_drop: { enabled: false, threshold: 10, email: '' },
-        new_critical: { enabled: false, threshold: null, email: '' },
-        score_below: { enabled: false, threshold: 50, email: '' },
+    const [alerts, setAlerts] = useState<Record<string, { enabled: boolean; threshold: number | null }>>({
+        score_drop: { enabled: false, threshold: 10 },
+        new_critical: { enabled: false, threshold: null },
+        score_below: { enabled: false, threshold: 50 },
     });
+    const [notifyEmail, setNotifyEmail] = useState('');
 
     useEffect(() => {
         async function load() {
@@ -69,14 +70,16 @@ export default function MonitoringPage() {
 
                 if (data.alerts) {
                     const alertMap = { ...alerts };
+                    let loadedEmail = '';
                     for (const alert of data.alerts) {
                         alertMap[alert.type] = {
                             enabled: alert.enabled,
                             threshold: alert.threshold,
-                            email: alert.notify_email || '',
                         };
+                        if (alert.notify_email) loadedEmail = alert.notify_email;
                     }
                     setAlerts(alertMap);
+                    if (loadedEmail) setNotifyEmail(loadedEmail);
                 }
             } catch {
                 setError('Failed to load monitoring settings. Please refresh the page.');
@@ -114,27 +117,35 @@ export default function MonitoringPage() {
         }
     }
 
-    async function saveAlert(alertType: string) {
+    async function saveAllAlerts() {
         setSavingAlert(true);
         try {
-            const alert = alerts[alertType];
-            const res = await fetch('/api/monitoring', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    projectId,
-                    type: 'alert',
-                    alertType,
-                    threshold: alert.threshold,
-                    notifyEmail: alert.email || undefined,
-                    enabled: alert.enabled,
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            toast.success('Alert rule saved');
+            const results = await Promise.all(
+                ALERT_TYPES.map(({ type }) => {
+                    const alert = alerts[type];
+                    return fetch('/api/monitoring', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            projectId,
+                            type: 'alert',
+                            alertType: type,
+                            threshold: alert.threshold,
+                            notifyEmail: notifyEmail || undefined,
+                            enabled: alert.enabled,
+                        }),
+                    });
+                })
+            );
+            for (const res of results) {
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error);
+                }
+            }
+            toast.success('Alert rules saved');
         } catch (e: unknown) {
-            toast.error(e instanceof Error ? e.message : 'Failed to save alert rule. Please try again.');
+            toast.error(e instanceof Error ? e.message : 'Failed to save alert rules. Please try again.');
         } finally {
             setSavingAlert(false);
         }
@@ -296,55 +307,51 @@ export default function MonitoringPage() {
                                     </label>
                                 </div>
 
-                                {alert.enabled && (
-                                    <div className="ml-0 sm:ml-10 mt-3 space-y-3">
-                                        {defaultThreshold !== null && (
-                                            <div>
-                                                <label className="text-xs text-zinc-400 mb-1 block">Threshold</label>
-                                                <input
-                                                    type="number"
-                                                    value={alert.threshold ?? defaultThreshold}
-                                                    onChange={(e) => setAlerts({
-                                                        ...alerts,
-                                                        [type]: { ...alert, threshold: Number(e.target.value) },
-                                                    })}
-                                                    className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-24 min-h-[44px]"
-                                                    min={1}
-                                                    max={100}
-                                                />
-                                                <span className="text-xs text-zinc-500 ml-2">
-                                                    {type === 'score_drop' ? 'points' : 'score'}
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div>
-                                            <label className="text-xs text-zinc-400 mb-1 block">Notify email</label>
-                                            <input
-                                                type="email"
-                                                value={alert.email}
-                                                onChange={(e) => setAlerts({
-                                                    ...alerts,
-                                                    [type]: { ...alert, email: e.target.value },
-                                                })}
-                                                placeholder="your@email.com"
-                                                className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-sm placeholder:text-zinc-600 min-h-[44px]"
-                                            />
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => saveAlert(type)}
-                                            disabled={savingAlert}
-                                            className="text-xs"
-                                        >
-                                            {savingAlert ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
-                                            Save
-                                        </Button>
+                                {alert.enabled && defaultThreshold !== null && (
+                                    <div className="ml-0 sm:ml-10 mt-3">
+                                        <label className="text-xs text-zinc-400 mb-1 block">Threshold</label>
+                                        <input
+                                            type="number"
+                                            value={alert.threshold ?? defaultThreshold}
+                                            onChange={(e) => setAlerts({
+                                                ...alerts,
+                                                [type]: { ...alert, threshold: Number(e.target.value) },
+                                            })}
+                                            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-24 min-h-[44px]"
+                                            min={1}
+                                            max={100}
+                                        />
+                                        <span className="text-xs text-zinc-500 ml-2">
+                                            {type === 'score_drop' ? 'points' : 'score'}
+                                        </span>
                                     </div>
                                 )}
                             </div>
                         );
                     })}
+                </div>
+
+                {/* Shared notification email + save */}
+                <div className="mt-6 pt-6 border-t border-white/[0.04] space-y-4">
+                    <div>
+                        <label className="text-xs text-zinc-400 mb-1.5 block">Notification email for all alerts</label>
+                        <input
+                            type="email"
+                            value={notifyEmail}
+                            onChange={(e) => setNotifyEmail(e.target.value)}
+                            placeholder="your@email.com"
+                            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-300 w-full sm:max-w-sm placeholder:text-zinc-600 min-h-[44px]"
+                        />
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveAllAlerts}
+                        disabled={savingAlert}
+                        className="bg-sky-500 hover:bg-sky-400 text-white"
+                    >
+                        {savingAlert ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                        Save Alert Rules
+                    </Button>
                 </div>
             </div>
         </div>
