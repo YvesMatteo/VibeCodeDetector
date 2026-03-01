@@ -321,6 +321,7 @@ export default function NewProjectPage() {
                                                     placeholder="your-project-id or https://your-project.firebaseapp.com"
                                                     value={backendUrl}
                                                     onChange={(e) => setBackendUrl(e.target.value)}
+                                                    autoComplete="off"
                                                     className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                                 />
                                             </div>
@@ -333,6 +334,7 @@ export default function NewProjectPage() {
                                                     placeholder="https://your-project.convex.cloud"
                                                     value={backendUrl}
                                                     onChange={(e) => setBackendUrl(e.target.value)}
+                                                    autoComplete="off"
                                                     className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                                 />
                                             </div>
