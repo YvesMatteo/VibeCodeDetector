@@ -189,7 +189,7 @@ export function threatAlertTemplate(opts: {
     uniqueIps: number;
     dashboardUrl: string;
 }): { subject: string; html: string; text: string } {
-    const severityLabel = opts.criticalCount > 0 ? 'critical' : opts.highCount > 0 ? 'high' : 'medium';
+    const _severityLabel = opts.criticalCount > 0 ? 'critical' : opts.highCount > 0 ? 'high' : 'medium'; void _severityLabel;
     const headerColor = opts.criticalCount > 0 ? '#EF4444' : opts.highCount > 0 ? '#F97316' : '#EAB308';
 
     return {

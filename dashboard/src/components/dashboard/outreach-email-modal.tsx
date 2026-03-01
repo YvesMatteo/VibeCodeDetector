@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 'use client';
 
 import { useState } from 'react';
@@ -15,7 +14,7 @@ import { Mail, Send, Loader2, Check, RefreshCw, Search, Github, Globe } from 'lu
 import { toast } from 'sonner';
 
 interface OutreachEmailModalProps {
-    scanResults: Record<string, any>;
+    scanResults: Record<string, unknown>;
     projectUrl: string;
     issueCount: number;
     severityBreakdown: { critical: number; high: number; medium: number; low: number };

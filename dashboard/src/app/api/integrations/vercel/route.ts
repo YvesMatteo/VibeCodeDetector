@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-     
     const sbUnchecked = supabase as any;
 
     // Fetch integration
@@ -82,7 +81,6 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-     
     const sbUnchecked = supabase as any;
 
     // Check if integration already exists
@@ -141,7 +139,6 @@ export async function DELETE(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-     
     const { error } = await (supabase as any)
         .from('vercel_integrations')
         .delete()

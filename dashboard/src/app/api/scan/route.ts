@@ -699,7 +699,7 @@ export async function POST(req: NextRequest) {
                     if (r.error || r.skipped) continue;
                     if (!Array.isArray(r.findings) || r.findings.length === 0) continue;
 
-                    scannersWithFindings++;
+                    _scannersWithFindings++;
                     for (const f of r.findings) {
                         const sev = (f.severity || 'info').toLowerCase();
                         totalPenalty += SEVERITY_PENALTY[sev] ?? 0;

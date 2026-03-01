@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getResend } from '@/lib/resend';
@@ -114,8 +113,9 @@ export async function POST(req: NextRequest) {
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
             },
         });
-    } catch (emailError: any) {
-        console.error('Resend send error:', emailError?.message || emailError);
+    } catch (emailError: unknown) {
+        const msg = emailError instanceof Error ? emailError.message : String(emailError);
+        console.error('Resend send error:', msg);
         return NextResponse.json({ error: 'Failed to send confirmation email. Please try again.' }, { status: 500 });
     }
 

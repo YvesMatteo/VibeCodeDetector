@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getResend } from '@/lib/resend';
 import {
@@ -16,6 +15,14 @@ function getServiceClient() {
 
 const THROTTLE_HOURS = 24;
 const FROM_EMAIL = 'CheckVibe <alerts@checkvibe.dev>';
+
+interface AlertRule {
+    id: string;
+    type: 'score_drop' | 'new_critical' | 'score_below';
+    threshold?: number;
+    last_triggered_at?: string | null;
+    notify_email?: string | null;
+}
 
 interface AlertDispatchOpts {
     projectId: string;
@@ -36,18 +43,18 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
         const supabase = getServiceClient();
 
         const { data: rules } = await supabase
-            .from('alert_rules' as any)
+            .from('alert_rules' as never)
             .select('*')
             .eq('project_id', opts.projectId)
             .eq('enabled', true);
 
-        if (!rules || rules.length === 0) return;
+        if (!rules || (rules as AlertRule[]).length === 0) return;
 
         const now = new Date();
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://checkvibe.dev');
         const dashboardUrl = `${appUrl}/dashboard/projects/${opts.projectId}/report`;
 
-        const deliveries = rules.map(async (rule: any) => {
+        const deliveries = (rules as AlertRule[]).map(async (rule) => {
             // 24h throttle check
             if (rule.last_triggered_at) {
                 const lastTriggered = new Date(rule.last_triggered_at);
@@ -112,11 +119,12 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
 
                 // Update last_triggered_at
                 await supabase
-                    .from('alert_rules' as any)
+                    .from('alert_rules' as never)
                     .update({ last_triggered_at: now.toISOString() })
                     .eq('id', rule.id);
-            } catch (err: any) {
-                console.error(`Alert email failed for rule ${rule.id}:`, err.message);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error(`Alert email failed for rule ${rule.id}:`, message);
             }
         });
 

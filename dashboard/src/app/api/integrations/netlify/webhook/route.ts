@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
         }
 
-         
         let payload: any;
         try {
             payload = JSON.parse(rawBody);
@@ -70,7 +69,6 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify HMAC-SHA256 signature against each integration's secret
-         
         let matchedIntegration: any = null;
         for (const integration of integrations) {
             const expectedSig = crypto

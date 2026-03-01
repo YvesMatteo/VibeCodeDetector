@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -106,9 +105,14 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                 throw new Error('No response body');
             }
 
+            type NdjsonChunk =
+                | { type: 'started'; scanId: string }
+                | { type: 'result'; overallScore?: number | string }
+                | { type: 'error'; error?: string };
+
             const decoder = new TextDecoder();
             let buffer = '';
-            let finalResult: any = null;
+            let finalResult: { overallScore?: number | string } | null = null;
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -125,7 +129,7 @@ export function RunAuditButton({ projectId, variant = 'default', size = 'default
                     if (!line) continue;
 
                     try {
-                        const chunk = JSON.parse(line);
+                        const chunk = JSON.parse(line) as NdjsonChunk;
 
                         if (chunk.type === 'started' && chunk.scanId) {
                             // Subscribe to real-time progress via the scanId
