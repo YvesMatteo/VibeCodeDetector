@@ -645,6 +645,18 @@ export async function POST(req: NextRequest) {
 
         if (!insertError && scan) {
             scanId = scan.id;
+
+            // Dispatch scan.started webhook (fire-and-forget)
+            if (resolvedProjectId) {
+                dispatchWebhooks({
+                    event: 'scan.started',
+                    projectId: resolvedProjectId,
+                    scanId: scan.id,
+                    url: targetUrl,
+                    overallScore: 0,
+                    results: {},
+                }).catch(() => { });
+            }
         } else {
             console.error('Failed to create scan row:', insertError);
             // Continue without progress tracking — the scan still works
@@ -795,13 +807,56 @@ export async function POST(req: NextRequest) {
 
                 // Dispatch webhooks (fire-and-forget)
                 if (resolvedProjectId && scanId) {
+                    // scan.completed — always
                     dispatchWebhooks({
+                        event: 'scan.completed',
                         projectId: resolvedProjectId,
                         scanId,
                         url: targetUrl,
                         overallScore,
                         results,
                     }).catch(() => { });
+
+                    // score.changed — compare with previous scan score
+                    (async () => {
+                        try {
+                            const svc = getServiceClient();
+                            const { data: prev } = await svc
+                                .from('scans')
+                                .select('overall_score')
+                                .eq('project_id', resolvedProjectId!)
+                                .eq('status', 'completed')
+                                .neq('id', scanId!)
+                                .order('completed_at', { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+
+                            if (prev && prev.overall_score !== overallScore) {
+                                await dispatchWebhooks({
+                                    event: 'score.changed',
+                                    projectId: resolvedProjectId!,
+                                    scanId: scanId!,
+                                    url: targetUrl,
+                                    overallScore,
+                                    results,
+                                    previousScore: prev.overall_score as number,
+                                });
+                            }
+                        } catch { /* non-critical */ }
+                    })();
+
+                    // threat.detected — fire if threat_intelligence scanner found issues
+                    const threatResult = results.threat_intelligence as Record<string, unknown> | undefined;
+                    if (threatResult && Array.isArray(threatResult.findings) && threatResult.findings.length > 0) {
+                        dispatchWebhooks({
+                            event: 'threat.detected',
+                            projectId: resolvedProjectId,
+                            scanId,
+                            url: targetUrl,
+                            overallScore,
+                            results,
+                        }).catch(() => { });
+                    }
                 }
 
                 // Dispatch alert emails (fire-and-forget)

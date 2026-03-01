@@ -128,13 +128,13 @@ export async function POST(req: NextRequest) {
         }
 
         // Rate limit: 30 deployments per minute per integration
-        const { data: recentCount } = await supabase
+        const { count: recentCount } = await supabase
             .from('vercel_deployments' as never)
             .select('id', { count: 'exact', head: true })
             .eq('integration_id', matchedIntegration.id)
-            .gte('created_at', new Date(Date.now() - 60_000).toISOString()) as { data: { id: string }[] | null };
+            .gte('created_at', new Date(Date.now() - 60_000).toISOString()) as { count: number | null };
 
-        if (recentCount && recentCount.length > 30) {
+        if (recentCount !== null && recentCount > 30) {
             return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
         }
 
