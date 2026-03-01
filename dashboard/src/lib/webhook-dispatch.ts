@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { countIssuesBySeverity } from '@/lib/scan-utils';
+import { resolveAndValidateUrl } from '@/lib/url-validation';
 
 function getServiceClient() {
     return createServiceClient(
@@ -61,6 +62,21 @@ export async function dispatchWebhooks(opts: {
         const deliveries = webhooks
             .filter(wh => (wh.events as string[]).includes('scan.completed'))
             .map(async (wh) => {
+                // DNS rebinding protection: re-validate webhook URL before delivery
+                const dnsCheck = await resolveAndValidateUrl(wh.url as string);
+                if (!dnsCheck.valid) {
+                    console.error(`Webhook SSRF blocked for ${String(wh.url)}: ${dnsCheck.error}`);
+                    await supabase
+                        .from('project_webhooks')
+                        .update({
+                            last_triggered_at: new Date().toISOString(),
+                            last_status: 0,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', wh.id);
+                    return;
+                }
+
                 const signature = signPayload(body, wh.secret as string);
                 try {
                     const controller = new AbortController();

@@ -5,7 +5,7 @@ import { resolveAuth, requireScope, requireDomain, logApiKeyUsage } from '@/lib/
 import { dispatchWebhooks } from '@/lib/webhook-dispatch';
 import { dispatchAlerts } from '@/lib/alert-dispatch';
 import { getServiceClient } from '@/lib/api-keys';
-import { validateTargetUrl, isPrivateHostname } from '@/lib/url-validation';
+import { validateTargetUrl, isPrivateHostname, resolveAndValidateUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { decrypt } from '@/lib/encryption';
 import type { Json } from '@/lib/supabase/database.types';
@@ -153,6 +153,12 @@ export async function POST(req: NextRequest) {
         }
         const targetUrl = urlValidation.parsed.href;
         const parsedUrl = urlValidation.parsed;
+
+        // DNS rebinding protection: resolve hostname and check actual IP
+        const dnsCheck = await resolveAndValidateUrl(targetUrl);
+        if (!dnsCheck.valid) {
+            return NextResponse.json({ error: dnsCheck.error }, { status: 400 });
+        }
 
         // ==========================================
         // API KEY DOMAIN RESTRICTION CHECK

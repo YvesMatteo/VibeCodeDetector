@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
-import { isPrivateHostname } from '@/lib/url-validation';
+import { isPrivateHostname, resolveAndValidateUrl } from '@/lib/url-validation';
 import { checkCsrf } from '@/lib/csrf';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -67,6 +67,12 @@ export async function POST(req: NextRequest) {
         }
     } catch {
         return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
+
+    // DNS rebinding protection: resolve hostname and check actual IP
+    const dnsCheck = await resolveAndValidateUrl(url);
+    if (!dnsCheck.valid) {
+        return NextResponse.json({ error: dnsCheck.error }, { status: 400 });
     }
 
     // Verify project ownership

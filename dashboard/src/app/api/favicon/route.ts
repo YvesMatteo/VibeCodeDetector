@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { isPrivateHostname } from '@/lib/url-validation';
+import { isPrivateHostname, resolveAndValidateUrl } from '@/lib/url-validation';
 
 const FALLBACK_ICON = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAKRJREFUWEft' +
@@ -31,6 +31,12 @@ export async function GET(req: NextRequest) {
 
     // Block internal/private hostnames to prevent SSRF (shared validation)
     if (isPrivateHostname(domain)) {
+        return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
+    }
+
+    // DNS rebinding protection: resolve hostname and check actual IP
+    const dnsCheck = await resolveAndValidateUrl(`https://${domain}`);
+    if (!dnsCheck.valid) {
         return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
     }
 
