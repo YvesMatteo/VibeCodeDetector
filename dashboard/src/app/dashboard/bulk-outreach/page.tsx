@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { processAuditData } from '@/lib/audit-data';
+import type { ScanResultItem } from '@/lib/audit-data';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,6 +17,61 @@ const OWNER_EMAIL = OWNER_EMAIL_CLIENT;
 
 type UrlStatus = 'pending' | 'scanning' | 'finding_contacts' | 'generating' | 'sending' | 'done' | 'error' | 'skipped';
 
+type ScanResults = Record<string, ScanResultItem>;
+
+/** Row shape from the outreach_batches table */
+interface OutreachBatchRow {
+    id: string;
+    created_at: string;
+    user_id: string;
+}
+
+/** Row shape from the outreach_entries table */
+interface OutreachEntryRow {
+    id: string;
+    batch_id: string;
+    url: string;
+    domain: string;
+    status: UrlStatus;
+    score: number | null;
+    emails: string[] | null;
+    error: string | null;
+    sent_count: number | null;
+    failed_count: number | null;
+    scan_results: ScanResults | null;
+    email_subject: string | null;
+    email_body: string | null;
+    created_at: string;
+    updated_at: string | null;
+}
+
+/** Lightweight row for batch entry counting */
+interface OutreachEntryCountRow {
+    batch_id: string;
+    status: UrlStatus;
+    sent_count: number | null;
+}
+
+/** Email object returned by the scrape-email API */
+interface ScrapedEmail {
+    email: string;
+    source: string;
+}
+
+/** Patch shape written to the outreach_entries DB table */
+interface EntryDbPatch {
+    updated_at: string;
+    status?: UrlStatus;
+    score?: number | null;
+    emails?: string[];
+    error?: string | null;
+    sent_count?: number;
+    failed_count?: number;
+    scan_results?: ScanResults | null;
+    email_subject?: string | null;
+    email_body?: string | null;
+}
+
 interface UrlEntry {
     id: string;
     url: string;
@@ -26,7 +82,7 @@ interface UrlEntry {
     error: string | null;
     sentCount: number;
     failedCount: number;
-    scanResults: Record<string, any> | null;
+    scanResults: ScanResults | null;
     emailSubject: string | null;
     emailBody: string | null;
 }
@@ -96,6 +152,58 @@ export default function BulkOutreachPage() {
 
     useEffect(() => { entriesRef.current = entries; }, [entries]);
 
+    // ── DB loaders ──
+    const loadBatches = useCallback(async () => {
+        const { data } = await supabase
+            .from('outreach_batches' as never)
+            .select('id, created_at')
+            .order('created_at', { ascending: false })
+            .limit(30);
+        const rows = (data ?? []) as OutreachBatchRow[];
+        if (rows.length === 0) { setBatches([]); return; }
+
+        // Load entry counts for each batch
+        const batchIds = rows.map((b) => b.id);
+        const { data: allEntries } = await supabase
+            .from('outreach_entries' as never)
+            .select('batch_id, status, sent_count')
+            .in('batch_id', batchIds);
+
+        const entryMap = new Map<string, OutreachEntryCountRow[]>();
+        for (const e of ((allEntries ?? []) as OutreachEntryCountRow[])) {
+            const arr = entryMap.get(e.batch_id) || [];
+            arr.push(e);
+            entryMap.set(e.batch_id, arr);
+        }
+
+        setBatches(rows.map((b) => {
+            const ents = entryMap.get(b.id) || [];
+            return {
+                id: b.id,
+                created_at: b.created_at,
+                total: ents.length,
+                done: ents.filter((e) => e.status === 'done').length,
+                error: ents.filter((e) => e.status === 'error').length,
+                skipped: ents.filter((e) => e.status === 'skipped').length,
+                sent: ents.reduce((s: number, e) => s + (e.sent_count || 0), 0),
+            };
+        }));
+    }, [supabase]);
+
+    const loadContactedDomains = useCallback(async () => {
+        const { data } = await supabase
+            .from('outreach_entries' as never)
+            .select('domain, created_at')
+            .eq('status', 'done')
+            .order('created_at', { ascending: false });
+        if (!data) return;
+        const map = new Map<string, string>();
+        for (const row of data as Pick<OutreachEntryRow, 'domain' | 'created_at'>[]) {
+            if (!map.has(row.domain)) map.set(row.domain, row.created_at);
+        }
+        setContactedDomains(map);
+    }, [supabase]);
+
     // ── Auth + load data ──
     useEffect(() => {
         (async () => {
@@ -105,7 +213,7 @@ export default function BulkOutreachPage() {
             setUserId(user.id);
             await Promise.all([loadBatches(), loadContactedDomains()]);
         })();
-    }, []);
+    }, [supabase, loadBatches, loadContactedDomains]);
 
     // beforeunload warning
     useEffect(() => {
@@ -128,71 +236,19 @@ export default function BulkOutreachPage() {
         setDuplicates(dupes);
     }, [input, contactedDomains]);
 
-    // ── DB loaders ──
-    async function loadBatches() {
-        const { data } = await supabase
-            .from('outreach_batches' as any)
-            .select('id, created_at')
-            .order('created_at', { ascending: false })
-            .limit(30);
-        const rows = data as any[] | null;
-        if (!rows || rows.length === 0) { setBatches([]); return; }
-
-        // Load entry counts for each batch
-        const batchIds = rows.map((b: any) => b.id);
-        const { data: allEntries } = await supabase
-            .from('outreach_entries' as any)
-            .select('batch_id, status, sent_count')
-            .in('batch_id', batchIds);
-
-        const entryMap = new Map<string, any[]>();
-        for (const e of (allEntries as any[] || [])) {
-            const arr = entryMap.get(e.batch_id) || [];
-            arr.push(e);
-            entryMap.set(e.batch_id, arr);
-        }
-
-        setBatches(rows.map((b: any) => {
-            const ents = entryMap.get(b.id) || [];
-            return {
-                id: b.id,
-                created_at: b.created_at,
-                total: ents.length,
-                done: ents.filter((e: any) => e.status === 'done').length,
-                error: ents.filter((e: any) => e.status === 'error').length,
-                skipped: ents.filter((e: any) => e.status === 'skipped').length,
-                sent: ents.reduce((s: number, e: any) => s + (e.sent_count || 0), 0),
-            };
-        }));
-    }
-
-    async function loadContactedDomains() {
-        const { data } = await supabase
-            .from('outreach_entries' as any)
-            .select('domain, created_at')
-            .eq('status', 'done')
-            .order('created_at', { ascending: false });
-        if (!data) return;
-        const map = new Map<string, string>();
-        for (const row of data as any[]) {
-            if (!map.has(row.domain)) map.set(row.domain, row.created_at);
-        }
-        setContactedDomains(map);
-    }
-
     async function loadBatchEntries(bId: string) {
         setBatchId(bId);
         const { data } = await supabase
-            .from('outreach_entries' as any)
+            .from('outreach_entries' as never)
             .select('*')
             .eq('batch_id', bId)
             .order('created_at', { ascending: true });
         if (!data) return;
-        const loaded: UrlEntry[] = data.map((row: any) => ({
+        const loaded: UrlEntry[] = (data as OutreachEntryRow[]).map((row) => ({
             id: row.id,
             url: row.url,
             domain: row.domain,
-            status: row.status as UrlStatus,
+            status: row.status,
             score: row.score,
             emails: row.emails || [],
             error: row.error,
@@ -208,8 +264,8 @@ export default function BulkOutreachPage() {
     }
 
     async function deleteBatch(bId: string) {
-        await supabase.from('outreach_entries' as any).delete().eq('batch_id', bId);
-        await supabase.from('outreach_batches' as any).delete().eq('id', bId);
+        await supabase.from('outreach_entries' as never).delete().eq('batch_id', bId);
+        await supabase.from('outreach_batches' as never).delete().eq('id', bId);
         setBatches(prev => prev.filter(b => b.id !== bId));
         if (batchId === bId) {
             setEntries([]);
@@ -225,7 +281,7 @@ export default function BulkOutreachPage() {
             const next = prev.map((e, i) => i === idx ? { ...e, ...patch } : e);
             const entry = next[idx];
             if (entry?.id) {
-                const dbPatch: Record<string, any> = { updated_at: new Date().toISOString() };
+                const dbPatch: EntryDbPatch = { updated_at: new Date().toISOString() };
                 if (patch.status !== undefined) dbPatch.status = patch.status;
                 if (patch.score !== undefined) dbPatch.score = patch.score;
                 if (patch.emails !== undefined) dbPatch.emails = patch.emails;
@@ -235,21 +291,21 @@ export default function BulkOutreachPage() {
                 if (patch.scanResults !== undefined) dbPatch.scan_results = patch.scanResults;
                 if (patch.emailSubject !== undefined) dbPatch.email_subject = patch.emailSubject;
                 if (patch.emailBody !== undefined) dbPatch.email_body = patch.emailBody;
-                supabase.from('outreach_entries' as any).update(dbPatch).eq('id', entry.id).then();
+                supabase.from('outreach_entries' as never).update(dbPatch as never).eq('id', entry.id).then();
             }
             return next;
         });
-    }, []);
+    }, [supabase]);
 
     // ── API helpers ──
-    async function runScan(url: string): Promise<{ results: Record<string, any>; score: number } | null> {
+    async function runScan(url: string): Promise<{ results: ScanResults; score: number } | null> {
         const res = await fetch('/api/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url }),
         });
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ error: 'Scan failed' }));
+            const err = await res.json().catch(() => ({ error: 'Scan failed' })) as { error?: string };
             if (res.status === 402) throw new Error('QUOTA_EXHAUSTED');
             throw new Error(err.error || `Scan failed (${res.status})`);
         }
@@ -257,7 +313,7 @@ export default function BulkOutreachPage() {
         if (!reader) throw new Error('No response body');
         const decoder = new TextDecoder();
         let buffer = '';
-        let finalResult: any = null;
+        let finalResult: { type: string; results?: ScanResults; overallScore?: number; error?: string } | null = null;
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -268,7 +324,7 @@ export default function BulkOutreachPage() {
                 buffer = buffer.slice(nlIdx + 1);
                 if (!line) continue;
                 try {
-                    const chunk = JSON.parse(line);
+                    const chunk = JSON.parse(line) as { type: string; results?: ScanResults; overallScore?: number; error?: string };
                     if (chunk.type === 'result') finalResult = chunk;
                     else if (chunk.type === 'error') throw new Error(chunk.error || 'Scan failed');
                 } catch (e) {
@@ -287,12 +343,12 @@ export default function BulkOutreachPage() {
             body: JSON.stringify({ url }),
         });
         if (!res.ok) throw new Error('Email scrape failed');
-        const data = await res.json();
-        return (data.emails || []).map((e: any) => e.email);
+        const data = await res.json() as { emails?: ScrapedEmail[] };
+        return (data.emails || []).map((e) => e.email);
     }
 
-    async function generateEmail(scanResults: Record<string, any>, projectUrl: string) {
-        const audit = processAuditData(scanResults as any);
+    async function generateEmail(scanResults: ScanResults, projectUrl: string) {
+        const audit = processAuditData(scanResults);
         const payload = {
             scanResults,
             projectUrl,
@@ -306,7 +362,7 @@ export default function BulkOutreachPage() {
                 body: JSON.stringify(payload),
             });
             if (res.ok) return res.json() as Promise<{ subject: string; body: string }>;
-            const err = await res.json().catch(() => ({}));
+            const err = await res.json().catch(() => ({})) as { error?: string };
             const msg = err.error || '';
             const is429 = res.status === 429 || msg.includes('429') || msg.includes('quota') || msg.includes('rate limit');
             if (is429 && attempt < 2) {
@@ -335,7 +391,7 @@ export default function BulkOutreachPage() {
 
         try {
             // 1. Scan (skip if we already have results from a previous run)
-            let scanData: { results: Record<string, any>; score: number } | null = null;
+            let scanData: { results: ScanResults; score: number } | null = null;
             if (entry.scanResults) {
                 scanData = { results: entry.scanResults, score: entry.score || 0 };
             } else {
@@ -369,8 +425,8 @@ export default function BulkOutreachPage() {
             updateEntry(idx, { status: 'sending' });
             const sendResult = await sendEmail([emails[0]], generated.subject, generated.body);
             updateEntry(idx, { status: 'done', sentCount: sendResult.sent, failedCount: sendResult.failed });
-        } catch (err: any) {
-            const msg = err?.message || 'Unknown error';
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Unknown error';
             if (msg === 'QUOTA_EXHAUSTED') {
                 updateEntry(idx, { status: 'error', error: 'Scan quota exhausted' });
                 throw err;
@@ -391,27 +447,28 @@ export default function BulkOutreachPage() {
 
         // Create batch in DB
         const { data: batch } = await supabase
-            .from('outreach_batches' as any)
-            .insert({ user_id: userId })
+            .from('outreach_batches' as never)
+            .insert({ user_id: userId } as never)
             .select()
             .single();
         if (!batch) { setRunning(false); return; }
-        setBatchId((batch as any).id);
+        const batchRow = batch as OutreachBatchRow;
+        setBatchId(batchRow.id);
 
         // Create entries in DB
         const entryRows = urls.map(url => ({
-            batch_id: (batch as any).id,
+            batch_id: batchRow.id,
             url,
             domain: getDomain(url),
             status: 'pending',
         }));
         const { data: dbEntries } = await supabase
-            .from('outreach_entries' as any)
-            .insert(entryRows)
+            .from('outreach_entries' as never)
+            .insert(entryRows as never)
             .select();
         if (!dbEntries) { setRunning(false); return; }
 
-        const initial: UrlEntry[] = (dbEntries as any[]).map((row: any) => ({
+        const initial: UrlEntry[] = (dbEntries as OutreachEntryRow[]).map((row) => ({
             id: row.id,
             url: row.url,
             domain: row.domain,
@@ -433,8 +490,8 @@ export default function BulkOutreachPage() {
             if (abortRef.current) break;
             try {
                 await processEntry(i);
-            } catch (err: any) {
-                if (err?.message === 'QUOTA_EXHAUSTED') {
+            } catch (err: unknown) {
+                if (err instanceof Error && err.message === 'QUOTA_EXHAUSTED') {
                     for (let j = i + 1; j < initial.length; j++) {
                         updateEntry(j, { status: 'skipped', error: 'Batch stopped (quota exhausted)' });
                     }
@@ -464,8 +521,8 @@ export default function BulkOutreachPage() {
             if (abortRef.current) break;
             try {
                 await processEntry(idx);
-            } catch (err: any) {
-                if (err?.message === 'QUOTA_EXHAUSTED') break;
+            } catch (err: unknown) {
+                if (err instanceof Error && err.message === 'QUOTA_EXHAUSTED') break;
             }
             await sleep(8000);
         }
@@ -525,7 +582,6 @@ export default function BulkOutreachPage() {
     const isComplete = !running && entries.length > 0 && entries.every(e => !['pending', 'scanning', 'finding_contacts', 'generating', 'sending'].includes(e.status));
 
     const parsedUrls = input.split(/[,\n]+/).map(s => normalizeUrl(s)).filter(Boolean);
-    const newUrlCount = parsedUrls.filter(u => !contactedDomains.has(getDomain(u))).length;
     const dupeUrlCount = parsedUrls.filter(u => contactedDomains.has(getDomain(u))).length;
 
     // ── Auth guard ──
