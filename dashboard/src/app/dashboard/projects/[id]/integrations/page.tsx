@@ -11,9 +11,6 @@ import {
     Loader2,
     GitBranch,
     Code2,
-    MessageSquare,
-    Hash,
-    Mail,
     Shield,
     Triangle,
     ExternalLink,
@@ -796,48 +793,6 @@ jobs:
                         </button>
                         <pre className="text-xs text-zinc-400 overflow-x-auto whitespace-pre">{webhookPayloadExample}</pre>
                     </div>
-                </div>
-            </div>
-
-            {/* Request Integration */}
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-white/[0.05]">
-                        <MessageSquare className="h-4 w-4 text-zinc-400" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-medium text-white">Request Integration</h3>
-                        <p className="text-xs text-zinc-500">Vote for the integrations you want to see next</p>
-                    </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                    {[
-                        { name: 'Slack', icon: <Hash className="h-4 w-4 text-amber-400" />, bg: 'bg-amber-500/10', description: 'Post scan results to Slack channels' },
-                        { name: 'Discord', icon: <MessageSquare className="h-4 w-4 text-indigo-400" />, bg: 'bg-indigo-500/10', description: 'Send alerts to Discord servers' },
-                        { name: 'Other', icon: <Mail className="h-4 w-4 text-zinc-400" />, bg: 'bg-white/[0.05]', description: 'Suggest a new integration' },
-                    ].map((integration) => (
-                        <div
-                            key={integration.name}
-                            className="flex items-center justify-between p-3 rounded-lg border border-white/[0.06] bg-white/[0.01]"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={`p-1.5 rounded-md ${integration.bg}`}>
-                                    {integration.icon}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-zinc-200">{integration.name}</p>
-                                    <p className="text-[11px] text-zinc-500">{integration.description}</p>
-                                </div>
-                            </div>
-                            <a
-                                href={`mailto:support@checkvibe.dev?subject=${encodeURIComponent(`Integration Request: ${integration.name}`)}&body=${encodeURIComponent(`Hi CheckVibe team,\n\nI'd like to request the ${integration.name} integration for my project.\n\nThanks!`)}`}
-                                className="text-xs font-medium text-zinc-400 hover:text-white px-3 py-1.5 rounded-md border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] transition-colors"
-                            >
-                                Request
-                            </a>
-                        </div>
-                    ))}
                 </div>
             </div>
         </div>
