@@ -55,16 +55,27 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ message: 'No threat settings enabled', processed: 0 });
     }
 
+    // Process projects in parallel batches to avoid 60s timeout
+    const BATCH_SIZE = 10;
     const results: { projectId: string; sent: boolean; eventCount?: number }[] = [];
 
-    for (const s of settings) {
-        try {
-            const result = await dispatchThreatAlerts(s.project_id);
-            results.push({ projectId: s.project_id, ...result });
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.error(`Threat alert dispatch failed for project ${s.project_id}:`, msg);
-            results.push({ projectId: s.project_id, sent: false });
+    for (let i = 0; i < settings.length; i += BATCH_SIZE) {
+        const batch = settings.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+            batch.map(async (s) => {
+                const result = await dispatchThreatAlerts(s.project_id);
+                return { projectId: s.project_id, ...result };
+            })
+        );
+
+        for (const r of batchResults) {
+            if (r.status === 'fulfilled') {
+                results.push(r.value);
+            } else {
+                const msg = r.reason instanceof Error ? r.reason.message : String(r.reason);
+                console.error(`Threat alert dispatch failed:`, msg);
+                results.push({ projectId: 'unknown', sent: false });
+            }
         }
     }
 
