@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { slide } from "@remotion/transitions/slide";
@@ -17,10 +17,11 @@ import {
     Scene09Output,
     Scene10CTA,
 } from "./components/scenes";
-import { SCENE_DURATIONS, TRANSITION_DURATION } from "./config";
+import { VIDEO_CONFIG, SCENE_DURATIONS, TRANSITION_DURATION } from "./config";
 
 export const CheckVibePromo: React.FC = () => {
-    const { fps } = useVideoConfig();
+    // Use FPS from config instead of useVideoConfig to avoid context issues
+    const fps = VIDEO_CONFIG.FPS;
 
     // Convert seconds to frames
     const toFrames = (seconds: number) => Math.round(seconds * fps);

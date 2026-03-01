@@ -1,12 +1,13 @@
 import React from "react";
 import {
     useCurrentFrame,
-    useVideoConfig,
     spring,
     interpolate,
-    Easing,
 } from "remotion";
-import { SPRING_CONFIG } from "../../config";
+import { VIDEO_CONFIG, SPRING_CONFIG } from "../../config";
+
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
 // Fade In Animation
 export const FadeIn: React.FC<{
@@ -15,7 +16,6 @@ export const FadeIn: React.FC<{
     duration?: number;
 }> = ({ children, delay = 0, duration = 1 }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const opacity = spring({
         frame: frame - delay * fps,
@@ -35,7 +35,6 @@ export const SlideIn: React.FC<{
     distance?: number;
 }> = ({ children, direction = "bottom", delay = 0, distance = 100 }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const progress = spring({
         frame: frame - delay * fps,
@@ -70,7 +69,6 @@ export const ScaleIn: React.FC<{
     delay?: number;
 }> = ({ children, delay = 0 }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const scale = spring({
         frame: frame - delay * fps,
@@ -98,7 +96,6 @@ export const TypewriterText: React.FC<{
     style?: React.CSSProperties;
 }> = ({ text, startFrame = 0, charsPerSecond = 30, style }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const framesPerChar = fps / charsPerSecond;
     const elapsedFrames = Math.max(0, frame - startFrame);
@@ -125,7 +122,6 @@ export const GlowText: React.FC<{
     pulse?: boolean;
 }> = ({ children, color = "#00D4FF", intensity = 20, pulse = false }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     let glowIntensity = intensity;
     if (pulse) {
@@ -175,7 +171,6 @@ export const PulseGlow: React.FC<{
     color?: string;
 }> = ({ children, color = "#00D4FF" }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const pulse = interpolate(
         Math.sin((frame / fps) * Math.PI * 2),
@@ -193,17 +188,3 @@ export const PulseGlow: React.FC<{
         </div>
     );
 };
-// ... existing exports ...
-
-export { ScoreDashboardAnimation } from "./ScoreDashboardAnimation";
-export { SecurityShieldAnimation } from "./SecurityShieldAnimation";
-export { SecurityConfidenceAnimation } from "./SecurityConfidenceAnimation";
-export { SocialMediaAnimation } from "./SocialMediaAnimation";
-export {
-    PlatformLogos,
-    VulnerabilityVisuals,
-    RapidCounter,
-    ConsequenceIcons,
-    ScannerRow,
-    ActionableButton
-} from "./MicroAnimations";

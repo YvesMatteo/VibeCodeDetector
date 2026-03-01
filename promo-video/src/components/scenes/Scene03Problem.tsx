@@ -1,75 +1,103 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Inter";
-import { COLORS, SPRING_CONFIG } from "../../config";
-import { SlideIn, FadeIn, GlowText, VulnerabilityVisuals } from "../animations";
+import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+import { SlideIn, FadeIn, GlowText } from "../animations";
+import { CodeEditorAnimation, AlertBadge } from "../premium";
 
-const { fontFamily } = loadFont();
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
-const mistakes = [
-    { icon: "🔑", text: "API keys leaked in the frontend" },
-    { icon: "🗄️", text: "Databases left wide open" },
-    { icon: "🚫", text: '"Temporary" debug routes with zero auth' },
-];
-
-// Scene 3: The Problem - Common mistakes list
 export const Scene03Problem: React.FC = () => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
+
+    const codeLines = [
+        { content: <><span style={{ color: "#c084fc" }}>import</span> {'{'} OpenAI {'}'} <span style={{ color: "#c084fc" }}>from</span> <span style={{ color: "#86efac" }}>'openai'</span>;</>, delay: 0.5 },
+        { content: "", delay: 0.7 },
+        { content: <><span style={{ color: "#6b7280" }}>// Initialize client</span></>, delay: 0.9 },
+        {
+            content: <><span style={{ color: "#c084fc" }}>const</span> client = <span style={{ color: "#c084fc" }}>new</span> <span style={{ color: "#93c5fd" }}>OpenAI</span>({'{'}
+            </>, delay: 1.1
+        },
+        { content: <><span style={{ color: "#ef4444", fontWeight: 700 }}>  apiKey: "sk-live-8923..."</span>,</>, delay: 1.4 },
+        { content: "  dangerouslyAllowBrowser: true", delay: 1.6 },
+        { content: "});", delay: 1.8 },
+    ];
 
     return (
         <AbsoluteFill
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
                 padding: 60,
-                fontFamily,
+                gap: 40,
             }}
         >
-            <SlideIn direction="top" delay={0.2}>
+            {/* Title */}
+            <SlideIn direction="bottom" delay={0.2}>
                 <div
                     style={{
-                        fontSize: 36,
-                        color: COLORS.textSecondary,
-                        textAlign: "center",
-                        marginBottom: 20,
-                    }}
-                >
-                    Because here's the uncomfortable truth:
-                </div>
-            </SlideIn>
-
-            <FadeIn delay={0.8}>
-                <div
-                    style={{
-                        fontSize: 40,
+                        fontSize: 42,
                         fontWeight: 600,
                         color: COLORS.textPrimary,
                         textAlign: "center",
-                        marginBottom: 60,
                     }}
                 >
-                    Most vibecoded apps ship with the same{" "}
-                    <GlowText color={COLORS.danger}>dangerous mistakes</GlowText>:
+                    Most vibecoded apps ship with{" "}
+                    <GlowText color={COLORS.danger}>dangerous mistakes</GlowText>
                 </div>
+            </SlideIn>
+
+            {/* Code Editor showing leaked API key */}
+            <FadeIn delay={0.4}>
+                <CodeEditorAnimation
+                    lines={codeLines}
+                    filename="config.ts"
+                    highlightLine={5}
+                    highlightColor={COLORS.danger}
+                />
             </FadeIn>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 30, width: '100%', maxWidth: 800 }}>
-                {mistakes.map((mistake, index) => (
-                    <SlideIn key={index} direction="right" delay={1.5 + index * 0.5}>
-                        <div className="flex items-center gap-6 bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
-                            <VulnerabilityVisuals index={index} />
-                            <div className="text-3xl text-zinc-300 font-medium">
-                                {mistake.text}
-                            </div>
+            {/* Alert Badge */}
+            <div style={{ marginTop: 20 }}>
+                <AlertBadge text="SECRET LEAK DETECTED" type="danger" delay={2.5} />
+            </div>
+
+            {/* Problem List */}
+            <div style={{ display: "flex", gap: 30, marginTop: 30, flexWrap: "wrap", justifyContent: "center" }}>
+                {[
+                    { icon: "🔑", text: "API keys in frontend", delay: 3 },
+                    { icon: "🗄️", text: "Open databases", delay: 3.3 },
+                    { icon: "🐛", text: "Debug routes live", delay: 3.6 },
+                ].map((item, index) => {
+                    const itemProgress = spring({
+                        frame: frame - item.delay * fps,
+                        fps,
+                        config: SPRING_CONFIG.snappy,
+                    });
+
+                    return (
+                        <div
+                            key={index}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                                padding: "16px 24px",
+                                background: `${COLORS.danger}15`,
+                                border: `1px solid ${COLORS.danger}40`,
+                                borderRadius: 14,
+                                opacity: itemProgress,
+                                transform: `translateY(${interpolate(itemProgress, [0, 1], [20, 0])}px)`,
+                            }}
+                        >
+                            <span style={{ fontSize: 28 }}>{item.icon}</span>
+                            <span style={{ color: COLORS.danger, fontSize: 20, fontWeight: 500 }}>{item.text}</span>
                         </div>
-                    </SlideIn>
-                ))}
+                    );
+                })}
             </div>
         </AbsoluteFill>
     );
 };
-
-export default Scene03Problem;

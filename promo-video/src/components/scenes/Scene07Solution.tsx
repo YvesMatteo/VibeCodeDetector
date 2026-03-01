@@ -1,22 +1,22 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Inter";
-import { COLORS, SPRING_CONFIG } from "../../config";
-import { FadeIn, ScaleIn, GlowText } from "../animations";
-import { RemediationAnimation } from "../animations/RemediationAnimation";
-import { Logo } from "../common";
+import { AbsoluteFill, useCurrentFrame, spring, interpolate, Img, staticFile } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+import { SlideIn, FadeIn, ScaleIn, GlowText } from "../animations";
+import { SecurityShield } from "../premium";
 
-const { fontFamily } = loadFont();
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
-// Scene 7: Solution Introduction - "Meet CheckVibe"
 export const Scene07Solution: React.FC = () => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
-    const entrance = spring({
-        frame,
+    // Logo pulse
+    const logoPulse = Math.sin((frame / fps) * 2) * 0.05 + 1;
+
+    const logoProgress = spring({
+        frame: frame - fps * 1.5,
         fps,
-        config: SPRING_CONFIG.smooth,
+        config: SPRING_CONFIG.bouncy,
     });
 
     return (
@@ -24,74 +24,83 @@ export const Scene07Solution: React.FC = () => {
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
                 padding: 60,
-                fontFamily,
+                gap: 40,
             }}
         >
+            {/* Relief Opener */}
             <FadeIn delay={0.2}>
-                <div
-                    style={{
-                        fontSize: 40,
-                        color: COLORS.success,
-                        textAlign: "center",
-                        marginBottom: 50,
-                        fontWeight: 500,
-                    }}
-                >
+                <div style={{ fontSize: 38, color: COLORS.textSecondary }}>
                     It doesn't have to be like that.
                 </div>
             </FadeIn>
 
-            <ScaleIn delay={1}>
+            {/* Meet CheckVibe */}
+            <ScaleIn delay={0.8}>
                 <div
                     style={{
                         fontSize: 48,
-                        color: COLORS.textSecondary,
-                        textAlign: "center",
-                        marginBottom: 40,
+                        fontWeight: 600,
+                        color: COLORS.textPrimary,
                     }}
                 >
-                    Meet
+                    Meet <GlowText color={COLORS.primary}>CheckVibe</GlowText>
                 </div>
             </ScaleIn>
 
-            <ScaleIn delay={2}>
-                <div style={{ width: 600, height: 400, marginTop: 40 }}>
-                    <RemediationAnimation />
-                </div>
-            </ScaleIn>
-
-            <ScaleIn delay={2.5}>
+            {/* Logo with glow */}
+            <div
+                style={{
+                    position: "relative",
+                    marginTop: 20,
+                    opacity: logoProgress,
+                    transform: `scale(${logoProgress * logoPulse})`,
+                }}
+            >
+                {/* Glow behind logo */}
                 <div
                     style={{
-                        fontSize: 72,
-                        fontWeight: 800,
-                        textAlign: "center",
-                        marginTop: 30,
+                        position: "absolute",
+                        inset: -60,
+                        background: `radial-gradient(circle, ${COLORS.primary}40 0%, transparent 70%)`,
+                        filter: "blur(40px)",
                     }}
-                >
-                    <GlowText color={COLORS.primary}>CheckVibe</GlowText>
-                </div>
-            </ScaleIn>
+                />
 
-            <FadeIn delay={3}>
+                {/* Logo */}
+                <Img
+                    src={staticFile("CV_Logo.png")}
+                    style={{
+                        width: 220,
+                        height: 220,
+                        objectFit: "contain",
+                        position: "relative",
+                    }}
+                />
+            </div>
+
+            {/* Shield */}
+            <div style={{ marginTop: 20 }}>
+                <SecurityShield secured delay={3} />
+            </div>
+
+            {/* Tagline */}
+            <FadeIn delay={3.5}>
                 <div
                     style={{
-                        fontSize: 32,
+                        fontSize: 28,
                         color: COLORS.textSecondary,
                         textAlign: "center",
-                        marginTop: 40,
+                        maxWidth: 700,
                         lineHeight: 1.5,
-                        maxWidth: 800,
                     }}
                 >
-                    Built for vibecoded startups — for founders shipping fast with Replit, Lovable, Cursor, and AI pair programmers.
+                    Built for <span style={{ color: COLORS.primary, fontWeight: 600 }}>vibecoded startups</span>
+                    {" "}— for founders shipping fast with AI pair programmers
                 </div>
             </FadeIn>
         </AbsoluteFill>
     );
 };
-
-export default Scene07Solution;

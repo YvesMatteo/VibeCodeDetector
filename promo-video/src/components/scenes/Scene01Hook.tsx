@@ -1,106 +1,121 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Inter";
-import { COLORS } from "../../config";
-import { SlideIn, TypewriterText, GlowText, PlatformLogos } from "../animations";
-import { VibeCodingAnimation } from "../animations/VibeCodingAnimation";
+import { AbsoluteFill, useCurrentFrame, spring, interpolate, Img, staticFile } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+import { SlideIn, FadeIn, GlowText, TypewriterText, ScaleIn } from "../animations";
+import { CodeEditorAnimation } from "../premium";
 
-const { fontFamily } = loadFont();
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
-// Scene 1: Hook - "You just vibecoded your app..."
 export const Scene01Hook: React.FC = () => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     return (
         <AbsoluteFill
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
                 padding: 60,
-                fontFamily,
-                backgroundColor: '#09090b',
+                gap: 60,
             }}
         >
-            <div className="absolute inset-0 z-0 opacity-40">
-                <VibeCodingAnimation />
-            </div>
-
-            <div className="z-10 relative flex flex-col items-center">
+            {/* Main Hook Text */}
+            <div style={{ textAlign: "center", maxWidth: 900 }}>
                 <SlideIn direction="bottom" delay={0.3}>
-                    <div
-                        style={{
-                            fontSize: 52,
-                            fontWeight: 600,
-                            color: COLORS.textPrimary,
-                            textAlign: "center",
-                            lineHeight: 1.4,
-                            marginBottom: 40,
-                            textShadow: '0 4px 30px rgba(0,0,0,0.8)'
-                        }}
-                    >
+                    <div style={{ fontSize: 48, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.3 }}>
                         You just <GlowText color={COLORS.primary}>vibecoded</GlowText> your app
                     </div>
                 </SlideIn>
 
-                <SlideIn direction="bottom" delay={0.8}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: 20
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: 42,
-                                color: COLORS.textSecondary,
-                                textAlign: "center",
-                                lineHeight: 1.5,
-                                textShadow: '0 2px 20px rgba(0,0,0,0.8)'
-                            }}
-                        >
-                            in Replit, Lovable, or Cursor.
-                        </div>
-                        <PlatformLogos />
-                    </div>
-                </SlideIn>
-
-                <SlideIn direction="bottom" delay={1.5}>
-                    <div
-                        style={{
-                            fontSize: 42,
-                            color: COLORS.textSecondary,
-                            textAlign: "center",
-                            lineHeight: 1.5,
-                            marginTop: 60,
-                            textShadow: '0 2px 20px rgba(0,0,0,0.8)'
-                        }}
-                    >
-                        It works. It looks good.
-                    </div>
-                </SlideIn>
-
-                <SlideIn direction="bottom" delay={2.2}>
-                    <div
-                        style={{
-                            fontSize: 52,
-                            fontWeight: 700,
-                            color: COLORS.success,
-                            textAlign: "center",
-                            marginTop: 40,
-                            textShadow: '0 4px 30px rgba(0,0,0,0.8)'
-                        }}
-                    >
-                        You're ready to ship.
+                <SlideIn direction="bottom" delay={0.6}>
+                    <div style={{ fontSize: 44, fontWeight: 500, color: COLORS.textSecondary, marginTop: 20 }}>
+                        in Replit, Lovable, or Cursor
                     </div>
                 </SlideIn>
             </div>
+
+            {/* Platform Icons - Using actual logos */}
+            <div style={{ display: "flex", gap: 60, marginTop: 20, alignItems: "center" }}>
+                <ScaleIn delay={1.2}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                        <Img
+                            src={staticFile("replit-logo.webp")}
+                            style={{ width: 80, height: 80, objectFit: "contain" }}
+                        />
+                        <span style={{ color: "#F26207", fontSize: 20, fontWeight: 600 }}>Replit</span>
+                    </div>
+                </ScaleIn>
+                <ScaleIn delay={1.4}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                        <Img
+                            src={staticFile("lovable-logo.avif")}
+                            style={{ width: 80, height: 80, objectFit: "contain" }}
+                        />
+                        <span style={{ color: "#FF4A8D", fontSize: 20, fontWeight: 600 }}>Lovable</span>
+                    </div>
+                </ScaleIn>
+                <ScaleIn delay={1.6}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                        <Img
+                            src={staticFile("cursor-logo.webp")}
+                            style={{ width: 80, height: 80, objectFit: "contain" }}
+                        />
+                        <span style={{ color: "#3799FF", fontSize: 20, fontWeight: 600 }}>Cursor</span>
+                    </div>
+                </ScaleIn>
+            </div>
+
+            {/* Success States */}
+            <SlideIn direction="bottom" delay={2.2}>
+                <div style={{ display: "flex", gap: 40, marginTop: 30 }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "16px 28px",
+                            background: "rgba(16, 185, 129, 0.1)",
+                            border: `1px solid ${COLORS.success}40`,
+                            borderRadius: 100,
+                        }}
+                    >
+                        <span style={{ fontSize: 28 }}>✅</span>
+                        <span style={{ color: COLORS.success, fontSize: 22, fontWeight: 600 }}>It works</span>
+                    </div>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "16px 28px",
+                            background: "rgba(16, 185, 129, 0.1)",
+                            border: `1px solid ${COLORS.success}40`,
+                            borderRadius: 100,
+                        }}
+                    >
+                        <span style={{ fontSize: 28 }}>✨</span>
+                        <span style={{ color: COLORS.success, fontSize: 22, fontWeight: 600 }}>It looks good</span>
+                    </div>
+                </div>
+            </SlideIn>
+
+            {/* Ready to Ship */}
+            <FadeIn delay={3}>
+                <div
+                    style={{
+                        fontSize: 56,
+                        fontWeight: 700,
+                        color: COLORS.primary,
+                        textShadow: `0 0 40px ${COLORS.primaryGlow}`,
+                        marginTop: 20,
+                    }}
+                >
+                    You're ready to ship. 🚀
+                </div>
+            </FadeIn>
         </AbsoluteFill>
     );
 };
-
-export default Scene01Hook;

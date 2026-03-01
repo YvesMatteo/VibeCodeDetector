@@ -1,0 +1,58 @@
+{
+  "hash": "8279198f",
+  "configHash": "d0ed7247",
+  "lockfileHash": "bbdbf2ee",
+  "browserHash": "e8262e48",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "255d5b69",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "1d385e17",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "611a780e",
+      "needsInterop": true
+    },
+    "framer-motion": {
+      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "7c81f5d8",
+      "needsInterop": false
+    },
+    "@remotion/player": {
+      "src": "../../node_modules/@remotion/player/dist/esm/index.mjs",
+      "file": "@remotion_player.js",
+      "fileHash": "548fc17c",
+      "needsInterop": false
+    },
+    "remotion": {
+      "src": "../../node_modules/remotion/dist/esm/index.mjs",
+      "file": "remotion.js",
+      "fileHash": "8d469f48",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-DNND6QTT": {
+      "file": "chunk-DNND6QTT.js"
+    },
+    "chunk-V2RGCPN2": {
+      "file": "chunk-V2RGCPN2.js"
+    },
+    "chunk-P7YOETE4": {
+      "file": "chunk-P7YOETE4.js"
+    },
+    "chunk-WYYPSHNY": {
+      "file": "chunk-WYYPSHNY.js"
+    }
+  }
+}

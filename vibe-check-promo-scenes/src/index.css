@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-dark text-white font-sans;
+    }
+}
+
+/* Custom Utilities */
+.glass-panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+}
+
+.text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400;
+}
+
+.glow-text {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}

@@ -1,6 +1,9 @@
 import React from "react";
-import { Img, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
-import { COLORS, SPRING_CONFIG } from "../../config";
+import { Img, staticFile, useCurrentFrame, spring, interpolate } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
 // Animated CheckVibe Logo with glow effect
 export const Logo: React.FC<{
@@ -9,7 +12,6 @@ export const Logo: React.FC<{
     delay?: number;
 }> = ({ size = 200, showGlow = true, delay = 0 }) => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
 
     const entrance = spring({
         frame: frame - delay * fps,
@@ -52,7 +54,7 @@ export const Logo: React.FC<{
                     />
                 )}
                 <Img
-                    src={staticFile("logo.png")}
+                    src={staticFile("CV_Logo.png")}
                     style={{
                         width: "100%",
                         height: "100%",

@@ -1,115 +1,155 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Inter";
-import { COLORS, SPRING_CONFIG } from "../../config";
-import { SlideIn, FadeIn, GlowText, ScaleIn, SocialMediaAnimation, RapidCounter } from "../animations";
+import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+import { SlideIn, FadeIn, ScaleIn, GlowText } from "../animations";
+import { RapidCounter } from "../premium";
 
-const { fontFamily } = loadFont();
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
-// Scene 4: Real Story - Moltbook example
 export const Scene04RealStory: React.FC = () => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
+
+    const stats = [
+        { value: 150000, label: "API keys exposed", icon: "🔑", delay: 2 },
+        { value: 50000, label: "User records leaked", icon: "👤", delay: 2.5 },
+        { value: 1, label: "Misconfigured database", icon: "🗄️", delay: 3 },
+    ];
 
     return (
         <AbsoluteFill
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
                 padding: 60,
-                fontFamily,
+                gap: 40,
             }}
         >
-            <FadeIn delay={0.2}>
+            {/* Title */}
+            <SlideIn direction="bottom" delay={0.2}>
                 <div
                     style={{
-                        fontSize: 36,
+                        fontSize: 38,
+                        fontWeight: 500,
                         color: COLORS.textSecondary,
-                        textAlign: "center",
-                        marginBottom: 30,
                     }}
                 >
                     This isn't theoretical.
                 </div>
-            </FadeIn>
-
-            <SlideIn direction="bottom" delay={0.8}>
-                <div style={{ width: 800, height: 600, transform: 'scale(0.8)' }}>
-                    <SocialMediaAnimation
-                        type="disaster"
-                        username="Moltbook App"
-                        handle="@moltbook_official"
-                        content={<>We are thrilled to announce our Series A raise of $15M! 🚀<br /><br />Join the future of Molting. #growth #startup</>}
-                    />
-                </div>
             </SlideIn>
 
-            <ScaleIn delay={2}>
+            {/* Case Study Card */}
+            <FadeIn delay={0.6}>
                 <div
                     style={{
-                        marginTop: 50,
-                        display: "flex",
-                        gap: 40,
-                        flexWrap: "wrap",
-                        justifyContent: "center",
+                        background: "rgba(239, 68, 68, 0.08)",
+                        border: `2px solid ${COLORS.danger}40`,
+                        borderRadius: 24,
+                        padding: "40px 50px",
+                        maxWidth: 800,
+                        textAlign: "center",
                     }}
                 >
-                    <StatBadge
-                        value={<RapidCounter value={150000} />}
-                        label="API Keys Exposed"
-                        color={COLORS.danger}
-                        suffix="+"
-                    />
-                    <StatBadge
-                        value="∞"
-                        label="User Data at Risk"
-                        color={COLORS.warning}
-                    />
-                </div>
-            </ScaleIn>
+                    {/* Company Name */}
+                    <div
+                        style={{
+                            fontSize: 28,
+                            color: COLORS.textSecondary,
+                            marginBottom: 10,
+                        }}
+                    >
+                        Take, for example...
+                    </div>
 
-            <FadeIn delay={3.5}>
+                    <div
+                        style={{
+                            fontSize: 56,
+                            fontWeight: 700,
+                            color: COLORS.danger,
+                            textShadow: `0 0 40px ${COLORS.danger}40`,
+                            marginBottom: 20,
+                        }}
+                    >
+                        Moltbook
+                    </div>
+
+                    <div
+                        style={{
+                            fontSize: 24,
+                            color: COLORS.textSecondary,
+                            lineHeight: 1.5,
+                        }}
+                    >
+                        An AI agent platform that left a database{" "}
+                        <span style={{ color: COLORS.danger, fontWeight: 600 }}>publicly accessible</span>
+                    </div>
+                </div>
+            </FadeIn>
+
+            {/* Stats */}
+            <div style={{ display: "flex", gap: 40, marginTop: 20 }}>
+                {stats.map((stat, index) => {
+                    const statProgress = spring({
+                        frame: frame - stat.delay * fps,
+                        fps,
+                        config: SPRING_CONFIG.bouncy,
+                    });
+
+                    return (
+                        <div
+                            key={index}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 10,
+                                padding: "24px 32px",
+                                background: "rgba(255,255,255,0.03)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                borderRadius: 20,
+                                opacity: statProgress,
+                                transform: `scale(${statProgress})`,
+                            }}
+                        >
+                            <span style={{ fontSize: 40 }}>{stat.icon}</span>
+                            <div
+                                style={{
+                                    fontSize: 42,
+                                    fontWeight: 700,
+                                    color: COLORS.danger,
+                                    fontFamily: "monospace",
+                                }}
+                            >
+                                <RapidCounter endValue={stat.value} duration={1.5} delay={stat.delay} />
+                            </div>
+                            <div style={{ fontSize: 16, color: COLORS.textSecondary, textAlign: "center" }}>
+                                {stat.label}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Bottom Message */}
+            <FadeIn delay={4}>
                 <div
                     style={{
-                        marginTop: 50,
-                        fontSize: 28,
+                        fontSize: 26,
                         color: COLORS.textSecondary,
                         textAlign: "center",
-                        fontStyle: "italic",
+                        maxWidth: 700,
+                        lineHeight: 1.5,
+                        marginTop: 20,
                     }}
                 >
-                    Cases like this are not rare edge-cases — there are thousands.
+                    They didn't get hacked by genius attackers.{" "}
+                    <span style={{ color: COLORS.warning }}>
+                        They got hacked by copy-paste bugs.
+                    </span>
                 </div>
             </FadeIn>
         </AbsoluteFill>
     );
 };
-
-const StatBadge: React.FC<{ value: React.ReactNode; label: string; color: string; suffix?: string }> = ({
-    value,
-    label,
-    color,
-    suffix = ""
-}) => (
-    <div
-        style={{
-            backgroundColor: `${color}20`,
-            border: `2px solid ${color}`,
-            borderRadius: 16,
-            padding: "20px 32px",
-            textAlign: "center",
-            minWidth: 300
-        }}
-    >
-        <div style={{ fontSize: 48, fontWeight: 800, color, display: 'flex', justifyContent: 'center', gap: 4 }}>
-            {value}{suffix}
-        </div>
-        <div style={{ fontSize: 22, color: COLORS.textSecondary, marginTop: 8 }}>
-            {label}
-        </div>
-    </div>
-);
-
-export default Scene04RealStory;

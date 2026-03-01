@@ -1,48 +1,85 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Inter";
-import { COLORS, SPRING_CONFIG } from "../../config";
-import { SlideIn, ScaleIn, GlowText, ConsequenceIcons } from "../animations";
-import { IncidentImpactAnimation } from "../animations/IncidentImpactAnimation";
+import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
+import { COLORS, SPRING_CONFIG, VIDEO_CONFIG } from "../../config";
+import { SlideIn, FadeIn } from "../animations";
+import { ConsequenceIcon } from "../premium";
 
-const { fontFamily } = loadFont();
+// Use FPS from config to avoid useVideoConfig context issues
+const fps = VIDEO_CONFIG.FPS;
 
-const consequences = [
-    { label: "Your brand?", result: "Damaged.", type: "brand" },
-    { label: "Your users' trust?", result: "Gone.", type: "trust" },
-    { label: "Your startup?", result: "Over.", type: "startup" },
-    { label: "Your Credit Card?", result: "Drained.", type: "money" },
-];
-
-// Scene 6: The Damage - Consequences
 export const Scene06Damage: React.FC = () => {
     const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
+
+    const consequences = [
+        { emoji: "💔", label: "Brand? Damaged.", delay: 0.8 },
+        { emoji: "📉", label: "Users' trust? Gone.", delay: 1.4 },
+        { emoji: "💀", label: "Startup? Maybe over.", delay: 2 },
+        { emoji: "💸", label: "Credit Card? Drained.", delay: 2.6 },
+    ];
 
     return (
         <AbsoluteFill
             style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
                 padding: 60,
-                fontFamily,
+                gap: 50,
             }}
         >
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'center', maxWidth: 900 }}>
-                {consequences.map((item, i) => (
-                    <ScaleIn key={i} delay={0.5 + i * 0.3}>
-                        <div className="flex flex-col items-center gap-4 bg-zinc-800/50 p-6 rounded-2xl border border-red-900/30 w-64">
-                            <ConsequenceIcons type={item.type as any} />
-                            <div className="text-xl text-zinc-400 font-medium">{item.label}</div>
-                            <div className="text-2xl text-red-500 font-bold">{item.result}</div>
-                        </div>
-                    </ScaleIn>
+            {/* Title */}
+            <SlideIn direction="bottom" delay={0.2}>
+                <div
+                    style={{
+                        fontSize: 42,
+                        fontWeight: 600,
+                        color: COLORS.textPrimary,
+                        textAlign: "center",
+                    }}
+                >
+                    The fallout is <span style={{ color: COLORS.danger }}>devastating</span>
+                </div>
+            </SlideIn>
+
+            {/* Consequences Grid */}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 50,
+                    marginTop: 20,
+                }}
+            >
+                {consequences.map((item, index) => (
+                    <ConsequenceIcon
+                        key={index}
+                        emoji={item.emoji}
+                        label={item.label}
+                        delay={item.delay}
+                    />
                 ))}
             </div>
+
+            {/* Bottom Statement */}
+            <FadeIn delay={3.5}>
+                <div
+                    style={{
+                        marginTop: 40,
+                        padding: "24px 40px",
+                        background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05))",
+                        border: `2px solid ${COLORS.danger}30`,
+                        borderRadius: 20,
+                        maxWidth: 600,
+                        textAlign: "center",
+                    }}
+                >
+                    <div style={{ fontSize: 32, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.4 }}>
+                        All because of{" "}
+                        <span style={{ color: COLORS.danger }}>one missed vulnerability</span>
+                    </div>
+                </div>
+            </FadeIn>
         </AbsoluteFill>
     );
 };
-
-export default Scene06Damage;

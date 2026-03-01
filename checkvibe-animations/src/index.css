@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+}
+
+:root {
+    --apple-bg: #1c1c1e;
+    --apple-surface: #2c2c2e;
+    --apple-surface-2: #3a3a3c;
+    --apple-border: #48484a;
+    --apple-text: #f5f5f7;
+    --apple-text-secondary: #a1a1a6;
+    --apple-blue: #0a84ff;
+    --apple-green: #30d158;
+    --apple-red: #ff453a;
+    --apple-orange: #ff9f0a;
+    --apple-yellow: #ffd60a;
+    --apple-purple: #bf5af2;
+    --apple-pink: #ff375f;
+    --apple-teal: #64d2ff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    background: #000;
+    color: var(--apple-text);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apple-style scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #48484a;
+    border-radius: 4px;
+}
+
+/* macOS window chrome */
+.macos-window {
+    background: var(--apple-surface);
+    border-radius: 12px;
+    border: 1px solid var(--apple-border);
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.macos-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(44, 44, 46, 0.8);
+    border-bottom: 1px solid var(--apple-border);
+}
+
+.macos-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.macos-dot-red {
+    background: #ff5f57;
+}
+
+.macos-dot-yellow {
+    background: #febc2e;
+}
+
+.macos-dot-green {
+    background: #28c840;
+}
+
+/* iOS status bar */
+.ios-statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--apple-text);
+}
