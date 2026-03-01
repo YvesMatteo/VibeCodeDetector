@@ -48,7 +48,7 @@ const definitions: Record<string, PlainEnglishExplanation> = {
         summary: 'Your database is open to the entire internet.',
         whyItMatters: 'Anyone can read (and possibly write) all data in your Firebase database without logging in.',
     },
-    'leakix': {
+    'data leak': {
         summary: 'Known data leaks found for this domain.',
         whyItMatters: 'Your domain appears in public leak databases, meaning attackers already know about exposed services.',
     },

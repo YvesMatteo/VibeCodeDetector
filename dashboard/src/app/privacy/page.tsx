@@ -174,21 +174,11 @@ export default function PrivacyPage() {
                 <span className="font-medium text-white">Google Gemini API</span> &mdash; AI-based analysis for vibe-coding detection.
               </li>
               <li>
-                <span className="font-medium text-white">VirusTotal</span> &mdash; malware and threat intelligence scanning.
-              </li>
-              <li>
-                <span className="font-medium text-white">Shodan</span> &mdash; infrastructure security analysis.
-              </li>
-              <li>
                 <span className="font-medium text-white">National Vulnerability Database (NVD)</span> &mdash; CVE lookup for dependency scanning.
               </li>
               <li>
                 <span className="font-medium text-white">Resend</span> &mdash; transactional email delivery for support notifications and outreach communications ({' '}
                 <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">privacy policy</a>).
-              </li>
-              <li>
-                <span className="font-medium text-white">URLScan.io</span> &mdash; URL scanning and threat intelligence analysis ({' '}
-                <a href="https://urlscan.io/about/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">about &amp; privacy</a>).
               </li>
             </ul>
             <p className="mt-3">
