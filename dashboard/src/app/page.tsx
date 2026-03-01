@@ -65,29 +65,29 @@ export default function HomePage() {
             </div>
 
             {/* eslint-disable @next/next/no-img-element -- decorative tool logos, no need for next/image optimization */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6">
               {/* Claude */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center">
+              <div className="group relative flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center">
                   <img src="/images/tools/claude.svg" alt="Claude AI" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-base font-medium text-white">Claude</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-zinc-200">Claude</h3>
               </div>
 
               {/* Cursor */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
-                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
+              <div className="group relative flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center relative">
+                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain invert mix-blend-screen" />
                 </div>
-                <h3 className="text-base font-medium text-white">Cursor</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-zinc-200">Cursor</h3>
               </div>
 
               {/* Antigravity */}
-              <div className="flex flex-col items-center justify-center p-4 sm:p-5 transition-all duration-300">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-2 sm:mb-3 flex items-center justify-center rounded-xl overflow-hidden">
-                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
+              <div className="group relative flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center relative">
+                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain mix-blend-screen" />
                 </div>
-                <h3 className="text-base font-medium text-white">Antigravity</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-zinc-200">Antigravity</h3>
               </div>
             </div>
             {/* eslint-enable @next/next/no-img-element */}

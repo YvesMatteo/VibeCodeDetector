@@ -305,13 +305,6 @@ export default function ApiKeysPage() {
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <CardTitle className="text-white text-sm font-medium">Use with AI Coding Agents (MCP)</CardTitle>
-                                                <div className="flex items-center gap-1.5 ml-2" title="Cursor, Claude, and Antigravity">
-                                                    {/* eslint-disable @next/next/no-img-element */}
-                                                    <img src="/images/tools/cursor.png" alt="Cursor" className="w-5 h-5 invert mix-blend-screen" />
-                                                    <img src="/images/tools/claude.svg" alt="Claude" className="w-5 h-5" />
-                                                    <img src="/images/tools/antigravity.png" alt="Antigravity" className="w-5 h-5 mix-blend-screen" />
-                                                    {/* eslint-enable @next/next/no-img-element */}
-                                                </div>
                                             </div>
                                             <CardDescription className="text-zinc-500 text-xs">Works with Claude Code, Cursor, and Antigravity</CardDescription>
                                         </div>
@@ -323,9 +316,13 @@ export default function ApiKeysPage() {
                                 <CardContent>
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-xs text-zinc-500 mb-2">
-                                                <span className="text-zinc-300 font-medium">Claude Code</span> — add to <code className="text-zinc-400">.mcp.json</code> in your project root:
-                                            </p>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src="/images/tools/claude.svg" alt="Claude AI" className="w-4 h-4" />
+                                                <p className="text-xs text-zinc-500">
+                                                    <span className="text-zinc-300 font-medium">Claude Code</span> — add to <code className="text-zinc-400">.mcp.json</code> in your project root:
+                                                </p>
+                                            </div>
                                             <pre className="p-3 bg-black/30 border border-white/[0.06] rounded-lg text-xs text-green-400 font-mono overflow-x-auto">
                                                 {`{
   "mcpServers": {
@@ -340,12 +337,20 @@ export default function ApiKeysPage() {
 }`}
                                             </pre>
                                         </div>
-                                        <p className="text-xs text-zinc-500">
-                                            <span className="text-zinc-300 font-medium">Cursor</span> — same config in <code className="text-zinc-400">.cursor/mcp.json</code>
-                                        </p>
-                                        <p className="text-xs text-zinc-500">
-                                            <span className="text-zinc-300 font-medium">Antigravity</span> — same config in <code className="text-zinc-400">~/.gemini/antigravity/mcp_config.json</code>
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-4 h-4 invert mix-blend-screen" />
+                                            <p className="text-xs text-zinc-500">
+                                                <span className="text-zinc-300 font-medium">Cursor</span> — same config in <code className="text-zinc-400">.cursor/mcp.json</code>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src="/images/tools/antigravity.png" alt="Antigravity" className="w-4 h-4 mix-blend-screen" />
+                                            <p className="text-xs text-zinc-500">
+                                                <span className="text-zinc-300 font-medium">Antigravity</span> — same config in <code className="text-zinc-400">~/.gemini/antigravity/mcp_config.json</code>
+                                            </p>
+                                        </div>
                                         <div className="flex items-center gap-2 text-xs text-zinc-500">
                                             <Terminal className="h-3.5 w-3.5" />
                                             <span>Available tools: <code className="text-zinc-400">run_scan</code>, <code className="text-zinc-400">get_scan_results</code>, <code className="text-zinc-400">list_scans</code></span>
@@ -597,7 +602,7 @@ export default function ApiKeysPage() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </div >
     );
 }
 
