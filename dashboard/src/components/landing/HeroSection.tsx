@@ -73,7 +73,7 @@ export function HeroSection() {
               transition={{ duration: isTouch ? 0.4 : 0.8, ease: 'easeOut', delay: isTouch ? 0.05 : 0.2 }}
               className="block"
             >
-              for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibecoded</span> apps
+              for <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-300 to-sky-400 animate-gradient-flow bg-[length:200%_auto]">vibe-coded</span> apps
             </motion.span>
           </span>
         </h1>
