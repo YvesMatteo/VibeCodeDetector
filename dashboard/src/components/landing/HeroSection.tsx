@@ -195,11 +195,12 @@ export function HeroSection() {
                 animate={{ opacity: [0, 1, 1, 0, 0] }}
                 transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.1, 0.2, 0.45, 0.5, 1] }}
                 style={{ willChange: 'opacity' }}
-                className="absolute top-[16px] min-[400px]:top-[20px] sm:top-[50px] left-2 min-[400px]:left-auto min-[400px]:right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-16px)] min-[400px]:max-w-[180px] sm:max-w-none"
+                className="absolute top-[16px] min-[400px]:top-[20px] sm:top-[50px] right-1 min-[400px]:right-3 sm:right-8 bg-red-500/10 border border-red-500/50 text-red-400 px-1 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30"
               >
                 <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
-                <div className="min-w-0 overflow-hidden">
-                  <div className="text-[8px] min-[400px]:text-[9px] sm:text-xs font-bold truncate">Exposed Stripe Key</div>
+                <div className="text-[7px] min-[400px]:text-[9px] sm:text-xs font-bold whitespace-nowrap">
+                  <span className="hidden min-[400px]:inline">Exposed Stripe Key</span>
+                  <span className="min-[400px]:hidden">API Key Leak</span>
                 </div>
               </motion.div>
 
@@ -208,11 +209,12 @@ export function HeroSection() {
                 animate={{ opacity: [0, 1, 1, 0, 0] }}
                 transition={{ duration: isTouch ? 6 : 4, repeat: Infinity, times: [0.6, 0.7, 0.9, 0.95, 1] }}
                 style={{ willChange: 'opacity' }}
-                className="absolute top-[45px] min-[400px]:top-[55px] sm:top-[140px] md:top-[200px] left-2 min-[400px]:left-auto min-[400px]:right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-1.5 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30 max-w-[calc(100%-16px)] min-[400px]:max-w-[180px] sm:max-w-none"
+                className="absolute top-[45px] min-[400px]:top-[55px] sm:top-[140px] md:top-[200px] right-1 min-[400px]:right-3 sm:right-8 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-1 min-[400px]:px-2 sm:px-3 py-0.5 min-[400px]:py-1 sm:py-1.5 rounded-lg backdrop-blur-md flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 shadow-xl z-30"
               >
                 <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 shrink-0" />
-                <div className="min-w-0 overflow-hidden">
-                  <div className="text-[8px] min-[400px]:text-[9px] sm:text-xs font-bold truncate">CORS Misconfigured</div>
+                <div className="text-[7px] min-[400px]:text-[9px] sm:text-xs font-bold whitespace-nowrap">
+                  <span className="hidden min-[400px]:inline">CORS Misconfigured</span>
+                  <span className="min-[400px]:hidden">CORS Issue</span>
                 </div>
               </motion.div>
             </div>
