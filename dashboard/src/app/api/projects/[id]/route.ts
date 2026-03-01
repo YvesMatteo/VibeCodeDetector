@@ -111,8 +111,6 @@ export async function PATCH(
             const rawPAT = body.supabasePAT?.trim() || null;
             updates.supabase_pat = rawPAT ? encrypt(rawPAT) : null;
         }
-        if (body.badgeEnabled !== undefined) updates.badge_enabled = !!body.badgeEnabled;
-
         const { data: project, error: updateError } = await supabase
             .from('projects')
             .update(updates)

@@ -11,7 +11,6 @@ import {
     Loader2,
     GitBranch,
     Code2,
-    Shield,
     Triangle,
     ExternalLink,
 } from 'lucide-react';
@@ -80,8 +79,6 @@ export default function IntegrationsPage() {
     const [adding, setAdding] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [newWebhookSecret, setNewWebhookSecret] = useState<string | null>(null);
-    const [badgeEnabled, setBadgeEnabled] = useState(false);
-    const [badgeToggling, setBadgeToggling] = useState(false);
 
     // Vercel integration state
     const [vercelIntegration, setVercelIntegration] = useState<VercelIntegration | null>(null);
@@ -100,19 +97,13 @@ export default function IntegrationsPage() {
     useEffect(() => {
         async function load() {
             try {
-                const [whRes, projRes, vercelRes, netlifyRes] = await Promise.all([
+                const [whRes, vercelRes, netlifyRes] = await Promise.all([
                     fetch(`/api/integrations/webhooks?projectId=${projectId}`),
-                    fetch(`/api/projects/${projectId}`),
                     fetch(`/api/integrations/vercel?projectId=${projectId}`),
                     fetch(`/api/integrations/netlify?projectId=${projectId}`),
                 ]);
                 const whData = await whRes.json();
                 setWebhooks(Array.isArray(whData) ? whData : []);
-
-                if (projRes.ok) {
-                    const projData = await projRes.json();
-                    setBadgeEnabled(!!projData.project?.badge_enabled);
-                }
 
                 if (vercelRes.ok) {
                     const vercelData = await vercelRes.json();
@@ -257,26 +248,6 @@ export default function IntegrationsPage() {
         }
     }
 
-    async function toggleBadge() {
-        setBadgeToggling(true);
-        try {
-            const res = await fetch(`/api/projects/${projectId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ badgeEnabled: !badgeEnabled }),
-            });
-            if (res.ok) {
-                setBadgeEnabled(!badgeEnabled);
-                toast.success(badgeEnabled ? 'Badge disabled' : 'Badge enabled');
-            } else {
-                toast.error('Failed to update security badge. Please try again.');
-            }
-        } catch {
-            toast.error('Failed to update security badge. Please check your connection and try again.');
-        } finally {
-            setBadgeToggling(false);
-        }
-    }
 
     function copyToClipboard(text: string, id: string) {
         navigator.clipboard.writeText(text);
@@ -284,9 +255,6 @@ export default function IntegrationsPage() {
         toast.success('Copied to clipboard');
         setTimeout(() => setCopiedId(null), 2000);
     }
-
-    const badgeUrl = `https://checkvibe.dev/api/badge/project/${projectId}`;
-    const badgeMarkdown = `[![CheckVibe Security](${badgeUrl})](https://checkvibe.dev)`;
 
     const ciSnippet = `# .github/workflows/security-audit.yml
 name: Security Audit
@@ -347,47 +315,6 @@ jobs:
 
     return (
         <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto w-full space-y-8">
-            {/* Badge */}
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-emerald-500/10">
-                            <Shield className="h-4 w-4 text-emerald-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-medium text-white">Security Badge</h3>
-                            <p className="text-xs text-zinc-500">Add a security score badge to your README</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={toggleBadge}
-                        disabled={badgeToggling}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${badgeEnabled ? 'bg-emerald-500' : 'bg-zinc-700'}`}
-                    >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${badgeEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                </div>
-
-                {badgeEnabled ? (
-                    <>
-                        <div className="bg-black/30 rounded-lg p-4 mb-3">
-                            <div className="flex items-center justify-between">
-                                <code className="text-xs text-zinc-400 break-all">{badgeMarkdown}</code>
-                                <button
-                                    onClick={() => copyToClipboard(badgeMarkdown, 'badge')}
-                                    className="ml-3 text-zinc-500 hover:text-white transition-colors shrink-0"
-                                >
-                                    {copiedId === 'badge' ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                                </button>
-                            </div>
-                        </div>
-                        <p className="text-[11px] text-zinc-600">Paste this in your GitHub README.md to show your security score</p>
-                    </>
-                ) : (
-                    <p className="text-xs text-zinc-500">Enable the badge to publicly display your project&apos;s security score</p>
-                )}
-            </div>
-
             {/* CI/CD Integration */}
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
                 <div className="flex items-center gap-3 mb-4">
