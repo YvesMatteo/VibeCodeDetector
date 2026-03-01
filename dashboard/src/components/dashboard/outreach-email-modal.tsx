@@ -235,6 +235,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                             <div className="flex gap-2">
                                 <input
                                     type="text"
+                                    autoComplete="off"
                                     value={recipientEmail}
                                     onChange={(e) => {
                                         setRecipientEmail(e.target.value);
@@ -312,6 +313,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Subject</label>
                             <input
                                 type="text"
+                                autoComplete="off"
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
                                 className="w-full px-3 py-2 rounded-lg bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500/50"
@@ -322,6 +324,7 @@ export function OutreachEmailModal({ scanResults, projectUrl, issueCount, severi
                         <div>
                             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Email Body</label>
                             <textarea
+                                autoComplete="off"
                                 value={body}
                                 onChange={(e) => setBody(e.target.value)}
                                 rows={12}

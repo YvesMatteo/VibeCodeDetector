@@ -28,6 +28,7 @@ export function ProjectSearch() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
             <input
                 type="text"
+                autoComplete="off"
                 placeholder="Search for a project"
                 defaultValue={searchParams.get('q')?.toString()}
                 onChange={(e) => handleSearch(e.target.value)}
