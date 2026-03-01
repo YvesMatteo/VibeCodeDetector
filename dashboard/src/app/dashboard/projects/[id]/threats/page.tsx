@@ -52,7 +52,7 @@ export default function ThreatsPage() {
 
     // Settings
     const [settings, setSettings] = useState<ThreatSettings>({ enabled: false, project_id: projectId });
-    const [alertFrequency, setAlertFrequency] = useState('daily');
+    const [alertFrequency] = useState('immediate');
     const [alertEmail, setAlertEmail] = useState('');
 
     // Snippet
@@ -86,7 +86,7 @@ export default function ThreatsPage() {
             }
             const data = await res.json();
             setSettings(data);
-            setAlertFrequency(data.alert_frequency || 'daily');
+            // Alert frequency is always immediate
             setAlertEmail(data.alert_email || '');
 
             if (data.enabled && data.snippet_token) {
@@ -260,20 +260,8 @@ export default function ThreatsPage() {
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
                                 <label className="text-xs text-zinc-400 mb-1.5 block">Alert Frequency</label>
-                                <div className="flex gap-2">
-                                    {['immediate', 'hourly', 'daily'].map((freq) => (
-                                        <button
-                                            key={freq}
-                                            onClick={() => setAlertFrequency(freq)}
-                                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors capitalize min-h-[36px] ${
-                                                alertFrequency === freq
-                                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
-                                                    : 'bg-white/[0.03] text-zinc-400 border border-white/[0.06] hover:border-white/[0.1]'
-                                            }`}
-                                        >
-                                            {freq}
-                                        </button>
-                                    ))}
+                                <div className="px-3 py-2 rounded-lg text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30 inline-block min-h-[36px] leading-[20px]">
+                                    Immediate
                                 </div>
                             </div>
                             <div className="flex-1">
