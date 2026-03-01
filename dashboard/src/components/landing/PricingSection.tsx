@@ -191,7 +191,7 @@ export function PricingSection() {
                       variant="default"
                       asChild
                     >
-                      <Link href="mailto:support@checkvibe.dev"><MessageSquare className="h-4 w-4" />{tier.cta}</Link>
+                      <a href="mailto:support@checkvibe.dev"><MessageSquare className="h-4 w-4" />{tier.cta}</a>
                     </Button>
                   ) : 'isFree' in tier && tier.isFree ? (
                     <Button
