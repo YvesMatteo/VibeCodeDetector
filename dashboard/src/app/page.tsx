@@ -76,16 +76,16 @@ export default function HomePage() {
 
               {/* Cursor */}
               <div className="group relative flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center relative">
-                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain invert mix-blend-screen" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center rounded-xl overflow-hidden relative">
+                  <img src="/images/tools/cursor.png" alt="Cursor Editor" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-xs sm:text-sm font-medium text-zinc-200">Cursor</h3>
               </div>
 
               {/* Antigravity */}
               <div className="group relative flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center relative">
-                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain mix-blend-screen" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mb-2 flex items-center justify-center rounded-xl overflow-hidden relative">
+                  <img src="/images/tools/antigravity.png" alt="Google Antigravity" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-xs sm:text-sm font-medium text-zinc-200">Antigravity</h3>
               </div>

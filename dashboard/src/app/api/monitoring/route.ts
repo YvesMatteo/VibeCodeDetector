@@ -106,6 +106,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Threshold must be between 1 and 100' }, { status: 400 });
         }
 
+        // Validate email format if provided
+        if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notifyEmail)) {
+            return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- alert_rules not in generated types
         const sbUntypedAlert = supabase as any;
         const { data, error } = await sbUntypedAlert

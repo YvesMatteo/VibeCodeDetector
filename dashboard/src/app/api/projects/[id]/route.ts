@@ -175,21 +175,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
 
-        // Hard delete all scans linked to this project (owned by user)
-        const { error: scansError } = await supabase
-            .from('scans')
-            .delete()
-            .eq('project_id', params.id)
-            .eq('user_id', user.id);
-
-        if (scansError) {
-            console.error('Delete project scans error:', scansError);
-            return NextResponse.json({ error: 'Failed to delete project scans' }, { status: 500 });
-        }
-
-        // dismissed_findings cascade-deletes via FK, no need to delete manually
-
-        // Delete the project itself
+        // Delete the project — scans and all child records cascade-delete via FK
         const { error } = await supabase
             .from('projects')
             .delete()

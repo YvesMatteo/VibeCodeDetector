@@ -89,17 +89,10 @@ export async function POST(req: NextRequest) {
             metadata: {
                 userId: user.id,
                 plan,
-                billing_interval: isAnnual ? 'year' : 'month',
-                plan_domains: planConfig.domains.toString(),
-                plan_scans_limit: planConfig.scans.toString(),
             },
             subscription_data: {
                 metadata: {
-                    userId: user.id,
                     plan,
-                    billing_interval: isAnnual ? 'year' : 'month',
-                    plan_domains: planConfig.domains.toString(),
-                    plan_scans_limit: planConfig.scans.toString(),
                 },
             },
             ...(profile?.stripe_customer_id

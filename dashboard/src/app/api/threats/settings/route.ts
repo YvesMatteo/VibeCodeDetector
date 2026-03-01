@@ -108,6 +108,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid alert frequency' }, { status: 400 });
     }
 
+    // Validate email format if provided
+    if (alertEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) {
+        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+    }
+
     // Verify project ownership
     const { data: project } = await supabase
         .from('projects')

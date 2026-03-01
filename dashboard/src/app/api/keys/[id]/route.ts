@@ -58,6 +58,10 @@ export async function DELETE(
         );
       }
 
+      // Clean up rate_limit_windows for this key (uses text identifier, no FK)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not in generated types
+      await (supabase.rpc as any)('cleanup_api_key_artifacts', { p_key_id: id });
+
       const { error } = await table
         .delete()
         .eq('id', id)

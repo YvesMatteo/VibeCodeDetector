@@ -65,8 +65,6 @@ export function TestimonialsCarousel() {
 
     return (
         <div className="w-full max-w-7xl mx-auto overflow-hidden relative">
-            <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[#0E0E10] to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[#0E0E10] to-transparent z-10 pointer-events-none" />
 
             <motion.div
                 ref={carousel}
@@ -96,7 +94,7 @@ export function TestimonialsCarousel() {
                             </div>
                             <div className="min-w-0">
                                 <div className="text-sm font-medium text-white truncate">{testimonial.name}</div>
-                                <div className="text-xs text-zinc-500 truncate">{testimonial.title}</div>
+                                <div className="text-xs text-zinc-300 truncate">{testimonial.title}</div>
                             </div>
                         </div>
                     </div>
