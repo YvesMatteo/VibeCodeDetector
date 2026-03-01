@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
-
 export interface PlainEnglishExplanation {
     summary: string;
     whyItMatters: string;
@@ -559,7 +557,13 @@ export function getPlainEnglish(title: string, description: string): PlainEnglis
     return null;
 }
 
-export function generateAIPrompt(url: string, issues: any[]): string {
+interface IssueForPrompt {
+    severity: string;
+    title: string;
+    description?: string;
+}
+
+export function generateAIPrompt(url: string, issues: IssueForPrompt[]): string {
     const criticalIssues = issues.filter(i => i.severity === 'critical');
     const technicalIssues = issues.filter(i => i.severity !== 'critical');
 
@@ -569,10 +573,10 @@ export function generateAIPrompt(url: string, issues: any[]): string {
 I have run an automated audit on my website and need you to fix the following issues.
 
 ## 🚨 Critical Issues (Fix These First)
-${criticalIssues.map(i => `- [ ] **${i.title}**: ${i.description}`).join('\n')}
+${criticalIssues.map(i => `- [ ] **${i.title}**: ${i.description ?? ''}`).join('\n')}
 
 ## 🛠️ Improvements
-${technicalIssues.map(i => `- [ ] **${i.title}**: ${i.description}`).join('\n')}
+${technicalIssues.map(i => `- [ ] **${i.title}**: ${i.description ?? ''}`).join('\n')}
 
 ## Instructions
 1. Analyze the codebase to find the source of these issues.

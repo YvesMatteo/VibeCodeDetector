@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServiceClient } from '@/lib/api-keys';
 import { createClient } from '@/lib/supabase/server';
@@ -51,10 +50,10 @@ export async function GET(req: NextRequest) {
             keyMap[k.id] = { name: k.name, prefix: k.key_prefix };
         }
 
-        const enriched = (logs || []).map((log: any) => ({
+        const enriched = (logs || []).map((log) => ({
             ...log,
-            key_name: keyMap[log.key_id]?.name || 'Unknown',
-            key_prefix: keyMap[log.key_id]?.prefix || '',
+            key_name: (log.key_id ? keyMap[log.key_id]?.name : undefined) || 'Unknown',
+            key_prefix: (log.key_id ? keyMap[log.key_id]?.prefix : undefined) || '',
         }));
 
         return NextResponse.json({ logs: enriched });

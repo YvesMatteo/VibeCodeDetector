@@ -115,19 +115,20 @@ function sortedScannerKeys(results: Record<string, ScanResultItem>): string[] {
 
 interface ScanRecord {
   url?: string;
-  completed_at?: string;
-  created_at?: string;
+  completed_at?: string | null;
+  created_at?: string | null;
   status?: string;
-  results?: Record<string, ScanResultItem>;
+  results?: unknown;
 }
 
 export function generateScanMarkdown(scan: ScanRecord, previousScan?: ScanRecord): string {
   const lines: string[] = [];
   const url = scan.url || 'Unknown URL';
   const domain = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-  const scanDate = formatDate(scan.completed_at || scan.created_at, 'long');
+  const scanDate = formatDate(scan.completed_at || scan.created_at || new Date().toISOString(), 'long');
 
-  const results = (scan.results || {}) as Record<string, ScanResultItem>;
+  const rawResults = (scan.results || {}) as Record<string, unknown>;
+  const results = rawResults as Record<string, ScanResultItem>;
 
   // Count total issues first for the header
   let totalIssueCount = 0;
@@ -151,8 +152,8 @@ export function generateScanMarkdown(scan: ScanRecord, previousScan?: ScanRecord
 
   // ── Scan Diff ──────────────────────────────────────────────────────────
   if (previousScan?.results) {
-    const diff = computeScanDiff(results, previousScan.results as Record<string, ScanResultItem>);
-    const prevDate = formatDate(previousScan.completed_at || previousScan.created_at, 'short');
+    const diff = computeScanDiff(rawResults, (previousScan.results || {}) as Record<string, unknown>);
+    const prevDate = formatDate(previousScan.completed_at || previousScan.created_at || new Date().toISOString(), 'short');
     const parts: string[] = [];
     if (diff.resolvedIssues.length > 0) parts.push(`${diff.resolvedIssues.length} resolved`);
     if (diff.newIssues.length > 0) parts.push(`${diff.newIssues.length} new`);

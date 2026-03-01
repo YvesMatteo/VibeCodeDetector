@@ -15,7 +15,7 @@ import Link from 'next/link';
 
 interface Finding {
     title: string;
-    description: string;
+    description?: string;
     severity: string;
 }
 

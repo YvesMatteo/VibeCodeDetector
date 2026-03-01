@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import crypto from 'crypto';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { countIssuesBySeverity } from '@/lib/scan-utils';
@@ -33,7 +32,7 @@ export async function dispatchWebhooks(opts: {
     scanId: string;
     url: string;
     overallScore: number;
-    results: Record<string, any>;
+    results: Record<string, unknown>;
 }): Promise<void> {
     try {
         const supabase = getServiceClient();
@@ -60,14 +59,14 @@ export async function dispatchWebhooks(opts: {
         const body = JSON.stringify(payload);
 
         const deliveries = webhooks
-            .filter(wh => wh.events.includes('scan.completed'))
+            .filter(wh => (wh.events as string[]).includes('scan.completed'))
             .map(async (wh) => {
-                const signature = signPayload(body, wh.secret);
+                const signature = signPayload(body, wh.secret as string);
                 try {
                     const controller = new AbortController();
                     const timeout = setTimeout(() => controller.abort(), 10000);
 
-                    const res = await fetch(wh.url, {
+                    const res = await fetch(wh.url as string, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -87,8 +86,9 @@ export async function dispatchWebhooks(opts: {
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', wh.id);
-                } catch (err: any) {
-                    console.error(`Webhook delivery failed for ${wh.url}:`, err.message);
+                } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : String(err);
+                    console.error(`Webhook delivery failed for ${String(wh.url)}:`, message);
                     await supabase
                         .from('project_webhooks')
                         .update({

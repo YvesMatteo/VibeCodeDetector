@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
+import type { Finding, ScanResultItem } from './audit-data';
+
 export interface DiffFinding {
-    finding: any;
+    finding: Finding;
     scannerKey: string;
 }
 
@@ -15,18 +16,19 @@ export interface ScanDiff {
  * Uses fingerprinting: `scannerKey::findingId||title::severity`
  */
 export function computeScanDiff(
-    currentResults: Record<string, any>,
-    previousResults: Record<string, any>,
+    currentResults: Record<string, unknown>,
+    previousResults: Record<string, unknown>,
 ): ScanDiff {
     const currentFingerprints = new Map<string, DiffFinding>();
     const previousFingerprints = new Map<string, DiffFinding>();
 
-    function collectFingerprints(results: Record<string, any>, target: Map<string, DiffFinding>) {
+    function collectFingerprints(results: Record<string, unknown>, target: Map<string, DiffFinding>) {
         for (const [key, result] of Object.entries(results)) {
-            if (!result?.findings) continue;
-            for (const f of result.findings) {
+            const r = result as ScanResultItem | undefined;
+            if (!r?.findings) continue;
+            for (const f of r.findings) {
                 if (f.severity === 'info') continue;
-                const fp = `${key}::${f.id || f.title}::${f.severity}`;
+                const fp = `${key}::${f.id ?? f.title}::${f.severity}`;
                 target.set(fp, { finding: f, scannerKey: key });
             }
         }

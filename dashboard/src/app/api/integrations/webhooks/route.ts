@@ -88,8 +88,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'At least one valid event is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-        .from('project_webhooks' as never)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_webhooks table not in generated types
+    const sbUntyped = supabase as any;
+    const { data, error } = await sbUntyped
+        .from('project_webhooks')
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -99,7 +101,7 @@ export async function POST(req: NextRequest) {
             enabled: true,
         })
         .select('id, project_id, url, events, enabled, created_at')
-        .single() as { data: Record<string, unknown> | null; error: unknown };
+        .single() as { data: Record<string, unknown> | null; error: { message: string } | null };
 
     if (error) {
         console.error('Create webhook error:', error);

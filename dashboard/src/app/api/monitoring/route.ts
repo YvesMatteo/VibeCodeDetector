@@ -19,9 +19,12 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
+    // scheduled_scans and alert_rules are not in generated Supabase types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- custom tables not in generated types
+    const sbUntyped = supabase as any;
     const [scheduleRes, alertsRes] = await Promise.all([
-        (supabase.from('scheduled_scans' as never).select('*').eq('project_id', projectId).eq('user_id', user.id).maybeSingle()) as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
-        (supabase.from('alert_rules' as never).select('*').eq('project_id', projectId).eq('user_id', user.id)) as Promise<{ data: Record<string, unknown>[] | null; error: unknown }>,
+        sbUntyped.from('scheduled_scans').select('*').eq('project_id', projectId).eq('user_id', user.id).maybeSingle() as Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>,
+        sbUntyped.from('alert_rules').select('*').eq('project_id', projectId).eq('user_id', user.id) as Promise<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>,
     ]);
 
     return NextResponse.json({
@@ -68,8 +71,10 @@ export async function POST(req: NextRequest) {
 
         const nextRunAt = enabled !== false ? computeNextRun(frequency, hourUtc ?? 6, dayOfWeek) : null;
 
-        const { data, error } = await supabase
-            .from('scheduled_scans' as never)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- scheduled_scans not in generated types
+        const sbUntypedSchedule = supabase as any;
+        const { data, error } = await sbUntypedSchedule
+            .from('scheduled_scans')
             .upsert({
                 project_id: projectId,
                 user_id: user.id,
@@ -81,7 +86,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
             }, { onConflict: 'project_id' })
             .select()
-            .single() as { data: Record<string, unknown> | null; error: unknown };
+            .single() as { data: Record<string, unknown> | null; error: { message: string } | null };
 
         if (error) {
             console.error('Monitoring schedule upsert error:', error);
@@ -101,8 +106,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Threshold must be between 1 and 100' }, { status: 400 });
         }
 
-        const { data, error } = await supabase
-            .from('alert_rules' as never)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- alert_rules not in generated types
+        const sbUntypedAlert = supabase as any;
+        const { data, error } = await sbUntypedAlert
+            .from('alert_rules')
             .upsert({
                 project_id: projectId,
                 user_id: user.id,
@@ -112,7 +119,7 @@ export async function POST(req: NextRequest) {
                 enabled: enabled !== false,
             }, { onConflict: 'project_id,type' })
             .select()
-            .single() as { data: Record<string, unknown> | null; error: unknown };
+            .single() as { data: Record<string, unknown> | null; error: { message: string } | null };
 
         if (error) {
             console.error('Monitoring alert upsert error:', error);
@@ -150,11 +157,13 @@ export async function DELETE(req: NextRequest) {
 
     const table = type === 'schedule' ? 'scheduled_scans' : 'alert_rules';
 
-    const { error } = await supabase
-        .from(table as never)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- custom tables not in generated types
+    const sbUntypedDel = supabase as any;
+    const { error } = await sbUntypedDel
+        .from(table)
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id) as { error: unknown };
+        .eq('user_id', user.id) as { error: { message: string } | null };
 
     if (error) {
         console.error('Monitoring delete error:', error);

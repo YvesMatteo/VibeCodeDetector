@@ -5,6 +5,7 @@
  */
 import type { ScanResultItem } from './audit-data';
 
+
 export interface OwaspCategory {
   id: string;
   code: string;
@@ -107,18 +108,19 @@ export function getOwaspCategories(scannerKey: string): OwaspCategory[] {
  * Returns an array of 10 items, one per OWASP category, with finding counts.
  */
 export function computeOwaspSummary(
-  results: Record<string, ScanResultItem>,
+  results: Record<string, unknown>,
 ): Array<{ category: OwaspCategory; findingCount: number; tested: boolean }> {
   // Track which OWASP categories are tested and their finding counts
   const counts: Record<string, number> = {};
   const tested: Record<string, boolean> = {};
 
-  for (const [scannerKey, result] of Object.entries(results)) {
+  for (const [scannerKey, rawResult] of Object.entries(results)) {
+    const result = rawResult as ScanResultItem | undefined;
     const owaspIds = SCANNER_OWASP_MAP[scannerKey];
     if (!owaspIds) continue;
 
     // Skip errored/skipped scanners
-    if (result.error || result.skipped) continue;
+    if (result?.error || result?.skipped) continue;
 
     // Mark categories as tested
     for (const id of owaspIds) {
@@ -126,7 +128,7 @@ export function computeOwaspSummary(
     }
 
     // Count actionable findings (non-info)
-    const findings = result.findings ?? [];
+    const findings = result?.findings ?? [];
     const actionable = findings.filter((f) => f.severity?.toLowerCase() !== 'info');
 
     for (const id of owaspIds) {

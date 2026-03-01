@@ -101,8 +101,10 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = `vcel_whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-    const { data, error } = await supabase
-        .from('vercel_integrations' as never)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vercel_integrations table not in generated types
+    const sbUntyped = supabase as any;
+    const { data, error } = await sbUntyped
+        .from('vercel_integrations')
         .insert({
             project_id: projectId,
             user_id: user.id,
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
             enabled: true,
         })
         .select('id, project_id, enabled, created_at')
-        .single() as { data: Record<string, unknown> | null; error: unknown };
+        .single() as { data: Record<string, unknown> | null; error: { message: string } | null };
 
     if (error) {
         console.error('Create vercel integration error:', error);

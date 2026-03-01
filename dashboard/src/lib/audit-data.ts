@@ -83,6 +83,7 @@ export interface ScanResultItem {
     metadata?: Record<string, unknown>;
     scannedAt?: string;
     technologies?: Array<{ name: string; version?: string; category?: string }>;
+    [key: string]: unknown;
 }
 
 export interface AuditReportData {
@@ -101,7 +102,8 @@ export interface AuditReportData {
 const HIDDEN_SCANNER_KEYS = new Set(['vibe_match', 'ai_detection']);
 
 /** Pre-process scan results into the shape needed by AuditReport */
-export function processAuditData(results: Record<string, ScanResultItem>): AuditReportData {
+export function processAuditData(rawResults: Record<string, unknown>): AuditReportData {
+    const results = rawResults as Record<string, ScanResultItem>;
     const techStack = results.tech_stack;
     const techStackCveFindings = techStack?.findings?.filter(
         (f) => f.severity?.toLowerCase() !== 'info'
