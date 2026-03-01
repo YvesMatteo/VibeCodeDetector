@@ -305,11 +305,11 @@ export default function ApiKeysPage() {
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <CardTitle className="text-white text-sm font-medium">Use with AI Coding Agents (MCP)</CardTitle>
-                                                <div className="flex items-center gap-1 ml-1" title="Cursor, Claude, and Antigravity">
+                                                <div className="flex items-center gap-1.5 ml-2" title="Cursor, Claude, and Antigravity">
                                                     {/* eslint-disable @next/next/no-img-element */}
-                                                    <img src="/images/tools/cursor.png" alt="Cursor" className="w-3.5 h-3.5 rounded-[2px]" />
-                                                    <img src="/images/tools/claude.svg" alt="Claude" className="w-3.5 h-3.5" />
-                                                    <img src="/images/tools/antigravity.png" alt="Antigravity" className="w-3.5 h-3.5 rounded-[2px]" />
+                                                    <img src="/images/tools/cursor.png" alt="Cursor" className="w-5 h-5 invert mix-blend-screen" />
+                                                    <img src="/images/tools/claude.svg" alt="Claude" className="w-5 h-5" />
+                                                    <img src="/images/tools/antigravity.png" alt="Antigravity" className="w-5 h-5 mix-blend-screen" />
                                                     {/* eslint-enable @next/next/no-img-element */}
                                                 </div>
                                             </div>

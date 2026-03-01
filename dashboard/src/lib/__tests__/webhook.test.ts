@@ -13,6 +13,11 @@ import {
 
 
 
+// plan-config mock — needed because webhook route imports FREE_PLAN_CONFIG
+vi.mock('@/lib/plan-config', () => ({
+  FREE_PLAN_CONFIG: { scans: 4, domains: 1 },
+}));
+
 // The "admin" Supabase client mock
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock object has dynamic shape
 let supabaseMock: any;
@@ -246,7 +251,7 @@ describe('stripe-plans — plan limits consistency', () => {
     expect(starterPrices.length).toBeGreaterThanOrEqual(2);
     for (const [, info] of starterPrices) {
       expect(info.domains).toBe(1);
-      expect(info.scans).toBe(5);
+      expect(info.scans).toBe(30);
     }
   });
 
@@ -257,7 +262,7 @@ describe('stripe-plans — plan limits consistency', () => {
     expect(proPrices.length).toBeGreaterThanOrEqual(2);
     for (const [, info] of proPrices) {
       expect(info.domains).toBe(3);
-      expect(info.scans).toBe(20);
+      expect(info.scans).toBe(155);
     }
   });
 
@@ -268,7 +273,7 @@ describe('stripe-plans — plan limits consistency', () => {
     expect(maxPrices.length).toBeGreaterThanOrEqual(2);
     for (const [, info] of maxPrices) {
       expect(info.domains).toBe(10);
-      expect(info.scans).toBe(75);
+      expect(info.scans).toBe(3000);
     }
   });
 
@@ -393,6 +398,7 @@ describe('webhook POST — checkout.session.completed', () => {
       'checkout.session.completed',
       {
         id: 'cs_test_starter',
+        payment_status: 'paid',
         metadata: { userId: TEST_USER_ID, plan: 'starter' },
         customer: 'cus_test_123',
         subscription: 'sub_test_123',
@@ -429,6 +435,7 @@ describe('webhook POST — checkout.session.completed', () => {
   it('activates pro plan from monthly price ID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_pro',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: 'pro' },
       customer: 'cus_test_456',
       subscription: 'sub_test_456',
@@ -454,6 +461,7 @@ describe('webhook POST — checkout.session.completed', () => {
   it('activates max plan from monthly price ID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_max',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: 'max' },
       customer: 'cus_test_789',
       subscription: 'sub_test_789',
@@ -479,6 +487,7 @@ describe('webhook POST — checkout.session.completed', () => {
   it('activates starter annual plan from annual price ID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_starter_annual',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID },
       customer: 'cus_test_annual',
       subscription: 'sub_test_annual',
@@ -504,6 +513,7 @@ describe('webhook POST — checkout.session.completed', () => {
   it('activates pro annual plan from annual price ID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_pro_annual',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID },
       customer: 'cus_pro_annual',
       subscription: 'sub_pro_annual',
@@ -529,6 +539,7 @@ describe('webhook POST — checkout.session.completed', () => {
   it('activates max annual plan from annual price ID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_max_annual',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID },
       customer: 'cus_max_annual',
       subscription: 'sub_max_annual',
@@ -551,9 +562,10 @@ describe('webhook POST — checkout.session.completed', () => {
     expect(updateCall.plan_scans_limit).toBe(3000);
   });
 
-  it('returns 200 but does not activate when userId is missing', async () => {
+  it('returns 500 when userId is missing', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_no_user',
+      payment_status: 'paid',
       metadata: {},
       customer: 'cus_xxx',
       subscription: 'sub_xxx',
@@ -562,7 +574,7 @@ describe('webhook POST — checkout.session.completed', () => {
     mockConstructEvent.mockReturnValue(event);
 
     const res = await POST(makeRequest());
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(500);
 
     // profiles.update should NOT have been called
     const profilesTracker = supabaseMock._tables['profiles'];
@@ -571,9 +583,10 @@ describe('webhook POST — checkout.session.completed', () => {
     }
   });
 
-  it('returns 200 but does not activate when userId is not a valid UUID', async () => {
+  it('returns 500 when userId is not a valid UUID', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_bad_uuid',
+      payment_status: 'paid',
       metadata: { userId: 'not-a-valid-uuid' },
       customer: 'cus_xxx',
       subscription: 'sub_xxx',
@@ -582,7 +595,7 @@ describe('webhook POST — checkout.session.completed', () => {
     mockConstructEvent.mockReturnValue(event);
 
     const res = await POST(makeRequest());
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(500);
 
     const profilesTracker = supabaseMock._tables['profiles'];
     if (profilesTracker) {
@@ -599,6 +612,7 @@ describe('webhook POST — metadata fallback validation', () => {
   it('falls back to valid metadata plan when line items fetch fails', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_fallback_valid',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: 'pro' },
       customer: 'cus_fallback',
       subscription: 'sub_fallback',
@@ -623,6 +637,7 @@ describe('webhook POST — metadata fallback validation', () => {
   it('falls back to valid metadata plan when price ID is unknown', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_fallback_unknown_price',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: 'max' },
       customer: 'cus_fb2',
       subscription: 'sub_fb2',
@@ -648,6 +663,7 @@ describe('webhook POST — metadata fallback validation', () => {
   it('rejects invalid metadata plan name and does not activate', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_fallback_invalid',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: 'enterprise_hacked' },
       customer: 'cus_bad',
       subscription: 'sub_bad',
@@ -672,6 +688,7 @@ describe('webhook POST — metadata fallback validation', () => {
   it('rejects empty metadata plan and does not activate', async () => {
     const event = makeEvent('checkout.session.completed', {
       id: 'cs_test_fallback_empty',
+      payment_status: 'paid',
       metadata: { userId: TEST_USER_ID, plan: '' },
       customer: 'cus_empty',
       subscription: 'sub_empty',
@@ -701,6 +718,7 @@ describe('webhook POST — idempotency', () => {
       'checkout.session.completed',
       {
         id: 'cs_test_idem',
+        payment_status: 'paid',
         metadata: { userId: TEST_USER_ID, plan: 'pro' },
         customer: 'cus_idem',
         subscription: 'sub_idem',
@@ -742,6 +760,7 @@ describe('webhook POST — idempotency', () => {
       'checkout.session.completed',
       {
         id: 'cs_test_new',
+        payment_status: 'paid',
         metadata: { userId: TEST_USER_ID, plan: 'starter' },
         customer: 'cus_new',
         subscription: 'sub_new',
