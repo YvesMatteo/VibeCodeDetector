@@ -18,7 +18,7 @@ const roadmapSteps = [
                         <span className="w-6 text-zinc-600">3</span>
                         <span>
                             stripeKey: <span className="text-green-300">&apos;</span>
-                            <span className="bg-red-500/20 text-red-300 border border-red-500/30 px-1 rounded mx-0.5">sk_live_51M...</span>
+                            <span className="bg-red-500/20 text-red-300 border border-red-500/30 px-1 rounded mx-0.5">sk_live_•••••</span>
                             <span className="text-green-300">&apos;</span>
                         </span>
                     </div>

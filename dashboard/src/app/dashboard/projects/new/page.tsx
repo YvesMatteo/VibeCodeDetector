@@ -161,7 +161,7 @@ export default function NewProjectPage() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} autoComplete="off">
                     {/* Step 1: Project Details */}
                     {step === 1 && (
                         <>
@@ -181,11 +181,13 @@ export default function NewProjectPage() {
                                             <Label htmlFor="name" className="text-zinc-300">Project Name</Label>
                                             <Input
                                                 id="name"
+                                                name="project-name-nofill"
                                                 type="text"
                                                 placeholder="My App"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
                                                 autoFocus
+                                                autoComplete="off"
                                                 className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                             />
                                         </div>
@@ -194,10 +196,12 @@ export default function NewProjectPage() {
                                             <div className="flex gap-2">
                                                 <Input
                                                     id="url"
+                                                    name="project-url-nofill"
                                                     type="text"
                                                     placeholder="https://example.com"
                                                     value={url}
                                                     onChange={(e) => handleUrlChange(e.target.value)}
+                                                    autoComplete="off"
                                                     className="text-lg flex-1 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-sky-400/50"
                                                 />
                                                 {isValidUrl(url) && (
@@ -256,6 +260,7 @@ export default function NewProjectPage() {
                                         placeholder="https://github.com/your-org/your-repo"
                                         value={githubRepo}
                                         onChange={(e) => setGithubRepo(e.target.value)}
+                                        autoComplete="off"
                                         className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-white/20"
                                     />
                                 </CardContent>
@@ -288,6 +293,7 @@ export default function NewProjectPage() {
                                                         placeholder="https://yourproject.supabase.co"
                                                         value={backendUrl}
                                                         onChange={(e) => setBackendUrl(e.target.value)}
+                                                        autoComplete="off"
                                                         className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600"
                                                     />
                                                 </div>
@@ -301,6 +307,7 @@ export default function NewProjectPage() {
                                                         placeholder="sbp_..."
                                                         value={supabasePAT}
                                                         onChange={(e) => setSupabasePAT(e.target.value)}
+                                                        autoComplete="off"
                                                         className="text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 font-mono"
                                                     />
                                                 </div>

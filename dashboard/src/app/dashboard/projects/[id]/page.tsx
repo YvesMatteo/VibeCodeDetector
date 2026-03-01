@@ -46,35 +46,38 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
 
     if (!project) redirect('/dashboard');
 
-    // Get monitoring schedule
-    const { data: schedule } = await supabase
-        .from('scheduled_scans' as string)
+    // Get monitoring schedule (custom table not in generated types)
+    interface ScheduleRow { id: string; frequency: string; enabled: boolean; next_run_at: string | null; hour_utc: number }
+    const { data: schedule } = await (supabase
+        .from('scheduled_scans' as never)
         .select('id, frequency, enabled, next_run_at, hour_utc')
-        .eq('project_id', id)
-        .eq('user_id', user.id)
-        .maybeSingle() as { data: { id: string; frequency: string; enabled: boolean; next_run_at: string | null; hour_utc: number } | null };
+        .eq('project_id' as never, id)
+        .eq('user_id' as never, user.id)
+        .maybeSingle()) as unknown as { data: ScheduleRow | null };
 
     // Get recent scans for chart (metadata only — no results blob)
+    interface ScanMeta { id: string; overall_score: number | null; created_at: string; completed_at: string | null; status: string }
     const { data: recentScans } = await supabase
         .from('scans')
         .select('id, overall_score, created_at, completed_at, status')
         .eq('project_id', id)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
-        .limit(20);
+        .limit(20) as unknown as { data: ScanMeta[] | null };
 
     const latestScanMeta = recentScans?.[0] ?? null;
     const previousScan = recentScans?.[1] ?? null;
 
     // Fetch full results only for the latest scan (for issue counts + top findings)
-    let latestScan: (typeof latestScanMeta & { results: Record<string, unknown> | null }) | null = null;
+    interface FullScan extends ScanMeta { results: Record<string, unknown> | null }
+    let latestScan: FullScan | null = null;
     if (latestScanMeta) {
         const { data: fullScan } = await supabase
             .from('scans')
             .select('id, overall_score, created_at, completed_at, status, results')
             .eq('id', latestScanMeta.id)
-            .single();
-        latestScan = fullScan as typeof latestScan;
+            .single() as unknown as { data: FullScan | null };
+        latestScan = fullScan;
     }
 
     const score = latestScan?.overall_score ?? null;

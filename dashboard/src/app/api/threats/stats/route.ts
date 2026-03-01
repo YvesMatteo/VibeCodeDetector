@@ -94,8 +94,9 @@ export async function GET(req: NextRequest) {
         p_limit: 10
     });
 
+    interface TopIpRow { source_ip: string; event_count: number | string }
     const topIps = Array.isArray(topIpsRaw)
-        ? topIpsRaw.map((row: any) => ({ ip: row.source_ip, count: Number(row.event_count) }))
+        ? topIpsRaw.map((row: TopIpRow) => ({ ip: row.source_ip, count: Number(row.event_count) }))
         : [];
 
     return NextResponse.json({

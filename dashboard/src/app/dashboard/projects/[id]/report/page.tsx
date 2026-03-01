@@ -39,8 +39,9 @@ export default async function ProjectReportPage(props: {
 
     const userPlan = profile?.plan || 'none';
 
-    let latestScan: Record<string, unknown> | null = null;
-    let previousScan: Record<string, unknown> | null = null;
+    interface ScanRow { id: string; overall_score: number | null; created_at: string; completed_at: string | null; status: string; results: Record<string, unknown> | null; public_id: string | null; user_id: string; project_id: string }
+    let latestScan: ScanRow | null = null;
+    let previousScan: ScanRow | null = null;
 
     if (scanId) {
         // Fetch the specific scan requested via query param
@@ -52,7 +53,7 @@ export default async function ProjectReportPage(props: {
             .eq('user_id', user.id)
             .single();
 
-        latestScan = specificScan ?? null;
+        latestScan = (specificScan as unknown as ScanRow) ?? null;
 
         // Fetch the previous scan before this one for diff
         if (latestScan) {
@@ -61,11 +62,11 @@ export default async function ProjectReportPage(props: {
                 .select('*')
                 .eq('project_id', id)
                 .eq('status', 'completed')
-                .lt('completed_at', (latestScan as Record<string, unknown>).completed_at as string ?? (latestScan as Record<string, unknown>).created_at as string)
+                .lt('completed_at', latestScan.completed_at ?? latestScan.created_at)
                 .order('completed_at', { ascending: false })
                 .limit(1);
 
-            previousScan = prevScans?.[0] ?? null;
+            previousScan = (prevScans?.[0] as unknown as ScanRow) ?? null;
         }
     } else {
         // Fallback: get latest 2 completed scans (current + previous for diff)
@@ -77,8 +78,8 @@ export default async function ProjectReportPage(props: {
             .order('completed_at', { ascending: false })
             .limit(2);
 
-        latestScan = recentScans?.[0] ?? null;
-        previousScan = recentScans?.[1] ?? null;
+        latestScan = (recentScans?.[0] as unknown as ScanRow) ?? null;
+        previousScan = (recentScans?.[1] as unknown as ScanRow) ?? null;
     }
 
     // Fetch dismissed findings for this project
@@ -95,7 +96,7 @@ export default async function ProjectReportPage(props: {
         d.scope === 'project' || d.scan_id === latestScan?.id
     );
 
-    const auditData = latestScan ? processAuditData(latestScan.results as Record<string, ScanResultItem>) : null;
+    const auditData = latestScan ? processAuditData(latestScan.results as unknown as Record<string, ScanResultItem>) : null;
     const missingScanners = latestScan
         ? getMissingScannerNames(latestScan.results as Record<string, unknown>)
         : [];
