@@ -16,7 +16,9 @@ import { ScoreChart } from '@/components/dashboard/score-chart';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format-date';
 import { getScoreColor, getScoreBg } from '@/lib/severity-utils';
-import { countIssuesBySeverity } from '@/lib/scan-utils';
+import { countIssuesExcludingDismissed, computeAdjustedScore } from '@/lib/scan-utils';
+import { buildFingerprint } from '@/lib/dismissals';
+import type { Dismissal } from '@/lib/dismissals';
 
 const FREQUENCY_LABELS: Record<string, string> = {
     every_6h: 'Every 6 hours',
@@ -80,11 +82,30 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
         latestScan = fullScan;
     }
 
-    const score = latestScan?.overall_score ?? null;
+    // Fetch dismissed findings for this project
+    const { data: dismissalsRaw } = await supabase
+        .from('dismissed_findings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', id)
+        .order('created_at', { ascending: false });
+
+    const allDismissals = (dismissalsRaw || []) as Dismissal[];
+    const activeDismissals = allDismissals.filter(d =>
+        d.scope === 'project' || d.scan_id === latestScan?.id
+    );
+    const dismissedFingerprints = new Set(activeDismissals.map(d => d.fingerprint));
+    const hasDismissals = dismissedFingerprints.size > 0;
+
+    // Compute score and issues adjusted for dismissals
+    const rawScore = latestScan?.overall_score ?? null;
+    const score = hasDismissals && latestScan
+        ? computeAdjustedScore(latestScan.results as Record<string, unknown>, dismissedFingerprints)
+        : rawScore;
     const previousScore = previousScan?.overall_score ?? null;
     const scoreDelta = (score !== null && previousScore !== null) ? score - previousScore : null;
 
-    const issues = latestScan ? countIssuesBySeverity(latestScan.results as Record<string, unknown>) : null;
+    const issues = latestScan ? countIssuesExcludingDismissed(latestScan.results as Record<string, unknown>, dismissedFingerprints) : null;
     // Chart data (oldest first)
     const chartData = (recentScans || [])
         .filter(s => s.overall_score !== null)
@@ -94,22 +115,22 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
             score: s.overall_score!,
         }));
 
-    // Top findings from latest scan
+    // Top findings from latest scan (excluding dismissed)
     const topFindings: { scanner: string; finding: string; severity: string }[] = [];
     if (latestScan?.results) {
-        const results = latestScan.results as Record<string, { name?: string; findings?: { severity?: string; title?: string; description?: string }[] }>;
+        const results = latestScan.results as Record<string, { name?: string; findings?: { id?: string; severity?: string; title?: string; description?: string }[] }>;
         for (const key of Object.keys(results)) {
             const scanner = results[key];
             if (scanner?.findings && Array.isArray(scanner.findings)) {
                 for (const f of scanner.findings) {
                     const sev = (f.severity || '').toLowerCase();
-                    if (sev === 'critical' || sev === 'high') {
-                        topFindings.push({
-                            scanner: scanner.name || key,
-                            finding: f.title || f.description || 'Issue found',
-                            severity: sev,
-                        });
-                    }
+                    if (sev !== 'critical' && sev !== 'high') continue;
+                    if (dismissedFingerprints.has(buildFingerprint(key, { id: f.id, title: f.title || '', severity: f.severity || '' }))) continue;
+                    topFindings.push({
+                        scanner: scanner.name || key,
+                        finding: f.title || f.description || 'Issue found',
+                        severity: sev,
+                    });
                 }
             }
         }
@@ -223,6 +244,9 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
                                         <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 font-medium">{issues.low} low</span>
                                     )}
                                 </div>
+                            )}
+                            {hasDismissals && (
+                                <p className="text-[10px] text-zinc-600 mt-1.5">{dismissedFingerprints.size} dismissed</p>
                             )}
                         </div>
 
