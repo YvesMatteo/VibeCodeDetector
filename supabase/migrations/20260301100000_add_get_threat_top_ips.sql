@@ -9,12 +9,12 @@ CREATE OR REPLACE FUNCTION public.get_threat_top_ips(
     p_since TIMESTAMPTZ DEFAULT now() - INTERVAL '24 hours',
     p_limit INT DEFAULT 10
 )
-RETURNS TABLE(source_ip INET, event_count BIGINT)
+RETURNS TABLE(source_ip INET, event_count BIGINT, last_seen_at TIMESTAMPTZ)
 LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-    SELECT te.source_ip, COUNT(*) AS event_count
+    SELECT te.source_ip, COUNT(*) AS event_count, MAX(te.created_at) AS last_seen_at
     FROM public.threat_events te
     WHERE te.project_id = p_project_id
     AND te.created_at >= p_since
