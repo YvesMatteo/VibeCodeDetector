@@ -173,10 +173,10 @@ BEGIN
     FOR r IN
         SELECT
             ts.project_id,
-            COALESCE(u.raw_user_meta_data->>'plan', 'none') AS plan
+            COALESCE(pr.plan, 'none') AS plan
         FROM public.threat_settings ts
         JOIN public.projects p ON p.id = ts.project_id
-        JOIN auth.users u ON u.id = p.user_id
+        JOIN public.profiles pr ON pr.id = p.user_id
         WHERE ts.enabled = true
     LOOP
         DELETE FROM public.threat_events
