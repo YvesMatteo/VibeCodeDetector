@@ -59,10 +59,4 @@ export const OWNER_EMAIL = process.env.OWNER_EMAIL || 'support@checkvibe.dev';
  */
 export const OWNER_EMAIL_CLIENT = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'support@checkvibe.dev';
 
-/** Plan limits */
-export const PLAN_LIMITS: Record<string, { domains: number; scans: number; projects: number; apiKeys: number }> = {
-  none: { domains: 0, scans: 0, projects: 0, apiKeys: 0 },
-  starter: { domains: 1, scans: 5, projects: 1, apiKeys: 1 },
-  pro: { domains: 3, scans: 20, projects: 3, apiKeys: 5 },
-  max: { domains: 10, scans: 75, projects: 10, apiKeys: 20 },
-};
+// PLAN_LIMITS removed — use plan-config.ts as the single source of truth for plan limits.

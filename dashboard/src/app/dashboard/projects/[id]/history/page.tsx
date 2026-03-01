@@ -4,14 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { ScoreChart } from '@/components/dashboard/score-chart';
 import { formatDate } from '@/lib/format-date';
-import { countIssuesBySeverity } from '@/lib/scan-utils';
 
-function getVibeRating(issues: number): { label: string; color: string; bg: string } {
-    if (issues === 0) return { label: 'Clean', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
-    if (issues <= 3) return { label: 'Good', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' };
-    if (issues <= 7) return { label: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
-    if (issues <= 15) return { label: 'Needs Work', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
-    if (issues <= 25) return { label: 'At Risk', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
+function getVibeRating(score: number | null): { label: string; color: string; bg: string } {
+    if (score === null) return { label: 'Pending', color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20' };
+    if (score >= 90) return { label: 'Clean', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
+    if (score >= 75) return { label: 'Good', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' };
+    if (score >= 60) return { label: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
+    if (score >= 40) return { label: 'Needs Work', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
+    if (score >= 20) return { label: 'At Risk', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
     return { label: 'Critical', color: 'text-red-500', bg: 'bg-red-500/15 border-red-500/30' };
 }
 
@@ -34,7 +34,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
     const PAGE_SIZE = 20;
     const { data: scans, count } = await supabase
         .from('scans')
-        .select('id, url, status, overall_score, results, created_at, completed_at', { count: 'exact' })
+        .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
         .eq('project_id', params.id)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -73,9 +73,8 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
             ) : (
                 <div className="relative">
                     {scans.map((scan: any, index: number) => {
-                        const issueCount = countIssuesBySeverity(scan.results as Record<string, any>).total;
                         const score = scan.overall_score;
-                        const rating = getVibeRating(issueCount);
+                        const rating = getVibeRating(score);
                         const date = new Date(scan.created_at);
                         const isFirst = index === 0;
 
@@ -106,8 +105,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
                                             </span>
                                         </div>
                                         <p className="text-sm text-zinc-400">
-                                            {issueCount} issue{issueCount !== 1 ? 's' : ''} found
-                                            {score != null && <span className="text-zinc-600 ml-2">· Score: {score}</span>}
+                                            Score: {score ?? '\u2014'}/100
                                         </p>
                                     </div>
                                 </Link>

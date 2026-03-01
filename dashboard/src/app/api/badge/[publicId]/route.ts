@@ -25,13 +25,25 @@ function getLabel(score: number): string {
   return 'F';
 }
 
+// CORS preflight for cross-origin badge embedding
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   const { publicId } = await params;
 
-  if (!/^[0-9a-f]{6,16}$/i.test(publicId)) {
+  if (!/^[0-9a-f]{6,64}$/i.test(publicId)) {
     return new NextResponse('Not found', { status: 404 });
   }
 
@@ -54,7 +66,7 @@ export async function GET(
     return new NextResponse('Not found', { status: 404 });
   }
 
-  const score = scan.overall_score ?? 0;
+  const score = Math.max(0, Math.min(100, Math.round(Number(scan.overall_score) || 0)));
   const color = getColor(score);
   const label = getLabel(score);
 
@@ -84,6 +96,7 @@ export async function GET(
     headers: {
       'Content-Type': 'image/svg+xml',
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }
