@@ -8,7 +8,8 @@ export interface Project {
   github_repo: string | null;
   backend_type: 'supabase' | 'firebase' | 'convex' | 'none';
   backend_url: string | null;
-  supabase_pat: string | null;
+  /** True if the project has an encrypted Supabase PAT stored (actual value is never sent to client) */
+  has_supabase_pat: boolean;
   created_at: string;
   updated_at: string;
   /** Aggregated from latest completed scan */

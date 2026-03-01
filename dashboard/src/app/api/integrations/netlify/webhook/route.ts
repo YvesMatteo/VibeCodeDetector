@@ -180,11 +180,8 @@ export async function POST(req: NextRequest) {
 
         if (project.github_repo) scanBody.githubRepo = project.github_repo;
         if (project.supabase_pat) {
-            try {
-                scanBody.supabasePAT = decrypt(project.supabase_pat);
-            } catch {
-                scanBody.supabasePAT = project.supabase_pat;
-            }
+            // decrypt() handles legacy plaintext values gracefully (returns as-is if no "enc:" prefix)
+            scanBody.supabasePAT = decrypt(project.supabase_pat);
         }
 
         const cronSecret = process.env.CRON_SECRET;
