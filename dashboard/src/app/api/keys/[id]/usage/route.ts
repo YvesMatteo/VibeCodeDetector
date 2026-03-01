@@ -41,8 +41,8 @@ export async function GET(
 
     // Parse query params for pagination
     const searchParams = req.nextUrl.searchParams;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10), 1), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
 
     // Get recent usage logs
     const logTable = supabase.from('api_key_usage_log');

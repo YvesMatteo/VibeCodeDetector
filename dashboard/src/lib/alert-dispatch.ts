@@ -32,6 +32,7 @@ interface AlertDispatchOpts {
     currentScore: number;
     previousScore: number | null;
     issues: { critical: number; high: number; medium: number; low: number };
+    previousCriticalCount?: number | null;
 }
 
 /**
@@ -77,10 +78,11 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
                     });
                 }
             } else if (rule.type === 'new_critical') {
-                if (opts.issues.critical > 0) {
+                const prevCritical = opts.previousCriticalCount ?? 0;
+                if (opts.issues.critical > prevCritical) {
                     template = newCriticalAlertTemplate({
                         projectName: opts.projectName,
-                        criticalCount: opts.issues.critical,
+                        criticalCount: opts.issues.critical - prevCritical,
                         currentScore: opts.currentScore,
                         dashboardUrl,
                     });
@@ -103,6 +105,13 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
             if (!email) return;
 
             try {
+                // Update last_triggered_at BEFORE sending email (pessimistic)
+                // This prevents retry spam if the email provider is temporarily down
+                await supabase
+                    .from('alert_rules' as never)
+                    .update({ last_triggered_at: now.toISOString() })
+                    .eq('id', rule.id);
+
                 const resend = getResend();
                 await resend.emails.send({
                     from: FROM_EMAIL,
@@ -116,12 +125,6 @@ export async function dispatchAlerts(opts: AlertDispatchOpts): Promise<void> {
                         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
                     },
                 });
-
-                // Update last_triggered_at
-                await supabase
-                    .from('alert_rules' as never)
-                    .update({ last_triggered_at: now.toISOString() })
-                    .eq('id', rule.id);
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
                 console.error(`Alert email failed for rule ${rule.id}:`, message);

@@ -868,7 +868,7 @@ export async function POST(req: NextRequest) {
                             const [projectRes, prevScanRes] = await Promise.all([
                                 svc.from('projects').select('name, url').eq('id', resolvedProjectId!).single(),
                                 svc.from('scans')
-                                    .select('overall_score')
+                                    .select('overall_score, results')
                                     .eq('project_id', resolvedProjectId!)
                                     .eq('status', 'completed')
                                     .neq('id', scanId!)
@@ -891,6 +891,21 @@ export async function POST(req: NextRequest) {
                                 }
                             }
 
+                            // Count previous scan's critical issues for delta comparison
+                            let previousCriticalCount: number | null = null;
+                            if (prevScanRes.data?.results) {
+                                let prevCritical = 0;
+                                for (const val of Object.values(prevScanRes.data.results as Record<string, unknown>)) {
+                                    const r = val as Record<string, unknown>;
+                                    if (!r || !Array.isArray(r.findings)) continue;
+                                    for (const f of r.findings) {
+                                        const finding = f as Record<string, unknown>;
+                                        if (((finding.severity as string | undefined) || '').toLowerCase() === 'critical') prevCritical++;
+                                    }
+                                }
+                                previousCriticalCount = prevCritical;
+                            }
+
                             await dispatchAlerts({
                                 projectId: resolvedProjectId!,
                                 projectName: projectRes.data?.name || 'Unknown project',
@@ -899,6 +914,7 @@ export async function POST(req: NextRequest) {
                                 currentScore: overallScore,
                                 previousScore: prevScanRes.data?.overall_score ?? null,
                                 issues: counts,
+                                previousCriticalCount,
                             });
                         } catch { /* non-critical */ }
                     })();

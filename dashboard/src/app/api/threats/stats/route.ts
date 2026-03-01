@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { PLAN_CONFIG, FREE_PLAN_CONFIG } from '@/lib/plan-config';
 
-interface TopIpRow { source_ip: string; event_count: number | string }
+interface TopIpRow { source_ip: string; event_count: number | string; last_seen_at: string | null }
 interface ThreatEvent { created_at: string; severity: string }
 
 // GET /api/threats/stats?projectId=xxx&hours=24
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
         ('get_threat_top_ips', { p_project_id: projectId, p_since: since, p_limit: 10 });
 
     const topIps = Array.isArray(topIpsRaw)
-        ? (topIpsRaw as TopIpRow[]).map((row) => ({ ip: row.source_ip, count: Number(row.event_count) }))
+        ? (topIpsRaw as TopIpRow[]).map((row) => ({ ip: row.source_ip, count: Number(row.event_count), lastSeen: row.last_seen_at || new Date().toISOString() }))
         : [];
 
     return NextResponse.json({

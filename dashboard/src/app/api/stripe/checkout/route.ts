@@ -53,27 +53,19 @@ export async function POST(req: NextRequest) {
             return new NextResponse('Invalid plan', { status: 400 });
         }
 
-        // Reuse existing Stripe customer if available
+        // Fetch customer + subscription in a single query to avoid race conditions
         const { data: profile } = await supabase
             .from('profiles')
-            .select('stripe_customer_id')
+            .select('stripe_customer_id, stripe_subscription_id')
             .eq('id', user.id)
             .single();
 
         // Check for existing active subscription — redirect to portal for plan changes
-        if (profile?.stripe_customer_id) {
-            const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('stripe_subscription_id')
-                .eq('id', user.id)
-                .single();
-
-            if (existingProfile?.stripe_subscription_id) {
-                return NextResponse.json(
-                    { error: 'You already have an active subscription. Use the billing portal to change plans.', code: 'EXISTING_SUBSCRIPTION' },
-                    { status: 409 }
-                );
-            }
+        if (profile?.stripe_subscription_id) {
+            return NextResponse.json(
+                { error: 'You already have an active subscription. Use the billing portal to change plans.', code: 'EXISTING_SUBSCRIPTION' },
+                { status: 409 }
+            );
         }
 
         const isAnnual = billing === 'annual';

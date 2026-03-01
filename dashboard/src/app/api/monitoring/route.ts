@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     if (type === 'schedule') {
         const { frequency, hourUtc, dayOfWeek, enabled } = body;
-        if (!['every_6h', 'daily', 'weekly', 'monthly'].includes(frequency)) {
+        if (!['daily', 'weekly', 'monthly'].includes(frequency)) {
             return NextResponse.json({ error: 'Invalid frequency' }, { status: 400 });
         }
 

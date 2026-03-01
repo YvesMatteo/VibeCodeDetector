@@ -3,6 +3,86 @@ import { createClient } from '@/lib/supabase/server';
 import { hashApiKey, getServiceClient, type Scope } from './api-keys';
 import { checkAllRateLimits } from './rate-limit';
 import crypto from 'crypto';
+import { isIP } from 'net';
+
+// ---------------------------------------------------------------------------
+// CIDR matching
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks whether `ip` falls within a CIDR range (e.g. "10.0.0.0/8") or is
+ * an exact match for a plain IP entry. Supports both IPv4 and IPv6.
+ */
+function ipMatchesCidr(ip: string, entry: string): boolean {
+  if (!entry.includes('/')) {
+    return ip === entry;
+  }
+
+  const [subnet, prefixStr] = entry.split('/');
+  const prefix = parseInt(prefixStr, 10);
+  if (isNaN(prefix)) return false;
+
+  // IPv4
+  if (isIP(ip) === 4 && isIP(subnet) === 4) {
+    const ipNum = ipv4ToNum(ip);
+    const subNum = ipv4ToNum(subnet);
+    if (ipNum === null || subNum === null || prefix < 0 || prefix > 32) return false;
+    const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+    return (ipNum & mask) === (subNum & mask);
+  }
+
+  // IPv6
+  if (isIP(ip) === 6 && isIP(subnet) === 6) {
+    const ipBytes = ipv6ToBytes(ip);
+    const subBytes = ipv6ToBytes(subnet);
+    if (!ipBytes || !subBytes || prefix < 0 || prefix > 128) return false;
+    let bits = prefix;
+    for (let i = 0; i < 16; i++) {
+      if (bits >= 8) {
+        if (ipBytes[i] !== subBytes[i]) return false;
+        bits -= 8;
+      } else if (bits > 0) {
+        const mask = (0xff << (8 - bits)) & 0xff;
+        if ((ipBytes[i] & mask) !== (subBytes[i] & mask)) return false;
+        bits = 0;
+      } else {
+        break;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function ipv4ToNum(ip: string): number | null {
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) return null;
+  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+}
+
+function ipv6ToBytes(ip: string): Uint8Array | null {
+  // Expand :: shorthand
+  let full = ip;
+  if (full.includes('::')) {
+    const [left, right] = full.split('::');
+    const leftParts = left ? left.split(':') : [];
+    const rightParts = right ? right.split(':') : [];
+    const missing = 8 - leftParts.length - rightParts.length;
+    if (missing < 0) return null;
+    full = [...leftParts, ...Array(missing).fill('0'), ...rightParts].join(':');
+  }
+  const parts = full.split(':');
+  if (parts.length !== 8) return null;
+  const bytes = new Uint8Array(16);
+  for (let i = 0; i < 8; i++) {
+    const val = parseInt(parts[i], 16);
+    if (isNaN(val) || val < 0 || val > 0xffff) return null;
+    bytes[i * 2] = (val >> 8) & 0xff;
+    bytes[i * 2 + 1] = val & 0xff;
+  }
+  return bytes;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -122,9 +202,10 @@ export async function resolveAuth(req: NextRequest): Promise<AuthResult> {
 
     const row = data[0];
 
-    // IP allowlist check
+    // IP allowlist check (supports exact IPs and CIDR notation like 10.0.0.0/8)
     if (row.allowed_ips && row.allowed_ips.length > 0) {
-      if (!row.allowed_ips.includes(ip)) {
+      const ipAllowed = row.allowed_ips.some((entry: string) => ipMatchesCidr(ip, entry));
+      if (!ipAllowed) {
         return {
           context: null,
           error: NextResponse.json(
