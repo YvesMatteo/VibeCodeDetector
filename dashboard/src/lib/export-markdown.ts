@@ -70,7 +70,14 @@ const SCANNER_ORDER: string[] = [
   'threat_intelligence',
   'tech_stack',
   'legal',
-  'vibe_match',
+  'ddos_protection',
+  'file_upload',
+  'audit_logging',
+  'mobile_api',
+  'domain_hijacking',
+  'graphql',
+  'jwt_audit',
+  'ai_llm',
 ];
 
 function getVibeRating(issues: number): string {

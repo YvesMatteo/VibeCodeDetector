@@ -61,6 +61,7 @@ const SCANNER_NAMES: Record<string, string> = {
     ddos_protection: 'DDoS', file_upload: 'File Upload',
     audit_logging: 'Audit Logging', mobile_api: 'Mobile API',
     domain_hijacking: 'Domain Hijacking', debug_endpoints: 'Debug Endpoints',
+    graphql: 'GraphQL', jwt_audit: 'JWT Audit', ai_llm: 'AI/LLM',
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
