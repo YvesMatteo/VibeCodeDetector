@@ -79,8 +79,8 @@ describe('isPrivateHostname', () => {
 describe('validateTargetUrl', () => {
   it('rejects empty/null/undefined input', () => {
     expect(validateTargetUrl('')).toEqual({ valid: false, error: 'URL is required' });
-    expect(validateTargetUrl(null as any)).toEqual({ valid: false, error: 'URL is required' });
-    expect(validateTargetUrl(undefined as any)).toEqual({ valid: false, error: 'URL is required' });
+    expect(validateTargetUrl(null as unknown as string)).toEqual({ valid: false, error: 'URL is required' });
+    expect(validateTargetUrl(undefined as unknown as string)).toEqual({ valid: false, error: 'URL is required' });
   });
 
   it('rejects URLs exceeding 2048 characters', () => {

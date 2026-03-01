@@ -99,6 +99,7 @@ export default function HomePage() {
               </p>
             </div>
 
+            {/* eslint-disable @next/next/no-img-element -- decorative tool logos, no need for next/image optimization */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
               {/* Claude */}
               <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 transition-all duration-300 shadow-xl">
@@ -124,6 +125,7 @@ export default function HomePage() {
                 <h3 className="text-base font-medium text-white">Antigravity</h3>
               </div>
             </div>
+            {/* eslint-enable @next/next/no-img-element */}
           </div>
 
           <FeatureRoadmap />

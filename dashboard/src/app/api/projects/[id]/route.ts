@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateTargetUrl } from '@/lib/url-validation';
@@ -84,7 +83,7 @@ export async function PATCH(
         }
 
         const body = await req.json();
-        const updates: Record<string, any> = {};
+        const updates: Record<string, unknown> = {};
 
         if (body.name !== undefined) {
             if (typeof body.name !== 'string' || body.name.trim().length < 1 || body.name.trim().length > 100) {

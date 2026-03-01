@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { dispatchThreatAlerts } from '@/lib/threat-alert-dispatch';
@@ -22,6 +21,10 @@ function getServiceClient() {
 
 export const maxDuration = 60;
 
+interface ThreatSettingRow {
+    project_id: string;
+}
+
 export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
@@ -39,9 +42,9 @@ export async function GET(req: NextRequest) {
 
     // Fetch all enabled threat settings
     const { data: settings, error } = await supabase
-        .from('threat_settings' as any)
+        .from('threat_settings' as never)
         .select('project_id')
-        .eq('enabled', true);
+        .eq('enabled', true) as { data: ThreatSettingRow[] | null; error: unknown };
 
     if (error) {
         console.error('Failed to query threat settings:', error);
@@ -58,8 +61,9 @@ export async function GET(req: NextRequest) {
         try {
             const result = await dispatchThreatAlerts(s.project_id);
             results.push({ projectId: s.project_id, ...result });
-        } catch (err: any) {
-            console.error(`Threat alert dispatch failed for project ${s.project_id}:`, err.message);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`Threat alert dispatch failed for project ${s.project_id}:`, msg);
             results.push({ projectId: s.project_id, sent: false });
         }
     }
