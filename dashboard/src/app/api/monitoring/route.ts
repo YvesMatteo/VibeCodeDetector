@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { computeNextRun } from '@/lib/schedule-utils';
@@ -21,8 +20,8 @@ export async function GET(req: NextRequest) {
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
     const [scheduleRes, alertsRes] = await Promise.all([
-        supabase.from('scheduled_scans' as any).select('*').eq('project_id', projectId).eq('user_id', user.id).maybeSingle(),
-        supabase.from('alert_rules' as any).select('*').eq('project_id', projectId).eq('user_id', user.id),
+        (supabase.from('scheduled_scans' as never).select('*').eq('project_id', projectId).eq('user_id', user.id).maybeSingle()) as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
+        (supabase.from('alert_rules' as never).select('*').eq('project_id', projectId).eq('user_id', user.id)) as Promise<{ data: Record<string, unknown>[] | null; error: unknown }>,
     ]);
 
     return NextResponse.json({
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
         const nextRunAt = enabled !== false ? computeNextRun(frequency, hourUtc ?? 6, dayOfWeek) : null;
 
         const { data, error } = await supabase
-            .from('scheduled_scans' as any)
+            .from('scheduled_scans' as never)
             .upsert({
                 project_id: projectId,
                 user_id: user.id,
@@ -82,7 +81,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date().toISOString(),
             }, { onConflict: 'project_id' })
             .select()
-            .single();
+            .single() as { data: Record<string, unknown> | null; error: unknown };
 
         if (error) {
             console.error('Monitoring schedule upsert error:', error);
@@ -103,7 +102,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { data, error } = await supabase
-            .from('alert_rules' as any)
+            .from('alert_rules' as never)
             .upsert({
                 project_id: projectId,
                 user_id: user.id,
@@ -113,7 +112,7 @@ export async function POST(req: NextRequest) {
                 enabled: enabled !== false,
             }, { onConflict: 'project_id,type' })
             .select()
-            .single();
+            .single() as { data: Record<string, unknown> | null; error: unknown };
 
         if (error) {
             console.error('Monitoring alert upsert error:', error);
@@ -152,10 +151,10 @@ export async function DELETE(req: NextRequest) {
     const table = type === 'schedule' ? 'scheduled_scans' : 'alert_rules';
 
     const { error } = await supabase
-        .from(table as any)
+        .from(table as never)
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id) as { error: unknown };
 
     if (error) {
         console.error('Monitoring delete error:', error);
