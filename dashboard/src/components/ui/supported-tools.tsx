@@ -66,6 +66,7 @@ export function SupportedTools() {
                     >
                         <div className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 transition-opacity duration-300`}>
                             {'image' in tool ? (
+                                /* eslint-disable-next-line @next/next/no-img-element -- decorative tool logos */
                                 <img src={tool.image} alt={`${tool.name} logo`} className="w-full h-full object-contain" />
                             ) : (
                                 <svg viewBox={tool.viewBox} width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">

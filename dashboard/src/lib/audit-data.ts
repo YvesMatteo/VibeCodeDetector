@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 /** Shared audit data types and processing — importable from both server and client components */
 
 /**
@@ -59,20 +58,42 @@ export function getMissingScannerNames(results: Record<string, unknown>): string
         .map(key => SCANNER_DISPLAY_NAMES[key] || key);
 }
 
+/** A single finding from a scanner — compatible with scanner-accordion component */
+export interface Finding {
+    severity: string;
+    title: string;
+    description?: string;
+    id?: string;
+    category?: string;
+    recommendation?: string;
+    reportUrl?: string;
+    evidence?: string;
+    details?: Record<string, unknown>;
+    _summaryId?: string;
+    [key: string]: unknown;
+}
+
 export interface ScanResultItem {
     score: number;
-    findings: { severity: string; title: string; description: string;[key: string]: any }[];
+    findings: Finding[];
+    error?: string;
+    skipped?: boolean;
+    reason?: string;
+    missingConfig?: string;
+    metadata?: Record<string, unknown>;
+    scannedAt?: string;
+    technologies?: Array<{ name: string; version?: string; category?: string }>;
 }
 
 export interface AuditReportData {
     results: Record<string, ScanResultItem>;
-    allFindings: any[];
+    allFindings: Finding[];
     totalFindings: { critical: number; high: number; medium: number; low: number };
     issueCount: number;
     passingCheckCount: number;
     visibleScannerCount: number;
-    techStack: any;
-    techStackCveFindings: any[];
+    techStack: ScanResultItem | undefined;
+    techStackCveFindings: Finding[];
     scannerResults: Record<string, ScanResultItem>;
 }
 
@@ -81,32 +102,32 @@ const HIDDEN_SCANNER_KEYS = new Set(['vibe_match', 'ai_detection']);
 
 /** Pre-process scan results into the shape needed by AuditReport */
 export function processAuditData(results: Record<string, ScanResultItem>): AuditReportData {
-    const techStack = (results as Record<string, ScanResultItem>).tech_stack;
+    const techStack = results.tech_stack;
     const techStackCveFindings = techStack?.findings?.filter(
-        (f: any) => f.severity?.toLowerCase() !== 'info'
-    ) || [];
+        (f) => f.severity?.toLowerCase() !== 'info'
+    ) ?? [];
 
     const scannerResults = Object.fromEntries(
         Object.entries(results).filter(([key]) => key !== 'tech_stack' && !HIDDEN_SCANNER_KEYS.has(key))
     ) as Record<string, ScanResultItem>;
 
-    const visibleScannerCount = Object.entries(scannerResults).filter(([key, result]: [string, any]) => {
+    const visibleScannerCount = Object.entries(scannerResults).filter(([key, result]) => {
         if (result.skipped) return false;
         if (key.endsWith('_hosting') && result.score === 100 && !result.error) {
-            const allInfo = !result.findings?.length || result.findings.every((f: any) => f.severity?.toLowerCase() === 'info');
+            const allInfo = !result.findings?.length || result.findings.every((f) => f.severity?.toLowerCase() === 'info');
             if (allInfo) return false;
         }
         return true;
     }).length;
 
     const totalFindings = { critical: 0, high: 0, medium: 0, low: 0 };
-    const allFindings: any[] = [];
+    const allFindings: Finding[] = [];
 
-    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]: [string, any]) => {
+    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]) => {
         if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
             allFindings.push(...result.findings);
-            result.findings.forEach((f: any) => {
+            result.findings.forEach((f) => {
                 const sev = f.severity?.toLowerCase();
                 if (sev === 'info') return;
                 if (sev === 'critical') totalFindings.critical++;
@@ -120,10 +141,10 @@ export function processAuditData(results: Record<string, ScanResultItem>): Audit
     const issueCount = totalFindings.critical + totalFindings.high + totalFindings.medium + totalFindings.low;
 
     let passingCheckCount = 0;
-    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]: [string, any]) => {
+    Object.entries(results).filter(([key]) => !HIDDEN_SCANNER_KEYS.has(key)).forEach(([, result]) => {
         if (result.skipped) return;
         if (result.findings && Array.isArray(result.findings)) {
-            result.findings.forEach((f: any) => {
+            result.findings.forEach((f) => {
                 if (f.severity?.toLowerCase() === 'info') passingCheckCount++;
             });
         }

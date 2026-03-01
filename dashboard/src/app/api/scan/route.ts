@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase custom tables & dynamic scanner results */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -107,7 +106,8 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        let { url, scanTypes, githubRepo, supabasePAT } = body;
+        let { url, githubRepo, supabasePAT } = body;
+        const { scanTypes } = body;
         const projectId: string | undefined = body.projectId;
 
         // If projectId is provided, fetch project and use its config
@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
         // RUN SCANNERS (with real-time progress)
         // ==========================================
 
-        const results: Record<string, any> = {};
+        const results: Record<string, unknown> = {};
         const scannerPromises: Promise<void>[] = [];
 
         const SCANNER_TIMEOUT_MS = 45000; // 45 second timeout per scanner (all run in parallel)
@@ -287,7 +287,7 @@ export async function POST(req: NextRequest) {
         };
 
         // Helper: Format body for scanners
-        const buildScannerBody = (extraParams: Record<string, any> = {}) => {
+        const buildScannerBody = (extraParams: Record<string, unknown> = {}) => {
             return JSON.stringify({
                 targetUrl,
                 ...extraParams
