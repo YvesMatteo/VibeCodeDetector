@@ -19,8 +19,8 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-4xl font-bold tracking-tight mb-2">Privacy Policy</h1>
-        <p className="text-zinc-400 mb-1">Last updated: February 16, 2026</p>
-        <p className="text-zinc-500 text-sm mb-12">Version 2.0</p>
+        <p className="text-zinc-400 mb-1">Last updated: March 1, 2026</p>
+        <p className="text-zinc-500 text-sm mb-12">Version 2.1</p>
 
         <div className="space-y-10 text-zinc-300 leading-relaxed">
           <section>
@@ -81,6 +81,30 @@ export default function PrivacyPage() {
               in our database and used solely to perform security scans you initiate. They are never shared
               with third parties beyond the specific scanning services required. You can delete these
               credentials at any time by removing the associated project.
+            </p>
+
+            <h3 className="text-lg font-medium text-white mt-5 mb-2">2.6 Email and Outreach Data</h3>
+            <p>
+              If you use our outreach features, we process email addresses and message content you provide
+              for the purpose of sending bulk or individual communications on your behalf via our email
+              delivery provider (Resend). Email delivery metadata such as send status and timestamps is
+              retained for service operation and troubleshooting.
+            </p>
+
+            <h3 className="text-lg font-medium text-white mt-5 mb-2">2.7 Threat Detection Data</h3>
+            <p>
+              Our real-time threat detection feature may deploy a lightweight JavaScript snippet on scanned
+              pages to collect visitor interaction data such as IP addresses, user agents, and behavioral
+              signals. This data is used exclusively for identifying malicious activity and security threats
+              and is not used for advertising or profiling purposes.
+            </p>
+
+            <h3 className="text-lg font-medium text-white mt-5 mb-2">2.8 Support Ticket Data</h3>
+            <p>
+              When you submit a support request, we collect your email address, message content, and any
+              attachments you provide. This information is used to respond to your inquiry and improve our
+              support processes. Support correspondence is retained for the duration of your account plus
+              30 days after closure.
             </p>
           </section>
 
@@ -157,6 +181,14 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <span className="font-medium text-white">National Vulnerability Database (NVD)</span> &mdash; CVE lookup for dependency scanning.
+              </li>
+              <li>
+                <span className="font-medium text-white">Resend</span> &mdash; transactional email delivery for support notifications and outreach communications ({' '}
+                <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">privacy policy</a>).
+              </li>
+              <li>
+                <span className="font-medium text-white">URLScan.io</span> &mdash; URL scanning and threat intelligence analysis ({' '}
+                <a href="https://urlscan.io/about/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">about &amp; privacy</a>).
               </li>
             </ul>
             <p className="mt-3">

@@ -19,8 +19,8 @@ export default function CookiePolicyPage() {
         </Link>
 
         <h1 className="text-4xl font-bold tracking-tight mb-2">Cookie Policy</h1>
-        <p className="text-zinc-400 mb-1">Last updated: February 16, 2026</p>
-        <p className="text-zinc-500 text-sm mb-12">Version 1.0</p>
+        <p className="text-zinc-400 mb-1">Last updated: March 1, 2026</p>
+        <p className="text-zinc-500 text-sm mb-12">Version 1.1</p>
 
         <div className="space-y-10 text-zinc-300 leading-relaxed">
           <section>
