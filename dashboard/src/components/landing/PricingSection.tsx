@@ -6,43 +6,44 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
 import { detectCurrency, formatPrice, type CurrencyCode } from '@/lib/currency';
+import { FREE_PLAN_CONFIG, PLAN_CONFIG } from '@/lib/plan-config';
 
 const pricingTiers = [
   {
-    name: 'Free',
-    priceMonthly: 0,
-    priceAnnualPerMonth: 0,
+    name: FREE_PLAN_CONFIG.name,
+    priceMonthly: FREE_PLAN_CONFIG.priceMonthly,
+    priceAnnualPerMonth: FREE_PLAN_CONFIG.priceAnnualPerMonth,
     description: 'Try it out',
-    features: ['1 project', 'Weekly monitoring', 'Issue overview', 'Blurred details'],
+    features: [`${FREE_PLAN_CONFIG.projects} project`, FREE_PLAN_CONFIG.monitoringLabel, 'Issue overview', 'Blurred details'],
     cta: 'Get Started Free',
     highlighted: false,
     isFree: true,
   },
   {
-    name: 'Starter',
-    priceMonthly: 19,
-    priceAnnualPerMonth: 13.30,
+    name: PLAN_CONFIG.starter.name,
+    priceMonthly: PLAN_CONFIG.starter.priceMonthly,
+    priceAnnualPerMonth: PLAN_CONFIG.starter.priceAnnualPerMonth,
     description: 'For solo makers',
-    features: ['1 project', 'Daily monitoring', '35 security checks', 'Full history'],
+    features: [`${PLAN_CONFIG.starter.projects} project`, PLAN_CONFIG.starter.monitoringLabel, '35 security checks', 'Full history'],
     cta: 'Get Started',
     highlighted: true,
     badgeText: 'Most Popular',
   },
   {
-    name: 'Pro',
-    priceMonthly: 39,
-    priceAnnualPerMonth: 27.30,
+    name: PLAN_CONFIG.pro.name,
+    priceMonthly: PLAN_CONFIG.pro.priceMonthly,
+    priceAnnualPerMonth: PLAN_CONFIG.pro.priceAnnualPerMonth,
     description: 'For growing projects',
-    features: ['3 projects', 'Daily monitoring', '35 security checks', 'Priority support'],
+    features: [`${PLAN_CONFIG.pro.projects} projects`, PLAN_CONFIG.pro.monitoringLabel, '35 security checks', 'Priority support'],
     cta: 'Get Started',
     highlighted: false,
   },
   {
-    name: 'Max',
-    priceMonthly: 79,
-    priceAnnualPerMonth: 55.30,
+    name: PLAN_CONFIG.max.name,
+    priceMonthly: PLAN_CONFIG.max.priceMonthly,
+    priceAnnualPerMonth: PLAN_CONFIG.max.priceAnnualPerMonth,
     description: 'For teams & agencies',
-    features: ['10 projects', 'Every 6h monitoring', '35 security checks', 'Dedicated support'],
+    features: [`${PLAN_CONFIG.max.projects} projects`, PLAN_CONFIG.max.monitoringLabel, '35 security checks', 'Dedicated support'],
     cta: 'Get Started',
     highlighted: true,
     badgeText: 'Best Value',
@@ -52,11 +53,7 @@ const pricingTiers = [
 
 export function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
-  const [currency, setCurrency] = useState<CurrencyCode>('USD');
-
-  useEffect(() => {
-    setCurrency(detectCurrency());
-  }, []);
+  const [currency] = useState<CurrencyCode>(() => detectCurrency());
 
   // Sliding pill refs
   const toggleRef = useRef<HTMLDivElement>(null);

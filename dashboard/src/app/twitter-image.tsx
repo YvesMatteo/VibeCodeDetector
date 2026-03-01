@@ -62,7 +62,6 @@ export default async function Image() {
             gap: "20px",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://checkvibe.dev"}/icon.png`}
             width={90}
@@ -79,7 +78,7 @@ export default async function Image() {
               display: "flex",
             }}
           >
-            checkvibe
+            CheckVibe
           </div>
         </div>
 
@@ -102,7 +101,7 @@ export default async function Image() {
             gap: "16px",
           }}
         >
-          {["Security", "API Keys", "SEO", "Legal", "Threats"].map(
+          {["Security", "API Keys", "SSL/TLS", "Legal", "Threats"].map(
             (label) => (
               <div
                 key={label}

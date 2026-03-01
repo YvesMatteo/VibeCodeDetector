@@ -139,7 +139,7 @@ export default async function BlogPost({
                         Scan your site for free
                     </h3>
                     <p className="text-sm text-zinc-400 mb-6 max-w-md mx-auto">
-                        30 automated security checks in under 60 seconds. No credit card required.
+                        35 automated security checks in under 60 seconds. No credit card required.
                     </p>
                     <Link
                         href="/signup"
