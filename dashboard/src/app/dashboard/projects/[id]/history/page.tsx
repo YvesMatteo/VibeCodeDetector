@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScoreChart } from '@/components/dashboard/score-chart';
 import { FetchErrorState } from '@/components/dashboard/fetch-error-state';
 import { formatDate } from '@/lib/format-date';
+import { computeAdjustedScore } from '@/lib/scan-utils';
+import type { Dismissal } from '@/lib/dismissals';
 
 function getVibeRating(score: number | null): { label: string; color: string; bg: string } {
     if (score === null) return { label: 'Pending', color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20' };
@@ -32,7 +34,8 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
 
     if (!project) return notFound();
 
-    let scans: { id: string; url: string; status: string; overall_score: number | null; created_at: string; completed_at: string | null }[] | null = null;
+    type ScanRow = { id: string; url: string; status: string; overall_score: number | null; created_at: string; completed_at: string | null; results: Record<string, unknown> | null };
+    let scans: ScanRow[] | null = null;
     let totalScans = 0;
     let fetchError = false;
 
@@ -40,7 +43,7 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
         const PAGE_SIZE = 20;
         const { data, count, error } = await supabase
             .from('scans')
-            .select('id, url, status, overall_score, created_at, completed_at', { count: 'exact' })
+            .select('id, url, status, overall_score, created_at, completed_at, results', { count: 'exact' })
             .eq('project_id', params.id)
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
@@ -48,11 +51,25 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
 
         if (error) throw error;
 
-        scans = data;
+        scans = data as unknown as ScanRow[];
         totalScans = count || 0;
     } catch {
         fetchError = true;
     }
+
+    // Fetch project-scoped dismissals for score adjustment
+    const { data: dismissalsRaw } = await supabase
+        .from('dismissed_findings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', params.id);
+
+    const projectDismissals = new Set(
+        ((dismissalsRaw || []) as Dismissal[])
+            .filter(d => d.scope === 'project')
+            .map(d => d.fingerprint)
+    );
+    const hasDismissals = projectDismissals.size > 0;
 
     if (fetchError) {
         return (
@@ -62,13 +79,15 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
         );
     }
 
-    // Chart data (oldest first)
+    // Chart data (oldest first), adjusted for dismissals
     const chartData = (scans || [])
         .filter(s => s.overall_score !== null && s.status === 'completed')
         .reverse()
         .map(s => ({
             date: new Date(s.completed_at || s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            score: s.overall_score!,
+            score: hasDismissals && s.results
+                ? computeAdjustedScore(s.results, projectDismissals)
+                : s.overall_score!,
         }));
 
     return (
@@ -93,7 +112,9 @@ export default async function ProjectHistoryPage(props: { params: Promise<{ id: 
             ) : (
                 <div className="relative">
                     {scans.map((scan, index: number) => {
-                        const score = scan.overall_score;
+                        const score = hasDismissals && scan.results
+                            ? computeAdjustedScore(scan.results, projectDismissals)
+                            : scan.overall_score;
                         const rating = getVibeRating(score);
                         const date = new Date(scan.created_at);
                         const isFirst = index === 0;

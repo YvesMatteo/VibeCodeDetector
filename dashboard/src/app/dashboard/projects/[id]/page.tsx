@@ -57,30 +57,18 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
         .eq('user_id' as never, user.id)
         .maybeSingle()) as unknown as { data: ScheduleRow | null };
 
-    // Get recent scans for chart (metadata only — no results blob)
-    interface ScanMeta { id: string; overall_score: number | null; created_at: string; completed_at: string | null; status: string }
+    // Get recent scans for chart (with results for score adjustment)
+    interface FullScan { id: string; overall_score: number | null; created_at: string; completed_at: string | null; status: string; results: Record<string, unknown> | null }
     const { data: recentScans } = await supabase
         .from('scans')
-        .select('id, overall_score, created_at, completed_at, status')
+        .select('id, overall_score, created_at, completed_at, status, results')
         .eq('project_id', id)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
-        .limit(20) as unknown as { data: ScanMeta[] | null };
+        .limit(20) as unknown as { data: FullScan[] | null };
 
-    const latestScanMeta = recentScans?.[0] ?? null;
+    const latestScan = recentScans?.[0] ?? null;
     const previousScan = recentScans?.[1] ?? null;
-
-    // Fetch full results only for the latest scan (for issue counts + top findings)
-    interface FullScan extends ScanMeta { results: Record<string, unknown> | null }
-    let latestScan: FullScan | null = null;
-    if (latestScanMeta) {
-        const { data: fullScan } = await supabase
-            .from('scans')
-            .select('id, overall_score, created_at, completed_at, status, results')
-            .eq('id', latestScanMeta.id)
-            .single() as unknown as { data: FullScan | null };
-        latestScan = fullScan;
-    }
 
     // Fetch dismissed findings for this project
     const { data: dismissalsRaw } = await supabase
@@ -97,22 +85,31 @@ export default async function ProjectOverviewPage(props: { params: Promise<{ id:
     const dismissedFingerprints = new Set(activeDismissals.map(d => d.fingerprint));
     const hasDismissals = dismissedFingerprints.size > 0;
 
+    // Project-scoped dismissals apply to all scans for chart adjustment
+    const projectDismissals = new Set(
+        allDismissals.filter(d => d.scope === 'project').map(d => d.fingerprint)
+    );
+
     // Compute score and issues adjusted for dismissals
     const rawScore = latestScan?.overall_score ?? null;
     const score = hasDismissals && latestScan
         ? computeAdjustedScore(latestScan.results as Record<string, unknown>, dismissedFingerprints)
         : rawScore;
-    const previousScore = previousScan?.overall_score ?? null;
-    const scoreDelta = (score !== null && previousScore !== null) ? score - previousScore : null;
+    const previousAdjusted = previousScan && projectDismissals.size > 0
+        ? computeAdjustedScore(previousScan.results as Record<string, unknown>, projectDismissals)
+        : previousScan?.overall_score ?? null;
+    const scoreDelta = (score !== null && previousAdjusted !== null) ? score - previousAdjusted : null;
 
     const issues = latestScan ? countIssuesExcludingDismissed(latestScan.results as Record<string, unknown>, dismissedFingerprints) : null;
-    // Chart data (oldest first)
+    // Chart data (oldest first), adjusted for project-scoped dismissals
     const chartData = (recentScans || [])
         .filter(s => s.overall_score !== null)
         .reverse()
         .map(s => ({
             date: new Date(s.completed_at || s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            score: s.overall_score!,
+            score: projectDismissals.size > 0 && s.results
+                ? computeAdjustedScore(s.results as Record<string, unknown>, projectDismissals)
+                : s.overall_score!,
         }));
 
     // Top findings from latest scan (excluding dismissed)
