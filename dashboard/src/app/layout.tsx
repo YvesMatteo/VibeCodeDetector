@@ -30,6 +30,17 @@ export const metadata: Metadata = {
   description: "Monitor your website with 35 automated security checks. Detect exposed API keys, SQL injection, XSS, and more.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://checkvibe.dev"),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "64x64" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "CheckVibe - Always-On Security Monitoring",
     description: "Monitor your website for security vulnerabilities, exposed API keys, SQL injection, XSS, and more.",
