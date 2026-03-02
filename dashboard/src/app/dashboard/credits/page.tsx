@@ -407,7 +407,7 @@ export default function CreditsPage() {
                                 <CardDescription className="text-zinc-500">{plan.description}</CardDescription>
                                 <div className="mt-6">
                                     {isCustom ? (
-                                        <span className="text-3xl font-heading font-bold white text-center">Max</span>
+                                        <span className="text-3xl font-heading font-bold text-white text-center">Max</span>
                                     ) : 'isFree' in plan && plan.isFree ? (
                                         <span className="text-3xl font-heading font-bold text-white">Free</span>
                                     ) : billing === 'annual' ? (

@@ -30,8 +30,8 @@ const changelog = [
             { type: 'added', text: 'Per-key rate limiting with sliding window (plan-based: 10/30/100 req/min)' },
             { type: 'added', text: 'MCP server integration for Claude Code' },
             // Billing & Auth
-            { type: 'added', text: 'Stripe billing with Starter ($19/mo), Pro ($39/mo), and Max ($79/mo) plans + 30% annual discount' },
-            { type: 'added', text: 'Free tier — 1 project, 3 scans/month, blurred finding details with upgrade CTAs' },
+            { type: 'added', text: 'Stripe billing with Starter ($19/mo), Pro ($39/mo), and Max (custom pricing) plans + 30% annual discount' },
+            { type: 'added', text: 'Free tier — 1 project, 4 scans/month, blurred finding details with upgrade CTAs' },
             { type: 'added', text: 'Supabase auth with Google OAuth and email/password sign-up' },
             // Security
             { type: 'added', text: 'Row-Level Security, CSRF protection, SSRF validation, CSP headers, HSTS preload' },

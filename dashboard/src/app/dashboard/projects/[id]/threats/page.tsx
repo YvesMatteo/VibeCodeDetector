@@ -197,7 +197,7 @@ export default function ThreatsPage() {
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">Real-Time Threat Detection</h3>
                     <p className="text-sm text-zinc-400 mb-6 max-w-md mx-auto">
-                        Monitor your website for live hacking attempts including XSS, SQL injection, brute force attacks, and more. Available on Starter plans and above.
+                        Monitor your website for live hacking attempts including XSS, SQL injection, brute force attacks, and more. Available on Pro plans and above.
                     </p>
                     <Link href="/dashboard/credits">
                         <Button className="bg-sky-500 hover:bg-sky-400 text-white">

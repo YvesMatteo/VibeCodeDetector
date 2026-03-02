@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkCsrf } from '@/lib/csrf';
 import nodemailer from 'nodemailer';
 import { OWNER_EMAIL } from '@/lib/constants';
+
+/** Escape HTML special characters to prevent injection */
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 /** Convert plain text body to a clean HTML email with footer */
 function buildHtml(body: string): string {
@@ -15,13 +26,13 @@ function buildHtml(body: string): string {
         const trimmed = line.trim();
         if (trimmed.startsWith('•')) {
             if (!inList) { html += '<ul style="padding-left:20px;margin:8px 0;">'; inList = true; }
-            html += `<li style="margin:4px 0;color:#333;">${trimmed.slice(1).trim()}</li>`;
+            html += `<li style="margin:4px 0;color:#333;">${escapeHtml(trimmed.slice(1).trim())}</li>`;
         } else {
             if (inList) { html += '</ul>'; inList = false; }
             if (trimmed === '') {
                 html += '<br/>';
             } else {
-                html += `<p style="margin:6px 0;color:#333;line-height:1.5;">${trimmed}</p>`;
+                html += `<p style="margin:6px 0;color:#333;line-height:1.5;">${escapeHtml(trimmed)}</p>`;
             }
         }
     }
@@ -50,6 +61,9 @@ Not interested? Just reply with "unsubscribe" and you won't hear from us again.`
 }
 
 export async function POST(req: NextRequest) {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -69,8 +83,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Support single email string or array of emails
-    const recipients: string[] = Array.isArray(to) ? to : [to];
+    // Support single email string or array of emails (max 20 per request)
+    const recipients: string[] = Array.isArray(to) ? to.slice(0, 20) : [to];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const validRecipients = recipients.filter(e => emailRegex.test(e.trim()));
 

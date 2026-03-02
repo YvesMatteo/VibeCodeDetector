@@ -106,7 +106,18 @@ export async function PATCH(
             }
             updates.backend_type = body.backendType;
         }
-        if (body.backendUrl !== undefined) updates.backend_url = body.backendUrl?.trim() || null;
+        if (body.backendUrl !== undefined) {
+            const rawBackendUrl = body.backendUrl?.trim() || null;
+            if (rawBackendUrl) {
+                const backendUrlValidation = validateTargetUrl(rawBackendUrl);
+                if (!backendUrlValidation.valid) {
+                    return NextResponse.json({ error: backendUrlValidation.error }, { status: 400 });
+                }
+                updates.backend_url = backendUrlValidation.parsed.href;
+            } else {
+                updates.backend_url = null;
+            }
+        }
         if (body.supabasePAT !== undefined) {
             const rawPAT = body.supabasePAT?.trim() || null;
             updates.supabase_pat = rawPAT ? encrypt(rawPAT) : null;

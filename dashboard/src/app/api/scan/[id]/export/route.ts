@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateScanMarkdown } from '@/lib/export-markdown';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { PLAN_CONFIG } from '@/lib/plan-config';
 
 export async function GET(
   req: NextRequest,
@@ -26,6 +27,17 @@ export async function GET(
     const rl = await checkRateLimit(`export:${user.id}`, 10);
     if (!rl.allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
+    // Plan check: free users cannot export
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+    const planKey = (profile?.plan || 'none') as string;
+    if (!(planKey in PLAN_CONFIG)) {
+      return NextResponse.json({ error: 'Export requires a paid plan. Please upgrade.' }, { status: 403 });
     }
 
     const { data: scan, error } = await supabase

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { decrypt } from '@/lib/encryption';
 import { computeNextRun, resolveAppUrl } from '@/lib/schedule-utils';
+import crypto from 'crypto';
 
 /**
  * Cron endpoint for executing scheduled scans.
@@ -55,7 +56,9 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expected = `Bearer ${cronSecret}`;
+    if (!authHeader || authHeader.length !== expected.length ||
+        !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

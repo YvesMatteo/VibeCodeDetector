@@ -85,6 +85,16 @@ export async function POST(req: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+    // Limit webhooks per project to prevent abuse
+    const { count: webhookCount } = await (supabase as any)
+        .from('project_webhooks')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', projectId)
+        .eq('user_id', user.id);
+    if (webhookCount !== null && webhookCount >= 10) {
+        return NextResponse.json({ error: 'Maximum 10 webhooks per project' }, { status: 400 });
+    }
+
     const secret = `whsec_${crypto.randomBytes(24).toString('hex')}`;
 
     const validEvents = ['scan.completed', 'scan.started', 'score.changed', 'threat.detected'];

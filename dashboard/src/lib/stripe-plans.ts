@@ -14,20 +14,20 @@ export interface PlanInfo {
  * Includes current prices, annual variants, and legacy price IDs.
  */
 export const PLANS_BY_PRICE_ID: Record<string, PlanInfo> = {
-  // Starter
+  // Starter (1 project, 30 scans/mo)
   'price_1Sz2CgLRbxIsl4HLE7jp6ecZ': { plan: 'starter', domains: 1, scans: 30 },  // monthly
   'price_1T1G35LRbxIsl4HLq1Geq4Ov': { plan: 'starter', domains: 1, scans: 30 },  // annual (30% off)
   'price_1Sz2CiLRbxIsl4HLDkUzXZXs': { plan: 'starter', domains: 1, scans: 30 },  // annual (legacy 20%)
-  // Pro
-  'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 3, scans: 155 },      // monthly
-  'price_1T1G36LRbxIsl4HLcxaSjnej': { plan: 'pro', domains: 3, scans: 155 },      // annual (30% off)
-  'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 3, scans: 155 },      // annual (legacy 20%)
-  // Max (formerly Enterprise)
-  'price_1T1G99LRbxIsl4HLzT5TNktI': { plan: 'max', domains: 10, scans: 3000 },     // monthly $79
-  'price_1T1G99LRbxIsl4HLfsEV74xC': { plan: 'max', domains: 10, scans: 3000 },     // annual (30% off)
-  'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'max', domains: 10, scans: 3000 },     // legacy monthly $89
-  'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'max', domains: 10, scans: 3000 },     // legacy annual
-  'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'max', domains: 10, scans: 3000 },     // legacy annual
+  // Pro (5 projects, 155 scans/mo)
+  'price_1Sz2CjLRbxIsl4HLbs2LEaw0': { plan: 'pro', domains: 5, scans: 155 },      // monthly
+  'price_1T1G36LRbxIsl4HLcxaSjnej': { plan: 'pro', domains: 5, scans: 155 },      // annual (30% off)
+  'price_1Sz2ClLRbxIsl4HLrXX3IxAf': { plan: 'pro', domains: 5, scans: 155 },      // annual (legacy 20%)
+  // Max (25 projects, 3000 scans/mo)
+  'price_1T1G99LRbxIsl4HLzT5TNktI': { plan: 'max', domains: 25, scans: 3000 },     // monthly $79
+  'price_1T1G99LRbxIsl4HLfsEV74xC': { plan: 'max', domains: 25, scans: 3000 },     // annual (30% off)
+  'price_1Sz2CnLRbxIsl4HL2XFxYOmP': { plan: 'max', domains: 25, scans: 3000 },     // legacy monthly $89
+  'price_1T1G36LRbxIsl4HLk68EVav3': { plan: 'max', domains: 25, scans: 3000 },     // legacy annual
+  'price_1Sz2CoLRbxIsl4HL1uhpaBEp': { plan: 'max', domains: 25, scans: 3000 },     // legacy annual
 };
 
 /**
@@ -36,8 +36,8 @@ export const PLANS_BY_PRICE_ID: Record<string, PlanInfo> = {
  */
 export const VALID_PLANS: Record<string, { domains: number; scans: number }> = {
   starter: { domains: 1, scans: 30 },
-  pro: { domains: 3, scans: 155 },
-  max: { domains: 10, scans: 3000 },
+  pro: { domains: 5, scans: 155 },
+  max: { domains: 25, scans: 3000 },
 };
 
 /**

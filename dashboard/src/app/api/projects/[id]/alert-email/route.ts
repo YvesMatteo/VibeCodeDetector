@@ -1,8 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkCsrf } from '@/lib/csrf';
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
     try {
+        const csrfError = checkCsrf(req);
+        if (csrfError) return csrfError;
+
         const { id: projectId } = await props.params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

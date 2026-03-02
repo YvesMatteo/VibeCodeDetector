@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     if (!planConfig.threatDetection) {
         return NextResponse.json(
-            { error: 'Threat detection requires a paid plan. Please upgrade.' },
+            { error: 'Threat detection requires a Pro or higher plan. Please upgrade.' },
             { status: 403 }
         );
     }

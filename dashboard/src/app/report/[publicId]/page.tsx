@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ publicId:
 export default async function PublicReportPage({ params }: { params: Promise<{ publicId: string }> }) {
     const { publicId } = await params;
 
-    if (!/^[0-9a-f]{6,16}$/i.test(publicId)) {
+    if (!/^[0-9a-f]{6,64}$/i.test(publicId)) {
         return notFound();
     }
 

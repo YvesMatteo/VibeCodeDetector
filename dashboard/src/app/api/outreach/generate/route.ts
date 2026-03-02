@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkCsrf } from '@/lib/csrf';
 import { OWNER_EMAIL } from '@/lib/constants';
 const MODELS = ['gemini-2.0-flash'];
 const MAX_RETRIES = 1; // Keep low — Vercel Hobby has 60s function timeout
@@ -60,6 +61,9 @@ async function scrapeCompanyContext(url: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+    const csrfError = checkCsrf(req);
+    if (csrfError) return csrfError;
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

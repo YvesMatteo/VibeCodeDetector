@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     try {
         const res = await fetch(`https://${domain}/favicon.ico`, {
             signal: AbortSignal.timeout(5000),
-            redirect: 'follow',
+            redirect: 'manual',
         });
         if (res.ok) {
             const ct = res.headers.get('content-type') || '';

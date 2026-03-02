@@ -222,22 +222,22 @@ const sections = [
                             <tr className="border-b border-white/[0.04]">
                                 <td className="py-2 pr-4">Free</td>
                                 <td className="py-2 pr-4">5</td>
-                                <td className="py-2">3</td>
+                                <td className="py-2">4</td>
                             </tr>
                             <tr className="border-b border-white/[0.04]">
                                 <td className="py-2 pr-4">Starter</td>
                                 <td className="py-2 pr-4">10</td>
-                                <td className="py-2">5</td>
+                                <td className="py-2">30</td>
                             </tr>
                             <tr className="border-b border-white/[0.04]">
                                 <td className="py-2 pr-4">Pro</td>
                                 <td className="py-2 pr-4">30</td>
-                                <td className="py-2">20</td>
+                                <td className="py-2">155</td>
                             </tr>
                             <tr>
                                 <td className="py-2 pr-4">Max</td>
                                 <td className="py-2 pr-4">100</td>
-                                <td className="py-2">75</td>
+                                <td className="py-2">3000</td>
                             </tr>
                         </tbody>
                     </table>

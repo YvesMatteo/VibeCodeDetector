@@ -205,21 +205,25 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Atomic scan usage increment
-        const { data: usageResult, error: usageError } = await supabase
-            .rpc('increment_scan_usage', { p_user_id: auth.userId });
+        // Atomic scan usage increment (skip for scheduled scans — cron already decremented)
+        if (isScheduled) {
+            // Cron handler already called increment_scan_usage before triggering this scan
+        } else {
+            const { data: usageResult, error: usageError } = await supabase
+                .rpc('increment_scan_usage', { p_user_id: auth.userId });
 
-        if (usageError) {
-            console.error('Usage increment error:', usageError);
-            return NextResponse.json({ error: 'Failed to check scan usage' }, { status: 500 });
-        }
+            if (usageError) {
+                console.error('Usage increment error:', usageError);
+                return NextResponse.json({ error: 'Failed to check scan usage' }, { status: 500 });
+            }
 
-        if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
-            logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
-            return NextResponse.json({
-                error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
-                code: 'SCAN_LIMIT_REACHED',
-            }, { status: 402 });
+            if (usageResult && usageResult.length > 0 && !usageResult[0].success) {
+                logApiKeyUsage({ keyId: auth.keyId, userId: auth.userId, endpoint: '/api/scan', method: 'POST', ip, statusCode: 402 });
+                return NextResponse.json({
+                    error: `Monthly scan limit reached (${usageResult[0].plan_scans_used}/${usageResult[0].plan_scans_limit}). Upgrade your plan for more scans.`,
+                    code: 'SCAN_LIMIT_REACHED',
+                }, { status: 402 });
+            }
         }
 
         // ==========================================
